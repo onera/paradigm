@@ -523,13 +523,13 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
 
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
   if (geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
-    pmne = pmn->volumic;
+    pmne = pmn->pmne[3];
   } else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-    pmne = pmn->surfacic;
+    pmne = pmn->pmne[2];
   } else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-    pmne = pmn->ridge;
+    pmne = pmn->pmne[1];
   } else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-    pmne = pmn->corner;
+    pmne = pmn->pmne[0];
   } else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx not implemented for geom_kind %d\n", geom_kind);
   }
@@ -648,10 +648,10 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
   if (geom_kind==PDM_GEOMETRY_KIND_SURFACIC) {
-    pmne = pmn->surfacic;
+    pmne = pmn->pmne[2];
   }
   else if (geom_kind==PDM_GEOMETRY_KIND_RIDGE) {
-    pmne = pmn->ridge;
+    pmne = pmn->pmne[1];
   }
   else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners not implemented for geom_kind %d\n", geom_kind);
@@ -790,7 +790,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
   if (geom_kind_tgt==PDM_GEOMETRY_KIND_CORNER) {
 
-    if (pmn->corner!=NULL) {
+    if (pmn->pmne[0]!=NULL) {
       PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners : part_mesh_nodal already has corner section\n");
     }
 
@@ -840,12 +840,12 @@ PDM_part_mesh_nodal_compute_straddling_entities
     PDM_free(vtx_gnum);
 
 
-    pmn->corner = PDM_part_mesh_nodal_elmts_create(0, pmn->n_part, pmn->comm);
-    int section_corner = PDM_part_mesh_nodal_elmts_add(pmn->corner, PDM_MESH_NODAL_POINT);
-    PDM_part_mesh_nodal_elmts_n_group_set(pmn->corner, g_n_group);
+    pmn->pmne[0] = PDM_part_mesh_nodal_elmts_create(0, pmn->n_part, pmn->comm);
+    int section_corner = PDM_part_mesh_nodal_elmts_add(pmn->pmne[0], PDM_MESH_NODAL_POINT);
+    PDM_part_mesh_nodal_elmts_n_group_set(pmn->pmne[0], g_n_group);
 
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-      PDM_part_mesh_nodal_elmts_std_set(pmn->corner,
+      PDM_part_mesh_nodal_elmts_std_set(pmn->pmne[0],
                                         section_corner,
                                         i_part,
                                         group_vtx_idx[i_part][g_n_group],
@@ -862,7 +862,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
         PDM_malloc(_group_vtx_gnum, n_group_vtx, PDM_g_num_t);
         memcpy(_group_vtx     , &group_vtx     [i_part][group_vtx_idx[i_part][i_group]], n_group_vtx*sizeof(int        ));
         memcpy(_group_vtx_gnum, &group_vtx_gnum[i_part][group_vtx_idx[i_part][i_group]], n_group_vtx*sizeof(PDM_g_num_t));
-        PDM_part_mesh_nodal_elmts_group_set(pmn->corner, i_part,
+        PDM_part_mesh_nodal_elmts_group_set(pmn->pmne[0], i_part,
                                             i_group, n_group_vtx,
                                             _group_vtx, _group_vtx_gnum,
                                             PDM_OWNERSHIP_KEEP);
@@ -877,7 +877,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
   }
   else { //edge
 
-    if (pmn->ridge!=NULL) {
+    if (pmn->pmne[1]!=NULL) {
       PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners : part_mesh_nodal already has ridge section\n");
     }
 
@@ -966,11 +966,11 @@ PDM_part_mesh_nodal_compute_straddling_entities
     PDM_g_num_t **unique_edge_gnum = NULL;
     if (pmn->pcg[PDM_MESH_ENTITY_EDGE]==NULL) {
 
-      pmn->ridge = PDM_part_mesh_nodal_elmts_create(1, pmn->n_part, pmn->comm);
-      int section_ridge = PDM_part_mesh_nodal_elmts_add(pmn->ridge, PDM_MESH_NODAL_BAR2);
+      pmn->pmne[1] = PDM_part_mesh_nodal_elmts_create(1, pmn->n_part, pmn->comm);
+      int section_ridge = PDM_part_mesh_nodal_elmts_add(pmn->pmne[1], PDM_MESH_NODAL_BAR2);
 
       for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-        PDM_part_mesh_nodal_elmts_std_set(pmn->ridge,
+        PDM_part_mesh_nodal_elmts_std_set(pmn->pmne[1],
                                           section_ridge,
                                           i_part,
                                           n_unique_edge   [i_part],
@@ -1202,14 +1202,14 @@ PDM_part_mesh_nodal_compute_straddling_entities
                                &group_ridge_gnum);
 
 
-    PDM_part_mesh_nodal_elmts_free(pmn->ridge);
+    PDM_part_mesh_nodal_elmts_free(pmn->pmne[1]);
 
-    pmn->ridge = PDM_part_mesh_nodal_elmts_create(1, pmn->n_part, pmn->comm);
-    int section_ridge = PDM_part_mesh_nodal_elmts_add(pmn->ridge, PDM_MESH_NODAL_BAR2);
-    PDM_part_mesh_nodal_elmts_n_group_set(pmn->ridge, g_n_group);
+    pmn->pmne[1] = PDM_part_mesh_nodal_elmts_create(1, pmn->n_part, pmn->comm);
+    int section_ridge = PDM_part_mesh_nodal_elmts_add(pmn->pmne[1], PDM_MESH_NODAL_BAR2);
+    PDM_part_mesh_nodal_elmts_n_group_set(pmn->pmne[1], g_n_group);
 
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-      PDM_part_mesh_nodal_elmts_std_set(pmn->ridge,
+      PDM_part_mesh_nodal_elmts_std_set(pmn->pmne[1],
                                         section_ridge,
                                         i_part,
                                         n_ridge   [i_part],
@@ -1226,7 +1226,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
         PDM_malloc(_group_ridge_gnum, n_group_ridge, PDM_g_num_t);
         memcpy(_group_ridge     , &group_ridge     [i_part][group_ridge_idx[i_part][i_group]], n_group_ridge*sizeof(int        ));
         memcpy(_group_ridge_gnum, &group_ridge_gnum[i_part][group_ridge_idx[i_part][i_group]], n_group_ridge*sizeof(PDM_g_num_t));
-        PDM_part_mesh_nodal_elmts_group_set(pmn->ridge,
+        PDM_part_mesh_nodal_elmts_group_set(pmn->pmne[1],
                                             i_part,
                                             i_group,
                                             n_group_ridge,

@@ -47,10 +47,7 @@ struct _pdm_part_mesh_nodal_t {
 
   PDM_Mesh_nodal_vtx_t              **vtx;              /*!< Description des sommmets de chaque partition */
 
-  PDM_part_mesh_nodal_elmts_t       *volumic;
-  PDM_part_mesh_nodal_elmts_t       *surfacic;
-  PDM_part_mesh_nodal_elmts_t       *ridge;
-  PDM_part_mesh_nodal_elmts_t       *corner;
+  PDM_part_mesh_nodal_elmts_t       *pmne[4];           /*!< Ordered by increasing dimension 0D (corner), 1D (ridge), ... */
 
   PDM_part_comm_graph_t             *pcg          [PDM_GEOMETRY_KIND_MAX];
   PDM_ownership_t                    pcg_ownership[PDM_GEOMETRY_KIND_MAX];

@@ -121,16 +121,16 @@ _get_from_geometry_kind
 
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
   if (geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
-    pmne = pmn->volumic;
+    pmne = pmn->pmne[3];
   }
   else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-    pmne = pmn->surfacic;
+    pmne = pmn->pmne[2];
   }
   else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-    pmne = pmn->ridge;
+    pmne = pmn->pmne[1];
   }
   else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-    pmne = pmn->corner;
+    pmne = pmn->pmne[0];
   }
   else {
     PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
@@ -336,19 +336,19 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   if(pmne->mesh_dimension == 3) {
-    pmn->volumic = pmne;
+    pmn->pmne[3] = pmne;
     geom_kind    = PDM_GEOMETRY_KIND_VOLUMIC;
   }
   else if(pmne->mesh_dimension == 2){
-    pmn->surfacic = pmne;
+    pmn->pmne[2] = pmne;
     geom_kind     = PDM_GEOMETRY_KIND_SURFACIC;
   }
   else if(pmne->mesh_dimension == 1){
-    pmn->ridge = pmne;
+    pmn->pmne[1] = pmne;
     geom_kind  = PDM_GEOMETRY_KIND_RIDGE;
   }
   else if(pmne->mesh_dimension == 0){
-    pmn->corner = pmne;
+    pmn->pmne[0] = pmne;
     geom_kind   = PDM_GEOMETRY_KIND_CORNER;
   }
   else {
@@ -651,22 +651,22 @@ PDM_part_mesh_nodal_section_add
 
   if( _get_from_geometry_kind(pmn, geom_kind) == NULL) {
     if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
-      pmn->volumic = PDM_part_mesh_nodal_elmts_create(3,
+      pmn->pmne[3] = PDM_part_mesh_nodal_elmts_create(3,
                                                       pmn->n_part,
                                                       pmn->comm);
     }
     else if( geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-      pmn->surfacic = PDM_part_mesh_nodal_elmts_create(2,
+      pmn->pmne[2] = PDM_part_mesh_nodal_elmts_create(2,
                                                        pmn->n_part,
                                                        pmn->comm);
     }
     else if( geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-      pmn->ridge = PDM_part_mesh_nodal_elmts_create(1,
+      pmn->pmne[1] = PDM_part_mesh_nodal_elmts_create(1,
                                                     pmn->n_part,
                                                     pmn->comm);
     }
     else if( geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-      pmn->corner = PDM_part_mesh_nodal_elmts_create(0,
+      pmn->pmne[0] = PDM_part_mesh_nodal_elmts_create(0,
                                                      pmn->n_part,
                                                      pmn->comm);
     }
@@ -917,16 +917,16 @@ PDM_part_mesh_nodal_free
   }
 
   // volumic
-  PDM_part_mesh_nodal_elmts_free(pmn->volumic);
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[3]);
 
   // surfacic
-  PDM_part_mesh_nodal_elmts_free(pmn->surfacic);
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[2]);
 
   // ridge
-  PDM_part_mesh_nodal_elmts_free(pmn->ridge);
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[1]);
 
   // corner
-  PDM_part_mesh_nodal_elmts_free(pmn->corner);
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[0]);
 
   if (pmn->vtx != NULL) {
     for (int i_part = 0; i_part < pmn->n_part; i_part++) {

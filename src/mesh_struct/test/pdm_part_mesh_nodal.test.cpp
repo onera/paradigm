@@ -124,8 +124,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
                                                                 3, 3, 3, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // > Remove computed corners
-  PDM_part_mesh_nodal_elmts_free(pmn->corner);
-  pmn->corner = NULL; // because shitty C
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[0]);
+  pmn->pmne[0] = NULL; // because shitty C
 
   PDM_part_mesh_nodal_compute_straddling_entities(pmn,
                                                   PDM_GEOMETRY_KIND_SURFACIC,
@@ -182,8 +182,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
                                                                 2, 2, 2, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // > Remove computed corners
-  PDM_part_mesh_nodal_elmts_free(pmn->ridge);
-  pmn->ridge = NULL; // because shitty C
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[1]);
+  pmn->pmne[1] = NULL; // because shitty C
 
   PDM_part_mesh_nodal_compute_straddling_entities(pmn,
                                                   PDM_GEOMETRY_KIND_SURFACIC,
@@ -236,8 +236,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 
                                                                 3, 3, 3, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // > Remove computed corners
-  PDM_part_mesh_nodal_elmts_free(pmn->corner);
-  pmn->corner = NULL; // because shitty C
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[0]);
+  pmn->pmne[0] = NULL; // because shitty C
 
   PDM_part_mesh_nodal_compute_straddling_entities(pmn,
                                                   PDM_GEOMETRY_KIND_RIDGE,

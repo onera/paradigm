@@ -1443,13 +1443,13 @@ _create_extract_part_nodal
   if (mesh_nodal != NULL) {
     switch (dim_mesh) {
     case 1:
-      pmne = mesh_nodal->ridge;
+      pmne = mesh_nodal->pmne[1];
       break;
     case 2:
-      pmne = mesh_nodal->surfacic;
+      pmne = mesh_nodal->pmne[2];
       break;
     case 3:
-      pmne = mesh_nodal->volumic;
+      pmne = mesh_nodal->pmne[3];
       break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
