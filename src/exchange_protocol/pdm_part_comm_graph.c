@@ -10,30 +10,37 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_binary_search.h"
 #include "pdm_error.h"
+#include "pdm_exchange_helper_priv.h"
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_order.h"
-#include "pdm_part_comm_graph.h"
 #include "pdm_part_comm_graph_priv.h"
-#include "pdm_exchange_helper_priv.h"
+#include "pdm_part_comm_graph.h"
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 #include "pdm_unique.h"
+#include "pdm.h"
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
+
+#define CHECK_INSTANCE(pcg) \
+  if ((pcg) == NULL) { \
+    PDM_error(__FILE__, __LINE__, 0, "%s : Invalid PDM_part_comm_graph_t instance\n", __func__); \
+  }
+
+#define CHECK_I_PART(pcg, i_part) \
+  if ((i_part) < 0 || (i_part) >= (pcg)->n_part) { \
+    PDM_error(__FILE__, __LINE__, 0, "%s : Invalid i_part (%d / %d)\n", __func__, (i_part), (pcg)->n_part); \
+  }
 
 /*============================================================================
  * Type
@@ -980,20 +987,24 @@ PDM_part_comm_graph_exch
   void                  ***recv_entity_data
 )
 {
-  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+  CHECK_INSTANCE(pcg)
+
+  if (t_stride == PDM_STRIDE_CST_INTERLACED) {
     _exch_strid_cst(pcg,
                     s_data,
                     cst_stride,
                     send_entity_data,
                     recv_entity_data);
-  } else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+  }
+  else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
     _exch_strid_var(pcg,
                     s_data,
                     send_entity_stride,
                     send_entity_data,
                     recv_entity_stride,
                     recv_entity_data);
-  } else {
+  }
+  else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch, wrong t_stride \n");
   }
 
@@ -1014,6 +1025,8 @@ PDM_part_comm_graph_iexch
   void                  ***recv_entity_data
 )
 {
+  CHECK_INSTANCE(pcg)
+
   int n_rank;
   PDM_MPI_Comm_size(pcg->comm, &n_rank);
 
@@ -1178,6 +1191,8 @@ PDM_part_comm_graph_exch_init
   void                  ***recv_entity_data
 )
 {
+  CHECK_INSTANCE(pcg)
+
   PDM_UNUSED(recv_entity_stride);
 
   int request_id = -1;
@@ -1228,6 +1243,8 @@ PDM_part_comm_graph_exch_start
   int                      request_id
 )
 {
+  CHECK_INSTANCE(pcg)
+
   if(pcg->exch_h->t_stride[request_id] == PDM_STRIDE_CST_INTERLACED) {
     // Hook internal send_buffer et send_entity_data
     _fill_send_strid_cst(pcg,
@@ -1254,6 +1271,8 @@ PDM_part_comm_graph_exch_wait
   int                      request_id
 )
 {
+  CHECK_INSTANCE(pcg)
+
   PDM_exchange_helper_exch_wait(pcg->exch_h, request_id);
 
   unsigned char **_precv_data = (unsigned char **) pcg->exch_h->p_recv_data[request_id];
@@ -1299,6 +1318,8 @@ PDM_part_comm_graph_exch_free
   int                      request_id
 )
 {
+  CHECK_INSTANCE(pcg)
+
   PDM_exchange_helper_exch_free(pcg->exch_h, request_id);
 
   PDM_free(pcg->exch_h->send_buffer[request_id]);
@@ -1319,22 +1340,26 @@ PDM_part_comm_graph_exch_one_way_raw_init
   int                         tag
 )
 {
+  CHECK_INSTANCE(pcg)
+
   int *send_or_recv_idx = NULL;
   int *send_or_recv_n   = NULL;
   int  n_active_rank    = 0;
   int *active_rank      = 0;
 
-  if(direction == PDM_EXCHANGE_DIRECTION_SEND) {
+  if (direction == PDM_EXCHANGE_DIRECTION_SEND) {
     n_active_rank    = pcg->n_active_rank_send;
     active_rank      = pcg->active_rank_send;
     send_or_recv_idx = pcg->active_send_idx;
     send_or_recv_n   = pcg->active_send_n;
-  } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
+  }
+  else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
     n_active_rank    = pcg->n_active_rank_recv;
     active_rank      = pcg->active_rank_recv;
     send_or_recv_idx = pcg->active_recv_idx;
     send_or_recv_n   = pcg->active_recv_n;
-  } else {
+  }
+  else {
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_part_comm_graph_exch_one_way_raw_init not yet implemented with direction = %i\n", direction);
   }
@@ -1369,22 +1394,26 @@ PDM_part_comm_graph_iexch_one_way_raw
   int                         tag
 )
 {
+  CHECK_INSTANCE(pcg)
+
   int *send_or_recv_idx = NULL;
   int *send_or_recv_n   = NULL;
   int  n_active_rank    = 0;
   int *active_rank      = 0;
 
-  if(direction == PDM_EXCHANGE_DIRECTION_SEND) {
+  if (direction == PDM_EXCHANGE_DIRECTION_SEND) {
     n_active_rank    = pcg->n_active_rank_send;
     active_rank      = pcg->active_rank_send;
     send_or_recv_idx = pcg->active_send_idx;
     send_or_recv_n   = pcg->active_send_n;
-  } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
+  }
+  else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
     n_active_rank    = pcg->n_active_rank_recv;
     active_rank      = pcg->active_rank_recv;
     send_or_recv_idx = pcg->active_recv_idx;
     send_or_recv_n   = pcg->active_recv_n;
-  } else {
+  }
+  else {
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_part_comm_graph_iexch_one_way_raw not yet implemented with direction = %i\n", direction);
   }
@@ -1415,6 +1444,8 @@ PDM_part_comm_graph_exch_one_way_raw_start
   int                         request_id
 )
 {
+  CHECK_INSTANCE(pcg)
+
   PDM_exchange_helper_exch_start(pcg->exch_h, request_id);
 }
 
@@ -1425,6 +1456,8 @@ PDM_part_comm_graph_exch_one_way_raw_wait
   int                      request_id
 )
 {
+  CHECK_INSTANCE(pcg)
+
   PDM_exchange_helper_exch_wait(pcg->exch_h, request_id);
 }
 
@@ -1435,7 +1468,9 @@ PDM_part_comm_graph_exch_one_way_raw_free
   int                         request_id
 )
 {
-  pcg->exch_h->send_buffer  [request_id] = NULL;
+  CHECK_INSTANCE(pcg)
+
+  pcg->exch_h->send_buffer[request_id] = NULL;
 
   PDM_exchange_helper_exch_free(pcg->exch_h, request_id);
 }
@@ -1446,6 +1481,8 @@ PDM_part_comm_graph_n_part_get
   PDM_part_comm_graph_t *pcg
 )
 {
+  CHECK_INSTANCE(pcg)
+
   return pcg->n_part;
 }
 
@@ -1455,6 +1492,8 @@ PDM_part_comm_graph_comm_get
   PDM_part_comm_graph_t  *pcg
 )
 {
+  CHECK_INSTANCE(pcg)
+
   return pcg->comm;
 }
 
@@ -1465,6 +1504,9 @@ PDM_part_comm_graph_owner_get
   int                    i_part
 )
 {
+  CHECK_INSTANCE(pcg)
+  CHECK_I_PART(pcg, i_part)
+
   return pcg->bound_owner[i_part];
 }
 
@@ -1475,6 +1517,8 @@ PDM_part_comm_graph_reorder
   int                   **old_to_new
 )
 {
+  CHECK_INSTANCE(pcg)
+
   int **pentity_graph = pcg->pentity_graph;
 
   /* Prepare exchange */
@@ -1529,13 +1573,8 @@ PDM_part_comm_graph_entity_graph_get
   PDM_ownership_t         ownership
 )
 {
-  if (pcg == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_graph_get : Invalid PDM_part_comm_graph_t instance\n");
-  }
-
-  if (i_part < 0 || i_part >= pcg->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_graph_get : Invalid i_part (%d / %d)\n", i_part, pcg->n_part);
-  }
+  CHECK_INSTANCE(pcg)
+  CHECK_I_PART(pcg, i_part)
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
     pcg->owner_graph = ownership;
@@ -1553,6 +1592,8 @@ PDM_part_comm_graph_is_signed
   PDM_part_comm_graph_t *pcg
 )
 {
+  CHECK_INSTANCE(pcg)
+
   return pcg->is_signed;
 }
 
@@ -1563,6 +1604,8 @@ PDM_part_comm_graph_nuplet_size
   PDM_part_comm_graph_t *pcg
 )
 {
+  CHECK_INSTANCE(pcg)
+
   return pcg->nuplet_size;
 }
 
@@ -1576,13 +1619,8 @@ PDM_part_comm_graph_entity_nuplet_get
   PDM_ownership_t         ownership
 )
 {
-  if (pcg == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_nuplet_get : Invalid PDM_part_comm_graph_t instance\n");
-  }
-
-  if (i_part < 0 || i_part >= pcg->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_nuplet_get : Invalid i_part (%d / %d)\n", i_part, pcg->n_part);
-  }
+  CHECK_INSTANCE(pcg)
+  CHECK_I_PART(pcg, i_part)
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
     pcg->owner_nuplet = ownership;
@@ -1612,6 +1650,8 @@ PDM_part_comm_graph_gather_strided_data
   void                  ***out_data
 )
 {
+  CHECK_INSTANCE(pcg)
+
   if(t_stride == PDM_STRIDE_VAR_INTERLACED) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_gather_strided_data: PDM_STRIDE_VAR_INTERLACED not implemented \n");
   }
@@ -1775,6 +1815,8 @@ PDM_part_comm_graph_all_reduce
   unsigned char          **pdata
 )
 {
+  CHECK_INSTANCE(pcg)
+
   int n_part = pcg->n_part;
 
   if(op != PDM_MPI_SUM &&
@@ -1798,7 +1840,7 @@ PDM_part_comm_graph_all_reduce
     PDM_malloc(send_data[i_part], pcg->n_entity_graph[i_part] * s_data, unsigned char);
 
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
-      int i_entity = pcg->pentity_graph[i_part][4*i  ]-1;
+      int i_entity = pcg->pentity_graph[i_part][4*i]-1;
       for(int k = 0; k < s_data; ++k) {
         send_data[i_part][s_data * i + k] = pdata[i_part][s_data * i_entity + k];
       }
@@ -1899,6 +1941,8 @@ PDM_part_comm_graph_part_to_send_buffer_get
   int                   ***out_part_to_send_buffer
 )
 {
+  CHECK_INSTANCE(pcg)
+
   *out_part_to_send_buffer = pcg->part_to_send_buffer;
 }
 
@@ -1910,6 +1954,8 @@ PDM_part_comm_graph_part_to_recv_buffer_get
   int                   ***part_to_recv_buffer
 )
 {
+  CHECK_INSTANCE(pcg)
+
   *part_to_recv_buffer = pcg->part_to_recv_buffer;
 }
 
