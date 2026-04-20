@@ -30,6 +30,30 @@ bind (c, name = 'PDM_MPI_Comm_c2f')
 
 end function PDM_MPI_Comm_c2f
 
+function PDM_MPI_Type_f2c (f_datatype) &
+result (datatype)                      &
+bind (c, name = 'PDM_MPI_Type_f2c')
+
+    use iso_c_binding
+    implicit none
+
+    integer(c_int), value :: f_datatype
+    integer(c_int)        :: datatype
+
+end function PDM_MPI_Type_f2c
+
+function PDM_MPI_Op_f2c (f_op) &
+  result (op)                  &
+  bind (c, name = 'PDM_MPI_Op_f2c')
+
+    use iso_c_binding
+    implicit none
+
+    integer(c_int), value :: f_op
+    integer(c_int)        :: op
+
+end function PDM_MPI_Op_f2c
+
 end interface
 
 end module pdm
