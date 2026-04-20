@@ -59,6 +59,8 @@ module pdm_part_comm_graph
   end interface
 
 
+  private :: setup_recv_pa
+
   contains
 
 
@@ -121,7 +123,7 @@ module pdm_part_comm_graph
                                                     ownership_nuplet, &
                                                     is_signed,        &
                                                     comm)
-    ! Build a Part Comm Graph instance
+    ! Build a Part Comm Graph instance using additional information represented as a n-uplet
     implicit none
 
     type(c_ptr),                        intent(out) :: pcg                ! PDM_part_comm_graph_t instance
@@ -492,15 +494,15 @@ module pdm_part_comm_graph
                                      c_recv_stride,         &
                                      c_recv_data)
 
-    call set_recv_c2f(pcg,              &
-                      t_stride,         &
-                      cst_stride,       &
-                      send_data%type,   &
-                      send_data%s_data, &
-                      c_recv_stride,    &
-                      c_recv_data,      &
-                      recv_stride,      &
-                      recv_data)
+    call setup_recv_pa(pcg,              &
+                       t_stride,         &
+                       cst_stride,       &
+                       send_data%type,   &
+                       send_data%s_data, &
+                       c_recv_stride,    &
+                       c_recv_data,      &
+                       recv_stride,      &
+                       recv_data)
 
   end subroutine PDM_part_comm_graph_exch
 
@@ -580,15 +582,15 @@ module pdm_part_comm_graph
                                            c_recv_stride,         &
                                            c_recv_data)
 
-    call set_recv_c2f(pcg,              &
-                      t_stride,         &
-                      cst_stride,       &
-                      send_data%type,   &
-                      send_data%s_data, &
-                      c_recv_stride,    &
-                      c_recv_data,      &
-                      recv_stride,      &
-                      recv_data)
+    call setup_recv_pa(pcg,              &
+                       t_stride,         &
+                       cst_stride,       &
+                       send_data%type,   &
+                       send_data%s_data, &
+                       c_recv_stride,    &
+                       c_recv_data,      &
+                       recv_stride,      &
+                       recv_data)
 
   end subroutine PDM_part_comm_graph_iexch
 
@@ -669,15 +671,16 @@ module pdm_part_comm_graph
 
 
 
-  subroutine set_recv_c2f(pcg,           &
-                          t_stride,      &
-                          cst_stride,    &
-                          data_type,     &
-                          s_data,        &
-                          c_recv_stride, &
-                          c_recv_data,   &
-                          recv_stride,   &
-                          recv_data)
+  subroutine setup_recv_pa(pcg,           &
+                           t_stride,      &
+                           cst_stride,    &
+                           data_type,     &
+                           s_data,        &
+                           c_recv_stride, &
+                           c_recv_data,   &
+                           recv_stride,   &
+                           recv_data)
+    ! Setup the recv* pointer_arrays for (i)exch routines
     implicit none
 
     type(c_ptr),               intent(in) :: pcg
@@ -754,7 +757,7 @@ module pdm_part_comm_graph
     endif
     deallocate(length_data)
 
-  end subroutine set_recv_c2f
+  end subroutine setup_recv_pa
 
 
 end module pdm_part_comm_graph
