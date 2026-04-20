@@ -38,7 +38,7 @@ bind (c, name = 'PDM_MPI_Type_f2c')
     implicit none
 
     integer(c_int), value :: f_datatype
-    integer(c_int)        :: datatype
+    type(c_ptr)           :: datatype
 
 end function PDM_MPI_Type_f2c
 
@@ -50,7 +50,7 @@ function PDM_MPI_Op_f2c (f_op) &
     implicit none
 
     integer(c_int), value :: f_op
-    integer(c_int)        :: op
+    type(c_ptr)           :: op
 
 end function PDM_MPI_Op_f2c
 

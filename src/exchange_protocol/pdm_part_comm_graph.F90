@@ -385,8 +385,8 @@ module pdm_part_comm_graph
     integer,                   intent(in) :: op     ! Reduction operation kind (MPI_SUM/MPI_MIN/MPI_MAX)
     type(pdm_pointer_array_t), pointer    :: pdata  ! Buffer of data to synchronise (size = n_entity)
 
-    integer(c_int)                        :: c_datatype
-    integer(c_int)                        :: c_op
+    type(c_ptr)                           :: c_datatype
+    type(c_ptr)                           :: c_op
 
     interface
       subroutine pdm_part_comm_graph_all_reduce_cf(pcg,      &
@@ -398,9 +398,9 @@ module pdm_part_comm_graph
         use iso_c_binding
         implicit none
         type(c_ptr),    value :: pcg
-        integer(c_int), value :: datatype
+        type(c_ptr),    value :: datatype
         integer(c_int), value :: stride
-        integer(c_int), value :: op
+        type(c_ptr),    value :: op
         type(c_ptr),    value :: pdata
       end subroutine
     end interface
