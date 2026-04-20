@@ -509,7 +509,7 @@ PDM_part_comm_graph_entity_graph_get
 
 /**
  *
- * \brief Inplace reduce value on current graph. Allow synchronisation.
+ * \brief Inplace reduce value on current graph. Allow synchronization.
  *        Only PDM_MPI_DOUBLE and PDM_MPI_INT are allowed
  *
  * \param [in]    pcg            Pointer to \ref PDM_part_comm_graph_t instance
@@ -530,7 +530,7 @@ PDM_part_comm_graph_all_reduce
 
 /**
  *
- * \brief Return true (1) if graph description is signed, else false (0)
+ * \brief Return true (1) if nuplet description is signed, else false (0)
  *
  * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
  *
@@ -598,7 +598,7 @@ PDM_part_comm_graph_entity_nuplet_get
  *
  * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
  *
- * \return MPICommunicator
+ * \return MPI Communicator
  */
 PDM_MPI_Comm
 PDM_part_comm_graph_comm_get
