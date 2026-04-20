@@ -145,15 +145,15 @@ PDM_MPI_Isends
 int
 PDM_MPI_Irecvs
 (
-  const void              *recvbuf,
-        int               *recvcounts,
-        int               *rdispls,
-        PDM_MPI_Datatype   datatype,
-        int                n_src_rank,
-        int               *src_rank,
-        int                tag,
-        PDM_MPI_Comm       comm,
-        PDM_MPI_Request  **out_requests
+  void              *recvbuf,
+  int               *recvcounts,
+  int               *rdispls,
+  PDM_MPI_Datatype   datatype,
+  int                n_src_rank,
+  int               *src_rank,
+  int                tag,
+  PDM_MPI_Comm       comm,
+  PDM_MPI_Request  **out_requests
 );
 
 

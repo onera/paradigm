@@ -63,7 +63,7 @@ PDM_MPI_Sends_init
 
   int code = MPI_SUCCESS;
   for (int i = 0; i < n_tgt_rank; i++) {
-    void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_send_type);
+    const void *buf = (const void *) ((const unsigned char*) sendbuf + sdispls[i] * size_send_type);
     int t_rank = tgt_rank[i];
     code = MPI_Send_init(buf,
                          sendcounts[i],
@@ -105,7 +105,7 @@ PDM_MPI_Isends
 
   int code = MPI_SUCCESS;
   for (int i = 0; i < n_tgt_rank; i++) {
-    void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_send_type);
+    const void *buf = (const void *) ((const unsigned char*) sendbuf + sdispls[i] * size_send_type);
     int t_rank = tgt_rank[i];
     code = MPI_Isend(buf,
                      sendcounts[i],
@@ -167,15 +167,15 @@ PDM_MPI_Recvs_init
 int
 PDM_MPI_Irecvs
 (
-  const void              *recvbuf,
-        int               *recvcounts,
-        int               *rdispls,
-        PDM_MPI_Datatype   datatype,
-        int                n_src_rank,
-        int               *src_rank,
-        int                tag,
-        PDM_MPI_Comm       comm,
-        PDM_MPI_Request  **out_requests
+  void              *recvbuf,
+  int               *recvcounts,
+  int               *rdispls,
+  PDM_MPI_Datatype   datatype,
+  int                n_src_rank,
+  int               *src_rank,
+  int                tag,
+  PDM_MPI_Comm       comm,
+  PDM_MPI_Request  **out_requests
 )
 {
   PDM_MPI_Request *requests = NULL;
