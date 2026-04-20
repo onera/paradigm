@@ -1611,6 +1611,20 @@ PDM_part_comm_graph_nuplet_size
 
 
 int
+PDM_part_comm_graph_n_entity_get
+(
+  PDM_part_comm_graph_t *pcg,
+  int                    i_part
+)
+{
+  CHECK_INSTANCE(pcg)
+  CHECK_I_PART(pcg, i_part)
+
+  return pcg->n_entity_graph[i_part];
+}
+
+
+int
 PDM_part_comm_graph_entity_nuplet_get
 (
   PDM_part_comm_graph_t  *pcg,

@@ -558,6 +558,22 @@ PDM_part_comm_graph_nuplet_size
 
 /**
  *
+ * \brief Get number of graph entities
+ *
+ * \param [in] pcg    Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in] i_part Partition identifier
+ *
+ * \return Number of graph entities
+ */
+int
+PDM_part_comm_graph_n_entity_get
+(
+  PDM_part_comm_graph_t *pcg,
+  int                    i_part
+);
+
+/**
+ *
  * \brief Get entity nuplets
  *
  * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
