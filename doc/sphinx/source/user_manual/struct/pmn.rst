@@ -143,6 +143,20 @@ API
           .. warning::
             Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
+      .. tab-item:: Python
+        :sync: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_sections_from_cell_face
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_sections_from_face_edge
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
 
   |
 

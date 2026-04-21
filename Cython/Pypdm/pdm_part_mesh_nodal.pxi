@@ -99,6 +99,28 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                                 PDM_g_num_t           *parent_entity_g_num,
                                                 PDM_ownership_t        owner)
 
+    void PDM_part_mesh_nodal_face2d_faceedge_add(PDM_part_mesh_nodal_t *pmn,
+                                                 int                    id_part,
+                                                 int                    n_face,
+                                                 int                    n_edge,
+                                                 int                   *edge_vtx,
+                                                 int                   *face_edge_idx,
+                                                 int                   *face_edge,
+                                                 PDM_g_num_t           *face_ln_to_gn,
+                                                 PDM_ownership_t        ownership)
+
+    void PDM_part_mesh_nodal_cell3d_cellface_add(PDM_part_mesh_nodal_t *pmn,
+                                                 int                    id_part,
+                                                 int                    n_cell,
+                                                 int                    n_face,
+                                                 int                   *face_vtx_idx,
+                                                 int                   *face_vtx,
+                                                 PDM_g_num_t           *face_ln_to_gn,
+                                                 int                   *cell_face_idx,
+                                                 int                   *cell_face,
+                                                 PDM_g_num_t           *cell_ln_to_gn,
+                                                 PDM_ownership_t        ownership)
+
     int PDM_part_mesh_nodal_section_n_elt_get(PDM_part_mesh_nodal_t  *pmn,
                                               int                     id_block,
                                               int                     id_part)
@@ -413,6 +435,83 @@ cdef class PartMeshNodal:
                                              np_to_int_pointer(parent_num),
                                              np_to_gnum_pointer(parent_entity_g_num),
                                              PDM_OWNERSHIP_USER)
+
+    # ------------------------------------------------------------------------
+    def set_sections_from_face_edge(self,
+                                    int                                           id_part,
+                                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] edge_vtx,
+                                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge_idx,
+                                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge,
+                                    NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_ln_to_gn):
+      """
+      Set 2D faces from face edge connectivity.
+
+      Faces are sorted from their type (tri, quad, ...) and stored in the corresponding
+      sections.
+
+      Parameters:
+        id_part             (int)                          : id of the part (max = n_part)
+        edge_vtx            (`np.ndarray[np.int32_t]`)     : Connectivity array for edges
+        face_edge_idx       (`np.ndarray[np.int32_t]`)     : Connectivity index array for faces
+        face_edge           (`np.ndarray[np.int32_t]`)     : Connectivity array for faces
+        face_ln_to_gn       (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering of faces
+      """
+      self.keep_alive.extend([edge_vtx, face_edge_idx, face_edge, face_ln_to_gn])
+
+      cdef int n_edge = edge_vtx.size // 2
+      cdef int n_face = face_edge_idx.size - 1
+      PDM_part_mesh_nodal_face2d_faceedge_add(self.pmn,
+                                              id_part,
+                                              n_face,
+                                              n_edge,
+                                              np_to_int_pointer(edge_vtx),
+                                              np_to_int_pointer(face_edge_idx),
+                                              np_to_int_pointer(face_edge),
+                                              np_to_gnum_pointer(face_ln_to_gn),
+                                              PDM_OWNERSHIP_USER)
+      
+    # ------------------------------------------------------------------------
+    def set_sections_from_cell_face(self,
+                                    int                                           id_part,
+                                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx_idx,
+                                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx,
+                                    NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_ln_to_gn,
+                                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_face_idx,
+                                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_face,
+                                    NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] cell_ln_to_gn):
+      """
+      Set 3D cells from cell face connectivity.
+
+      Cells are sorted from their type (tetrahedra, hexahedra, ...) and stored in the corresponding
+      sections.
+
+      Parameters:
+        id_part             (int)                          : id of the part (max = n_part)
+        face_vtx_idx        (`np.ndarray[np.int32_t]`)     : Connectivity index array for faces
+        face_vtx            (`np.ndarray[np.int32_t]`)     : Connectivity array for faces
+        face_ln_to_gn       (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering of faces
+        cell_face_idx       (`np.ndarray[np.int32_t]`)     : Connectivity index array for cells
+        cell_face           (`np.ndarray[np.int32_t]`)     : Connectivity array for cells
+        cell_ln_to_gn       (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering of cells
+      """
+
+      self.keep_alive.extend([face_vtx_idx, face_vtx, face_ln_to_gn, cell_face_idx,
+        cell_face, cell_ln_to_gn])
+
+      cdef int n_cell = cell_face_idx.size - 1
+      cdef int n_face = face_vtx_idx.size - 1
+      PDM_part_mesh_nodal_cell3d_cellface_add(self.pmn,
+                                              id_part,
+                                              n_cell,
+                                              n_face,
+                                              np_to_int_pointer(face_vtx_idx),
+                                              np_to_int_pointer(face_vtx),
+                                              np_to_gnum_pointer(face_ln_to_gn),
+                                              np_to_int_pointer(cell_face_idx),
+                                              np_to_int_pointer(cell_face),
+                                              np_to_gnum_pointer(cell_ln_to_gn),
+                                              PDM_OWNERSHIP_USER)
+
 
 
     # ------------------------------------------------------------------------
