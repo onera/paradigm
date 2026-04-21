@@ -598,9 +598,122 @@ module pdm_part_comm_graph
 
 
 
+  subroutine PDM_part_comm_graph_exch_init(pcg,         &
+                                           k_comm,      &
+                                           t_stride,    &
+                                           cst_stride,  &
+                                           send_stride, &
+                                           send_data,   &
+                                           recv_stride, &
+                                           recv_data,   &
+                                           request)
+    ! Prepare a series of persistent exchanges
+    implicit none
+
+    type(c_ptr),               intent(in)  :: pcg         ! PDM_part_comm_graph_t instance
+    integer,                   intent(in)  :: k_comm      ! Kind of MPI communication
+    integer,                   intent(in)  :: t_stride    ! Type of stride
+    integer,                   intent(in)  :: cst_stride  ! Constant stride
+    type(pdm_pointer_array_t), pointer     :: send_stride ! Stride of send data
+    type(pdm_pointer_array_t), pointer     :: send_data   ! Send data
+    type(pdm_pointer_array_t), pointer     :: recv_stride ! Stride of recv data
+    type(pdm_pointer_array_t), pointer     :: recv_data   ! Recv data
+    integer,                   intent(out) :: request     ! Request ID
+
+    integer(c_size_t)                      :: c_s_data
+    type(c_ptr)                            :: c_send_stride
+    type(c_ptr)                            :: c_recv_stride
+    type(c_ptr)                            :: c_recv_data
+
+    interface
+      function pdm_part_comm_graph_exch_init_cf(pcg,         &
+                                                k_comm,      &
+                                                s_data,      &
+                                                t_stride,    &
+                                                cst_stride,  &
+                                                send_stride, &
+                                                send_data,   &
+                                                recv_stride, &
+                                                recv_data)   &
+      result (request)                                       &
+      bind(c, name="PDM_part_comm_graph_exch_init")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),       value :: pcg
+        integer(c_int),    value :: k_comm
+        integer(c_size_t), value :: s_data
+        integer(c_int),    value :: t_stride
+        integer(c_int),    value :: cst_stride
+        type(c_ptr),       value :: send_stride
+        type(c_ptr),       value :: send_data
+        type(c_ptr)              :: recv_stride
+        type(c_ptr)              :: recv_data
+        integer(c_int)           :: request
+      end function pdm_part_comm_graph_exch_init_cf
+    end interface
+
+    c_s_data = send_data%s_data
+
+    c_send_stride = C_NULL_PTR
+    if (associated(send_stride)) then
+      c_send_stride = c_loc(send_stride%cptr)
+    endif
+
+    c_recv_stride = C_NULL_PTR
+    c_recv_data   = C_NULL_PTR
+
+    request = pdm_part_comm_graph_exch_init_cf(pcg,                   &
+                                               k_comm,                &
+                                               c_s_data,              &
+                                               t_stride,              &
+                                               cst_stride,            &
+                                               c_send_stride,         &
+                                               c_loc(send_data%cptr), &
+                                               c_recv_stride,         &
+                                               c_recv_data)
+
+    call setup_recv_pa(pcg,              &
+                       t_stride,         &
+                       cst_stride,       &
+                       send_data%type,   &
+                       send_data%s_data, &
+                       c_recv_stride,    &
+                       c_recv_data,      &
+                       recv_stride,      &
+                       recv_data)
+
+  end subroutine PDM_part_comm_graph_exch_init
+
+
+
+  subroutine PDM_part_comm_graph_exch_start(pcg,     &
+                                            request)
+    ! Start a non-blocking persistent exchange
+    implicit none
+
+    type(c_ptr), intent(in) :: pcg     ! PDM_part_comm_graph_t instance
+    integer,     intent(in) :: request ! Request ID
+
+    interface
+      subroutine pdm_part_comm_graph_exch_start_cf(pcg,     &
+                                                   request) &
+      bind(c, name="PDM_part_comm_graph_exch_start")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: request
+      end subroutine pdm_part_comm_graph_exch_start_cf
+    end interface
+
+    call pdm_part_comm_graph_exch_start_cf(pcg, request)
+
+  end subroutine PDM_part_comm_graph_exch_start
+
+
+
   subroutine PDM_part_comm_graph_exch_wait(pcg,     &
                                            request)
-    ! Wait for a non-blocking exchange to finish
+    ! Wait for a non-blocking (possibly persistent) exchange to finish
     implicit none
 
     type(c_ptr), intent(in) :: pcg     ! PDM_part_comm_graph_t instance
@@ -617,10 +730,34 @@ module pdm_part_comm_graph
       end subroutine pdm_part_comm_graph_exch_wait_cf
     end interface
 
-    call pdm_part_comm_graph_exch_wait_cf(pcg,     &
-                                          request)
+    call pdm_part_comm_graph_exch_wait_cf(pcg, request)
 
   end subroutine PDM_part_comm_graph_exch_wait
+
+
+
+  subroutine PDM_part_comm_graph_exch_free(pcg,     &
+                                           request)
+    ! Free a persistent exchange
+    implicit none
+
+    type(c_ptr), intent(in) :: pcg     ! PDM_part_comm_graph_t instance
+    integer,     intent(in) :: request ! Request ID
+
+    interface
+      subroutine pdm_part_comm_graph_exch_free_cf(pcg,     &
+                                                  request) &
+      bind(c, name="PDM_part_comm_graph_exch_free")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: request
+      end subroutine pdm_part_comm_graph_exch_free_cf
+    end interface
+
+    call pdm_part_comm_graph_exch_free_cf(pcg, request)
+
+  end subroutine PDM_part_comm_graph_exch_free
 
 
 

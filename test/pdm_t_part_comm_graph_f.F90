@@ -96,7 +96,7 @@ program test_part_comm_graph
   real(8)                                :: expected, diff
   integer                                :: request
   type(pdm_pointer_array_t), pointer     :: part_data
-  integer                                :: i, j, i_entity, i_try
+  integer                                :: i, j, i_entity, i_exch, j_exch
   !--------------------------------------------------------------
 
   verbose = .false.
@@ -281,10 +281,13 @@ program test_part_comm_graph
                                     parts(i_part)%send_data)
   enddo
 
-  ! Two rounds of echanges (blocking, then non-blocking)
-  do i_try = 1, 2
+  ! Three rounds of echanges (blocking, then non-blocking, then persistent)
+  do i_exch = 1, 3
 
-    if (i_try == 1) then
+    if (i_exch == 1) then
+      if (verbose) then
+        write (funit, *) "Blocking exchange"
+      endif
       ! Blocking exchange
       call pdm_part_comm_graph_exch(pcg,                       &
                                     PDM_STRIDE_CST_INTERLACED, &
@@ -293,7 +296,11 @@ program test_part_comm_graph
                                     send_data,                 &
                                     recv_stride,               &
                                     recv_data)
-    else
+
+    else if (i_exch == 2) then
+      if (verbose) then
+        write (funit, *) "Non-blocking exchange"
+      endif
       ! Initiate non-blocking exchange
       call pdm_part_comm_graph_iexch(pcg,                       &
                                      PDM_MPI_COMM_KIND_P2P,     &
@@ -305,8 +312,39 @@ program test_part_comm_graph
                                      recv_data,                 &
                                      request)
 
+      ! Do stuff here to cover MPI communications...
+
       ! Wait for exchange to finish
       call pdm_part_comm_graph_exch_wait(pcg, request)
+
+    else
+      if (verbose) then
+        write (funit, *) "Persistent exchange"
+      endif
+      ! Prepare persistent exchange
+      call pdm_part_comm_graph_exch_init(pcg,                       &
+                                         PDM_MPI_COMM_KIND_P2P,     &
+                                         PDM_STRIDE_CST_INTERLACED, &
+                                         stride,                    &
+                                         send_stride,               &
+                                         send_data,                 &
+                                         recv_stride,               &
+                                         recv_data,                 &
+                                         request)
+
+      ! We can use the same persistent channel multiple times (with the same send/recv buffers)
+      do j_exch = 1, 2
+        ! Start exchange
+        call pdm_part_comm_graph_exch_start(pcg, request)
+
+        ! Do stuff here to cover MPI communications...
+
+        ! Wait for exchange to finish
+        call pdm_part_comm_graph_exch_wait(pcg, request)
+      enddo
+
+      ! Free the persistent exchange
+      call pdm_part_comm_graph_exch_free(pcg, request)
     endif
 
 

@@ -155,15 +155,15 @@ PDM_part_comm_graph_exch
 int
 PDM_part_comm_graph_iexch
 (
- PDM_part_comm_graph_t   *pcg,
- PDM_mpi_comm_kind_t      kcomm,
- size_t                   s_data,
- PDM_stride_t             t_stride,
- int                      cst_stride,
- int                    **send_entity_stride,
- void                   **send_entity_data,
- int                   ***recv_entity_stride,
- void                  ***recv_entity_data
+  PDM_part_comm_graph_t   *pcg,
+  PDM_mpi_comm_kind_t      kcomm,
+  size_t                   s_data,
+  PDM_stride_t             t_stride,
+  int                      cst_stride,
+  int                    **send_entity_stride,
+  void                   **send_entity_data,
+  int                   ***recv_entity_stride,
+  void                  ***recv_entity_data
 );
 
 /**
@@ -187,15 +187,15 @@ PDM_part_comm_graph_iexch
 int
 PDM_part_comm_graph_exch_init
 (
- PDM_part_comm_graph_t   *pcg,
- PDM_mpi_comm_kind_t      kcomm,
- size_t                   s_data,
- PDM_stride_t             t_stride,
- int                      cst_stride,
- int                    **send_entity_stride,
- void                   **send_entity_data,
- int                   ***recv_entity_stride,
- void                  ***recv_entity_data
+  PDM_part_comm_graph_t   *pcg,
+  PDM_mpi_comm_kind_t      kcomm,
+  size_t                   s_data,
+  PDM_stride_t             t_stride,
+  int                      cst_stride,
+  int                    **send_entity_stride,
+  void                   **send_entity_data,
+  int                   ***recv_entity_stride,
+  void                  ***recv_entity_data
 );
 
 /**
