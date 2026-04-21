@@ -365,10 +365,9 @@ program test_part_comm_graph
                                     parts(i_part)%data)
   enddo
 
-  call pdm_part_comm_graph_all_reduce(pcg,        &
-                                      MPI_DOUBLE, &
-                                      stride,     &
-                                      MPI_MAX,    &
+  call pdm_part_comm_graph_all_reduce(pcg,       &
+                                      stride,    &
+                                      MPI_MAX,   &
                                       part_data)
 
   if (verbose) then

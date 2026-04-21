@@ -6,7 +6,6 @@ module pdm_part_comm_graph
   use pdm
   use pdm_pointer_array
 
-  implicit none
 
   interface
 
@@ -374,15 +373,19 @@ module pdm_part_comm_graph
 
 
   subroutine PDM_part_comm_graph_all_reduce(pcg,    &
-                                            datatype, &
                                             stride, &
                                             op,     &
                                             pdata)
     ! Inplace reduction value on current graph. Allow synchronization.
     ! Only MPI_DOUBLE and MPI_INT data types are supported
+#ifdef PDM_HAVE_FORTRAN_MPI_MODULE
+    use mpi
+#endif
     implicit none
+#ifndef PDM_HAVE_FORTRAN_MPI_MODULE
+    include "mpif.h"
+#endif
     type(c_ptr),               intent(in) :: pcg    ! PDM_part_comm_graph_t instance
-    integer,                   intent(in) :: datatype ! Data type (MPI_INT/MPI_DOUBLE)
     integer,                   intent(in) :: stride ! Constant stride
     integer,                   intent(in) :: op     ! Reduction operation kind (MPI_SUM/MPI_MIN/MPI_MAX)
     type(pdm_pointer_array_t), pointer    :: pdata  ! Buffer of data to synchronise (size = n_entity)
@@ -407,16 +410,14 @@ module pdm_part_comm_graph
       end subroutine
     end interface
 
-    ! if (pdata%type == PDM_TYPE_INT) then
-    !   c_datatype = PDM_MPI_Type_f2c(MPI_INT)
-    ! else if (pdata%type == PDM_TYPE_DOUBLE) then
-    !   c_datatype = PDM_MPI_Type_f2c(MPI_DOUBLE)
-    ! else
-    !   print *, "PDM_part_comm_graph_all_reduce: data type ", datatype, " is not supported"
-    !   stop
-    ! end if
-
-    c_datatype = PDM_MPI_Type_f2c(datatype)
+    if (pdata%type == PDM_TYPE_INT) then
+      c_datatype = PDM_MPI_Type_f2c(MPI_INT)
+    else if (pdata%type == PDM_TYPE_DOUBLE) then
+      c_datatype = PDM_MPI_Type_f2c(MPI_DOUBLE)
+    else
+      print *, "PDM_part_comm_graph_all_reduce: data type ", pdata%type, " is not supported"
+      stop
+    end if
 
     c_op = PDM_MPI_Op_f2c(op)
 
@@ -427,6 +428,7 @@ module pdm_part_comm_graph
                                            c_loc(pdata%cptr))
 
   end subroutine PDM_part_comm_graph_all_reduce
+
 
 
   subroutine PDM_part_comm_graph_exch(pcg,         &
@@ -669,7 +671,7 @@ module pdm_part_comm_graph
 
 
 
-
+  ! --- Auxiliary procedures ---
 
   subroutine setup_recv_pa(pcg,           &
                            t_stride,      &
