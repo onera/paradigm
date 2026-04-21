@@ -42,6 +42,9 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "%s : Invalid i_part (%d / %d)\n", __func__, (i_part), (pcg)->n_part); \
   }
 
+#define INVALID_T_STRIDE(t_stride) \
+  PDM_error(__FILE__, __LINE__, 0, "%s: wrong t_stride %d\n", __func__, (t_stride));
+
 /*============================================================================
  * Type
  *============================================================================*/
@@ -1005,7 +1008,7 @@ PDM_part_comm_graph_exch
                     recv_entity_data);
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch, wrong t_stride \n");
+    INVALID_T_STRIDE(t_stride)
   }
 
 }
@@ -1082,7 +1085,9 @@ PDM_part_comm_graph_iexch
       pcg->exch_h->p_recv_stride[request_id] = (*recv_entity_stride);
     }
     pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
-  } else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+  }
+
+  else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
 
     int  *send_stride = NULL;
     _allocate_send_strid(pcg, &send_stride);
@@ -1135,7 +1140,7 @@ PDM_part_comm_graph_iexch
     request_id = PDM_exchange_helper_iexch(pcg->exch_h,
                                            kcomm,
                                            s_data,
-                                           1, //
+                                           1,
                                            send_data_idx,
                                            send_data_n,
                                            send_buffer,
@@ -1167,8 +1172,9 @@ PDM_part_comm_graph_iexch
     pcg->exch_h->p_recv_stride  [request_id] = (*recv_entity_stride);
     pcg->exch_h->p_recv_data    [request_id] = (*recv_entity_data);
 
-  } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_iexch, wrong t_stride \n");
+  }
+  else {
+    INVALID_T_STRIDE(t_stride)
   }
 
   PDM_MPI_Type_free(&mpi_type);
@@ -1214,8 +1220,8 @@ PDM_part_comm_graph_exch_init
                                                pcg->recv_n,
                                                recv_buffer);
 
-    pcg->exch_h->send_buffer  [request_id] = send_buffer;
-    pcg->exch_h->recv_buffer  [request_id] = recv_buffer;
+    pcg->exch_h->send_buffer[request_id] = send_buffer;
+    pcg->exch_h->recv_buffer[request_id] = recv_buffer;
 
     unsigned char **_recv_entity_data = NULL;
     _allocate_recv_strid_cst(pcg, s_data, cst_stride, &_recv_entity_data);
@@ -1227,10 +1233,12 @@ PDM_part_comm_graph_exch_init
     pcg->exch_h->p_send_stride[request_id] = send_entity_stride;
     pcg->exch_h->p_send_data  [request_id] = send_entity_data;
     pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
-  } else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch_init, not yet implemented for variable stride \n");
-  } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_iexch, wrong t_stride \n");
+  }
+  else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+    PDM_error(__FILE__, __LINE__, 0, "%s: not yet implemented for variable stride\n, __func__");
+  }
+  else {
+    INVALID_T_STRIDE(t_stride)
   }
 
   return request_id;
@@ -1254,10 +1262,10 @@ PDM_part_comm_graph_exch_start
                          pcg->exch_h->send_buffer[request_id]);
   }
   else if (pcg->exch_h->t_stride[request_id] == PDM_STRIDE_VAR_INTERLACED) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch_start, PDM_STRIDE_VAR_INTERLACED not implemented \n");
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_STRIDE_VAR_INTERLACED not implemented\n", __func__);
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch_start, wrong t_stride \n");
+    INVALID_T_STRIDE(pcg->exch_h->t_stride[request_id])
   }
 
   PDM_exchange_helper_exch_start(pcg->exch_h, request_id);
@@ -1301,7 +1309,7 @@ PDM_part_comm_graph_exch_wait
 
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch_wait, wrong t_stride \n");
+    INVALID_T_STRIDE(pcg->exch_h->t_stride[request_id])
   }
 
   if(pcg->exch_h->is_persistent[request_id] == 0) {
@@ -1669,8 +1677,8 @@ PDM_part_comm_graph_gather_strided_data
   if(t_stride == PDM_STRIDE_VAR_INTERLACED) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_gather_strided_data: PDM_STRIDE_VAR_INTERLACED not implemented \n");
   }
-  else if(t_stride != PDM_STRIDE_CST_INTERLACED) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_gather_strided_data: wrong t_stride\n");
+  else if (t_stride != PDM_STRIDE_CST_INTERLACED) {
+    INVALID_T_STRIDE(t_stride)
   }
 
   int n_part = pcg->n_part;
