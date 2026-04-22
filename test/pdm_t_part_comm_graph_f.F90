@@ -86,6 +86,7 @@ program test_part_comm_graph
   integer                                :: i_part
 
   type(c_ptr)                            :: pcg
+  integer(pdm_l_num_s),      pointer     :: is_owner(:)
 
   integer                                :: stride
   type(pdm_pointer_array_t), pointer     :: send_stride
@@ -96,7 +97,7 @@ program test_part_comm_graph
   real(8)                                :: expected, diff
   integer                                :: request
   type(pdm_pointer_array_t), pointer     :: part_data
-  integer                                :: i, j, i_entity, i_exch, j_exch
+  integer                                :: i, j, i_entity, i_exch
   !--------------------------------------------------------------
 
   verbose = .false.
@@ -227,8 +228,35 @@ program test_part_comm_graph
                                   comm)
   !----------------------------------------
 
+
   !----------------------------------------
-  ! Exchange data
+  ! Inspect owners/ghosts
+  if (verbose) then
+    write (funit, *) "OWNER"
+  endif
+
+  do i_part = 1, n_part
+    call pdm_part_comm_graph_owner_get(pcg,      &
+                                       i_part-1, &
+                                       is_owner)
+
+    if (.not.check_owners(i_rank, i_part, is_owner)) then
+      print *, "Error, incorrect `is_owner` for rank", i_rank, " part", i_part
+      stop
+    endif
+
+    if (verbose) then
+      write (funit, *) "part ", i_part
+      do i = 1, pn_entity_graph(i_part)
+        write (funit, *) "  ", parts(i_part)%entity_graph(4*(i-1)+1), " : ", is_owner(i)
+      enddo
+    endif
+  enddo
+  !----------------------------------------
+
+
+  !----------------------------------------
+  ! Exchange constant-stride data
   stride = 2
   nullify(send_stride, &
           send_data,   &
@@ -257,32 +285,32 @@ program test_part_comm_graph
     enddo
 
 
-    ! Data for entities on partition boundary
+    ! Allocate data for entities on partition boundary
     if (verbose) then
       write (funit, *) "part ", i_part
     endif
 
     allocate(parts(i_part)%send_data(pn_entity_graph(i_part) * stride))
-    do i = 1, pn_entity_graph(i_part)
-      i_entity = parts(i_part)%entity_graph(4*(i-1)+1)
-      do j = 1, stride
-        parts(i_part)%send_data((i-1)*stride+j) = parts(i_part)%data((i_entity-1)*stride+j)
-      enddo
-
-      if (verbose) then
-        write (funit, *) i_entity, i_rank, i_part
-        write (funit, *) "     ", parts(i_part)%send_data((i-1)*stride+1:i*stride)
-      endif
-
-    enddo
-
     call pdm_pointer_array_part_set(send_data,               &
                                     i_part-1,                &
                                     parts(i_part)%send_data)
   enddo
 
-  ! Three rounds of echanges (blocking, then non-blocking, then persistent)
-  do i_exch = 1, 3
+  ! Four rounds of echanges (blocking, then non-blocking, then persistent (twice))
+  do i_exch = 1, 4
+
+    ! Prepare send_data (multiply part_data) by i_exch
+    do i_part = 1, n_part
+      call pdm_pointer_array_part_get(send_data, &
+                                      i_part-1,  &
+                                      data)
+       do i = 1, pn_entity_graph(i_part)
+        i_entity = parts(i_part)%entity_graph(4*(i-1)+1)
+        do j = 1, stride
+          data((i-1)*stride+j) = i_exch * parts(i_part)%data((i_entity-1)*stride+j)
+        enddo
+      enddo
+    enddo
 
     if (i_exch == 1) then
       if (verbose) then
@@ -321,30 +349,34 @@ program test_part_comm_graph
       if (verbose) then
         write (funit, *) "Persistent exchange"
       endif
-      ! Prepare persistent exchange
-      call pdm_part_comm_graph_exch_init(pcg,                       &
-                                         PDM_MPI_COMM_KIND_P2P,     &
-                                         PDM_STRIDE_CST_INTERLACED, &
-                                         stride,                    &
-                                         send_stride,               &
-                                         send_data,                 &
-                                         recv_stride,               &
-                                         recv_data,                 &
-                                         request)
+
+      if (i_exch == 3) then
+        ! Prepare persistent exchange
+        call pdm_part_comm_graph_exch_init(pcg,                       &
+                                           PDM_MPI_COMM_KIND_P2P,     &
+                                           PDM_STRIDE_CST_INTERLACED, &
+                                           stride,                    &
+                                           send_stride,               &
+                                           send_data,                 &
+                                           recv_stride,               &
+                                           recv_data,                 &
+                                           request)
+      endif
 
       ! We can use the same persistent channel multiple times (with the same send/recv buffers)
-      do j_exch = 1, 2
-        ! Start exchange
-        call pdm_part_comm_graph_exch_start(pcg, request)
 
-        ! Do stuff here to cover MPI communications...
+      ! Start exchange
+      call pdm_part_comm_graph_exch_start(pcg, request)
 
-        ! Wait for exchange to finish
-        call pdm_part_comm_graph_exch_wait(pcg, request)
-      enddo
+      ! Do stuff here to cover MPI communications...
 
-      ! Free the persistent exchange
-      call pdm_part_comm_graph_exch_free(pcg, request)
+      ! Wait for exchange to finish
+      call pdm_part_comm_graph_exch_wait(pcg, request)
+
+      if (i_exch == 4) then
+        ! Free the persistent exchange
+        call pdm_part_comm_graph_exch_free(pcg, request)
+      endif
     endif
 
 
@@ -375,10 +407,11 @@ program test_part_comm_graph
                       10.0d0*parts(i_part)%entity_graph(4*(i-1)+2) + &
                        1.0d0*parts(i_part)%entity_graph(4*(i-1)+3) + &
                        0.1d0*(j-1)
+          expected = expected * i_exch
 
           diff = abs(data((i-1)*stride+j) - expected)
           if (diff > 1.e-9) then
-            print *, "Error : (", i_rank, i_part, i, j, ") expected ", expected, " but received ", data((i-1)*stride+j), " from", parts(i_part)%entity_graph(4*(i-1)+2:4*i)
+            print *, "Error i_exch", i_exch, ": (", i_rank, i_part, i, j, ") expected ", expected, " but received ", data((i-1)*stride+j), " from", parts(i_part)%entity_graph(4*(i-1)+2:4*i)
             stop
           endif
 
@@ -386,7 +419,9 @@ program test_part_comm_graph
       enddo
     enddo
 
-    call pdm_pointer_array_free(recv_data)
+    if (i_exch /= 3) then
+      call pdm_pointer_array_free(recv_data)
+    endif
   enddo
   !----------------------------------------
 
@@ -449,6 +484,69 @@ program test_part_comm_graph
   endif
 
   call mpi_finalize(err)
+
+
+
+  contains
+
+
+  function check_array_eq(a, b, n) &
+  result (equal)
+
+    implicit none
+    integer(pdm_l_num_s) :: a(:)
+    integer(pdm_l_num_s) :: b(:)
+    integer              :: n
+    logical              :: equal
+    integer              :: i
+
+    equal = .true.
+    do i = 1, n
+      if (a(i) /= b(i)) then
+        equal = .false.
+        print *, ""
+        return
+      endif
+    enddo
+
+  end function check_array_eq
+
+
+
+  function check_owners(i_rank, i_part, is_owner) &
+  result (ok)
+
+    implicit none
+
+    integer              :: i_rank
+    integer              :: i_part
+    integer(pdm_l_num_s) :: is_owner(:)
+    logical              :: ok
+    integer(pdm_l_num_s) :: exp_is_owner_01(10)
+    integer(pdm_l_num_s) :: exp_is_owner_02(7)
+    integer(pdm_l_num_s) :: exp_is_owner_11(6)
+    integer(pdm_l_num_s) :: exp_is_owner_12(7)
+
+    exp_is_owner_01 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    exp_is_owner_02 = [0, 0, 0, 0, 0, 0, 1]
+    exp_is_owner_11 = [0, 0, 0, 0, 1, 1]
+    exp_is_owner_12 = [0, 0, 0, 0, 0, 0, 0]
+
+    if (i_rank == 0) then
+      if (i_part == 1) then
+        ok = check_array_eq(is_owner, exp_is_owner_01, size(exp_is_owner_01))
+      else
+        ok = check_array_eq(is_owner, exp_is_owner_02, size(exp_is_owner_02))
+      endif
+    else
+      if (i_part == 1) then
+        ok = check_array_eq(is_owner, exp_is_owner_11, size(exp_is_owner_11))
+      else
+        ok = check_array_eq(is_owner, exp_is_owner_12, size(exp_is_owner_12))
+      endif
+    endif
+
+  end function
 
 
 end program test_part_comm_graph

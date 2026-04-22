@@ -340,17 +340,17 @@ module pdm_part_comm_graph
 
 
 
-  subroutine PDM_part_comm_graph_owner_get(pcg,    &
-                                           i_part, &
-                                           owner)
+  subroutine PDM_part_comm_graph_owner_get(pcg,      &
+                                           i_part,   &
+                                           is_owner)
     ! Get the owner array computed inside the structure, useful to manage reduction of array for example
     implicit none
-    type(c_ptr),                   intent(in)  :: pcg      ! PDM_part_comm_graph_t instance
-    integer,                       intent(in)  :: i_part   ! Partition identifier
-    integer(pdm_l_num_s), pointer, intent(out) :: owner(:) ! Owner status (size = n_entity_graph)
+    type(c_ptr),                   intent(in)  :: pcg         ! PDM_part_comm_graph_t instance
+    integer,                       intent(in)  :: i_part      ! Partition identifier
+    integer(pdm_l_num_s), pointer, intent(out) :: is_owner(:) ! Owner status (size = n_entity_graph)
 
     integer(c_int)                             :: n_entity
-    type(c_ptr)                                :: c_owner
+    type(c_ptr)                                :: c_is_owner
 
     interface
       function pdm_part_comm_graph_owner_get_cf(pcg, i_part) result(res) &
@@ -364,9 +364,9 @@ module pdm_part_comm_graph
 
     n_entity = pdm_part_comm_graph_n_entity_get_cf(pcg, i_part)
 
-    c_owner = pdm_part_comm_graph_owner_get_cf(pcg, i_part)
+    c_is_owner = pdm_part_comm_graph_owner_get_cf(pcg, i_part)
 
-    call c_f_pointer(c_owner, owner, [n_entity])
+    call c_f_pointer(c_is_owner, is_owner, [n_entity])
 
   end subroutine PDM_part_comm_graph_owner_get
 
