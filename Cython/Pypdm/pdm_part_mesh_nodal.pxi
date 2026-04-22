@@ -468,7 +468,7 @@ cdef class PartMeshNodal:
                                               np_to_int_pointer(face_edge_idx),
                                               np_to_int_pointer(face_edge),
                                               np_to_gnum_pointer(face_ln_to_gn),
-                                              PDM_OWNERSHIP_USER)
+                                              PDM_OWNERSHIP_KEEP)
       
     # ------------------------------------------------------------------------
     def set_sections_from_cell_face(self,
@@ -510,7 +510,7 @@ cdef class PartMeshNodal:
                                               np_to_int_pointer(cell_face_idx),
                                               np_to_int_pointer(cell_face),
                                               np_to_gnum_pointer(cell_ln_to_gn),
-                                              PDM_OWNERSHIP_USER)
+                                              PDM_OWNERSHIP_KEEP)
 
 
 
