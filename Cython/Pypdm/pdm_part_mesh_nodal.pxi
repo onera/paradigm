@@ -319,38 +319,44 @@ cdef class PartMeshNodal:
                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] parent_num,
                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent_entity_g_num,
                     int                                           n_elemts):
-        """
-        set_section(id_section, id_part, elmt_vtx, numabs, parent_num, parent_entity_g_num, n_elemts)
+      # NB :: deprecated in favor of set_std_section
+      return self.set_std_section(id_section, id_part, elmt_vtx, numabs, parent_num, parent_entity_g_num)
 
-        For id_section and id_part, set the element connectivity and the associated parent_num
+    # ------------------------------------------------------------------------
+    def set_std_section(self,
+                        int                                           id_section,
+                        int                                           id_part,
+                        NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elmt_vtx,
+                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs,
+                        NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] parent_num,
+                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent_entity_g_num):
+      """
+      For id_section and id_part, set the element connectivity and the associated parent_num
 
-        Parameters:
-          id_section (int)                          : id of the section (return by add_section)
-          id_part    (int)                          : id of the part (max = n_part)
-          elmt_vtx   (`np.ndarray[np.int32_t]`)     : Element connectivity
-          numabs     (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
-          parent_num (`np.ndarray[np.int32_t]`)     : Correspondence table with a PartMesh (if any, else None)
-          parent_entity_g_num (`np.ndarray[npy_pdm_gnum_t]`) : Parent global numbering
-          n_elemts   (int)                          : Number of elements in section
-        """
-        # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        self.keep_alive.append(elmt_vtx)
-        self.keep_alive.append(numabs)
-        self.keep_alive.append(parent_num)
-        self.keep_alive.append(parent_entity_g_num)
-        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+      Parameters:
+        id_section (int)                          : id of the section (return by add_section)
+        id_part    (int)                          : id of the part (max = n_part)
+        elmt_vtx   (`np.ndarray[np.int32_t]`)     : Element connectivity
+        numabs     (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
+        parent_num (`np.ndarray[np.int32_t]`)     : Correspondence table with a PartMesh (if any, else None)
+        parent_entity_g_num (`np.ndarray[npy_pdm_gnum_t]`) : Parent global numbering
+      """
 
-        # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        PDM_part_mesh_nodal_section_std_set(self.pmn,
-                                            id_section,
-                                            id_part,
-                                            n_elemts,
-                                            np_to_int_pointer(elmt_vtx),
-                                            np_to_gnum_pointer(numabs),
-                                            np_to_int_pointer(parent_num),
-                                            np_to_gnum_pointer(parent_entity_g_num),
-                                            PDM_OWNERSHIP_USER)
-        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+      self.keep_alive.extend([elmt_vtx, numabs, parent_num, parent_entity_g_num])
+
+      cdef PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(self.pmn, id_section)
+      n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1)
+
+      cdef int n_elemts = elmt_vtx.size // n_vtx_per_elmt
+      PDM_part_mesh_nodal_section_std_set(self.pmn,
+                                          id_section,
+                                          id_part,
+                                          n_elemts,
+                                          np_to_int_pointer(elmt_vtx),
+                                          np_to_gnum_pointer(numabs),
+                                          np_to_int_pointer(parent_num),
+                                          np_to_gnum_pointer(parent_entity_g_num),
+                                          PDM_OWNERSHIP_USER)
 
     # ------------------------------------------------------------------------
     def set_poly2d_section(self,
