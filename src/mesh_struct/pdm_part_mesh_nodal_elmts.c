@@ -3888,9 +3888,9 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
 
 
   // Add sections
-  int id_tria;
-  int id_quad;
-  int id_poly;
+  int id_tria = -1;
+  int id_quad = -1;
+  int id_poly = -1;
   if (we_have_elts[0] > 0) {
     id_tria = PDM_part_mesh_nodal_elmts_add(pmne, PDM_MESH_NODAL_TRIA3);
   }
