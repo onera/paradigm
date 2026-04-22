@@ -786,6 +786,51 @@ module pdm_part_comm_graph
   end subroutine PDM_part_comm_graph_reorder
 
 
+  subroutine PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pcg_entity1,         &
+                                                                    pn_entity1,          &
+                                                                    pn_entity2,          &
+                                                                    entity2_entity1_idx, &
+                                                                    entity2_entity1,     &
+                                                                    pcg_entity2)
+    ! Create Part Comm Graph for entity2 from entity2->entity1 link and Part Comm Graph for entity1
+    implicit none
+
+    type(c_ptr),                        intent(in)  :: pcg_entity1
+    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity1(:)
+    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity2(:)
+    type(pdm_pointer_array_t), pointer, intent(in)  :: entity2_entity1_idx
+    type(pdm_pointer_array_t), pointer, intent(in)  :: entity2_entity1
+    type(c_ptr),                        intent(out) :: pcg_entity2
+
+    interface
+      subroutine pdm_part_comm_graph_entity1_to_part_comm_graph_entity2_cf(pcg_entity1,         &
+                                                                           pn_entity1,          &
+                                                                           pn_entity2,          &
+                                                                           entity2_entity1_idx, &
+                                                                           entity2_entity1,     &
+                                                                           pcg_entity2)         &
+      bind(c, name="PDM_part_comm_graph_entity1_to_part_comm_graph_entity2")
+        use iso_c_binding
+        implicit none
+        type(c_ptr), value :: pcg_entity1
+        type(c_ptr), value :: pn_entity1
+        type(c_ptr), value :: pn_entity2
+        type(c_ptr), value :: entity2_entity1_idx
+        type(c_ptr), value :: entity2_entity1
+        type(c_ptr)        :: pcg_entity2
+      end subroutine pdm_part_comm_graph_entity1_to_part_comm_graph_entity2_cf
+    end interface
+
+    call pdm_part_comm_graph_entity1_to_part_comm_graph_entity2_cf(pcg_entity1,                     &
+                                                                   c_loc(pn_entity1),               &
+                                                                   c_loc(pn_entity2),               &
+                                                                   c_loc(entity2_entity1_idx%cptr), &
+                                                                   c_loc(entity2_entity1%cptr),     &
+                                                                   pcg_entity2)
+
+  end subroutine PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
+
+
 
   subroutine PDM_part_comm_graph_free(pcg)
     ! Free a PDM_part_comm_graph instance

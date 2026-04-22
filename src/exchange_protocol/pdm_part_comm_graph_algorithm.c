@@ -78,12 +78,12 @@ _compare_nuplets
 void
 PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
 (
-  PDM_part_comm_graph_t   *ptpgc_entity1,
+  PDM_part_comm_graph_t   *pcg_entity1,
   int                     *pn_entity1,
   int                     *pn_entity2,
   int                    **entity2_entity1_idx,
   int                    **entity2_entity1,
-  PDM_part_comm_graph_t  **out_ptpgc_entity2
+  PDM_part_comm_graph_t  **out_pcg_entity2
 )
 {
 
@@ -91,12 +91,12 @@ PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
   int **pentity2_graph   = NULL;
   int **pentity2_nuplet  = NULL;
 
-  PDM_part_comm_graph_entity1_to_entity2(ptpgc_entity1->comm,
-                                         ptpgc_entity1->n_part,
-                                         ptpgc_entity1->n_entity_graph,
-                                         ptpgc_entity1->pentity_graph,
-                                         ptpgc_entity1->nuplet_size,
-                                         ptpgc_entity1->pentity_nuplet,
+  PDM_part_comm_graph_entity1_to_entity2(pcg_entity1->comm,
+                                         pcg_entity1->n_part,
+                                         pcg_entity1->n_entity_graph,
+                                         pcg_entity1->pentity_graph,
+                                         pcg_entity1->nuplet_size,
+                                         pcg_entity1->pentity_nuplet,
                                          pn_entity1,
                                          pn_entity2,
                                          entity2_entity1_idx,
@@ -105,30 +105,31 @@ PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
                                          &pentity2_graph,
                                          &pentity2_nuplet);
 
-  PDM_part_comm_graph_t* ptpgc_entity2 = NULL;
-  if(ptpgc_entity1->nuplet_size == 0) {
-    ptpgc_entity2 = PDM_part_comm_graph_create(ptpgc_entity1->n_part,
-                                               pn_entity2_graph,
-                                               pentity2_graph,
-                                               PDM_OWNERSHIP_KEEP,
-                                               ptpgc_entity1->comm);
-  } else {
-    ptpgc_entity2 = PDM_part_comm_graph_with_nuplet_create(ptpgc_entity1->n_part,
-                                                           pn_entity2_graph,
-                                                           pentity2_graph,
-                                                           PDM_OWNERSHIP_KEEP,
-                                                           ptpgc_entity1->nuplet_size,
-                                                           pentity2_nuplet,
-                                                           PDM_OWNERSHIP_KEEP,
-                                                           PDM_TRUE, // is_signed
-                                                           ptpgc_entity1->comm);
+  PDM_part_comm_graph_t* pcg_entity2 = NULL;
+  if(pcg_entity1->nuplet_size == 0) {
+    pcg_entity2 = PDM_part_comm_graph_create(pcg_entity1->n_part,
+                                             pn_entity2_graph,
+                                             pentity2_graph,
+                                             PDM_OWNERSHIP_KEEP,
+                                             pcg_entity1->comm);
+  }
+  else {
+    pcg_entity2 = PDM_part_comm_graph_with_nuplet_create(pcg_entity1->n_part,
+                                                         pn_entity2_graph,
+                                                         pentity2_graph,
+                                                         PDM_OWNERSHIP_KEEP,
+                                                         pcg_entity1->nuplet_size,
+                                                         pentity2_nuplet,
+                                                         PDM_OWNERSHIP_KEEP,
+                                                         PDM_TRUE, // is_signed
+                                                         pcg_entity1->comm);
   }
 
   PDM_free(pentity2_nuplet);
   PDM_free(pentity2_graph);
   PDM_free(pn_entity2_graph);
 
-  *out_ptpgc_entity2 = ptpgc_entity2;
+  *out_pcg_entity2 = pcg_entity2;
 }
 
 
@@ -1100,7 +1101,7 @@ PDM_part_comm_graph_filter
     PDM_free(recv_data[i_part]);
   }
   PDM_free(recv_data);
-  
+
   PDM_part_comm_graph_t* sub_pcg = NULL;
   if(pcg->nuplet_size == 0) {
     sub_pcg = PDM_part_comm_graph_create(pcg->n_part,
