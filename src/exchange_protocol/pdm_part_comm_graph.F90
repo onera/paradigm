@@ -438,7 +438,7 @@ module pdm_part_comm_graph
                                       send_data,   &
                                       recv_stride, &
                                       recv_data)
-    ! Exchange data
+    ! Exchange data using blocking communications
     implicit none
 
     type(c_ptr),               intent(in)  :: pcg         ! PDM_part_comm_graph_t instance
@@ -833,7 +833,7 @@ module pdm_part_comm_graph
 
 
   subroutine PDM_part_comm_graph_free(pcg)
-    ! Free a PDM_part_comm_graph instance
+    ! Free a Part Comm Graph instance
     implicit none
 
     type(c_ptr), intent(inout) :: pcg ! PDM_part_comm_graph_t instance
