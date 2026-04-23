@@ -39,12 +39,12 @@ Also, the communication graph *must* be symmetric.
 From this description of the communication graph, **Part Comm Graph** builds internal data structures to ease communications between entities connected in the graph.
 Multiple modes of communication are available (see the :ref:`Exchange data <pcg_exch>` dropdown in the :ref:`API <pcg_api>` section below).
 
-Owner/ghosts
+Owner status
 ~~~~~~~~~~~~
 
-For each connected component of the graph, a single entity is flagged as *owner* and the other are flagged as *ghosts*.
-This flag is determined automatically at the creation of the **Part Comm Graph** instance, and can be used in algorithms that require inter-partition synchronizations, for example.
-In the :ref:`example above <pcg_example_visu>`, the owner vertices are represented by solid dots, and the ghost vertices by circles.
+For each connected component of the graph, a single entity is flagged as *owner* (not to be confused with memory ownership !).
+This status is determined automatically at the creation of the **Part Comm Graph** instance, and can be used in algorithms that require inter-partition synchronizations, for example.
+In the :ref:`example above <pcg_example_visu>`, the owner vertices are represented by solid dots, and the "ghost" vertices by circles.
 
 
 Integration with other ParaDiGM features
@@ -159,7 +159,7 @@ API
 
   Data can be exchanged in multiple ways using a **Part Comm Graph** :
 
-  .. dropdown:: *Blocking* communications
+  .. dropdown:: Blocking communications
 
     .. tab-set::
       :sync-group: language
@@ -198,7 +198,7 @@ API
 
 
 
-  .. dropdown:: *Non-blocking* communications
+  .. dropdown:: Non-blocking communications
 
     .. tab-set::
       :sync-group: language

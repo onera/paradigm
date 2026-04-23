@@ -24,9 +24,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 
@@ -48,16 +45,16 @@ typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
 /**
  *
  * \brief Build a \ref PDM_part_comm_graph_t instance
- * \param [in]   n_part                 Number of partition on current process
- * \param [in]   pn_entity_graph        Number of bound (size = \p n_part)
- * \param [in]   pentity_graph          Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]) :
-                                            For each entity :
-                                              - entity local number (1-based)
-                                              - Connected process   (0-based)
-                                              - Connected partition on the connected process (1-based)
-                                              - Connected entity local number in the connected partition (1-based)
- * \param [in]   ownership              Ownership for \p pentity_graph
- * \param [in]   comm                   MPI communicator
+ * \param [in]   n_part          Number of partitions on current process
+ * \param [in]   pn_entity_graph Number of graph entities (size = \p n_part)
+ * \param [in]   pentity_graph   Inter-partition communication graph description (size = 4 * \p pn_entity_graph[i_part]) :
+                                   For each entity :
+                                     - Entity local ID (1-based)
+                                     - Rank of the connected process (0-based)
+                                     - Connected partition on the connected process (1-based)
+                                     - Connected entity's local ID in the connected partition (1-based)
+ * \param [in]   ownership       Ownership for \p pentity_graph
+ * \param [in]   comm            MPI communicator
 
  * \return   Initialized \ref PDM_part_comm_graph_t instance
  */
@@ -75,20 +72,20 @@ PDM_part_comm_graph_create
 /**
  *
  * \brief Build a \ref PDM_part_comm_graph_t instance using additional information represented as a n-uplet
- * \param [in]   n_part                 Number of partition on current process
- * \param [in]   pn_entity_graph        Number of bound (size = \p n_part)
- * \param [in]   pentity_graph          Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]) :
-                                            For each entity :
-                                              - entity local number (1-based)
-                                              - Connected process   (0-based)
-                                              - Connected partition on the connected process (1-based)
-                                              - Connected entity local number in the connected partition (1-based)
- * \param [in]   ownership_graph        Ownership for \p pentity_graph
- * \param [in]   nuplet_size            N-uplet size
- * \param [in]   pentity_nuplet         Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
- * \param [in]   ownership_nuplet       Ownership for \p pentity_nuplet
- * \param [in]   is_signed              Use signed nuplets
- * \param [in]   comm                   MPI communicator
+ * \param [in]   n_part           Number of partitions on current process
+ * \param [in]   pn_entity_graph  Number of graph entities (size = \p n_part)
+ * \param [in]   pentity_graph    Inter-partition communication graph description (size = 4 * \p pn_entity_graph[i_part]) :
+                                    For each entity :
+                                      - Entity local ID (1-based)
+                                      - Rank of the connected process (0-based)
+                                      - Connected partition on the connected process (1-based)
+                                      - Connected entity's local ID in the connected partition (1-based)
+ * \param [in]   ownership_graph  Ownership for \p pentity_graph
+ * \param [in]   nuplet_size      N-uplet size
+ * \param [in]   pentity_nuplet   Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
+ * \param [in]   ownership_nuplet Ownership for \p pentity_nuplet
+ * \param [in]   is_signed        Use signed nuplets?
+ * \param [in]   comm             MPI communicator
  *
  * \return   Initialized \ref PDM_part_comm_graph_t instance
  */
@@ -109,15 +106,16 @@ PDM_part_comm_graph_with_nuplet_create
 
 /**
  *
- * \brief Exchange data between graph comm with synchronous blocking exchange
- * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \brief Exchange data using two-way blocking communications.
+ *        Each graph entity sends *and* receives data.
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t instance
  * \param [in]   s_data              Data size
  * \param [in]   t_stride            Kind of stride (see \ref PDM_stride_t)
- * \param [in]   cst_stride          Constant stride
- * \param [in]   send_entity_stride  Stride of send data (following pentity_graph)
- * \param [in]   send_entity_data    Send data           (following pentity_graph)
- * \param [out]  recv_entity_stride  Stride of recv data (following pentity_graph)
- * \param [out]  recv_entity_data    Recv data           (following pentity_graph)
+ * \param [in]   cst_stride          Constant stride value
+ * \param [in]   send_entity_stride  Stride of send data
+ * \param [in]   send_entity_data    Send data
+ * \param [out]  recv_entity_stride  Stride of recv data
+ * \param [out]  recv_entity_data    Recv data
  *
  */
 void
@@ -136,18 +134,18 @@ PDM_part_comm_graph_exch
 
 /**
  *
- * \brief Start exchange data between graph comm with asyncrhonous exchange,
- *        after this call you need to use PDM_part_comm_graph_exch_start and wait.
- *        When you finish, you need to free the persistent exchange with PDM_part_comm_graph_exch_free
- * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \brief Initiate a two-way non-blocking exchange.
+ *        Each graph entity sends *and* receives data.
+ * \note  The exchange must then be finalized using \ref PDM_part_comm_graph_exch_wait.
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t instance
  * \param [in]   kcomm               Kind of MPI communication
  * \param [in]   s_data              Data size
  * \param [in]   t_stride            Kind of stride (see \ref PDM_stride_t)
- * \param [in]   cst_stride          Constant stride
- * \param [in]   send_entity_stride  Stride of send data (following pentity_graph)
- * \param [in]   send_entity_data    Send data           (following pentity_graph)
- * \param [out]  recv_entity_stride  Stride of recv data (following pentity_graph)
- * \param [out]  recv_entity_data    Recv data           (following pentity_graph)
+ * \param [in]   cst_stride          Constant stride value
+ * \param [in]   send_entity_stride  Stride of send data
+ * \param [in]   send_entity_data    Send data
+ * \param [out]  recv_entity_stride  Stride of recv data
+ * \param [out]  recv_entity_data    Recv data
  *
  * \return Request id
  *
@@ -168,18 +166,16 @@ PDM_part_comm_graph_iexch
 
 /**
  *
- * \brief Prepare exchange data between graph comm with persistent exchange,
- *        after this call you need to use PDM_part_comm_graph_exch_start and wait.
- *        When you finish, you need to free the persistent exchange with PDM_part_comm_graph_exch_free
- * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
- * \param [in]   kcomm               Kind of MPI communication
- * \param [in]   s_data              Data size
- * \param [in]   t_stride            Kind of stride (see \ref PDM_stride_t)
- * \param [in]   cst_stride          Constant stride
- * \param [in]   send_entity_stride  Stride of send data (following pentity_graph)
- * \param [in]   send_entity_data    Send data           (following pentity_graph)
- * \param [out]  recv_entity_stride  Stride of recv data (following pentity_graph)
- * \param [out]  recv_entity_data    Recv data           (following pentity_graph)
+ * \brief Prepare a persistent exchange
+ * \param [in]   pcg          \ref PDM_part_comm_graph_t instance
+ * \param [in]   kcomm        Kind of MPI communication
+ * \param [in]   s_data       Data size
+ * \param [in]   t_stride     Kind of stride (see \ref PDM_stride_t)
+ * \param [in]   cst_stride   Constant stride value
+ * \param [in]   send_stride  Stride of send data
+ * \param [in]   send_data    Send data
+ * \param [out]  recv_stride  Stride of recv data
+ * \param [out]  recv_data    Recv data
  *
  * \return Request id
  *
@@ -192,61 +188,63 @@ PDM_part_comm_graph_exch_init
   size_t                   s_data,
   PDM_stride_t             t_stride,
   int                      cst_stride,
-  int                    **send_entity_stride,
-  void                   **send_entity_data,
-  int                   ***recv_entity_stride,
-  void                  ***recv_entity_data
+  int                    **send_stride,
+  void                   **send_data,
+  int                   ***recv_stride,
+  void                  ***recv_data
 );
 
 /**
  *
- * \brief Start exchange ( initalize by PDM_part_comm_graph_exch_init )
- * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
- * \param [in]   request_id          Request id
+ * \brief Start a two-way non-blocking, persistent exchange
+ *        Each graph entity sends *and* receives data.
+ * \note  The exchange must then be finalized using \ref PDM_part_comm_graph_exch_wait.
+ * \param [in]   pcg         \ref PDM_part_comm_graph_t instance
+ * \param [in]   request_id  Request id
  *
  */
 void
 PDM_part_comm_graph_exch_start
 (
-  PDM_part_comm_graph_t   *pcg,
-  int                      request_id
+  PDM_part_comm_graph_t *pcg,
+  int                    request_id
 );
 
 
 /**
  *
- * \brief Wait exchange ( initalize by PDM_part_comm_graph_exch_init and launch by PDM_part_comm_graph_exch_start )
- * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
- * \param [in]   request_id          Request id
+ * \brief Wait for a non-blocking exchange to finish
+ * \param [in]   pcg        \ref PDM_part_comm_graph_t instance
+ * \param [in]   request_id Request id
  *
  */
 void
 PDM_part_comm_graph_exch_wait
 (
-  PDM_part_comm_graph_t   *pcg,
-  int                      request_id
+  PDM_part_comm_graph_t *pcg,
+  int                    request_id
 );
 
 
 /**
  *
- * \brief Free persistent exchange ( initalize by PDM_part_comm_graph_exch_init )
- * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
- * \param [in]   request_id          Request id
+ * \brief Free a persistent request
+ * \param [in]   pcg        \ref PDM_part_comm_graph_t instance
+ * \param [in]   request_id Request id
  *
  */
 void
 PDM_part_comm_graph_exch_free
 (
-  PDM_part_comm_graph_t   *pcg,
-  int                      request_id
+  PDM_part_comm_graph_t *pcg,
+  int                    request_id
 );
 
 
 /**
  *
  * \brief Get internal indirection to fill send buffer throw MPI from user data layout
- * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t instance
  * \param [in]   part_to_send_buffer Indirection table to fill directly send buffer
  *
  */
@@ -260,7 +258,7 @@ PDM_part_comm_graph_part_to_send_buffer_get
 /**
  *
  * \brief Get internal indirection to fill recv buffer throw MPI from user data layout
- * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t instance
  * \param [in]   part_to_recv_buffer Indirection table to fill directly recv buffer
  *
  */
@@ -282,7 +280,7 @@ PDM_part_comm_graph_part_to_recv_buffer_get
  * Buffer are filled with part_to_send or part_to_recv buffer \see PDM_part_comm_graph_part_to_send_buffer_get and
  * PDM_part_comm_graph_part_to_recv_buffer_get
  *
- * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure, which contains all communication
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t instance, which contains all communication
  *                           topology information (ranks, counts, etc.).
  * \param[in]     direction  Specifies the direction of the exchange: either send or receive.
  * \param[in]     s_data     The size of a single data element in bytes.
@@ -316,7 +314,7 @@ PDM_part_comm_graph_exch_one_way_raw_init
  * Buffer are filled with part_to_send or part_to_recv buffer \see PDM_part_comm_graph_part_to_send_buffer_get and
  * PDM_part_comm_graph_part_to_recv_buffer_get
  *
- * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure, which contains all communication
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t instance, which contains all communication
  *                           topology information (ranks, counts, etc.).
  * \param[in]     direction  Specifies the direction of the exchange: either send or receive.
  * \param[in]     s_data The size of a single data element in bytes.
@@ -346,7 +344,7 @@ PDM_part_comm_graph_iexch_one_way_raw
  * previously initialized persistent request ID. The function returns immediately
  * and the communication proceeds in the background.
  *
- * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t instance.
  * \param[in]     request_id The ID of the persistent request to be started, as
  *                           returned by PDM_part_comm_graph_exch_one_way_raw_init.
  *
@@ -368,7 +366,7 @@ PDM_part_comm_graph_exch_one_way_raw_start
  * ensure all data has been successfully sent or received before reusing
  * the communication buffers.
  *
- * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t instance.
  * \param[in]     request_id The ID of the request to wait for.
  *
  * \see PDM_part_comm_graph_exch_one_way_raw_start
@@ -390,7 +388,7 @@ PDM_part_comm_graph_exch_one_way_raw_wait
  * \pre The communication associated with request_id must be completed
  * (e.g., via PDM_part_comm_graph_exch_one_way_raw_wait) before freeing it.
  *
- * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t instance.
  * \param[in]     request_id The ID of the request to be freed.
  *
  * \see PDM_part_comm_graph_exch_one_way_raw_init
@@ -403,10 +401,10 @@ PDM_part_comm_graph_exch_one_way_raw_free
 );
 
 /**
- * \brief Get number of partitions registered in part_comm_graph structure
- * \param [in]   pcg           \ref PDM_part_comm_graph_t structure
+ * \brief Get number of partitions registered in a \ref PDM_part_comm_graph_t instance
+ * \param [in] pcg \ref PDM_part_comm_graph_t instance
  *
- * \return   Number of partitions for current process (int)
+ * \return Number of partitions for current process
  */
 int
 PDM_part_comm_graph_n_part_get
@@ -416,8 +414,8 @@ PDM_part_comm_graph_n_part_get
 
 /**
  *
- * \brief Get the owner array computed inside the structure, useful to manage reduction of array for example
- * \param [in]   pcg           \ref PDM_part_comm_graph_t structure
+ * \brief Get the owner status of local graph entities (read-only)
+ * \param [in]   pcg           \ref PDM_part_comm_graph_t instance
  * \param [in]   i_part        Id of current partition
  *
  * \return   Array of size pentity_graph[i_part] that contains 0 if not owner and 1 if owner. Ownership is determined by the lowest rank that holds the entity
@@ -435,7 +433,7 @@ PDM_part_comm_graph_owner_get
  * \brief Reorder internally the graph with the table \p old_to_new.
  *        This method is useful when we want to change the local order of entities and update the exchange protocol.
  *        This method changes the internal data for future exchanges.
- * \param [in]   pcg            \ref PDM_part_comm_graph_t structure
+ * \param [in]   pcg            \ref PDM_part_comm_graph_t instance
  * \param [in]   old_to_new     Permutation id old to new (0-based)
  */
 void
@@ -450,7 +448,7 @@ PDM_part_comm_graph_reorder
  *
  * \brief Gather local and distant data through part_comm_graph communicator
  *
- * \param [in]  pcg             \ref PDM_part_comm_graph_t structure
+ * \param [in]  pcg             \ref PDM_part_comm_graph_t instance
  * \param [in]  size_data       Data size
  * \param [in]  t_stride        Kind of stride (see \ref PDM_stride_t)
  * \param [in]  n_entity        n_entity for data (should be > pn_entity_bound)
@@ -476,9 +474,9 @@ PDM_part_comm_graph_gather_strided_data
 
 /**
  *
- * \brief Free \ref PDM_part_comm_graph_t structure
+ * \brief Free a \ref PDM_part_comm_graph_t instance
  *
- * \param pcg \ref PDM_part_comm_graph_t structure
+ * \param [inout] pcg \ref PDM_part_comm_graph_t instance
  *
  */
 void
@@ -489,7 +487,7 @@ PDM_part_comm_graph_free
 
 /**
  *
- * \brief Get entity graph
+ * \brief Get the communication graph description for a local partition
  *
  * \param [in]  pcg           Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]  i_part        Partition identifier
@@ -509,14 +507,16 @@ PDM_part_comm_graph_entity_graph_get
 
 /**
  *
- * \brief Inplace reduce value on current graph. Allow synchronization.
- *        Only PDM_MPI_DOUBLE and PDM_MPI_INT are allowed
+ * \brief Perform a reduction operation on entities connected by the graph
+ *        The reduction is performed in place, on an array of the size of the *whole* partition.
+ * \warning Only \p PDM_MPI_DOUBLE and \p PDM_MPI_INT data types are supported.
+ *          Only \p PDM_MPI_SUM, \p PDM_MPI_MIN and \p PDM_MPI_MAX operations are supported.
  *
  * \param [in]    pcg            Pointer to \ref PDM_part_comm_graph_t instance
- * \param [in]    datatype       Mpi datatype (PDM_MPI_DOUBLE/PDM_MPI_INT)
- * \param [in]    stride         Constant stride
- * \param [in]    op             Reduction operation kind (SUM/MIN/MAX)
- * \param [inout] pdata          Buffer of data to synchronise (size = n_entity)
+ * \param [in]    datatype       Data type ( \p PDM_MPI_DOUBLE / \p PDM_MPI_INT)
+ * \param [in]    stride         Constant stride value
+ * \param [in]    op             Reduction operation kind ( \p PDM_MPI_SUM / \p PDM_MPI_MIN / \p PDM_MPI_MAX)
+ * \param [inout] pdata          Buffer of data to synchronize (size = n_entity)
  */
 void
 PDM_part_comm_graph_all_reduce
@@ -596,7 +596,7 @@ PDM_part_comm_graph_entity_nuplet_get
  *
  * \brief Get internal communicator
  *
- * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  pcg  Pointer to \ref PDM_part_comm_graph_t instance
  *
  * \return MPI Communicator
  */

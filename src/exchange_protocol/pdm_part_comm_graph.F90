@@ -72,10 +72,10 @@ module pdm_part_comm_graph
     ! Build a Part Comm Graph instance
     implicit none
 
-    type(c_ptr),                        intent(out) :: pcg                ! PDM_part_comm_graph_t instance
+    type(c_ptr),                        intent(out) :: pcg                ! Part Comm Graph instance
     integer,                            intent(in)  :: n_part             ! Number of parts on current process
-    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity_graph(:) ! Number of part boundary entities (size = ``n_part``)
-    type(pdm_pointer_array_t), pointer, intent(in)  :: pentity_graph      ! Inter-part communication graph (size = 4*``pn_entity_graph`` : [local entity ID (1-based), connected rank (0-based), connected part (1-based), ID of connected entity (1-based)])
+    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity_graph(:) ! Number of graph entities (size = ``n_part``)
+    type(pdm_pointer_array_t), pointer, intent(in)  :: pentity_graph      ! Inter-partition communication graph description (size = ``4*pn_entity_graph``)
     integer,                            intent(in)  :: ownership          ! Ownership
     integer,                            intent(in)  :: comm               ! MPI communicator
 
@@ -111,7 +111,7 @@ module pdm_part_comm_graph
   end subroutine pdm_part_comm_graph_create
 
 
-
+  ! TODO: single create with optional nuplet_size, pentity_nuplet, is_signed ?
   subroutine PDM_part_comm_graph_with_nuplet_create(pcg,              &
                                                     n_part,           &
                                                     pn_entity_graph,  &
@@ -125,15 +125,15 @@ module pdm_part_comm_graph
     ! Build a Part Comm Graph instance using additional information represented as a n-uplet
     implicit none
 
-    type(c_ptr),                        intent(out) :: pcg                ! PDM_part_comm_graph_t instance
+    type(c_ptr),                        intent(out) :: pcg                ! Part Comm Graph instance
     integer,                            intent(in)  :: n_part             ! Number of parts on current process
-    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity_graph(:) ! Number of part boundary entities (size = ``n_part``)
-    type(pdm_pointer_array_t), pointer, intent(in)  :: pentity_graph      ! Inter-part communication graph (size = 4*``pn_entity_graph`` : [local entity ID (1-based), connected rank (0-based), connected part (1-based), ID of connected entity (1-based)])
+    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity_graph(:) ! Number of graph entities (size = ``n_part``)
+    type(pdm_pointer_array_t), pointer, intent(in)  :: pentity_graph      ! Inter-partition communication graph description (size = ``4*pn_entity_graph``)
     integer,                            intent(in)  :: ownership_graph    ! Ownership for ``pentity_graph``
     integer,                            intent(in)  :: nuplet_size        ! N-uplet size
     type(pdm_pointer_array_t), pointer, intent(in)  :: pentity_nuplet     ! Additional nuplets (size = ``nuplet_size * pn_entity_graph``)
     integer,                            intent(in)  :: ownership_nuplet   ! Ownership for ``pentity_nuplet``
-    logical,                            intent(in)  :: is_signed          ! Use signed nuplets
+    logical,                            intent(in)  :: is_signed          ! Use signed nuplets?
     integer,                            intent(in)  :: comm               ! MPI communicator
 
     integer                                         :: c_is_signed
@@ -192,7 +192,7 @@ module pdm_part_comm_graph
     ! Return .true. if nuplet description is signed, else .false.
     implicit none
 
-    type(c_ptr), intent(in) :: pcg       ! PDM_part_comm_graph_t instance
+    type(c_ptr), intent(in) :: pcg       ! Part Comm Graph instance
     logical                 :: is_signed ! Is the nuplet signed?
 
     integer                 :: c_is_signed
@@ -223,7 +223,7 @@ module pdm_part_comm_graph
     ! Get nuplet size
     implicit none
 
-    type(c_ptr), intent(in) :: pcg  ! PDM_part_comm_graph_t instance
+    type(c_ptr), intent(in) :: pcg  ! Part Comm Graph instance
     integer                 :: size ! Size of nuplet
 
     size = pdm_part_comm_graph_nuplet_size_cf(pcg)
@@ -238,7 +238,7 @@ module pdm_part_comm_graph
     ! Get number of graph entities
     implicit none
 
-    type(c_ptr), intent(in) :: pcg      ! PDM_part_comm_graph_t instance
+    type(c_ptr), intent(in) :: pcg      ! Part Comm Graph instance
     integer,     intent(in) :: i_part   ! Partition identifier
     integer                 :: n_entity ! Number of graph entities
 
@@ -255,7 +255,7 @@ module pdm_part_comm_graph
     ! Get entity nuplets
     implicit none
 
-    type(c_ptr),                   intent(in)  :: pcg              ! PDM_part_comm_graph_t instance
+    type(c_ptr),                   intent(in)  :: pcg              ! Part Comm Graph instance
     integer,                       intent(in)  :: i_part           ! Partition identifier
     integer(pdm_l_num_s), pointer, intent(out) :: entity_nuplet(:) ! Entity nuplets (size = nuplet_size * n_entity_graph)
     integer,                       intent(in)  :: ownership        ! Ownership
@@ -299,12 +299,12 @@ module pdm_part_comm_graph
                                                   i_part,       &
                                                   entity_graph, &
                                                   ownership)
-    ! Get entity graph
+    ! Get the communication graph description for a local partition
     implicit none
 
-    type(c_ptr),                   intent(in)  :: pcg             ! PDM_part_comm_graph_t instance
+    type(c_ptr),                   intent(in)  :: pcg             ! Part Comm Graph instance
     integer,                       intent(in)  :: i_part          ! Partition identifier
-    integer(pdm_l_num_s), pointer, intent(out) :: entity_graph(:) ! Entity graph (size = 4 * n_entity_graph)
+    integer(pdm_l_num_s), pointer, intent(out) :: entity_graph(:) ! Entity graph (size = ``4 * n_entity_graph``)
     integer,                       intent(in)  :: ownership       ! Ownership
 
     integer(c_int)                             :: n_entity
@@ -343,11 +343,11 @@ module pdm_part_comm_graph
   subroutine PDM_part_comm_graph_owner_get(pcg,      &
                                            i_part,   &
                                            is_owner)
-    ! Get the owner array computed inside the structure, useful to manage reduction of array for example
+    ! Get the owner status of local graph entities (read-only)
     implicit none
-    type(c_ptr),                   intent(in)  :: pcg         ! PDM_part_comm_graph_t instance
+    type(c_ptr),                   intent(in)  :: pcg         ! Part Comm Graph instance
     integer,                       intent(in)  :: i_part      ! Partition identifier
-    integer(pdm_l_num_s), pointer, intent(out) :: is_owner(:) ! Owner status (size = n_entity_graph)
+    integer(pdm_l_num_s), pointer, intent(out) :: is_owner(:) ! Owner status (size = ``n_entity_graph``)
 
     integer(c_int)                             :: n_entity
     type(c_ptr)                                :: c_is_owner
@@ -385,8 +385,8 @@ module pdm_part_comm_graph
 #ifndef PDM_HAVE_FORTRAN_MPI_MODULE
     include "mpif.h"
 #endif
-    type(c_ptr),               intent(in) :: pcg    ! PDM_part_comm_graph_t instance
-    integer,                   intent(in) :: stride ! Constant stride
+    type(c_ptr),               intent(in) :: pcg    ! Part Comm Graph instance
+    integer,                   intent(in) :: stride ! Constant stride value
     integer,                   intent(in) :: op     ! Reduction operation kind (MPI_SUM/MPI_MIN/MPI_MAX)
     type(pdm_pointer_array_t), pointer    :: pdata  ! Buffer of data to synchronise (size = n_entity)
 
@@ -438,12 +438,13 @@ module pdm_part_comm_graph
                                       send_data,   &
                                       recv_stride, &
                                       recv_data)
-    ! Exchange data using blocking communications
+    ! Exchange data using two-way blocking communications.
+    ! Each graph entity sends *and* receives data.
     implicit none
 
-    type(c_ptr),               intent(in)  :: pcg         ! PDM_part_comm_graph_t instance
+    type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
     integer,                   intent(in)  :: t_stride    ! Type of stride
-    integer,                   intent(in)  :: cst_stride  ! Constant stride
+    integer,                   intent(in)  :: cst_stride  ! Constant stride value
     type(pdm_pointer_array_t), pointer     :: send_stride ! Stride of send data
     type(pdm_pointer_array_t), pointer     :: send_data   ! Send data
     type(pdm_pointer_array_t), pointer     :: recv_stride ! Stride of recv data
@@ -519,13 +520,15 @@ module pdm_part_comm_graph
                                        recv_stride, &
                                        recv_data,   &
                                        request)
-    ! Initiate a non-blocking exchange
+    ! Initiate a two-way non-blocking exchange.
+    ! Each graph entity sends *and* receives data.
+    ! .. note:: The exchange must then be finalized using ``PDM_part_comm_graph_exch_wait``.
     implicit none
 
-    type(c_ptr),               intent(in)  :: pcg         ! PDM_part_comm_graph_t instance
+    type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
     integer,                   intent(in)  :: k_comm      ! Kind of MPI communication
     integer,                   intent(in)  :: t_stride    ! Type of stride
-    integer,                   intent(in)  :: cst_stride  ! Constant stride
+    integer,                   intent(in)  :: cst_stride  ! Constant stride value
     type(pdm_pointer_array_t), pointer     :: send_stride ! Stride of send data
     type(pdm_pointer_array_t), pointer     :: send_data   ! Send data
     type(pdm_pointer_array_t), pointer     :: recv_stride ! Stride of recv data
@@ -610,10 +613,10 @@ module pdm_part_comm_graph
     ! Prepare a series of persistent exchanges
     implicit none
 
-    type(c_ptr),               intent(in)  :: pcg         ! PDM_part_comm_graph_t instance
+    type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
     integer,                   intent(in)  :: k_comm      ! Kind of MPI communication
     integer,                   intent(in)  :: t_stride    ! Type of stride
-    integer,                   intent(in)  :: cst_stride  ! Constant stride
+    integer,                   intent(in)  :: cst_stride  ! Constant stride value
     type(pdm_pointer_array_t), pointer     :: send_stride ! Stride of send data
     type(pdm_pointer_array_t), pointer     :: send_data   ! Send data
     type(pdm_pointer_array_t), pointer     :: recv_stride ! Stride of recv data
@@ -689,9 +692,10 @@ module pdm_part_comm_graph
   subroutine PDM_part_comm_graph_exch_start(pcg,     &
                                             request)
     ! Start a non-blocking persistent exchange
+    ! .. note:: The exchange must then be finalized using ``PDM_part_comm_graph_exch_wait``.
     implicit none
 
-    type(c_ptr), intent(in) :: pcg     ! PDM_part_comm_graph_t instance
+    type(c_ptr), intent(in) :: pcg     ! Part Comm Graph instance
     integer,     intent(in) :: request ! Request ID
 
     interface
@@ -716,7 +720,7 @@ module pdm_part_comm_graph
     ! Wait for a non-blocking (possibly persistent) exchange to finish
     implicit none
 
-    type(c_ptr), intent(in) :: pcg     ! PDM_part_comm_graph_t instance
+    type(c_ptr), intent(in) :: pcg     ! Part Comm Graph instance
     integer,     intent(in) :: request ! Request ID
 
     interface
@@ -738,10 +742,10 @@ module pdm_part_comm_graph
 
   subroutine PDM_part_comm_graph_exch_free(pcg,     &
                                            request)
-    ! Free a persistent exchange
+    ! Free a persistent request
     implicit none
 
-    type(c_ptr), intent(in) :: pcg     ! PDM_part_comm_graph_t instance
+    type(c_ptr), intent(in) :: pcg     ! Part Comm Graph instance
     integer,     intent(in) :: request ! Request ID
 
     interface
@@ -766,7 +770,7 @@ module pdm_part_comm_graph
     ! Reorder the graph entities
     implicit none
 
-    type(c_ptr),               intent(in) :: pcg        ! PDM_part_comm_graph_t instance
+    type(c_ptr),               intent(in) :: pcg        ! Part Comm Graph instance
     type(pdm_pointer_array_t), pointer    :: old_to_new ! Permutation table (0-based)
 
     interface
@@ -784,6 +788,7 @@ module pdm_part_comm_graph
                                         c_loc(old_to_new%cptr))
 
   end subroutine PDM_part_comm_graph_reorder
+
 
 
   subroutine PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pcg_entity1,         &
@@ -836,7 +841,7 @@ module pdm_part_comm_graph
     ! Free a Part Comm Graph instance
     implicit none
 
-    type(c_ptr), intent(inout) :: pcg ! PDM_part_comm_graph_t instance
+    type(c_ptr), intent(inout) :: pcg ! Part Comm Graph instance
 
     interface
       subroutine pdm_part_comm_graph_free_cf(pcg) &
@@ -911,7 +916,7 @@ module pdm_part_comm_graph
       enddo
 
     else
-      ! Constant stride
+      ! Constant stride value
       do i_part = 1, n_part
         length_data(i_part) = cst_stride * pdm_part_comm_graph_n_entity_get_cf(pcg, i_part-1)
       enddo

@@ -75,29 +75,24 @@ cdef class PartCommGraph:
     """
     __init__(comm, pentity_graph, pentity_nuplet=None, is_signed=True)
 
-    Create a new :py:class`PartCommGraph` instance
+    Create a new :py:class:`PartCommGraph` instance
 
     Parameters:
-      comm            (MPI.Comm) : MPI communicator
-      pentity_graph   (int**)    : Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
-        For each entity :
-          - entity local number (1-based)
-          - Connected process   (0-based)
-          - Connected partition on the connected process (1-based)
-          - Connected entity local number in the connected partition (1-based)
-      pentity_nuplet (list of np.ndarray[in]) : Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
-      is_signed      (int**)                  : Use signed nuplets
+      comm           (`MPI.Comm`)                                 : MPI communicator
+      pentity_graph  (`list` of `np.ndarray[np.int32]`)           : Inter-partition communication graph description (size = ``4 * pn_entity_graph[i_part]``)
+      pentity_nuplet (`list` of `np.ndarray[np.int32]`, optional) : Additional nuplets (size = ``nuplet_size * pn_entity_graph[i_part]``)
+      is_signed      (`bool`, optional)                           : Use signed nuplets
     """
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    cdef PDM_MPI_Comm PDMC   = py_comm_to_pdm_comm(comm)
+    cdef PDM_MPI_Comm PDMC = py_comm_to_pdm_comm(comm)
     self.keep_alive = []
 
     cdef int **_pentity_graph  = NULL
     cdef int **_pentity_nuplet = NULL
 
-    _n_part          = len(pentity_graph)
+    _n_part = len(pentity_graph)
     cdef int* _pn_entity_graph = list_to_int_pointer([g.size // 4 for g in pentity_graph])
-    _pentity_graph        = np_list_to_int_pointers(pentity_graph)
+    _pentity_graph = np_list_to_int_pointers(pentity_graph)
     self.keep_alive.append(pentity_graph)
 
     _nuplet_size = 0
@@ -141,15 +136,16 @@ cdef class PartCommGraph:
     """
       exch(send_entity_data, send_entity_stride=1, interlaced_str=True)
 
-      Exchange data between graph comm with synchronous blocking exchange
+      Exchange data using two-way blocking communications.
+      Each graph entity sends *and* receives data.
 
       Parameters:
-        send_entity_data   (list)                      : Graph data for each part
-        send_entity_stride (`int` or `list, optional`) : Stride of Part1 data
-        interlaced_str    (bool, optional)             : Is the data interlaced? (default = **True**)
+        send_entity_data   (`list` of `np.ndarray`)                              : Data to send
+        send_entity_stride (`int` or `list` of `np.ndarray[np.int32]`, optional) : Stride of send data (default = 1)
+        interlaced_str     (`bool`, optional)                                    : Is the data interlaced? (default = **True**)
 
       Returns :
-        - Recv stride (same dtype as ``send_entity_stride`` )
+        - Recv stride (same dtype as ``send_entity_stride``)
         - Recv data   (`list` of same dtype as ``send_entity_data``)
     """
 
@@ -193,9 +189,9 @@ cdef class PartCommGraph:
     cdef int *dummy = NULL
     for i_part in range(PDM_part_comm_graph_n_part_get(self.pcg)):
       pn_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
-                                                        i_part,
-                                                        &dummy,
-                                                        PDM_OWNERSHIP_BAD_VALUE)
+                                                       i_part,
+                                                       &dummy,
+                                                       PDM_OWNERSHIP_BAD_VALUE)
       if _stride_t == PDM_STRIDE_VAR_INTERLACED:
 
         strid_size = pn_entity
@@ -227,13 +223,13 @@ cdef class PartCommGraph:
     """
     owner_get(i_part)
 
-    Get the owner array computed inside the structure, useful to manage reduction of array for example
+    Get the owner status of local graph entities (read-only)
 
     Parameters:
       i_part (int) : Partition identifier
 
     Returns:
-      Owner array, 0 is not owner, 1 is owner  (`np.array[np.int]`)
+      Owner status (`np.array[np.int32]` of size `n_entity_graph`)
     """
     cdef int *dummy = NULL
     cdef pn_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
@@ -241,7 +237,7 @@ cdef class PartCommGraph:
                                                           &dummy,
                                                           PDM_OWNERSHIP_BAD_VALUE)
 
-    cdef int* owner = PDM_part_comm_graph_owner_get(self.pcg,i_part) #returns an int*
+    cdef int* owner = PDM_part_comm_graph_owner_get(self.pcg,i_part)
 
     np_owner = create_numpy_i(owner, pn_entity, flag_owndata=False)
     return NPY.copy(np_owner)
@@ -250,41 +246,40 @@ cdef class PartCommGraph:
     """
     entity_graph_get(i_part)
 
-    Get entity graph
+    Get the communication graph description for a local partition
 
     Parameters:
       i_part (int) : Partition identifier
 
     Returns:
-      Graph comm identifier (`np.array[np.int]`):
+      Inter-partition communication graph description (`np.array[np.int32]` of size ``4 * n_entity_graph``):
         For each entity :
-          - entity local number (1-based)
-          - Connected process   (0-based)
+          - Entity local ID (1-based)
+          - Rank of the connected process (0-based)
           - Connected partition on the connected process (1-based)
-          - Connected entity local number in the connected partition (1-based)
+          - Connected entity's local ID in the connected partition (1-based)
 
     """
     cdef int *entity_graph = NULL
 
     cdef n_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
-                                                        i_part,
-                                                        &entity_graph,
-                                                        PDM_OWNERSHIP_USER)
+                                                         i_part,
+                                                         &entity_graph,
+                                                         PDM_OWNERSHIP_USER)
 
     return create_numpy_i(entity_graph, 4 * n_entity)
 
   def all_reduce(self,
-                 int             stride,
-                 MPI.Op          op,
-                 list            pdata):
+                 int    stride,
+                 MPI.Op op,
+                 list   pdata):
     """
     all_reduce(stride, op, pdata)
 
-      Parameters:
-        stride   (int)                              : Constant data stride
-        op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
-        pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
-
+    Parameters:
+      stride   (`int`)                  : Constant data stride
+      op       (`MPI.Op`)               : Reduction operation kind (``MPI.SUM`` / ``MPI.MIN`` / ``MPI.MAX``)
+      pdata    (`list` of `np.ndarray`) : Data buffer, value is modified inplace
     """
     cdef void **_pdata = np_list_to_void_pointers(pdata)
     cdef PDM_MPI_Op       c_op       = <MPI_Op      > op.ob_mpi
