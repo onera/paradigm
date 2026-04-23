@@ -13,7 +13,7 @@ A mapping between the associated points is computed, which consists in
   - the distance from each target point to its closest source points ;
   - a :ref:`PDM_part_to_part <ptp>` instance to transfer data in parallel.
 
-This mapping can be used to performed spatial interpolation, as in `CWIPI <https://github.com/onera/cwipi>`_ and `Maia <https://github.com/onera/maia>`_.
+This mapping can be used to perform spatial interpolation, as in `CWIPI <https://github.com/onera/cwipi>`_ and `Maia <https://github.com/onera/maia>`_.
 
 
 

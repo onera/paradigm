@@ -15,7 +15,7 @@ A mapping between the source mesh elements and the target points they contain is
   - geometric data (distances, barycentric and parametric coordinates, ...) ;
   - a :ref:`PDM_part_to_part <ptp>` instance to transfer data in parallel.
 
-This mapping can be used to performed spatial interpolation, as in `CWIPI <https://github.com/onera/cwipi>`_ and `Maia <https://github.com/onera/maia>`_.
+This mapping can be used to perform spatial interpolation, as in `CWIPI <https://github.com/onera/cwipi>`_ and `Maia <https://github.com/onera/maia>`_.
 
 API
 """
