@@ -537,7 +537,7 @@ PDM_part_mesh_nodal_gnum_vtx_compute_from_part_comm_graph
     /* Update pointer */
     for (int i_part=0; i_part<n_part; ++i_part) {
       PDM_g_num_t *_vtx_gnum = PDM_gnum_get(gen_gnum, i_part);
-      PDM_part_mesh_nodal_vtx_gnum_set(pmn, i_part, _vtx_gnum, PDM_OWNERSHIP_USER);
+      PDM_part_mesh_nodal_vtx_gnum_set(pmn, i_part, _vtx_gnum, PDM_OWNERSHIP_KEEP);
     }
 
     PDM_gnum_free(gen_gnum);
@@ -579,6 +579,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
   for (int i_part=0; i_part<n_part; ++i_part) {
     elmt_ln_to_gn[i_part] = PDM_gnum_get(gen_gnum, i_part);
   }
+  PDM_free(n_elmt_tot);
 
   PDM_gnum_free(gen_gnum);
 
@@ -641,8 +642,8 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
     PDM_free(section_elmt_ln_to_gn);
     PDM_gnum_free(gen_gnum);
 
-
   } // end loop on sections
+  PDM_free(shift_elt);
 
   // Groups
   int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
