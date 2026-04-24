@@ -454,6 +454,39 @@ PDM_part_mesh_nodal_poly2d_decompose_local_faces
        int *parent_elmt_position
 );
 
+/**
+ * \brief Decompose locally a poly3d section into faces (single partition).
+ *
+ * \param [in]    n_elt                     Number of elements
+ * \param [inout] n_elt_current             Current position in concatenated sections
+ * \param [inout] n_face_current            Current position in concatenated faces
+ * \param [in]    cell_face_idx             Index for Cell->Face connectivity
+ * \param [in]    cell_face                 Cell->Face connectivity (local IDs)
+ * \param [in]    face_vtx_idx              Index for Face->Vertex connectivity
+ * \param [in]    face_vtx                  Face->Vertex connectivity (local IDs)
+ * \param [inout] elmt_face_vtx_idx         Index for Elementface->Vertex connectivity
+ * \param [inout] elmt_face_vtx             ElementFace->Vertex connectivity (local IDs)
+ * \param [inout] elmt_cell_face_idx        Index for ElementFace->Face connectivity
+ * \param [inout] parent_elmt               ElementFace->Cell connectivity (Parent Element) (local IDs)
+ * \param [inout] parent_elmt_position      Position in parent element for each face
+ *
+ */
+void
+PDM_part_mesh_nodal_poly3d_decompose_local_faces
+(
+        int  n_elt,
+        int *n_elt_current,
+        int *n_face_current,
+  const int *cell_face_idx,
+  const int *cell_face,
+  const int *face_vtx_idx,
+  const int *face_vtx,
+        int *elmt_face_vtx_idx,
+        int *elmt_face_vtx,
+        int *elmt_cell_face_idx,
+        int *parent_elmt,
+        int *parent_elmt_position
+);
 
 /**
  * \brief Decompose locally a \ref PDM_part_mesh_nodal_elmts_t into faces.

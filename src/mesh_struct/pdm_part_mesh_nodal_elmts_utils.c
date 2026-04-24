@@ -1803,7 +1803,6 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
         PDM_g_num_t *face_ln_to_gn;
         PDM_g_num_t *cell_ln_to_gn;
         PDM_g_num_t *parent_entity_g_num;
-        int *parent_num;
         int *cell_face_idx = NULL;
         int *cell_face     = NULL;
         int *face_vtx_idx  = NULL;
