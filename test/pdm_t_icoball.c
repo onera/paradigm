@@ -5,6 +5,7 @@
 #include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_error.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_mpi.h"
@@ -294,6 +295,11 @@ int main(int argc, char *argv[])
       count++;
     }
   }
+
+  if(count > 0) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid count for icoball : %i/%i cells have negative volume \n", count, dn_cell);
+  }
+
   // log_trace("%d cells with negative volume / %d\n", count, dn_cell);
   PDM_free(volume);
 

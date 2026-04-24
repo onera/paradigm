@@ -64,7 +64,7 @@ _usage(int exit_code)
 static void
 _read_args(int            argc,
            char         **argv,
-           char         **filename,
+           const char   **filename,
            int           *visu)
 {
   int i = 1;
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
   /*
    *  Read args
    */
-  char *filename = NULL;
+  const char *filename = NULL;
   int   visu     = 0;
   int   n_part   = 1;
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
              &visu);
 
   if (filename == NULL) {
-    filename = (char *) PDM_MESH_DIR"bunny1k.vtk";
+    filename = PDM_MESH_DIR"bunny1k.vtk";
   }
 
   /*

@@ -3057,9 +3057,7 @@ PDM_domain_interface_translate_entity1_entity2
       //   key1 += data1[k];
       // }
       // log_trace("key1 = %i \n", key1);
-      PDM_g_num_t key1 = 0;
       for(int k = 0; k < n_val1; ++k) {
-        key1 += data1[k];
         _inv_order1[ordr1[k]] = k;
       }
       int          og_conn_size = (conflict_data_idx[i_conflict+1]-conflict_data_idx[i_conflict])/2;
@@ -3089,9 +3087,7 @@ PDM_domain_interface_translate_entity1_entity2
         //   key2 += data2[k];
         // }
         // log_trace("key2 = %i \n", key2);
-        PDM_g_num_t key2 = 0;
         for(int k = 0; k < n_val2; ++k) {
-          key2 += data2[k];
           _inv_order2[ordr2[k]] = k;
         }
 

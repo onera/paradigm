@@ -112,8 +112,8 @@ MPI_TEST_CASE("[PDM_io_gamma_reader] - Read and write", 2) {
 
 	PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
 
-	const char *filename_in;
-	int n_part;
+	const char *filename_in = NULL;
+	int         n_part      = 0;
 	SUBCASE("2D") {
 		filename_in = filename_in_2d;
 		SUBCASE("n_part = 1") {

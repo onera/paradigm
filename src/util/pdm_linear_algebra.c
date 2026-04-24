@@ -820,6 +820,9 @@ PDM_linear_algebra_eig_sym2
     memcpy(vec, M, sizeof(double) * 4);
   }
 #else
+  PDM_UNUSED(a);
+  PDM_UNUSED(val);
+  PDM_UNUSED(vec);
   PDM_error(__FILE__, __LINE__, 0, "PDM_linear_algebra_eig_sym2 needs LAPACK\n");
 #endif
 }
