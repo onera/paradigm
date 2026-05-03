@@ -522,6 +522,7 @@ module pdm_part_comm_graph
                                        request)
     ! Initiate a two-way non-blocking exchange.
     ! Each graph entity sends *and* receives data.
+    !
     ! .. note:: The exchange must then be finalized using ``PDM_part_comm_graph_exch_wait``.
     implicit none
 
@@ -692,6 +693,7 @@ module pdm_part_comm_graph
   subroutine PDM_part_comm_graph_exch_start(pcg,     &
                                             request)
     ! Start a non-blocking persistent exchange
+    !
     ! .. note:: The exchange must then be finalized using ``PDM_part_comm_graph_exch_wait``.
     implicit none
 

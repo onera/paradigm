@@ -460,20 +460,25 @@ program test_part_comm_graph
 
   if (verbose) then
     write (funit, *) "REDUCE"
-    do i_part = 1, n_part
+  endif
+
+  do i_part = 1, n_part
+    if (verbose) then
       write (funit, *) "part ", i_part
+    endif
+    call pdm_pointer_array_part_get(part_data, &
+                                    i_part-1,  &
+                                    data)
 
-      call pdm_pointer_array_part_get(part_data, &
-                                      i_part-1,  &
-                                      data)
-
-      do i = 1, pn_vtx_graph(i_part)
-        i_vtx = parts(i_part)%vtx_graph(4*(i-1)+1)
+    do i = 1, pn_vtx_graph(i_part)
+      i_vtx = parts(i_part)%vtx_graph(4*(i-1)+1)
+      ! TODO: check result?
+      if (verbose) then
         write (funit, *) i_vtx
         write (funit, *) "     ", data((i_vtx-1)*stride+1:i_vtx*stride)
-      enddo
+      endif
     enddo
-  endif
+  enddo
   !----------------------------------------
 
 

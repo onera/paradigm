@@ -43,7 +43,7 @@ Owner status
 ~~~~~~~~~~~~
 
 For each connected component of the graph, a single entity is flagged as *owner* (not to be confused with memory ownership !).
-This status is determined automatically at the creation of the **Part Comm Graph** instance, and can be used in algorithms that require inter-partition synchronizations, for example.
+This status is determined automatically at the creation of the **Part Comm Graph** instance, and can be used in algorithms that require inter-partition synchronizations for example.
 In the :ref:`example above <pcg_example_visu>`, the owner vertices are represented by solid dots, and the "ghost" vertices by circles.
 
 
@@ -64,7 +64,7 @@ API
 
   A **Part Comm Graph** is created by providing the array describing the communication graph, as described :ref:`above <pcg_comm_graph_desc>`.
 
-  Additional information can be provided by means of a n-uplet of integers for each partition boundary entity.
+  Additional information can be provided by means of a n-uplet of integers for each graph entity.
 
 
 
@@ -122,6 +122,8 @@ API
       .. doxygenfunction:: PDM_part_comm_graph_n_entity_get
       .. doxygenfunction:: PDM_part_comm_graph_entity_graph_get
       .. doxygenfunction:: PDM_part_comm_graph_owner_get
+      .. doxygenfunction:: PDM_part_comm_graph_nuplet_size
+      .. doxygenfunction:: PDM_part_comm_graph_entity_nuplet_get
 
 
     .. tab-item:: Fortran
@@ -132,6 +134,8 @@ API
         .. f:autofunction::   PDM_part_comm_graph_n_entity_get
         .. f:autosubroutine:: PDM_part_comm_graph_entity_graph_get
         .. f:autosubroutine:: PDM_part_comm_graph_owner_get
+        .. f:autofunction::   PDM_part_comm_graph_nuplet_size
+        .. f:autosubroutine:: PDM_part_comm_graph_entity_nuplet_get
 
       .. ifconfig:: enable_fortran_doc == 'OFF'
 
