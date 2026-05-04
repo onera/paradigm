@@ -1235,7 +1235,7 @@ PDM_part_comm_graph_exch_init
     pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
   }
   else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    PDM_error(__FILE__, __LINE__, 0, "%s: not yet implemented for variable stride\n, __func__");
+    PDM_error(__FILE__, __LINE__, 0, "%s: not yet implemented for variable stride\n", __func__);
   }
   else {
     INVALID_T_STRIDE(t_stride)

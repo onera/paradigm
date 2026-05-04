@@ -126,7 +126,7 @@ cdef class PartCommGraph:
   @staticmethod
   cdef from_ptr(PDM_part_comm_graph_t* ptr):
     cdef PartCommGraph obj = PartCommGraph.__new__(PartCommGraph)
-    obj.pcg      = ptr
+    obj.pcg = ptr
     return obj
 
   def exch(self,
