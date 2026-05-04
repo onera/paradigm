@@ -58,12 +58,13 @@ program test_part_comm_graph
   ! Dummy derived type to hold partition data
   type my_part_t
 
-  integer(pdm_l_num_s), pointer :: vtx_graph(:)
-  real(8),              pointer :: data(:)
-  real(8),              pointer :: send_data(:)
+    integer(pdm_l_num_s), pointer :: vtx_graph(:)
+    real(8),              pointer :: data(:)
+    real(8),              pointer :: send_data(:)
+    integer(pdm_l_num_s), pointer :: send_stride(:)
 
-  integer(pdm_l_num_s), pointer :: edge_vtx_idx(:)
-  integer(pdm_l_num_s), pointer :: edge_vtx(:)
+    integer(pdm_l_num_s), pointer :: edge_vtx_idx(:)
+    integer(pdm_l_num_s), pointer :: edge_vtx(:)
 
   end type my_part_t
   !-----------------------------------------------
@@ -88,19 +89,10 @@ program test_part_comm_graph
   type(my_part_t),           allocatable :: parts(:)
   integer                                :: i_part
 
-  type(c_ptr)                            :: pgc_vtx
+  type(c_ptr)                            :: pcg_vtx
   integer(pdm_l_num_s),      pointer     :: is_owner(:)
 
-  integer                                :: stride
-  type(pdm_pointer_array_t), pointer     :: send_stride
-  type(pdm_pointer_array_t), pointer     :: send_data
-  type(pdm_pointer_array_t), pointer     :: recv_stride
-  type(pdm_pointer_array_t), pointer     :: recv_data
-  real(8),                   pointer     :: data(:)
-  real(8)                                :: expected, diff
-  integer                                :: request
-  type(pdm_pointer_array_t), pointer     :: part_data
-  integer                                :: i, j, i_vtx, i_exch
+  integer                                :: i
 
   integer(pdm_l_num_s),      pointer     :: pn_edge(:)
   type(pdm_pointer_array_t), pointer     :: pedge_vtx_idx
@@ -116,7 +108,7 @@ program test_part_comm_graph
           pn_vtx_graph, &
           pvtx_graph)
 
-  pgc_vtx = C_NULL_PTR
+  pcg_vtx = C_NULL_PTR
 
 
   !----------------------------------------
@@ -230,7 +222,7 @@ program test_part_comm_graph
 
   !----------------------------------------
   ! Create a Part Comm Graph instance
-  call pdm_part_comm_graph_create(pgc_vtx,            &
+  call pdm_part_comm_graph_create(pcg_vtx,            &
                                   n_part,             &
                                   pn_vtx_graph,       &
                                   pvtx_graph,         &
@@ -246,7 +238,7 @@ program test_part_comm_graph
   endif
 
   do i_part = 1, n_part
-    call pdm_part_comm_graph_owner_get(pgc_vtx,  &
+    call pdm_part_comm_graph_owner_get(pcg_vtx,  &
                                        i_part-1, &
                                        is_owner)
 
@@ -267,218 +259,18 @@ program test_part_comm_graph
 
   !----------------------------------------
   ! Exchange constant-stride data
-  stride = 2
-  nullify(send_stride, &
-          send_data,   &
-          recv_stride, &
-          recv_data)
+  call exchanges_constant_stride(pcg_vtx, parts, pn_vtx_graph)
+  !----------------------------------------
 
-  call pdm_pointer_array_create(send_data,      &
-                                n_part,         &
-                                PDM_TYPE_DOUBLE)
-
-  do i_part = 1, n_part
-
-    ! Data for all entities in partition
-    allocate(parts(i_part)%data(pn_vtx(i_part) * stride))
-    do i_vtx = 1, pn_vtx(i_part)
-      do j = 1, stride
-        parts(i_part)%data((i_vtx-1)*stride+j) = 100.0d0*i_vtx  + &
-                                                  10.0d0*i_rank + &
-                                                   1.0d0*i_part + &
-                                                   0.1d0*(j-1)
-      enddo
-    enddo
-
-
-    ! Allocate data for entities on partition boundary
-    allocate(parts(i_part)%send_data(pn_vtx_graph(i_part) * stride))
-    call pdm_pointer_array_part_set(send_data,               &
-                                    i_part-1,                &
-                                    parts(i_part)%send_data)
-  enddo
-
-  ! Four rounds of echanges (blocking, then non-blocking, then persistent (twice))
-  do i_exch = 1, 4
-
-    if (verbose) then
-      write (funit, *) "SEND"
-    endif
-
-    ! Prepare send_data (multiply part_data) by i_exch
-    do i_part = 1, n_part
-      if (verbose) then
-        write (funit, *) "part ", i_part
-      endif
-
-      call pdm_pointer_array_part_get(send_data, &
-                                      i_part-1,  &
-                                      data)
-       do i = 1, pn_vtx_graph(i_part)
-        i_vtx = parts(i_part)%vtx_graph(4*(i-1)+1)
-        do j = 1, stride
-          data((i-1)*stride+j) = i_exch * parts(i_part)%data((i_vtx-1)*stride+j)
-        enddo
-
-        if (verbose) then
-          write (funit, *) parts(i_part)%vtx_graph(4*(i-1)+1), i_rank, i_part
-          write (funit, *) "     ", data((i-1)*stride+1:i*stride)
-        endif
-      enddo
-    enddo
-
-    if (i_exch == 1) then
-      if (verbose) then
-        write (funit, *) "Blocking exchange"
-      endif
-      ! Blocking exchange
-      call pdm_part_comm_graph_exch(pgc_vtx,                   &
-                                    PDM_STRIDE_CST_INTERLACED, &
-                                    stride,                    &
-                                    send_stride,               &
-                                    send_data,                 &
-                                    recv_stride,               &
-                                    recv_data)
-
-    else if (i_exch == 2) then
-      if (verbose) then
-        write (funit, *) "Non-blocking exchange"
-      endif
-      ! Initiate non-blocking exchange
-      call pdm_part_comm_graph_iexch(pgc_vtx,                   &
-                                     PDM_MPI_COMM_KIND_P2P,     &
-                                     PDM_STRIDE_CST_INTERLACED, &
-                                     stride,                    &
-                                     send_stride,               &
-                                     send_data,                 &
-                                     recv_stride,               &
-                                     recv_data,                 &
-                                     request)
-
-      ! Do stuff here to cover MPI communications...
-
-      ! Wait for exchange to finish
-      call pdm_part_comm_graph_exch_wait(pgc_vtx, request)
-
-    else
-      if (verbose) then
-        write (funit, *) "Persistent exchange"
-      endif
-
-      if (i_exch == 3) then
-        ! Prepare persistent exchange
-        call pdm_part_comm_graph_exch_init(pgc_vtx,                   &
-                                           PDM_MPI_COMM_KIND_P2P,     &
-                                           PDM_STRIDE_CST_INTERLACED, &
-                                           stride,                    &
-                                           send_stride,               &
-                                           send_data,                 &
-                                           recv_stride,               &
-                                           recv_data,                 &
-                                           request)
-      endif
-
-      ! We can use the same persistent channel multiple times (with the same send/recv buffers)
-
-      ! Start exchange
-      call pdm_part_comm_graph_exch_start(pgc_vtx, request)
-
-      ! Do stuff here to cover MPI communications...
-
-      ! Wait for exchange to finish
-      call pdm_part_comm_graph_exch_wait(pgc_vtx, request)
-
-      if (i_exch == 4) then
-        ! Free the persistent exchange
-        call pdm_part_comm_graph_exch_free(pgc_vtx, request)
-      endif
-    endif
-
-
-    ! Check the received data
-    if (verbose) then
-      write (funit, *) "RECV"
-    endif
-
-    do i_part = 1, n_part
-
-      if (verbose) then
-        write (funit, *) "part ", i_part
-      endif
-
-      call pdm_pointer_array_part_get(recv_data, &
-                                      i_part-1,  &
-                                      data)
-
-      do i = 1, pn_vtx_graph(i_part)
-
-        if (verbose) then
-          write (funit, *) parts(i_part)%vtx_graph(4*(i-1)+4), parts(i_part)%vtx_graph(4*(i-1)+2), parts(i_part)%vtx_graph(4*(i-1)+3)
-          write (funit, *) "     ", data((i-1)*stride+1:i*stride)
-        endif
-
-        do j = 1, stride
-          expected = 100.0d0*parts(i_part)%vtx_graph(4*(i-1)+4) + &
-                      10.0d0*parts(i_part)%vtx_graph(4*(i-1)+2) + &
-                       1.0d0*parts(i_part)%vtx_graph(4*(i-1)+3) + &
-                       0.1d0*(j-1)
-          expected = expected * i_exch
-
-          diff = abs(data((i-1)*stride+j) - expected)
-          if (diff > 1.e-9) then
-            print *, "Error i_exch", i_exch, ": (", i_rank, i_part, i, j, ") expected ", expected, " but received ", data((i-1)*stride+j), " from", parts(i_part)%vtx_graph(4*(i-1)+2:4*i)
-            stop
-          endif
-
-        enddo
-      enddo
-    enddo
-
-    if (i_exch /= 3) then
-      call pdm_pointer_array_free(recv_data)
-    endif
-  enddo
+  !----------------------------------------
+  ! Exchange variable-stride data
+  call exchanges_variable_stride(pcg_vtx, parts, pn_vtx_graph)
   !----------------------------------------
 
 
   !----------------------------------------
   ! Reduction
-  nullify(part_data)
-  call pdm_pointer_array_create(part_data,      &
-                                n_part,         &
-                                PDM_TYPE_DOUBLE)
-  do i_part = 1, n_part
-    call pdm_pointer_array_part_set(part_data,          &
-                                    i_part-1,           &
-                                    parts(i_part)%data)
-  enddo
-
-  call pdm_part_comm_graph_all_reduce(pgc_vtx,   &
-                                      stride,    &
-                                      MPI_MAX,   &
-                                      part_data)
-
-  if (verbose) then
-    write (funit, *) "REDUCE"
-  endif
-
-  do i_part = 1, n_part
-    if (verbose) then
-      write (funit, *) "part ", i_part
-    endif
-    call pdm_pointer_array_part_get(part_data, &
-                                    i_part-1,  &
-                                    data)
-
-    do i = 1, pn_vtx_graph(i_part)
-      i_vtx = parts(i_part)%vtx_graph(4*(i-1)+1)
-      ! TODO: check result?
-      if (verbose) then
-        write (funit, *) i_vtx
-        write (funit, *) "     ", data((i_vtx-1)*stride+1:i_vtx*stride)
-      endif
-    enddo
-  enddo
+  call all_reduce(pcg_vtx, parts)
   !----------------------------------------
 
 
@@ -576,7 +368,7 @@ program test_part_comm_graph
 
   !----------------------------------------
   ! Create edge Part Comm Graph for the vtx Part Comm Graph
-  call pdm_part_comm_graph_entity1_to_part_comm_graph_entity2(pgc_vtx,       &
+  call pdm_part_comm_graph_entity1_to_part_comm_graph_entity2(pcg_vtx,       &
                                                               pn_vtx,        &
                                                               pn_edge,       &
                                                               pedge_vtx_idx, &
@@ -610,18 +402,19 @@ program test_part_comm_graph
   !----------------------------------------
 
 
+  if (verbose) then
+    close(funit)
+  endif
+
+
 
   !----------------------------------------
   ! Free memory
-  call pdm_pointer_array_free(part_data)
-  call pdm_pointer_array_free(send_data)
-  call pdm_part_comm_graph_free(pgc_vtx)
+  call pdm_part_comm_graph_free(pcg_vtx)
   call pdm_part_comm_graph_free(pcg_edge)
 
   do i_part = 1, n_part
     deallocate(parts(i_part)%vtx_graph)
-    deallocate(parts(i_part)%data)
-    deallocate(parts(i_part)%send_data)
     deallocate(parts(i_part)%edge_vtx_idx)
     deallocate(parts(i_part)%edge_vtx)
   enddo
@@ -645,15 +438,21 @@ program test_part_comm_graph
   contains
 
 
+
+
+
   function check_array_eq(a, b, n) &
   result (equal)
 
     implicit none
+
+    !--------------------------------------------------------------
     integer(pdm_l_num_s) :: a(:)
     integer(pdm_l_num_s) :: b(:)
     integer              :: n
     logical              :: equal
     integer              :: i
+    !--------------------------------------------------------------
 
     equal = .true.
     do i = 1, n
@@ -673,6 +472,7 @@ program test_part_comm_graph
 
     implicit none
 
+    !--------------------------------------------------------------
     integer              :: i_rank
     integer              :: i_part
     integer(pdm_l_num_s) :: is_owner(:)
@@ -681,6 +481,7 @@ program test_part_comm_graph
     integer(pdm_l_num_s) :: exp_is_owner_02(7)
     integer(pdm_l_num_s) :: exp_is_owner_11(6)
     integer(pdm_l_num_s) :: exp_is_owner_12(7)
+    !--------------------------------------------------------------
 
     exp_is_owner_01 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     exp_is_owner_02 = [0, 0, 0, 0, 0, 0, 1]
@@ -710,6 +511,7 @@ program test_part_comm_graph
 
     implicit none
 
+    !--------------------------------------------------------------
     integer              :: i_rank
     integer              :: i_part
     integer(pdm_l_num_s) :: edge_graph(:)
@@ -718,6 +520,7 @@ program test_part_comm_graph
     integer(pdm_l_num_s) :: exp_edge_graph_02(20)
     integer(pdm_l_num_s) :: exp_edge_graph_11(16)
     integer(pdm_l_num_s) :: exp_edge_graph_12(16)
+    !--------------------------------------------------------------
 
     exp_edge_graph_01 = [ 6, 0, 2, 1, &
                           8, 0, 2, 3, &
@@ -758,6 +561,542 @@ program test_part_comm_graph
     endif
 
   end function check_edge_graph
+
+
+
+  subroutine all_reduce(pcg, parts)
+    ! Test in-place reduction
+    implicit none
+
+    !--------------------------------------------------------------
+    integer, parameter                  :: stride = 2
+
+    type(c_ptr),          intent(in)    :: pcg
+    type(my_part_t),      intent(inout) :: parts(n_part)
+
+    type(pdm_pointer_array_t), pointer  :: part_data
+    integer                             :: i_part, i_vtx, j, i_op
+    integer                             :: op
+    !--------------------------------------------------------------
+
+    nullify(part_data)
+
+    if (verbose) then
+      write (funit, *) "ALL REDUCE"
+    endif
+
+    ! Allocate part data
+    call pdm_pointer_array_create(part_data,      &
+                                  n_part,         &
+                                  PDM_TYPE_DOUBLE)
+
+    do i_part = 1, n_part
+
+      allocate(parts(i_part)%data(pn_vtx(i_part) * stride))
+
+      call pdm_pointer_array_part_set(part_data,          &
+                                      i_part-1,           &
+                                      parts(i_part)%data)
+    enddo
+
+
+    ! Test all possible reduction operations (MIN, MAX, SUM)
+    do i_op = 1, 3
+
+      ! Reset part data
+      if (verbose .and. (i_op == 1)) then
+        write (funit, *) "BEFORE REDUCTION"
+      endif
+
+      do i_part = 1, n_part
+
+        if (verbose .and. (i_op == 1)) then
+          write (funit, *) "part ", i_part
+        endif
+
+        do i_vtx = 1, pn_vtx(i_part)
+          do j = 1, stride
+            parts(i_part)%data((i_vtx-1)*stride+j) = 100.0d0*i_vtx  + &
+                                                      10.0d0*i_rank + &
+                                                       1.0d0*i_part + &
+                                                       0.1d0*(j-1)
+          enddo
+
+          if (verbose .and. (i_op == 1)) then
+            write (funit, *) i_vtx, " :", parts(i_part)%data((i_vtx-1)*stride+1:i_vtx*stride)
+          endif
+        enddo
+      enddo
+
+      ! Perform reduction operation
+      if (i_op == 1) then
+        op = MPI_MIN
+      else if (i_op == 2) then
+        op = MPI_MAX
+      else
+        op = MPI_SUM
+      endif
+
+      if (verbose) then
+        write (funit, *) "i_op", i_op
+      endif
+
+      call pdm_part_comm_graph_all_reduce(pcg_vtx,   &
+                                          stride,    &
+                                          op,        &
+                                          part_data)
+
+      ! Check result of reduction operation
+      if (verbose) then
+        write (funit, *) "AFTER REDUCTION"
+      endif
+
+      do i_part = 1, n_part
+
+        if (verbose) then
+          write (funit, *) "part ", i_part
+        endif
+
+        do i_vtx = 1, pn_vtx(i_part)
+          if (verbose) then
+            write (funit, *) i_vtx, " :", parts(i_part)%data((i_vtx-1)*stride+1:i_vtx*stride)
+          endif
+
+          ! TODO: check values?
+        enddo
+      enddo
+
+    enddo
+
+    do i_part = 1, n_part
+      deallocate(parts(i_part)%data)
+    enddo
+
+    call pdm_pointer_array_free(part_data)
+
+  end subroutine all_reduce
+
+
+
+  subroutine exchanges_constant_stride(pcg, parts, pn_vtx_graph)
+    ! Test different modes of exchanges with constant stride
+    implicit none
+
+    !--------------------------------------------------------------
+    integer, parameter                  :: cst_stride = 3
+
+    type(c_ptr),          intent(in)    :: pcg
+    type(my_part_t),      intent(inout) :: parts(n_part)
+    integer(pdm_l_num_s), intent(in)    :: pn_vtx_graph(n_part)
+    integer                             :: i_part, i_vtx, i, j, k
+
+    integer                             :: send_size
+    type(pdm_pointer_array_t), pointer  :: send_stride ! not used here
+    type(pdm_pointer_array_t), pointer  :: send_data
+    type(pdm_pointer_array_t), pointer  :: recv_stride ! not used here
+    type(pdm_pointer_array_t), pointer  :: recv_data
+    integer                             :: i_exch
+    integer                             :: request
+
+    real(8),                   pointer  :: data(:)
+    real(8)                             :: expected, diff
+    !--------------------------------------------------------------
+
+    if (verbose) then
+      write (funit, *) "EXCHANGE CONSTANT STRIDE"
+    endif
+
+    nullify(send_stride, &
+            send_data,   &
+            recv_stride, &
+            recv_data)
+
+    call pdm_pointer_array_create(send_data,       &
+                                  n_part,          &
+                                  PDM_TYPE_DOUBLE)
+
+    ! Allocate send data
+    do i_part = 1, n_part
+
+      send_size = cst_stride * pn_vtx_graph(i_part)
+
+      allocate(parts(i_part)%send_data(send_size))
+
+      call pdm_pointer_array_part_set(send_data,               &
+                                      i_part-1,                &
+                                      parts(i_part)%send_data)
+
+    enddo
+
+
+    ! Four rounds of echanges (blocking, then non-blocking, then persistent (twice))
+    do i_exch = 1, 4
+
+      ! Prepare send_data (multiply part_data) by i_exch
+      if (verbose) then
+        write (funit, *) "SEND", i_exch
+      endif
+
+      do i_part = 1, n_part
+        if (verbose) then
+          write (funit, *) "part ", i_part
+        endif
+
+        call pdm_pointer_array_part_get(send_data, &
+                                        i_part-1,  &
+                                        data)
+        k = 1
+        do i = 1, pn_vtx_graph(i_part)
+          i_vtx = parts(i_part)%vtx_graph(4*(i-1)+1)
+          do j = 1, cst_stride
+            data(k) = 100.0d0*i_vtx  + &
+                       10.0d0*i_rank + &
+                        1.0d0*i_part + &
+                        0.1d0*(j-1)
+            data(k) = i_exch * data(k)
+            k = k + 1
+          enddo
+
+          if (verbose) then
+            write (funit, *) parts(i_part)%vtx_graph(4*(i-1)+1), i_rank, i_part
+            write (funit, *) "      ", data((i-1)*cst_stride+1:i*cst_stride)
+          endif
+        enddo
+      enddo
+
+
+      if (i_exch == 1) then
+        if (verbose) then
+          write (funit, *) "Blocking exchange"
+        endif
+        ! Blocking exchange
+        call pdm_part_comm_graph_exch(pcg_vtx,                   &
+                                      PDM_STRIDE_CST_INTERLACED, &
+                                      cst_stride,                &
+                                      send_stride,               &
+                                      send_data,                 &
+                                      recv_stride,               &
+                                      recv_data)
+
+      else if (i_exch == 2) then
+        if (verbose) then
+          write (funit, *) "Non-blocking exchange"
+        endif
+        ! Initiate non-blocking exchange
+        call pdm_part_comm_graph_iexch(pcg_vtx,                   &
+                                       PDM_MPI_COMM_KIND_P2P,     &
+                                       PDM_STRIDE_CST_INTERLACED, &
+                                       cst_stride,                &
+                                       send_stride,               &
+                                       send_data,                 &
+                                       recv_stride,               &
+                                       recv_data,                 &
+                                       request)
+
+        ! Do stuff here to cover MPI communications...
+
+        ! Wait for exchange to finish
+        call pdm_part_comm_graph_exch_wait(pcg_vtx, request)
+
+      else
+        if (verbose) then
+          write (funit, *) "Persistent exchange"
+        endif
+
+        if (i_exch == 3) then
+          ! Prepare persistent exchange
+          call pdm_part_comm_graph_exch_init(pcg_vtx,                   &
+                                             PDM_MPI_COMM_KIND_P2P,     &
+                                             PDM_STRIDE_CST_INTERLACED, &
+                                             cst_stride,                &
+                                             send_stride,               &
+                                             send_data,                 &
+                                             recv_stride,               &
+                                             recv_data,                 &
+                                             request)
+        endif
+
+        ! We can use the same persistent channel multiple times (with the same send/recv buffers)
+
+        ! Start exchange
+        call pdm_part_comm_graph_exch_start(pcg_vtx, request)
+
+        ! Do stuff here to cover MPI communications...
+
+        ! Wait for exchange to finish
+        call pdm_part_comm_graph_exch_wait(pcg_vtx, request)
+
+        if (i_exch == 4) then
+          ! Free the persistent exchange
+          call pdm_part_comm_graph_exch_free(pcg_vtx, request)
+        endif
+      endif
+
+
+      ! Check the received data
+      if (verbose) then
+        write (funit, *) "RECV", i_exch
+      endif
+
+      do i_part = 1, n_part
+
+        if (verbose) then
+          write (funit, *) "part ", i_part
+        endif
+
+        call pdm_pointer_array_part_get(recv_data, &
+                                        i_part-1,  &
+                                        data)
+
+        k = 1
+        do i = 1, pn_vtx_graph(i_part)
+
+          if (verbose) then
+            write (funit, *) "  from", parts(i_part)%vtx_graph(4*(i-1)+4), parts(i_part)%vtx_graph(4*(i-1)+2), parts(i_part)%vtx_graph(4*(i-1)+3)
+            write (funit, *) "      ", data((i-1)*cst_stride+1:i*cst_stride)
+          endif
+
+          do j = 1, cst_stride
+            expected = 100.0d0*parts(i_part)%vtx_graph(4*(i-1)+4) + &
+                        10.0d0*parts(i_part)%vtx_graph(4*(i-1)+2) + &
+                         1.0d0*parts(i_part)%vtx_graph(4*(i-1)+3) + &
+                         0.1d0*(j-1)
+            expected = expected * i_exch
+
+            diff = abs(data(k) - expected)
+            if (diff > 1.e-9) then
+              print *, "Error i_exch", i_exch, ": (", i_rank, i_part, i, j, ") expected ", expected, " but received ", data(k), " from", parts(i_part)%vtx_graph(4*(i-1)+2:4*i)
+              stop
+            endif
+
+            k = k + 1
+
+          enddo
+        enddo
+
+      enddo
+
+      if (i_exch /= 3) then
+        call pdm_pointer_array_free(recv_data)
+      endif
+
+    enddo
+
+    do i_part = 1, n_part
+      deallocate(parts(i_part)%send_data)
+    enddo
+
+    call pdm_pointer_array_free(send_data)
+
+  end subroutine exchanges_constant_stride
+
+
+
+
+  subroutine exchanges_variable_stride(pcg, parts, pn_vtx_graph)
+    ! Test different modes of exchanges with variable stride
+    implicit none
+
+    !--------------------------------------------------------------
+    type(c_ptr),          intent(in)    :: pcg
+    type(my_part_t),      intent(inout) :: parts(n_part)
+    integer(pdm_l_num_s), intent(in)    :: pn_vtx_graph(n_part)
+    integer                             :: i_part, i_vtx, i, j, k, idx
+
+    integer                             :: send_size
+    type(pdm_pointer_array_t), pointer  :: send_stride
+    type(pdm_pointer_array_t), pointer  :: send_data
+    type(pdm_pointer_array_t), pointer  :: recv_stride
+    type(pdm_pointer_array_t), pointer  :: recv_data
+    integer                             :: i_exch
+    integer                             :: cst_stride = 0 ! not used here
+    integer                             :: request
+
+    integer(pdm_l_num_s),      pointer  :: stride(:)
+    real(8),                   pointer  :: data(:)
+    real(8)                             :: expected, diff
+    !--------------------------------------------------------------
+
+    if (verbose) then
+      write (funit, *) "EXCHANGE VARIABLE STRIDE"
+    endif
+
+    nullify(send_stride, &
+            send_data,   &
+            recv_stride, &
+            recv_data)
+
+    call pdm_pointer_array_create(send_stride,  &
+                                  n_part,       &
+                                  PDM_TYPE_INT)
+
+    call pdm_pointer_array_create(send_data,       &
+                                  n_part,          &
+                                  PDM_TYPE_DOUBLE)
+
+    ! Create send_stride and allocate send data
+    do i_part = 1, n_part
+
+      allocate(parts(i_part)%send_stride(pn_vtx_graph(i_part)))
+
+      send_size = 0
+      do i = 1, pn_vtx_graph(i_part)
+        i_vtx = parts(i_part)%vtx_graph(4*(i-1)+1)
+        parts(i_part)%send_stride(i) = 1 + modulo(i_vtx, 4)
+        send_size = send_size + parts(i_part)%send_stride(i)
+      enddo
+
+      allocate(parts(i_part)%send_data(send_size))
+
+      call pdm_pointer_array_part_set(send_stride,               &
+                                      i_part-1,                  &
+                                      parts(i_part)%send_stride)
+
+      call pdm_pointer_array_part_set(send_data,               &
+                                      i_part-1,                &
+                                      parts(i_part)%send_data)
+
+    enddo
+
+
+    ! Two rounds of echanges (blocking, then non-blocking)
+    do i_exch = 1, 2
+
+      ! Prepare send_data (multiply part_data) by i_exch
+      if (verbose) then
+        write (funit, *) "SEND", i_exch
+      endif
+
+      do i_part = 1, n_part
+        if (verbose) then
+          write (funit, *) "part ", i_part
+        endif
+
+        call pdm_pointer_array_part_get(send_data, &
+                                        i_part-1,  &
+                                        data)
+        k = 1
+        do i = 1, pn_vtx_graph(i_part)
+          idx = k
+          i_vtx = parts(i_part)%vtx_graph(4*(i-1)+1)
+          do j = 1, parts(i_part)%send_stride(i)
+            data(k) = 100.0d0*i_vtx  + &
+                       10.0d0*i_rank + &
+                        1.0d0*i_part + &
+                        0.1d0*(j-1)
+            data(k) = i_exch * data(k)
+            k = k + 1
+          enddo
+
+          if (verbose) then
+            write (funit, *) parts(i_part)%vtx_graph(4*(i-1)+1), i_rank, i_part
+            write (funit, *) "      stride =", parts(i_part)%send_stride(i)
+            write (funit, *) "      data   =", data(idx:k-1)
+          endif
+        enddo
+      enddo
+
+
+      if (i_exch == 1) then
+        if (verbose) then
+          write (funit, *) "Blocking exchange"
+        endif
+        ! Blocking exchange
+        call pdm_part_comm_graph_exch(pcg_vtx,                   &
+                                      PDM_STRIDE_VAR_INTERLACED, &
+                                      cst_stride,                &
+                                      send_stride,               &
+                                      send_data,                 &
+                                      recv_stride,               &
+                                      recv_data)
+
+      else if (i_exch == 2) then
+        if (verbose) then
+          write (funit, *) "Non-blocking exchange"
+        endif
+        ! Initiate non-blocking exchange
+        call pdm_part_comm_graph_iexch(pcg_vtx,                   &
+                                       PDM_MPI_COMM_KIND_P2P,     &
+                                       PDM_STRIDE_VAR_INTERLACED, &
+                                       cst_stride,                &
+                                       send_stride,               &
+                                       send_data,                 &
+                                       recv_stride,               &
+                                       recv_data,                 &
+                                       request)
+
+        ! Do stuff here to cover MPI communications...
+
+        ! Wait for exchange to finish
+        call pdm_part_comm_graph_exch_wait(pcg_vtx, request)
+
+      endif
+
+
+      ! Check the received data
+      if (verbose) then
+        write (funit, *) "RECV", i_exch
+      endif
+
+      do i_part = 1, n_part
+
+        if (verbose) then
+          write (funit, *) "part ", i_part
+        endif
+
+        call pdm_pointer_array_part_get(recv_stride, &
+                                        i_part-1,    &
+                                        stride)
+
+
+        call pdm_pointer_array_part_get(recv_data, &
+                                        i_part-1,  &
+                                        data)
+
+        k = 1
+        do i = 1, pn_vtx_graph(i_part)
+
+          if (verbose) then
+            write (funit, *) "  from", parts(i_part)%vtx_graph(4*(i-1)+4), parts(i_part)%vtx_graph(4*(i-1)+2), parts(i_part)%vtx_graph(4*(i-1)+3)
+            write (funit, *) "      stride =", stride(i)
+            write (funit, *) "      data   =", data(k:k+stride(i)-1)
+          endif
+
+          do j = 1, stride(i)
+            expected = 100.0d0*parts(i_part)%vtx_graph(4*(i-1)+4) + &
+                        10.0d0*parts(i_part)%vtx_graph(4*(i-1)+2) + &
+                         1.0d0*parts(i_part)%vtx_graph(4*(i-1)+3) + &
+                         0.1d0*(j-1)
+            expected = expected * i_exch
+
+            diff = abs(data(k) - expected)
+            if (diff > 1.e-9) then
+              print *, "Error i_exch", i_exch, ": (", i_rank, i_part, i, j, ") expected ", expected, " but received ", data(k), " from", parts(i_part)%vtx_graph(4*(i-1)+2:4*i)
+              stop
+            endif
+
+            k = k + 1
+
+          enddo
+        enddo
+
+      enddo
+
+
+      call pdm_pointer_array_free(recv_stride)
+      call pdm_pointer_array_free(recv_data)
+
+    enddo
+
+    do i_part = 1, n_part
+      deallocate(parts(i_part)%send_stride, &
+                 parts(i_part)%send_data)
+    enddo
+
+    call pdm_pointer_array_free(send_stride)
+    call pdm_pointer_array_free(send_data)
+
+  end subroutine exchanges_variable_stride
 
 
 end program test_part_comm_graph
