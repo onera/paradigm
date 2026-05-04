@@ -1544,9 +1544,10 @@ _contouring_tetrahedra
     }
 
   } // End of loop on elements
-  if (enable_debug==1) log_trace("iso_n_face        = %d\n", iso_n_face);
-  if (enable_debug==1) log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
-
+  if (enable_debug) {
+    log_trace("iso_n_face        = %d\n", iso_n_face);
+    log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
+  }
 
 
 
@@ -1556,10 +1557,12 @@ _contouring_tetrahedra
   if (*out_iso_face_vtx_idx != NULL) {
     prev_size = (*out_iso_face_vtx_idx)[*out_iso_n_face];
   }
-  if (enable_debug==1) log_trace("\n");
-  if (enable_debug==1) log_trace("iso_n_face        = %d\n", iso_n_face);
-  if (enable_debug==1) log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
-  if (enable_debug==1) log_trace("s_face_vtx        = %d\n", s_face_vtx);
+  if (enable_debug) {
+    log_trace("\n");
+    log_trace("iso_n_face        = %d\n", iso_n_face);
+    log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
+    log_trace("s_face_vtx        = %d\n", s_face_vtx);
+  }
 
   PDM_g_num_t *iso_face_parent_gnum = NULL;
   int         *iso_face_vtx_idx     = NULL;
@@ -1571,10 +1574,10 @@ _contouring_tetrahedra
   PDM_realloc(*out_iso_face_vtx,         iso_face_vtx,           prev_size  + s_face_vtx, int        );
   PDM_realloc(*out_iso_face_parent_idx,  iso_face_parent_idx,    iso_n_face + 1,          int        );
   PDM_realloc(*out_iso_face_parent    ,  iso_face_parent,        iso_n_face_parent,       int        );
-  iso_face_vtx_idx   [0] = 0;
   PDM_array_reset_int(iso_face_def, n_face, 0);
+  iso_face_vtx_idx   [0] = 0;
   iso_face_parent_idx[0] = 0.;
-  
+
   iso_n_face        = *out_iso_n_face;
   iso_n_face_parent = *out_iso_n_face_parent;
 
@@ -1588,9 +1591,10 @@ _contouring_tetrahedra
 
   /* Second loop to fill */
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-    if (debug_loop==1) log_trace("\n");
-    if (debug_loop==1) log_trace("i_elt = %d\n", i_elt);
-
+    if (debug_loop) {
+      log_trace("\n");
+      log_trace("i_elt = %d\n", i_elt);
+    }
     unsigned char pattern = 0;
     for (int i_edge = 0; i_edge < 6; i_edge++) {
       char bit = 0;
@@ -2007,31 +2011,31 @@ _debug_ngon_cell
 static void
 _trace_isopolygon_in_cell
 (
- int   cell_face_n,
- int  *cell_face,
- int  *face_edge_idx,
- int  *face_edge,
- int  *edge_vtx,
- double *vtx_coord, // only for enable_debug
- double *vtx_field, // only for enable_debug
- double  isovalue,  // only for enable_debug
- int  *is_active_face,
- int  *edge_to_iso_vtx,
- int  *i_edge_in_cell,
- int  *cell_edge_face,
- int  *cell_edge,
- int  *is_used_edge,
- int  *face_tag,
- int  *iso_n_face,
- int **iso_face_vtx_idx,
- int **iso_face_vtx,
- int  *tmp_iso_n_face,
- int  *iso_n_edge,
- int **iso_edge_vtx,
- int **iso_edge_parent_idx,
- int **iso_edge_parent,
- int  *tmp_iso_n_edge
- )
+  int      cell_face_n,
+  int     *cell_face,
+  int     *face_edge_idx,
+  int     *face_edge,
+  int     *edge_vtx,
+  double  *vtx_coord, // only for enable_debug
+  double  *vtx_field, // only for enable_debug
+  double   isovalue,  // only for enable_debug
+  int     *is_active_face,
+  int     *edge_to_iso_vtx,
+  int     *i_edge_in_cell,
+  int     *cell_edge_face,
+  int     *cell_edge,
+  int     *is_used_edge,
+  int     *face_tag,
+  int     *iso_n_face,
+  int    **iso_face_vtx_idx,
+  int    **iso_face_vtx,
+  int     *tmp_iso_n_face,
+  int     *iso_n_edge,
+  int    **iso_edge_vtx,
+  int    **iso_edge_parent_idx,
+  int    **iso_edge_parent,
+  int     *tmp_iso_n_edge
+)
 {
   int dbg = 0;
 
@@ -2064,7 +2068,7 @@ _trace_isopolygon_in_cell
   if (dbg) {
     PDM_log_trace_array_int(cell_edge, cell_edge_n, "  cell_edge : ");
   }
-  if (cell_edge_n < 3) {//== 0) {
+  if (cell_edge_n < 3) {
     // Current cell is not traversed by the isosurface
     return;
   }
@@ -2161,7 +2165,7 @@ _trace_isopolygon_in_cell
 
         // "internal" loop to find the (unique) edge in current face that starts at vertex current_dest
         for (int j = 0; j < face_edge_n; j++) {
-          int edge_id = PDM_ABS(fe[j]) - 1;//(i_edge+j)%face_edge_n]) - 1;
+          int edge_id = PDM_ABS(fe[j]) - 1;
           if (edge_id == current_edge) continue;
           if (dbg) {
             log_trace("      j = %d, edge_id = %d, isovtx : %d\n", j, edge_id, edge_to_iso_vtx[edge_id]);
@@ -2200,7 +2204,7 @@ _trace_isopolygon_in_cell
               int iso_edge_orig = ifv[s_ifv-1];
               int iso_edge_dest = -1;
               if (current_cell_edge == start_edge) {
-                is_complete = 1;
+                is_complete   = 1;
                 iso_edge_dest = ifv[0];
               }
               else {
@@ -2272,9 +2276,6 @@ _trace_isopolygon_in_cell
       s_ifv--;
     }
 
-    // last bnd edge if
-
-
     if (s_ifv > 2) {
       // Non-degenerate isopolygon
       if (dbg) {
@@ -2284,9 +2285,6 @@ _trace_isopolygon_in_cell
       }
       (*iso_face_vtx_idx)[*iso_n_face+1] = (*iso_face_vtx_idx)[*iso_n_face] + s_ifv;
       (*iso_n_face)++;
-    }
-    else {
-      // TODO: cancel iso_edges??
     }
 
   } // end of current cell
@@ -2589,9 +2587,7 @@ _isosurface_ngon_single_part
     if (isovalue_n_active_edge == 0) {
       isovalue_vtx_idx [i_isovalue+1] = iso_n_vtx;
       isovalue_face_idx[i_isovalue+1] = iso_n_face;
-      // if (face_tag != NULL) {
-        isovalue_edge_idx[i_isovalue+1] = iso_n_edge;
-      // }
+      isovalue_edge_idx[i_isovalue+1] = iso_n_edge;
       continue;
     }
 
@@ -2668,9 +2664,7 @@ _isosurface_ngon_single_part
     if (is_3d) {
       isovalue_face_idx[i_isovalue+1] = iso_n_face;
     }
-    // if (face_tag != NULL) {
-      isovalue_edge_idx[i_isovalue+1] = iso_n_edge;
-    // }
+    isovalue_edge_idx[i_isovalue+1] = iso_n_edge;
 
   } // End of loop on isovalues
 
