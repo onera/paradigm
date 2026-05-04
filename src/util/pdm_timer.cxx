@@ -372,9 +372,9 @@ _traverse_and_add_lines
   }
 
   // 1. Préparer l'indentation
-  std::string indent = "";
+  std::string indent = "|";
   for (int i = 0; i < depth; ++i) {
-    indent += "  |";
+    indent += "  ";
   }
   std::string indented_name = indent + node.event_name;
 
