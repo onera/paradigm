@@ -2238,7 +2238,7 @@ _trace_isopolygon_in_cell
               /* Add iso_edge if necessary */
               if (face_tag != NULL) {
                 if (face_tag[face_id] > 0) {
-                  if (iso_edge_dest > 0) {
+                  if (iso_edge_dest > 0 && (iso_edge_dest != iso_edge_orig)) {
                     // add 1 edge
                     if (*iso_n_edge >= *tmp_iso_n_edge) {
                       *tmp_iso_n_edge = PDM_MAX(*iso_n_edge+1, 2*(*tmp_iso_n_edge));
