@@ -248,7 +248,7 @@ _format_full_condensed_stat
   std::string min_str  = _format_condensed_value(t_min, r_min);
   std::string max_str  = _format_condensed_value(t_max, r_max);
 
-  std::string content = mean_str + "/" + min_str + "/" + max_str;
+  std::string content = mean_str + " / " + min_str + " / " + max_str;
 
   // Assurer l'alignement à droite dans la largeur donnée
   std::stringstream ss_final;
