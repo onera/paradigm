@@ -372,12 +372,17 @@ module pdm_part_comm_graph
 
 
 
-  subroutine PDM_part_comm_graph_all_reduce(pcg,    &
-                                            stride, &
-                                            op,     &
-                                            pdata)
-    ! Inplace reduction value on current graph. Allow synchronization.
-    ! Only MPI_DOUBLE and MPI_INT data types are supported
+  subroutine PDM_part_comm_graph_allreduce(pcg,               &
+                                           stride,            &
+                                           op,                &
+                                           data_def_graph, &
+                                           data)
+    ! Perform a reduction operation on constant-stride data.
+    ! The data can be defined either for only the entities connected in the graph, or the whole partition.
+    ! The reduction is performed in place.
+    !
+    ! .. warning:: Only ``real(8)`` and ``integer(4)`` data types are supported.
+    !              Only ``MPI_SUM``, ``MPI_MIN`` and ``MPI_MAX`` operations are supported.
 #ifdef PDM_HAVE_FORTRAN_MPI_MODULE
     use mpi
 #endif
@@ -385,49 +390,60 @@ module pdm_part_comm_graph
 #ifndef PDM_HAVE_FORTRAN_MPI_MODULE
     include "mpif.h"
 #endif
-    type(c_ptr),               intent(in) :: pcg    ! Part Comm Graph instance
-    integer,                   intent(in) :: stride ! Constant stride value
-    integer,                   intent(in) :: op     ! Reduction operation kind (MPI_SUM/MPI_MIN/MPI_MAX)
-    type(pdm_pointer_array_t), pointer    :: pdata  ! Buffer of data to synchronise (size = n_entity)
+    type(c_ptr),               intent(in) :: pcg            ! Part Comm Graph instance
+    integer,                   intent(in) :: stride         ! Constant stride value
+    integer,                   intent(in) :: op             ! Reduction operation (``MPI_SUM``/``MPI_MIN``/``MPI_MAX``)
+    logical,                   intent(in) :: data_def_graph ! Is the data defined only for the graph entities?
+    type(pdm_pointer_array_t), pointer    :: data           ! Data to reduce
 
     type(c_ptr)                           :: c_datatype
     type(c_ptr)                           :: c_op
+    integer(c_int)                        :: c_data_def_graph
 
     interface
-      subroutine pdm_part_comm_graph_all_reduce_cf(pcg,      &
-                                                   datatype, &
-                                                   stride,   &
-                                                   op,       &
-                                                   pdata)    &
-      bind(c, name="PDM_part_comm_graph_all_reduce")
+      subroutine pdm_part_comm_graph_allreduce_cf(pcg,            &
+                                                  datatype,       &
+                                                  stride,         &
+                                                  op,             &
+                                                  data_def_graph, &
+                                                  data)           &
+      bind(c, name="PDM_part_comm_graph_allreduce")
         use iso_c_binding
         implicit none
         type(c_ptr),    value :: pcg
         type(c_ptr),    value :: datatype
         integer(c_int), value :: stride
         type(c_ptr),    value :: op
-        type(c_ptr),    value :: pdata
+        integer(c_int), value :: data_def_graph
+        type(c_ptr),    value :: data
       end subroutine
     end interface
 
-    if (pdata%type == PDM_TYPE_INT) then
+    if (data%type == PDM_TYPE_INT) then
       c_datatype = PDM_MPI_Type_f2c(MPI_INT)
-    else if (pdata%type == PDM_TYPE_DOUBLE) then
+    else if (data%type == PDM_TYPE_DOUBLE) then
       c_datatype = PDM_MPI_Type_f2c(MPI_DOUBLE)
     else
-      print *, "PDM_part_comm_graph_all_reduce: data type ", pdata%type, " is not supported"
+      print *, "PDM_part_comm_graph_allreduce: data type ", data%type, " is not supported"
       stop
     end if
 
     c_op = PDM_MPI_Op_f2c(op)
 
-    call pdm_part_comm_graph_all_reduce_cf(pcg,               &
-                                           c_datatype,        &
-                                           stride,            &
-                                           c_op,              &
-                                           c_loc(pdata%cptr))
+    if (data_def_graph) then
+      c_data_def_graph = 1
+    else
+      c_data_def_graph = 0
+    endif
 
-  end subroutine PDM_part_comm_graph_all_reduce
+    call pdm_part_comm_graph_allreduce_cf(pcg,              &
+                                          c_datatype,       &
+                                          stride,           &
+                                          c_op,             &
+                                          c_data_def_graph, &
+                                          c_loc(data%cptr))
+
+  end subroutine PDM_part_comm_graph_allreduce
 
 
 

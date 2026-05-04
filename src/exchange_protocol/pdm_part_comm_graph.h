@@ -521,11 +521,36 @@ PDM_part_comm_graph_entity_graph_get
 void
 PDM_part_comm_graph_all_reduce
 (
-  PDM_part_comm_graph_t   *pcg,
-  PDM_MPI_Datatype         datatype,
-  int                      stride,
-  PDM_MPI_Op               op,
-  unsigned char          **pdata
+  PDM_part_comm_graph_t  *pcg,
+  PDM_MPI_Datatype        datatype,
+  int                     stride,
+  PDM_MPI_Op              op,
+  unsigned char         **pdata
+);
+
+/**
+ * \brief Perform a reduction operation on constant-stride data.
+ *        The data can be defined either for only the entities connected in the graph, or the whole partition.
+ *        The reduction is performed in place.
+ * \warning Only \p PDM_MPI_DOUBLE and \p PDM_MPI_INT data types are supported.
+ *          Only \p PDM_MPI_SUM, \p PDM_MPI_MIN and \p PDM_MPI_MAX operations are supported.
+ *
+ * \param [in]    pcg            Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]    datatype       Data type ( \p PDM_MPI_DOUBLE / \p PDM_MPI_INT)
+ * \param [in]    stride         Constant stride value
+ * \param [in]    op             Reduction operation ( \p PDM_MPI_SUM / \p PDM_MPI_MIN / \p PDM_MPI_MAX)
+ * \param [in]    data_def_graph Is the data defined only for the graph entities?
+ * \param [inout] data           Data to reduce
+ */
+void
+PDM_part_comm_graph_allreduce
+(
+  PDM_part_comm_graph_t  *pcg,
+  PDM_MPI_Datatype        datatype,
+  int                     stride,
+  PDM_MPI_Op              op,
+  PDM_bool_t              data_def_graph,
+  unsigned char         **data
 );
 
 /**

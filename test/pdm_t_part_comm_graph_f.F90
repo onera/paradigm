@@ -270,7 +270,7 @@ program test_part_comm_graph
 
   !----------------------------------------
   ! Reduction
-  call all_reduce(pcg_vtx, parts)
+  call allreduce(pcg_vtx, parts)
   !----------------------------------------
 
 
@@ -564,7 +564,7 @@ program test_part_comm_graph
 
 
 
-  subroutine all_reduce(pcg, parts)
+  subroutine allreduce(pcg, parts)
     ! Test in-place reduction
     implicit none
 
@@ -641,10 +641,11 @@ program test_part_comm_graph
         write (funit, *) "i_op", i_op
       endif
 
-      call pdm_part_comm_graph_all_reduce(pcg_vtx,   &
-                                          stride,    &
-                                          op,        &
-                                          part_data)
+      call pdm_part_comm_graph_allreduce(pcg_vtx,   &
+                                         stride,    &
+                                         op,        &
+                                         .false.,   &
+                                         part_data)
 
       ! Check result of reduction operation
       if (verbose) then
@@ -674,7 +675,7 @@ program test_part_comm_graph
 
     call pdm_pointer_array_free(part_data)
 
-  end subroutine all_reduce
+  end subroutine allreduce
 
 
 

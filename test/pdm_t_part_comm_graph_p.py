@@ -56,13 +56,13 @@ def test_constructor():
     assert (recv_stri[0] == np.array([0, 1, 0])).all()
     assert (recv_data[0] == np.array([1])).all()
 
-  # > All reduce
+  # > Allreduce
   if i_rank == 0:
     pdata = [np.ones(10, dtype=np.int32)]
   else:
     pdata = [np.ones(10, dtype=np.int32)]
 
-  pcg.all_reduce(1, MPI.SUM, pdata)
+  pcg.allreduce(1, MPI.SUM, False, pdata)
   if i_rank == 0:
     assert( pdata == np.array([1, 1, 2, 1, 1, 2, 1, 1, 2, 1])).all()
   else:

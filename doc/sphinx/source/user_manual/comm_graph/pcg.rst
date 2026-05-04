@@ -33,7 +33,7 @@ Note that **Part Comm Graph** can be used with any type of entity, including (bu
   :width: 95%
   :alt: Part Comm Graph
 
-Note that entities connected to more than one entities appear multiple times in their local part of the graph (e.g., vertex 10 in rank 0, part 1).
+Note that entities connected to more than one entities appear multiple times in their local part of the graph (e.g., vertex 8 in rank 0, part 1).
 Also, the communication graph *must* be symmetric.
 
 From this description of the communication graph, **Part Comm Graph** builds internal data structures to ease communications between entities connected in the graph.
@@ -162,6 +162,46 @@ API
 .. dropdown:: Exchange data
 
   Data can be exchanged in multiple ways using a **Part Comm Graph** :
+
+
+  .. dropdown:: Reduction operations
+
+    Basic reduction operations can be performed easily, enabling data synchronization between partitions.
+
+    .. tab-set::
+      :sync-group: language
+
+      .. tab-item:: C
+        :sync: C
+
+        .. doxygenfunction:: PDM_part_comm_graph_allreduce
+
+
+      .. tab-item:: Fortran
+        :sync: Fortran
+
+        .. ifconfig:: enable_fortran_doc == 'ON'
+
+          .. f:autosubroutine:: PDM_part_comm_graph_allreduce
+
+        .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+      .. tab-item:: Python
+        :sync: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. automethod:: Pypdm.Pypdm.PartCommGraph.allreduce
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
 
   .. dropdown:: Blocking communications
 

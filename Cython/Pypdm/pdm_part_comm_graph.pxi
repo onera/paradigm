@@ -43,6 +43,14 @@ cdef extern from "pdm_part_comm_graph.h":
                                       PDM_MPI_Op               op,
                                       unsigned char          **pdata)
 
+
+  void PDM_part_comm_graph_allreduce(PDM_part_comm_graph_t  *pcg,
+                                     PDM_MPI_Datatype        datatype,
+                                     int                     stride,
+                                     PDM_MPI_Op              op,
+                                     PDM_bool_t              data_def_graph,
+                                     unsigned char         **data)
+
   int PDM_part_comm_graph_entity_nuplet_get(PDM_part_comm_graph_t  *pcg,
                                             int                     i_part,
                                             int                   **entity_nuplet,
@@ -281,24 +289,49 @@ cdef class PartCommGraph:
       op       (`MPI.Op`)               : Reduction operation kind (``MPI.SUM`` / ``MPI.MIN`` / ``MPI.MAX``)
       pdata    (`list` of `np.ndarray`) : Data buffer, value is modified inplace
     """
-    cdef void **_pdata = np_list_to_void_pointers(pdata)
-    cdef PDM_MPI_Op       c_op       = <MPI_Op      > op.ob_mpi
+    self.allreduce(stride, op, False, pdata)
+
+  def allreduce(self,
+                int    stride,
+                MPI.Op op,
+                bint   data_def_graph,
+                list   data):
+    """
+    allreduce(stride, op, data_def_graph, data)
+
+    Perform a reduction operation on constant-stride data.
+    The data can be defined either for only the entities connected in the graph, or the whole partition.
+    The reduction is performed in place.
+
+    .. warning:: Only ``np.double`` and ``np.int32`` data types are supported.
+                 Only ``MPI.SUM``, ``MPI.MIN`` and ``MPI.MAX`` operations are supported.
+
+    Parameters:
+      stride         (`int`)                  : Constant stride value
+      op             (`MPI.Op`)               : Reduction operation (``MPI.SUM`` / ``MPI.MIN`` / ``MPI.MAX``)
+      data_def_graph (`bool`)                 : Is the data defined only for the graph entities?
+      data           (`list` of `np.ndarray`) : Data to reduce
+    """
+    cdef void **_data = np_list_to_void_pointers(data)
+    cdef PDM_MPI_Op c_op = <MPI_Op> op.ob_mpi
     cdef MPI.Datatype mpi_dtype
     cdef PDM_MPI_Comm pdm_comm = PDM_part_comm_graph_comm_get(self.pcg)
     py_comm = pdm_comm_to_py_comm(pdm_comm)
-    ref_dtype = recover_dtype(pdata, py_comm)
+    ref_dtype = recover_dtype(data, py_comm)
     mpi_dtype = MPI._typedict.get(ref_dtype.char)
     # > This one not working, it seems it give a special type
     # from mpi4py.util.dtlib import from_numpy_dtype
     # mpi_dtype = from_numpy_dtype(ref_dtype)
     cdef PDM_MPI_Datatype c_datatype = <MPI_Datatype> mpi_dtype.ob_mpi
 
-    PDM_part_comm_graph_all_reduce(self.pcg,
+    PDM_part_comm_graph_allreduce(self.pcg,
                                   c_datatype,
                                   stride,
                                   c_op,
-                <unsigned char **> _pdata)
-    free(_pdata)
+                     <PDM_bool_t> data_def_graph,
+               <unsigned char **> _data)
+    free(_data)
+
 
   def entity_nuplet_get(self, i_part):
     """

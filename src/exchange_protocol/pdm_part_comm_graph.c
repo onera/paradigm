@@ -45,6 +45,23 @@ extern "C" {
 #define INVALID_T_STRIDE(t_stride) \
   PDM_error(__FILE__, __LINE__, 0, "%s: wrong t_stride %d\n", __func__, (t_stride));
 
+
+// move these 3 macros to pdm_priv.h ? (if so, add PDM_ prefix)
+#define MIN_STRIDED(a, b, stride, min_ab)  \
+  for (int I = 0; I < (stride); I++) {     \
+    (min_ab)[I] = PDM_MIN((a)[I], (b)[I]); \
+  }
+
+#define MAX_STRIDED(a, b, stride, max_ab)  \
+  for (int I = 0; I < (stride); I++) {     \
+    (max_ab)[I] = PDM_MAX((a)[I], (b)[I]); \
+  }
+
+#define SUM_STRIDED(a, b, stride, sum_ab)  \
+  for (int I = 0; I < (stride); I++) {     \
+    (sum_ab)[I] = (a)[I] + (b)[I];         \
+  }
+
 /*============================================================================
  * Type
  *============================================================================*/
@@ -1837,19 +1854,35 @@ PDM_part_comm_graph_all_reduce
   unsigned char          **pdata
 )
 {
+  PDM_part_comm_graph_allreduce(pcg,
+                                datatype,
+                                stride,
+                                op,
+                                PDM_FALSE,
+                                pdata);
+}
+
+
+void
+PDM_part_comm_graph_allreduce
+(
+  PDM_part_comm_graph_t  *pcg,
+  PDM_MPI_Datatype        datatype,
+  int                     stride,
+  PDM_MPI_Op              op,
+  PDM_bool_t              data_def_graph,
+  unsigned char         **data
+)
+{
   CHECK_INSTANCE(pcg)
 
-  int n_part = pcg->n_part;
-
-  if(op != PDM_MPI_SUM &&
-     op != PDM_MPI_MIN &&
-     op != PDM_MPI_MAX) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_all_reduce only available with op = PDM_MPI_SUM/PDM_MPI_MIN/PDM_MPI_MAX\n");
+  if (op != PDM_MPI_SUM &&
+      op != PDM_MPI_MIN &&
+      op != PDM_MPI_MAX) {
+    PDM_error(__FILE__, __LINE__, 0, "%s only available with op = PDM_MPI_SUM, PDM_MPI_MIN or PDM_MPI_MAX\n", __func__);
   }
 
-  unsigned char **send_data = NULL;
-  unsigned char **recv_data = NULL;
-  PDM_malloc(send_data, n_part, unsigned char *);
+  int n_part = pcg->n_part;
 
   int s_data = 0;
   PDM_MPI_Type_size(datatype, &s_data);
@@ -1857,14 +1890,25 @@ PDM_part_comm_graph_all_reduce
   int _stride = (stride >= 0) ? stride : 1;
   s_data *= _stride;
 
-  for (int i_part = 0; i_part < n_part; ++i_part) {
+  // Prepare send data
+  unsigned char **send_data = NULL;
+  unsigned char **recv_data = NULL;
+  if (data_def_graph) {
+    send_data = data;
+  }
+  else {
+    // Extract values associated to graph entities
+    PDM_malloc(send_data, n_part, unsigned char *);
 
-    PDM_malloc(send_data[i_part], pcg->n_entity_graph[i_part] * s_data, unsigned char);
+    for (int i_part = 0; i_part < n_part; ++i_part) {
 
-    for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
-      int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-      for(int k = 0; k < s_data; ++k) {
-        send_data[i_part][s_data * i + k] = pdata[i_part][s_data * i_entity + k];
+      PDM_malloc(send_data[i_part], pcg->n_entity_graph[i_part] * s_data, unsigned char);
+
+      for (int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        int i_entity = pcg->pentity_graph[i_part][4*i]-1;
+        for (int j = 0; j < s_data; ++j) {
+          send_data[i_part][s_data * i + j] = data[i_part][s_data * i_entity + j];
+        }
       }
     }
   }
@@ -1875,84 +1919,66 @@ PDM_part_comm_graph_all_reduce
                            PDM_STRIDE_CST_INTERLACED,
                            1,
                            NULL,
-              (void **)    send_data,
+                (void ** ) send_data,
                            NULL,
-              (void ***)   &recv_data);
+                (void ***) &recv_data);
 
-  // Reduce
-  if(datatype == PDM_MPI_DOUBLE) {
-    double **_pdata     = (double **) pdata;
-    double **_recv_data = (double **) recv_data;
+  if (!data_def_graph) {
     for (int i_part = 0; i_part < n_part; ++i_part) {
-      if(op == PDM_MPI_SUM) {
-        // We suppose that current value already init
-        for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
-          int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          for (int j = 0; j < _stride; j++) {
-            _pdata[i_part][_stride*i_entity+j] += _recv_data[i_part][_stride*i+j];
-          }
-        }
-      } else if (op == PDM_MPI_MAX) {
-        for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
-          int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          for (int j = 0; j < _stride; j++) {
-            _pdata[i_part][_stride*i_entity+j] = PDM_MAX(_pdata    [i_part][_stride*i_entity+j],
-                                                         _recv_data[i_part][_stride*i       +j]);
-          }
-        }
-      } else if (op == PDM_MPI_MIN) {
-        for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
-          int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          for (int j = 0; j < _stride; j++) {
-            _pdata[i_part][_stride*i_entity+j] = PDM_MIN(_pdata    [i_part][_stride*i_entity+j],
-                                                         _recv_data[i_part][_stride*i       +j]);
-          }
-        }
-      }
+      PDM_free(send_data[i_part]);
+    }
+    PDM_free(send_data);
+  }
+
+  // Define macro for generic reduction
+#define REDUCE(data, recv_data, type, operation) do {                          \
+  type **_data      = (type **) (data);                                        \
+  type **_recv_data = (type **) (recv_data);                                   \
+  for (int i_part = 0; i_part < n_part; ++i_part) {                            \
+    for (int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {                    \
+      int i_entity = data_def_graph ? i : pcg->pentity_graph[i_part][4*i] - 1; \
+      operation(&_data     [i_part][_stride*i_entity],                         \
+                &_recv_data[i_part][_stride*i],                                \
+                _stride,                                                       \
+                &_data     [i_part][_stride*i_entity]);                        \
+    }                                                                          \
+  }                                                                            \
+} while (0) // do ... while (0) is somewhat necessary for multiline macros in if-else statements
+
+  // Perform reduction
+  if (datatype == PDM_MPI_DOUBLE) {
+    if (op == PDM_MPI_MIN) {
+      REDUCE(data, recv_data, double, MIN_STRIDED);
+    }
+    else if (op == PDM_MPI_MAX) {
+      REDUCE(data, recv_data, double, MAX_STRIDED);
+    }
+    else if (op == PDM_MPI_SUM) {
+      REDUCE(data, recv_data, double, SUM_STRIDED);
     }
   }
   else if (datatype == PDM_MPI_INT) {
-    int **_pdata     = (int **) pdata;
-    int **_recv_data = (int **) recv_data;
-    for (int i_part = 0; i_part < n_part; ++i_part) {
-      if(op == PDM_MPI_SUM) {
-        // We suppose that current value already init
-        for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
-          int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          for (int j = 0; j < _stride; j++) {
-            _pdata[i_part][_stride*i_entity+j] += _recv_data[i_part][_stride*i+j];
-          }
-        }
-      } else if (op == PDM_MPI_MAX) {
-        for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
-          int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          for (int j = 0; j < _stride; j++) {
-            _pdata[i_part][_stride*i_entity+j] = PDM_MAX(_pdata    [i_part][_stride*i_entity+j],
-                                                         _recv_data[i_part][_stride*i       +j]);
-          }
-        }
-      } else if (op == PDM_MPI_MIN) {
-        for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
-          int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          for (int j = 0; j < _stride; j++) {
-            _pdata[i_part][_stride*i_entity+j] = PDM_MIN(_pdata    [i_part][_stride*i_entity+j],
-                                                         _recv_data[i_part][_stride*i       +j]);
-          }
-        }
-      }
+    if (op == PDM_MPI_MIN) {
+      REDUCE(data, recv_data, int, MIN_STRIDED);
+    }
+    else if (op == PDM_MPI_MAX) {
+      REDUCE(data, recv_data, int, MAX_STRIDED);
+    }
+    else if (op == PDM_MPI_SUM) {
+      REDUCE(data, recv_data, int, SUM_STRIDED);
     }
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_all_reduce only available for PDM_MPI_DOUBLE / PDM_MPI_INT \n");
+    PDM_error(__FILE__, __LINE__, 0, "%s only available for PDM_MPI_DOUBLE or PDM_MPI_INT\n", __func__);
   }
 
+#undef REDUCE
+
+  // Free recv data
   for (int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(send_data[i_part]);
     PDM_free(recv_data[i_part]);
   }
-  PDM_free(send_data);
   PDM_free(recv_data);
-
 }
 
 
