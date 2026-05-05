@@ -1882,28 +1882,60 @@ PDM_part_comm_graph_allreduce
     PDM_error(__FILE__, __LINE__, 0, "%s only available with op = PDM_MPI_SUM, PDM_MPI_MIN or PDM_MPI_MAX\n", __func__);
   }
 
+  if (stride < 0) {
+    PDM_error(__FILE__, __LINE__, 0, "%s: invalid stride %d\n", __func__, stride);
+  }
+  else if (stride == 0) {
+    // Nothing to do
+    return;
+  }
+
   int n_part = pcg->n_part;
 
   int s_data = 0;
   PDM_MPI_Type_size(datatype, &s_data);
 
-  int _stride = (stride >= 0) ? stride : 1;
-  s_data *= _stride;
+  s_data *= stride;
 
-  // Prepare send data
-  unsigned char **send_data = NULL;
-  unsigned char **recv_data = NULL;
+
+  unsigned char **reduced_data = NULL;
+  unsigned char **send_data    = NULL;
+  unsigned char **recv_data    = NULL;
+
+  // Prepare buffers
   if (data_def_graph) {
+    /* data is defined only for the graph entities */
+
+    // Allocate a temporary array that emulates the whole partition
+    // This is necessary to ensure that multiply-connected entities get coherent values
+    PDM_malloc(reduced_data, n_part, unsigned char *);
+    for (int i_part = 0; i_part < n_part; ++i_part) {
+      int max_l_num = 0;
+      for (int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        max_l_num = PDM_MAX(max_l_num, pcg->pentity_graph[i_part][4*i]);
+      }
+
+      PDM_malloc(reduced_data[i_part], max_l_num * s_data, unsigned char);
+      for (int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        int i_entity = pcg->pentity_graph[i_part][4*i]-1;
+        for (int j = 0; j < s_data; ++j) {
+          reduced_data[i_part][s_data * i_entity + j] = data[i_part][s_data * i + j];
+        }
+      }
+    }
+
     send_data = data;
   }
   else {
-    // Extract values associated to graph entities
+    /* data is defined for the whole partitions */
+
+    // Reduction will be performed directly in-place
+    reduced_data = data;
+
+    // Extract values associated to graph entities to send them to connected entities
     PDM_malloc(send_data, n_part, unsigned char *);
-
     for (int i_part = 0; i_part < n_part; ++i_part) {
-
       PDM_malloc(send_data[i_part], pcg->n_entity_graph[i_part] * s_data, unsigned char);
-
       for (int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
         int i_entity = pcg->pentity_graph[i_part][4*i]-1;
         for (int j = 0; j < s_data; ++j) {
@@ -1913,7 +1945,7 @@ PDM_part_comm_graph_allreduce
     }
   }
 
-  // Exchange data
+  // Exchange data associated to graph entities
   PDM_part_comm_graph_exch(pcg,
                            s_data,
                            PDM_STRIDE_CST_INTERLACED,
@@ -1931,41 +1963,41 @@ PDM_part_comm_graph_allreduce
   }
 
   // Define macro for generic reduction
-#define REDUCE(data, recv_data, type, operation) do {                          \
-  type **_data      = (type **) (data);                                        \
-  type **_recv_data = (type **) (recv_data);                                   \
-  for (int i_part = 0; i_part < n_part; ++i_part) {                            \
-    for (int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {                    \
-      int i_entity = data_def_graph ? i : pcg->pentity_graph[i_part][4*i] - 1; \
-      operation(&_data     [i_part][_stride*i_entity],                         \
-                &_recv_data[i_part][_stride*i],                                \
-                _stride,                                                       \
-                &_data     [i_part][_stride*i_entity]);                        \
-    }                                                                          \
-  }                                                                            \
+#define REDUCE(data, recv_data, type, operation) do {       \
+  type **_data      = (type **) (data);                     \
+  type **_recv_data = (type **) (recv_data);                \
+  for (int i_part = 0; i_part < n_part; ++i_part) {         \
+    for (int i = 0; i < pcg->n_entity_graph[i_part]; ++i) { \
+      int i_entity = pcg->pentity_graph[i_part][4*i] - 1;   \
+      operation(&_data     [i_part][stride*i_entity],       \
+                &_recv_data[i_part][stride*i],              \
+                stride,                                     \
+                &_data     [i_part][stride*i_entity]);      \
+    }                                                       \
+  }                                                         \
 } while (0) // do ... while (0) is somewhat necessary for multiline macros in if-else statements
 
   // Perform reduction
   if (datatype == PDM_MPI_DOUBLE) {
     if (op == PDM_MPI_MIN) {
-      REDUCE(data, recv_data, double, MIN_STRIDED);
+      REDUCE(reduced_data, recv_data, double, MIN_STRIDED);
     }
     else if (op == PDM_MPI_MAX) {
-      REDUCE(data, recv_data, double, MAX_STRIDED);
+      REDUCE(reduced_data, recv_data, double, MAX_STRIDED);
     }
     else if (op == PDM_MPI_SUM) {
-      REDUCE(data, recv_data, double, SUM_STRIDED);
+      REDUCE(reduced_data, recv_data, double, SUM_STRIDED);
     }
   }
   else if (datatype == PDM_MPI_INT) {
     if (op == PDM_MPI_MIN) {
-      REDUCE(data, recv_data, int, MIN_STRIDED);
+      REDUCE(reduced_data, recv_data, int, MIN_STRIDED);
     }
     else if (op == PDM_MPI_MAX) {
-      REDUCE(data, recv_data, int, MAX_STRIDED);
+      REDUCE(reduced_data, recv_data, int, MAX_STRIDED);
     }
     else if (op == PDM_MPI_SUM) {
-      REDUCE(data, recv_data, int, SUM_STRIDED);
+      REDUCE(reduced_data, recv_data, int, SUM_STRIDED);
     }
   }
   else {
@@ -1979,6 +2011,20 @@ PDM_part_comm_graph_allreduce
     PDM_free(recv_data[i_part]);
   }
   PDM_free(recv_data);
+
+  if (data_def_graph) {
+    // Copy reduced values back to the data buffer (aligned with the graph)
+    for (int i_part = 0; i_part < n_part; ++i_part) {
+      for (int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        int i_entity = pcg->pentity_graph[i_part][4*i]-1;
+        for (int j = 0; j < s_data; ++j) {
+          data[i_part][s_data * i + j] = reduced_data[i_part][s_data * i_entity + j];
+        }
+      }
+      PDM_free(reduced_data[i_part]);
+    }
+    PDM_free(reduced_data);
+  }
 }
 
 
