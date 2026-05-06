@@ -49,6 +49,10 @@ cdef extern from "pdm_mesh_intersection.h":
                                                  PDM_g_num_t             **elt_a_elt_b,
                                                  double                  **elt_a_elt_b_weight);
 
+    void PDM_mesh_intersection_tetraisation_pt_set(PDM_mesh_intersection_t* mi,
+                                                   int     tetraisation_pt_type,
+                                                   double *tetraisation_pt_coord);
+
     void PDM_mesh_intersection_mesh_nodal_set(PDM_mesh_intersection_t  *mi,
                                               int                       i_mesh,
                                               PDM_part_mesh_nodal_t    *mesh);
@@ -201,6 +205,15 @@ cdef class MeshIntersection:
         """
         """
         PDM_mesh_intersection_mesh_nodal_set(self._mi, i_mesh, pypmn.pmn)
+
+    # ------------------------------------------------------------------
+    def tetraisation_pt_set(self,
+                            int                                         tetraisation_pt_type,
+                            NPY.ndarray[NPY.double_t, mode='c', ndim=1] np_tetraisation_pt_coord = None):
+        """
+        """
+        cdef double *tetraisation_pt_coord = np_to_double_pointer(np_tetraisation_pt_coord)
+        PDM_mesh_intersection_tetraisation_pt_set(self._mi, tetraisation_pt_type, <double *> tetraisation_pt_coord)
 
     # ------------------------------------------------------------------
     def compute(self):
