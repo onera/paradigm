@@ -284,6 +284,8 @@ cdef class PartCommGraph:
     """
     all_reduce(stride, op, pdata)
 
+    .. warning :: This function is **deprecated**, use :py:func:`allreduce` instead.
+
     Parameters:
       stride   (`int`)                  : Constant data stride
       op       (`MPI.Op`)               : Reduction operation kind (``MPI.SUM`` / ``MPI.MIN`` / ``MPI.MAX``)

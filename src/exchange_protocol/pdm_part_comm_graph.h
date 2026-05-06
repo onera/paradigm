@@ -509,6 +509,9 @@ PDM_part_comm_graph_entity_graph_get
  *
  * \brief Perform a reduction operation on entities connected by the graph
  *        The reduction is performed in place, on an array of the size of the *whole* partition.
+ *
+ * \warning This function is DEPRECATED, use \ref PDM_part_comm_graph_allreduce instead.
+ *
  * \warning Only \p PDM_MPI_DOUBLE and \p PDM_MPI_INT data types are supported.
  *          Only \p PDM_MPI_SUM, \p PDM_MPI_MIN and \p PDM_MPI_MAX operations are supported.
  *
