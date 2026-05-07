@@ -63,23 +63,35 @@ module pdm_part_comm_graph
   contains
 
 
-  subroutine PDM_part_comm_graph_create(pcg,             &
-                                        n_part,          &
-                                        pn_entity_graph, &
-                                        pentity_graph,   &
-                                        ownership,       &
-                                        comm)
-    ! Build a Part Comm Graph instance
+  subroutine PDM_part_comm_graph_create(pcg,              &
+                                        n_part,           &
+                                        pn_entity_graph,  &
+                                        pentity_graph,    &
+                                        ownership_graph,  &
+                                        comm,             &
+                                        nuplet_size,      &
+                                        pentity_nuplet,   &
+                                        ownership_nuplet, &
+                                        is_signed)
+    ! Build a Part Comm Graph instance.
+    !
+    ! Additional (optional) information represented as a n-uplet can be provided.
+    ! If so, the arguments ``nuplet_size``, ``pentity_nuplet``, ``ownership_nuplet`` and ``is_signed`` must be given.
     implicit none
 
-    type(c_ptr),                        intent(out) :: pcg                ! Part Comm Graph instance
-    integer,                            intent(in)  :: n_part             ! Number of parts on current process
-    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity_graph(:) ! Number of graph entities (size = ``n_part``)
-    type(pdm_pointer_array_t), pointer, intent(in)  :: pentity_graph      ! Inter-partition communication graph description (size = ``4*pn_entity_graph``)
-    integer,                            intent(in)  :: ownership          ! Ownership
-    integer,                            intent(in)  :: comm               ! MPI communicator
+    type(c_ptr),                        intent(out)          :: pcg                ! Part Comm Graph instance
+    integer,                            intent(in)           :: n_part             ! Number of parts on current process
+    integer(pdm_l_num_s),      pointer, intent(in)           :: pn_entity_graph(:) ! Number of graph entities (size = ``n_part``)
+    type(pdm_pointer_array_t), pointer, intent(in)           :: pentity_graph      ! Inter-partition communication graph description (size = ``4*pn_entity_graph``)
+    integer,                            intent(in)           :: ownership_graph    ! Ownership for ``pentity_graph``
+    integer,                            intent(in)           :: comm               ! MPI communicator
+    integer,                            intent(in), optional :: nuplet_size        ! N-uplet size (*optional*)
+    type(pdm_pointer_array_t), pointer, intent(in), optional :: pentity_nuplet     ! Additional nuplets (*optional*, size = ``nuplet_size * pn_entity_graph``)
+    integer,                            intent(in), optional :: ownership_nuplet   ! Ownership for ``pentity_nuplet`` (*optional*)
+    logical,                            intent(in), optional :: is_signed          ! Use signed nuplets? (*optional*)
 
-    type(c_ptr)                                     :: c_comm
+    integer                                                  :: c_is_signed
+    type(c_ptr)                                              :: c_comm
 
     interface
       function pdm_part_comm_graph_create_cf(n_part,          &
@@ -98,48 +110,7 @@ module pdm_part_comm_graph
         type(c_ptr),    value :: comm
         type(c_ptr)           :: pcg
       end function pdm_part_comm_graph_create_cf
-    end interface
 
-    c_comm = PDM_MPI_Comm_f2c(comm)
-
-    pcg = pdm_part_comm_graph_create_cf(n_part,                    &
-                                        c_loc(pn_entity_graph),    &
-                                        c_loc(pentity_graph%cptr), &
-                                        ownership,                 &
-                                        c_comm)
-
-  end subroutine pdm_part_comm_graph_create
-
-
-  ! TODO: single create with optional nuplet_size, pentity_nuplet, is_signed ?
-  subroutine PDM_part_comm_graph_with_nuplet_create(pcg,              &
-                                                    n_part,           &
-                                                    pn_entity_graph,  &
-                                                    pentity_graph,    &
-                                                    ownership_graph,  &
-                                                    nuplet_size,      &
-                                                    pentity_nuplet,   &
-                                                    ownership_nuplet, &
-                                                    is_signed,        &
-                                                    comm)
-    ! Build a Part Comm Graph instance using additional information represented as a n-uplet
-    implicit none
-
-    type(c_ptr),                        intent(out) :: pcg                ! Part Comm Graph instance
-    integer,                            intent(in)  :: n_part             ! Number of parts on current process
-    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity_graph(:) ! Number of graph entities (size = ``n_part``)
-    type(pdm_pointer_array_t), pointer, intent(in)  :: pentity_graph      ! Inter-partition communication graph description (size = ``4*pn_entity_graph``)
-    integer,                            intent(in)  :: ownership_graph    ! Ownership for ``pentity_graph``
-    integer,                            intent(in)  :: nuplet_size        ! N-uplet size
-    type(pdm_pointer_array_t), pointer, intent(in)  :: pentity_nuplet     ! Additional nuplets (size = ``nuplet_size * pn_entity_graph``)
-    integer,                            intent(in)  :: ownership_nuplet   ! Ownership for ``pentity_nuplet``
-    logical,                            intent(in)  :: is_signed          ! Use signed nuplets?
-    integer,                            intent(in)  :: comm               ! MPI communicator
-
-    integer                                         :: c_is_signed
-    type(c_ptr)                                     :: c_comm
-
-    interface
       function pdm_part_comm_graph_with_nuplet_create_cf(n_part,           &
                                                          pn_entity_graph,  &
                                                          pentity_graph,    &
@@ -163,28 +134,55 @@ module pdm_part_comm_graph
         integer(c_int), value :: is_signed
         type(c_ptr),    value :: comm
         type(c_ptr)           :: pcg
-      end function PDM_part_comm_graph_with_nuplet_create_cf
+      end function pdm_part_comm_graph_with_nuplet_create_cf
     end interface
-
-    if (is_signed) then
-      c_is_signed = 1
-    else
-      c_is_signed = 0
-    endif
 
     c_comm = PDM_MPI_Comm_f2c(comm)
 
-    pcg = pdm_part_comm_graph_with_nuplet_create_cf(n_part,                     &
-                                                    c_loc(pn_entity_graph),     &
-                                                    c_loc(pentity_graph%cptr),  &
-                                                    ownership_graph,            &
-                                                    nuplet_size,                &
-                                                    c_loc(pentity_nuplet%cptr), &
-                                                    ownership_nuplet,           &
-                                                    c_is_signed,                &
-                                                    c_comm)
+    if (present(nuplet_size)) then
+      if (nuplet_size <= 0) then
+        print *, "PDM_part_comm_graph_create: 'nuplet_size' must be > 0 (got", nuplet_size, ")"
+        stop
+      endif
+      if (.not. present(pentity_nuplet)) then
+        print *, "PDM_part_comm_graph_create: 'pentity_nuplet' argument is mandatory in 'nuplet' mode"
+        stop
+      endif
+      if (.not. present(ownership_nuplet)) then
+        print *, "PDM_part_comm_graph_create: 'ownership_nuplet' argument is mandatory in 'nuplet' mode"
+        stop
+      endif
+      if (.not. present(is_signed)) then
+        print *, "PDM_part_comm_graph_create: 'is_signed' argument is mandatory in 'nuplet' mode"
+        stop
+      endif
 
-  end subroutine PDM_part_comm_graph_with_nuplet_create
+      if (is_signed) then
+        c_is_signed = 1
+      else
+        c_is_signed = 0
+      endif
+
+      ! Create with nuplet
+      pcg = pdm_part_comm_graph_with_nuplet_create_cf(n_part,                     &
+                                                      c_loc(pn_entity_graph),     &
+                                                      c_loc(pentity_graph%cptr),  &
+                                                      ownership_graph,            &
+                                                      nuplet_size,                &
+                                                      c_loc(pentity_nuplet%cptr), &
+                                                      ownership_nuplet,           &
+                                                      c_is_signed,                &
+                                                      c_comm)
+    else
+      ! Create without nuplet
+      pcg = pdm_part_comm_graph_create_cf(n_part,                    &
+                                          c_loc(pn_entity_graph),    &
+                                          c_loc(pentity_graph%cptr), &
+                                          ownership_graph,           &
+                                          c_comm)
+    endif
+
+  end subroutine PDM_part_comm_graph_create
 
 
 
