@@ -147,6 +147,8 @@ cdef class PartCommGraph:
       Exchange data using two-way blocking communications.
       Each graph entity sends *and* receives data.
 
+      .. warning:: Interleaved data is not supported yet
+
       Parameters:
         send_entity_data   (`list` of `np.ndarray`)                              : Data to send
         send_entity_stride (`int` or `list` of `np.ndarray[np.int32]`, optional) : Stride of send data (default = 1)

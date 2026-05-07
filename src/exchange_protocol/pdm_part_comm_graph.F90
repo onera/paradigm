@@ -456,6 +456,8 @@ module pdm_part_comm_graph
                                       recv_data)
     ! Exchange data using two-way blocking communications.
     ! Each graph entity sends *and* receives data.
+    !
+    ! .. warning:: Interleaved data (``PDM_STRIDE_CST_INTERLEAVED``) is not supported yet
     implicit none
 
     type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
@@ -539,7 +541,9 @@ module pdm_part_comm_graph
     ! Initiate a two-way non-blocking exchange.
     ! Each graph entity sends *and* receives data.
     !
-    ! .. note:: The exchange must then be finalized using ``PDM_part_comm_graph_exch_wait``.
+    ! .. note:: The exchange must then be finalized using :ref:`PDM_part_comm_graph_exch_wait <PDM_part_comm_graph_exch_wait_f>`.
+    !
+    ! .. warning:: Interleaved data (``PDM_STRIDE_CST_INTERLEAVED``) is not supported yet.
     implicit none
 
     type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
@@ -627,7 +631,9 @@ module pdm_part_comm_graph
                                            recv_stride, &
                                            recv_data,   &
                                            request)
-    ! Prepare a series of persistent exchanges
+    ! Open a persistent exchange request
+    !
+    ! .. warning:: Only constant-stride, interlaced data (``PDM_STRIDE_CST_INTERLACED``) is currently supported
     implicit none
 
     type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
@@ -710,7 +716,7 @@ module pdm_part_comm_graph
                                             request)
     ! Start a non-blocking persistent exchange
     !
-    ! .. note:: The exchange must then be finalized using ``PDM_part_comm_graph_exch_wait``.
+    ! .. note:: The exchange must then be finalized using :ref:`PDM_part_comm_graph_exch_wait <PDM_part_comm_graph_exch_wait_f>`.
     implicit none
 
     type(c_ptr), intent(in) :: pcg     ! Part Comm Graph instance

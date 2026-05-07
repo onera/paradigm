@@ -108,6 +108,9 @@ PDM_part_comm_graph_with_nuplet_create
  *
  * \brief Exchange data using two-way blocking communications.
  *        Each graph entity sends *and* receives data.
+ *
+ * \warning Interleaved data ( \ref PDM_STRIDE_CST_INTERLEAVED) is not supported yet
+ *
  * \param [in]   pcg                 \ref PDM_part_comm_graph_t instance
  * \param [in]   s_data              Data size
  * \param [in]   t_stride            Kind of stride (see \ref PDM_stride_t)
@@ -136,7 +139,11 @@ PDM_part_comm_graph_exch
  *
  * \brief Initiate a two-way non-blocking exchange.
  *        Each graph entity sends *and* receives data.
- * \note  The exchange must then be finalized using \ref PDM_part_comm_graph_exch_wait.
+ *
+ * \note The exchange must then be finalized using \verbatim embed:rst:inline :ref:`PDM_part_comm_graph_exch_wait <PDM_part_comm_graph_exch_wait_c>` \endverbatim.
+ *
+ * \warning Interleaved data ( \p PDM_STRIDE_CST_INTERLEAVED) is not supported yet
+ *
  * \param [in]   pcg                 \ref PDM_part_comm_graph_t instance
  * \param [in]   kcomm               Kind of MPI communication
  * \param [in]   s_data              Data size
@@ -166,7 +173,10 @@ PDM_part_comm_graph_iexch
 
 /**
  *
- * \brief Prepare a persistent exchange
+ * \brief Open a persistent exchange request
+ *
+ * \warning Only constant-stride, interlaced data ( \p PDM_STRIDE_CST_INTERLACED) is currently supported
+ *
  * \param [in]   pcg          \ref PDM_part_comm_graph_t instance
  * \param [in]   kcomm        Kind of MPI communication
  * \param [in]   s_data       Data size
@@ -196,9 +206,11 @@ PDM_part_comm_graph_exch_init
 
 /**
  *
- * \brief Start a two-way non-blocking, persistent exchange
+ * \brief Start a two-way non-blocking, persistent exchange.
  *        Each graph entity sends *and* receives data.
- * \note  The exchange must then be finalized using \ref PDM_part_comm_graph_exch_wait.
+ *
+ * \note The exchange must then be finalized using \verbatim embed:rst:inline :ref:`PDM_part_comm_graph_exch_wait <PDM_part_comm_graph_exch_wait_c>` \endverbatim.
+ *
  * \param [in]   pcg         \ref PDM_part_comm_graph_t instance
  * \param [in]   request_id  Request id
  *
