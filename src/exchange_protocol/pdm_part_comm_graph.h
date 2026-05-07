@@ -430,7 +430,7 @@ PDM_part_comm_graph_n_part_get
  * \param [in]   pcg           \ref PDM_part_comm_graph_t instance
  * \param [in]   i_part        Id of current partition
  *
- * \return   Array of size pentity_graph[i_part] that contains 0 if not owner and 1 if owner. Ownership is determined by the lowest rank that holds the entity
+ * \return Owner status (1 if owner, 0 if not owner, size = \p n_entity_graph)
  */
 const int*
 PDM_part_comm_graph_owner_get

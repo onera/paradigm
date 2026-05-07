@@ -45,7 +45,7 @@ Multiple modes of communication are available (see the :ref:`Exchange data <pcg_
 Owner status
 ~~~~~~~~~~~~
 
-For each connected component of the graph, a single entity is flagged as *owner* (not to be confused with memory ownership !).
+For each connected component of the graph, a single entity is flagged as *owner* (not to be confused with memory ownership!).
 This status is determined automatically at the creation of the **Part Comm Graph** instance, and can be used in algorithms that require inter-partition synchronizations for example.
 In the :ref:`example above <pcg_example_visu>`, the owner vertices are represented by solid dots, and the "ghost" vertices by circles.
 
@@ -188,7 +188,6 @@ API
       .. ifconfig:: enable_fortran_doc == 'ON'
 
         .. f:autosubroutine:: PDM_part_comm_graph_create
-        .. f:autosubroutine:: PDM_part_comm_graph_with_nuplet_create
 
       .. ifconfig:: enable_fortran_doc == 'OFF'
 

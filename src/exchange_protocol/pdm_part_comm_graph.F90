@@ -345,7 +345,7 @@ module pdm_part_comm_graph
     implicit none
     type(c_ptr),                   intent(in)  :: pcg         ! Part Comm Graph instance
     integer,                       intent(in)  :: i_part      ! Partition identifier
-    integer(pdm_l_num_s), pointer, intent(out) :: is_owner(:) ! Owner status (size = ``n_entity_graph``)
+    integer(pdm_l_num_s), pointer, intent(out) :: is_owner(:) ! Owner status  (1 if owner, 0 if not owner, size = ``n_entity_graph``)
 
     integer(c_int)                             :: n_entity
     type(c_ptr)                                :: c_is_owner

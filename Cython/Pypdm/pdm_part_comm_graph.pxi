@@ -239,7 +239,7 @@ cdef class PartCommGraph:
       i_part (int) : Partition identifier
 
     Returns:
-      Owner status (`np.array[np.int32]` of size `n_entity_graph`)
+      Owner status (1 if owner, 0 if not owner) (`np.array[np.int32]` of size `n_entity_graph`)
     """
     cdef int *dummy = NULL
     cdef pn_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
