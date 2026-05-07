@@ -9,6 +9,8 @@ comm = MPI.COMM_WORLD
 i_rank = comm.rank
 n_rank = comm.size
 
+assert n_rank == 2, "This test is supposed to run on exactly 2 MPI ranks"
+
 if i_rank == 0:
   entity_graph = [np.array([3, 1, 1, 1,
                             6, 1, 1, 5,
@@ -69,7 +71,7 @@ def test_constructor():
     assert( pdata == np.array([2, 1, 1, 1, 2, 1, 1, 1, 2, 1])).all()
 
 def test_constructor_with_nuplet():
-  pcg = PDM.PartCommGraph(comm, entity_graph, entity_nuplet, 0)
+  pcg = PDM.PartCommGraph(comm, entity_graph, entity_nuplet, False)
   owner = pcg.owner_get(0)
 
   if i_rank == 0:
@@ -134,9 +136,169 @@ def test_with_part_mesh_nodal():
   for i in range(int(entity_graph.size//4)):
     print(entity_graph[4*i],"            ", entity_graph[4*i+1],"              ",entity_graph[4*i+2],"               ", entity_graph[4*i+3])
 
+
+def test_entity1_to_entity2():
+
   if i_rank == 0:
-    print("End :)")
+    pvtx_graph = [
+      np.array([
+        3, 1, 1, 1,
+        4, 0, 2, 1,
+        5, 0, 2, 2,
+        6, 1, 1, 4,
+        7, 0, 2, 4,
+        8, 1, 1, 7,
+        8, 1, 2, 1,
+        9, 0, 2, 6,
+        10, 0, 2, 7,
+        10, 1, 2, 4
+      ], dtype=np.int32),
+      np.array([
+        1, 0, 1, 4,
+        2, 0, 1, 5,
+        4, 0, 1, 7,
+        6, 0, 1, 9,
+        7, 0, 1, 10,
+        7, 1, 2, 4,
+        10, 1, 2, 7
+      ], dtype=np.int32),
+    ]
+
+    pn_vtx = [10, 10]
+
+    pedge_vtx = [
+      np.array([
+        1, 2,
+        2, 3,
+        1, 4,
+        2, 5,
+        3, 6,
+        4, 5,
+        5, 6,
+        5, 7,
+        6, 8,
+        7, 8,
+        7, 9,
+        8, 10,
+        9, 10
+      ], dtype=np.int32),
+      np.array([
+        1, 2,
+        1, 3,
+        2, 4,
+        3, 4,
+        3, 5,
+        4, 6,
+        5, 6,
+        6, 7,
+        5, 8,
+        6, 9,
+        7, 10,
+        8, 9,
+        9, 10
+      ], dtype=np.int32)
+    ]
+  else:
+    pvtx_graph = [
+      np.array([
+        1, 0, 1, 3,
+        4, 0, 1, 6,
+        7, 0, 1, 8,
+        7, 1, 2, 1,
+        8, 1, 2, 2,
+        9, 1, 2, 3
+      ], dtype=np.int32),
+      np.array([
+        1, 0, 1, 8,
+        1, 1, 1, 7,
+        2, 1, 1, 8,
+        3, 1, 1, 9,
+        4, 0, 2, 7,
+        4, 0, 1, 10,
+        7, 0, 2, 10
+      ], dtype=np.int32),
+    ]
+
+    pn_vtx = [9, 9]
+
+    pedge_vtx = [
+      np.array([
+        1, 2,
+        2, 3,
+        1, 4,
+        2, 5,
+        3, 6,
+        4, 5,
+        5, 6,
+        4, 7,
+        5, 8,
+        6, 9,
+        7, 8,
+        8, 9
+      ], dtype=np.int32),
+      np.array([
+        1, 2,
+        2, 3,
+        1, 4,
+        2, 5,
+        3, 6,
+        4, 5,
+        5, 6,
+        4, 7,
+        5, 8,
+        6, 9,
+        7, 8,
+        8, 9
+      ], dtype=np.int32)
+    ]
+
+
+  n_part = 2
+  pedge_vtx_idx = [
+    2*np.arange(ev.size//2 + 1, dtype=np.int32) for ev in pedge_vtx
+  ]
+
+  pcg_vtx = PDM.PartCommGraph(comm,
+                              pvtx_graph)
+
+  pcg_edge = pcg_vtx.entity1_to_entity2(pn_vtx,
+                                        pedge_vtx_idx,
+                                        pedge_vtx)
+  # pcg_edge = PDM.pcg_entity1_to_entity2(pcg_vtx,
+  #                                       pn_vtx,
+  #                                       pedge_vtx_idx,
+  #                                       pedge_vtx)
+
+  pedge_graph = [pcg_edge.entity_graph_get(i_part) for i_part in range(n_part)]
+
+  if i_rank == 0:
+    assert (pedge_graph[0] == np.array([ 6, 0, 2, 1,
+                                         8, 0, 2, 3,
+                                        11, 0, 2, 6,
+                                        13, 0, 2, 8,
+                                         5, 1, 1, 3,
+                                         9, 1, 1, 8,
+                                        12, 1, 2, 3])).all()
+    assert (pedge_graph[1] == np.array([ 1, 0, 1,  6,
+                                         3, 0, 1,  8,
+                                         6, 0, 1, 11,
+                                         8, 0, 1, 13,
+                                        11, 1, 2,  8])).all()
+  else:
+    assert (pedge_graph[0] == np.array([ 3, 0, 1, 5,
+                                         8, 0, 1, 9,
+                                        11, 1, 2, 1,
+                                        12, 1, 2, 2])).all()
+    assert (pedge_graph[1] == np.array([3, 0, 1, 12,
+                                        8, 0, 2, 11,
+                                        1, 1, 1, 11,
+                                        2, 1, 1, 12])).all()
+
 
 test_constructor()
 test_constructor_with_nuplet()
 test_with_part_mesh_nodal()
+test_entity1_to_entity2()
+
+if i_rank == 0:
+  print("End :)")

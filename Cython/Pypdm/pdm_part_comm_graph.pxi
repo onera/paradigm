@@ -366,6 +366,52 @@ cdef class PartCommGraph:
 
     return np_entity_nuplet
 
+
+  def entity1_to_entity2(self,
+                         list pn_entity1,
+                         list pentity2_entity1_idx,
+                         list pentity2_entity1):
+    """
+    entity1_to_entity2(pn_entity1, pentity2_entity1_idx, pentity2_entity1)
+
+    Create :py:class:`PartCommGraph` for entity2 from entity2->entity1 link and :py:class:`PartCommGraph` for entity1
+
+    Parameters:
+      pn_entity1           (`list` of `int`)                  : Number of entity1 (size = ``n_part``)
+      pentity2_entity1_idx (`list` of `np.ndarray[np.int32]`) : Connectivity index (size = ``n_entity2 + 1``)
+      pentity2_entity1     (`list` of `np.ndarray[np.int32]`) : Connectivity array (1-based, size = ``entity2_entity1_idx[n_entity2]``)
+
+    Returns:
+      Part Comm Graph for entity2 (:py:class:`PartCommGraph`)
+    """
+
+    cdef int  *_pn_entity1 = NULL
+    cdef int  *_pn_entity2 = NULL
+    cdef int **_pentity2_entity1_idx = NULL
+    cdef int **_pentity2_entity1     = NULL
+
+    pn_entity2 = [idx.size - 1 for idx in pentity2_entity1_idx]
+
+    _pn_entity1 = list_to_int_pointer(pn_entity1)
+    _pn_entity2 = list_to_int_pointer(pn_entity2)
+    _pentity2_entity1_idx = np_list_to_int_pointers(pentity2_entity1_idx)
+    _pentity2_entity1     = np_list_to_int_pointers(pentity2_entity1)
+
+    cdef PDM_part_comm_graph_t *_out_pcg_entity2 = NULL
+    PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(self.pcg,
+                                                           _pn_entity1,
+                                                           _pn_entity2,
+                                                           _pentity2_entity1_idx,
+                                                           _pentity2_entity1,
+                                                           &_out_pcg_entity2)
+
+    free(_pn_entity1)
+    free(_pn_entity2)
+    free(_pentity2_entity1_idx)
+    free(_pentity2_entity1)
+
+    return PartCommGraph.from_ptr(_out_pcg_entity2)
+
   def __dealloc__(self):
     """
     """
@@ -373,46 +419,24 @@ cdef class PartCommGraph:
 
 # ------------------------------------------------------------------------
 
-
-
-# ------------------------------------------------------------------------
 def pcg_entity1_to_entity2(PartCommGraph pypcg_entity1,
                            list          pn_entity1,
                            list          entity2_entity1_idx,
                            list          entity2_entity1):
   """
-  Returns a \ref PDM_part_comm_graph_t python object
+  pcg_entity1_to_entity2(pypcg_entity1, pn_entity1, entity2_entity1_idx, entity2_entity1)
+
+  Create :py:class:`PartCommGraph` for entity2 from entity2->entity1 link and :py:class:`PartCommGraph` for entity1
+
+  .. warning:: This function is **deprecated**, use :py:method:`entity1_to_entity2` instead.
 
   Parameters:
-    pypcg_entity1       (PartCommGraph) : \ref PDM_part_comm_graph_t structure for entity1
-    pn_entity1          (list         ) : Number of entity1 (size = n_part)
-    entity2_entity1_idx (list         ) : Connectivity index (size = \p pn_entity2 + 1)
-    entity2_entity1     (list         ) : Connectivity array (size = \p entity2_entity1_idx[\p pn_entity2] )
+    pypcg_entity1       (:py:class:`PartCommGraph`)        : Part Comm Graph for entity1
+    pn_entity1          (`list` of `int`)                  : Number of entity1 (size = ``n_part``)
+    entity2_entity1_idx (`list` of `np.ndarray[np.int32]`) : Connectivity index (size = ``n_entity2 + 1``)
+    entity2_entity1     (`list` of `np.ndarray[np.int32]`) : Connectivity array (1-based, size = ``entity2_entity1_idx[n_entity2]``)
+
+  Returns:
+    Part Comm Graph for entity2 (:py:class:`PartCommGraph`)
   """
-
-  cdef int  *_pn_entity1 = NULL
-  cdef int  *_pn_entity2 = NULL
-  cdef int **_entity2_entity1_idx = NULL
-  cdef int **_entity2_entity1     = NULL
-
-  pn_entity2 = [part_entity2_entity1_idx.size -1 for part_entity2_entity1_idx in entity2_entity1_idx]
-
-  _pn_entity1 = list_to_int_pointer(pn_entity1)
-  _pn_entity2 = list_to_int_pointer(pn_entity2)
-  _entity2_entity1_idx = np_list_to_int_pointers(entity2_entity1_idx)
-  _entity2_entity1     = np_list_to_int_pointers(entity2_entity1)
-
-  cdef PDM_part_comm_graph_t *_out_ptpgc_entity2 = NULL
-  PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pypcg_entity1.pcg,
-                                                         _pn_entity1,
-                                                         _pn_entity2,
-                                                         _entity2_entity1_idx,
-                                                         _entity2_entity1,
-                                                         &_out_ptpgc_entity2)
-
-  free(_pn_entity1)
-  free(_pn_entity2)
-  free(_entity2_entity1_idx)
-  free(_entity2_entity1)
-
-  return PartCommGraph.from_ptr(_out_ptpgc_entity2)
+  return pypcg_entity1.entity1_to_entity2(pn_entity1, entity2_entity1_idx, entity2_entity1)
