@@ -139,7 +139,7 @@ Basic reduction operations (min, max, sum) can be performed easily with the ``al
 
 Data exchanges can also be performed in multiple ways for more involved computations.
 Since the communication graph is symmetric, data can naturally be exchanged in both directions within a single exchange, meaning that each graph entity sends and receives data simultaneously.
-Exchange of data with constant or variable stride are supported, using either blocking, non-blocking or persistent communications.
+Exchange of data with constant or variable stride is supported, using either blocking, non-blocking or persistent communications.
 
 Under the hood, **Part Comm Graph** relies on the :ref:`Exchange Helper <exch_helper>` structure to manage these exchanges.
 

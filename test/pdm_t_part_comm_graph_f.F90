@@ -663,7 +663,6 @@ program test_part_comm_graph
             write (funit, *) i_vtx, " :", parts(i_part)%data((i_vtx-1)*stride+1:i_vtx*stride)
           endif
 
-          ! TODO: check values?
         enddo
       enddo
 
