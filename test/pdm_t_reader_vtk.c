@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
 
     PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_vtx,
-                                 (const PDM_g_num_t **) pvtx_ln_to_gn,
+                        (const PDM_g_num_t **) (void *) pvtx_ln_to_gn,
                                                         pn_vtx,
                                                         n_part,
                                                         comm);
