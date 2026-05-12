@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Iso-surfaces" href="isosurface.html" /><link rel="prev" title="Mesh location" href="mesh_location.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Closest points - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,9 +332,9 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="closest-points">
-<span id="id1"></span><h1>Closest points<a class="headerlink" href="#closest-points" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Closest points<a class="headerlink" href="#closest-points" title="Link to this heading">¶</a></h1>
 <section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
 <p><strong>Closest points</strong> is a service for finding nearest neighbors between a source and a target point cloud.</p>
 <dl class="simple">
 <dt>A mapping between the associated points is computed, which consists in</dt><dd><ul class="simple">
@@ -347,462 +347,630 @@
 <p>This mapping can be used to performed spatial interpolation, as in <a class="reference external" href="https://github.com/onera/cwipi">CWIPI</a> and <a class="reference external" href="https://github.com/onera/maia">Maia</a>.</p>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Initialization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 26)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425PDM_closest_points_createK12PDM_MPI_CommKiK15PDM_ownership_t">
+<span id="_CPPv325PDM_closest_points_createK12PDM_MPI_CommKiK15PDM_ownership_t"></span><span id="_CPPv225PDM_closest_points_createK12PDM_MPI_CommKiK15PDM_ownership_t"></span><span id="PDM_closest_points_create__PDM_MPI_CommC.iC.PDM_ownership_tC"></span><span class="target" id="pdm__closest__points_8h_1abcae7014880deb5bc3e7ec84fcaceeb0"></span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_closest</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">owner</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425PDM_closest_points_createK12PDM_MPI_CommKiK15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a structure to look for the closest points of a point cloud (target cloud) in an other point cloud (source cloud) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>n_closest</strong> – <strong>[in]</strong> Number of closest source points to find for each target point </p></li>
+<li><p class="sd-card-text"><strong>owner</strong> – <strong>[in]</strong> Ownership for PDM_closest_point_t</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Pointer to PDM_closest_points_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_closest_points_create
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_create
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. py:class:: ClosestPoints
-
-        .. automethod:: Pypdm.Pypdm.ClosestPoints.__init__
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em>, <em class="sig-param"><span class="pre">f_comm</span></em>, <em class="sig-param"><span class="pre">n_closest</span></em>, <em class="sig-param"><span class="pre">owner</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_create" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a structure to look for the closest points of a point cloud (target cloud) in an other point cloud (source cloud)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: PDM_closest_points instance</p></li>
+<li><p class="sd-card-text"><strong>f_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>n_closest</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of closest source points to find for each target point</p></li>
+<li><p class="sd-card-text"><strong>owner</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Ownership</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py class">
+<dt class="sig sig-object py" id="ClosestPoints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClosestPoints</span></span><a class="headerlink" href="#ClosestPoints" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_closest</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create the structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>n_closest</strong> (<em>int</em>) – Number of closest source points to find for each target point</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Set point clouds<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
+<span class="sd-summary-text">Set point clouds</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
 <p class="sd-card-text">Both the target and source point clouds can have a distinct number of parts per MPI rank, and have their own global numbering (which <em>must</em> range from 1 to the total number of points in each cloud).</p>
 <p class="sd-card-text">A point cloud is defined by coordinates and global IDs (if you don’t have a global numbering, check out <a class="reference internal" href="../gnum/index.html#gnum"><span class="std std-ref">this page</span></a> to see how to generate one).</p>
 <p class="sd-card-text">First, the number of partitions of each point cloud must be defined:</p>
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 76)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv435PDM_closest_points_n_part_cloud_setP19PDM_closest_point_tKiKi">
+<span id="_CPPv335PDM_closest_points_n_part_cloud_setP19PDM_closest_point_tKiKi"></span><span id="_CPPv235PDM_closest_points_n_part_cloud_setP19PDM_closest_point_tKiKi"></span><span id="PDM_closest_points_n_part_cloud_set__PDM_closest_point_tP.iC.iC"></span><span class="target" id="pdm__closest__points_8h_1aa8de76462b41cf03fa28e08880262e4f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_n_part_cloud_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part_cloud_src</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part_cloud_tgt</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv435PDM_closest_points_n_part_cloud_setP19PDM_closest_point_tKiKi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set the number of partitions of both point clouds. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud_src</strong> – <strong>[in]</strong> Number of partitions of the source cloud </p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud_tgt</strong> – <strong>[in]</strong> Number of partitions of the target cloud </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_closest_points_n_part_cloud_set
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_n_part_cloud_set
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.ClosestPoints.n_part_cloud_set
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_n_part_cloud_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_n_part_cloud_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em>, <em class="sig-param"><span class="pre">n_part_cloud_src</span></em>, <em class="sig-param"><span class="pre">n_part_cloud_tgt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_n_part_cloud_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the number of partitions of both point clouds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_closest_points instance</p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud_src</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions in the source cloud</p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud_tgt</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions in the target cloud</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.n_part_cloud_set">
+<span class="sig-prename descclassname"><span class="pre">ClosestPoints.</span></span><span class="sig-name descname"><span class="pre">n_part_cloud_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_part_cloud_src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_part_cloud_tgt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.n_part_cloud_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the number of partitions of both point clouds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_part_cloud_src</strong> (<em>int</em>) – Number of partitions of the source cloud</p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud_tgt</strong> (<em>int</em>) – Number of partitions of the target cloud</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 <p class="sd-card-text">Then, each point cloud is defined one partition at a time:</p>
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 115)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_closest_points_src_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t">
+<span id="_CPPv332PDM_closest_points_src_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t"></span><span id="_CPPv232PDM_closest_points_src_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t"></span><span id="PDM_closest_points_src_cloud_set__PDM_closest_point_tP.iC.iC.doubleP.PDM_g_num_tP"></span><span class="target" id="pdm__closest__points_8h_1a25155ff5ee17463eec8ae3c78e2ea04c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_src_cloud_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_points</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_closest_points_src_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set the source point cloud. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>n_points</strong> – <strong>[in]</strong> Number of points </p></li>
+<li><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Point coordinates (size : 3 * <code class="docutils literal notranslate"><span class="pre">n_points</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>gnum</strong> – <strong>[in]</strong> Point global ids (size : <code class="docutils literal notranslate"><span class="pre">n_points</span></code>) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_closest_points_tgt_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t">
+<span id="_CPPv332PDM_closest_points_tgt_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t"></span><span id="_CPPv232PDM_closest_points_tgt_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t"></span><span id="PDM_closest_points_tgt_cloud_set__PDM_closest_point_tP.iC.iC.doubleP.PDM_g_num_tP"></span><span class="target" id="pdm__closest__points_8h_1adbf716244b80f208d161cbf6d282a0c2"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_tgt_cloud_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_points</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_closest_points_tgt_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set the target point cloud. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>n_points</strong> – <strong>[in]</strong> Number of points </p></li>
+<li><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Point coordinates (size : 3 * <code class="docutils literal notranslate"><span class="pre">n_points</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>gnum</strong> – <strong>[in]</strong> Point global ids (size : <code class="docutils literal notranslate"><span class="pre">n_points</span></code>) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_closest_points_src_cloud_set
-    .. doxygenfunction:: PDM_closest_points_tgt_cloud_set
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_src_cloud_set
-      .. f:autosubroutine:: PDM_closest_points_tgt_cloud_set
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.ClosestPoints.src_cloud_set
-      .. automethod:: Pypdm.Pypdm.ClosestPoints.tgt_cloud_set
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_src_cloud_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_src_cloud_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">n_points</span></em>, <em class="sig-param"><span class="pre">coords</span></em>, <em class="sig-param"><span class="pre">gnum</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_src_cloud_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the source point cloud</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_closest_points instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>n_points</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of source points</p></li>
+<li><p class="sd-card-text"><strong>coords</strong> (,)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Coordinates of source points (shape = [3, <code class="docutils literal notranslate"><span class="pre">n_points</span></code>])</p></li>
+<li><p class="sd-card-text"><strong>gnum</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Global IDs of source points</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_tgt_cloud_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_tgt_cloud_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">n_points</span></em>, <em class="sig-param"><span class="pre">coords</span></em>, <em class="sig-param"><span class="pre">gnum</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_tgt_cloud_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the target point cloud</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_closest_points instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>n_points</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of target points</p></li>
+<li><p class="sd-card-text"><strong>coords</strong> (,)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Coordinates of target points (shape = [3, <code class="docutils literal notranslate"><span class="pre">n_points</span></code>])</p></li>
+<li><p class="sd-card-text"><strong>gnum</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Global IDs of target points</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-8">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.src_cloud_set">
+<span class="sig-prename descclassname"><span class="pre">ClosestPoints.</span></span><span class="sig-name descname"><span class="pre">src_cloud_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gnum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.src_cloud_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the source point cloud</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>n_points</strong> (<em>int</em>) – Number of points (to remove)</p></li>
+<li><p class="sd-card-text"><strong>coords</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Point coordinates</p></li>
+<li><p class="sd-card-text"><strong>gnum</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Point global ids</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.tgt_cloud_set">
+<span class="sig-prename descclassname"><span class="pre">ClosestPoints.</span></span><span class="sig-name descname"><span class="pre">tgt_cloud_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gnum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.tgt_cloud_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the target point cloud</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>n_points</strong> (<em>int</em>) – Number of points (to remove)</p></li>
+<li><p class="sd-card-text"><strong>coords</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Point coordinates</p></li>
+<li><p class="sd-card-text"><strong>gnum</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Point global ids</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Find closest points<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
+<span class="sd-summary-text">Find closest points</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
 <p class="sd-card-text">Once the source and target point clouds have been set, the correspondence between them can be computed:</p>
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 161)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-9">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_closest_points_computeP19PDM_closest_point_t">
+<span id="_CPPv326PDM_closest_points_computeP19PDM_closest_point_t"></span><span id="_CPPv226PDM_closest_points_computeP19PDM_closest_point_t"></span><span id="PDM_closest_points_compute__PDM_closest_point_tP"></span><span class="target" id="pdm__closest__points_8h_1adab35cc8ffaf813f5ee0df14e70ba06c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_compute</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_closest_points_computeP19PDM_closest_point_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Look for closest points. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_closest_points_compute
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_compute
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.ClosestPoints.compute
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-10">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_compute">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Look for closest points</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_closest_points instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-11">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.compute">
+<span class="sig-prename descclassname"><span class="pre">ClosestPoints.</span></span><span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Look for closest points</p>
+</dd></dl>
+
+</div>
+</div>
 <p class="sd-card-text">Once the calculation is complete, you can optionally display the elapsed and CPU times:</p>
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 200)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-12">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv429PDM_closest_points_dump_timesP19PDM_closest_point_t">
+<span id="_CPPv329PDM_closest_points_dump_timesP19PDM_closest_point_t"></span><span id="_CPPv229PDM_closest_points_dump_timesP19PDM_closest_point_t"></span><span id="PDM_closest_points_dump_times__PDM_closest_point_tP"></span><span class="target" id="pdm__closest__points_8h_1ac247dd5c838230c63a8cacb3fb6f5b06"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_dump_times</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429PDM_closest_points_dump_timesP19PDM_closest_point_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Dump elapsed and CPU times. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_closest_points_dump_times
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_dump_times
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.ClosestPoints.dump_times
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-13" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-13">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_dump_times">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_dump_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_dump_times" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Dump elapsed and CPU times</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_closest_points instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-14" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-14">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.dump_times">
+<span class="sig-prename descclassname"><span class="pre">ClosestPoints.</span></span><span class="sig-name descname"><span class="pre">dump_times</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.dump_times" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Dump elapsed and CPU times</p>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Get results<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
+<span class="sd-summary-text">Get results</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
 <p class="sd-card-text">Once computed, the correspondence data can retrieved either from the perspective of the target point cloud or from the perspective of the source point cloud.</p>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Target perspective<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 246)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Target perspective</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-15" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-15">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_closest_points_getP19PDM_closest_point_tKiPP11PDM_g_num_tPPd">
+<span id="_CPPv322PDM_closest_points_getP19PDM_closest_point_tKiPP11PDM_g_num_tPPd"></span><span id="_CPPv222PDM_closest_points_getP19PDM_closest_point_tKiPP11PDM_g_num_tPPd"></span><span id="PDM_closest_points_get__PDM_closest_point_tP.iC.PDM_g_num_tPP.doublePP"></span><span class="target" id="pdm__closest__points_8h_1a4084df0677c7359b6b6cfe5ee486372d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_tgt</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">closest_src_gnum</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">closest_src_distance</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_closest_points_getP19PDM_closest_point_tKiPP11PDM_g_num_tPPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get closest source points global ids and (squared) distance. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p></li>
+<li><p class="sd-card-text"><strong>i_part_tgt</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>closest_src_gnum</strong> – <strong>[out]</strong> Global ids of the closest source points (size : <em>n_closest</em> * <em>n_tgt_points</em>) </p></li>
+<li><p class="sd-card-text"><strong>closest_src_distance</strong> – <strong>[out]</strong> Squared distance from closest source points (size : <em>n_closest</em> * <em>n_tgt_points</em>) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_closest_points_get
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_get
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.ClosestPoints.points_get
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-16" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-16">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em>, <em class="sig-param"><span class="pre">i_part_tgt</span></em>, <em class="sig-param"><span class="pre">closest_src_gnum</span></em>, <em class="sig-param"><span class="pre">closest_src_distance</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_get" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_closest_points instance</p></li>
+<li><p class="sd-card-text"><strong>i_part_tgt</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>closest_src_gnum</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Global IDs of closest source points</p></li>
+<li><p class="sd-card-text"><strong>closest_src_distance</strong> (*)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Squared distance of closest source points</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-17" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-17">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.points_get">
+<span class="sig-prename descclassname"><span class="pre">ClosestPoints.</span></span><span class="sig-name descname"><span class="pre">points_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part_tgt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.points_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get closest source points global ids and (squared) distance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>i_part_tgt</strong> (<em>int</em>) – Partition identifier</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Dictionary</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;closest_src_gnum&quot;</span></code>     (<cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Global ids of the closest source points</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;closest_src_distance&quot;</span></code> (<cite>np.ndarray[np.double_t]</cite>)    : Squared distance from closest source points</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Source perspective<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 287)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Source perspective</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-18" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-18">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv433PDM_closest_points_tgt_in_src_getP19PDM_closest_point_tKiPPiPP11PDM_g_num_t">
+<span id="_CPPv333PDM_closest_points_tgt_in_src_getP19PDM_closest_point_tKiPPiPP11PDM_g_num_t"></span><span id="_CPPv233PDM_closest_points_tgt_in_src_getP19PDM_closest_point_tKiPPiPP11PDM_g_num_t"></span><span id="PDM_closest_points_tgt_in_src_get__PDM_closest_point_tP.iC.iPP.PDM_g_num_tPP"></span><span class="target" id="pdm__closest__points_8h_1a6fa633738ecd72b8be0625257da14854"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_tgt_in_src_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_src</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src_to_tgt_idx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src_to_tgt</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv433PDM_closest_points_tgt_in_src_getP19PDM_closest_point_tKiPPiPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get source-to-target mapping. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p></li>
+<li><p class="sd-card-text"><strong>i_part_src</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>src_to_tgt_idx</strong> – <strong>[out]</strong> Index for source-to-target mapping (size : <em>n_src_points</em> + 1) </p></li>
+<li><p class="sd-card-text"><strong>src_to_tgt</strong> – <strong>[out]</strong> Source-to-target mapping (global ids) (size : <code class="docutils literal notranslate"><span class="pre">src_to_tgt_idx</span></code>[ <em>n_src_points</em> ] ) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv438PDM_closest_points_tgt_in_src_dist_getP19PDM_closest_point_tKiPPiPPd">
+<span id="_CPPv338PDM_closest_points_tgt_in_src_dist_getP19PDM_closest_point_tKiPPiPPd"></span><span id="_CPPv238PDM_closest_points_tgt_in_src_dist_getP19PDM_closest_point_tKiPPiPPd"></span><span id="PDM_closest_points_tgt_in_src_dist_get__PDM_closest_point_tP.iC.iPP.doublePP"></span><span class="target" id="pdm__closest__points_8h_1aa113d6e98673f92c068ba5aa6c743130"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_tgt_in_src_dist_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_src</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src_to_tgt_idx</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src_to_tgt_dist</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv438PDM_closest_points_tgt_in_src_dist_getP19PDM_closest_point_tKiPPiPPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get source-to-target distance. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p></li>
+<li><p class="sd-card-text"><strong>i_part_src</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>src_to_tgt_idx</strong> – <strong>[out]</strong> Index for source-to-target mapping (size : <em>n_src_points</em> + 1) </p></li>
+<li><p class="sd-card-text"><strong>src_to_tgt_dist</strong> – <strong>[out]</strong> Squared source-to-target distance (size : <code class="docutils literal notranslate"><span class="pre">src_to_tgt_idx</span></code>[ <em>n_src_points</em> ] ) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_closest_points_tgt_in_src_get
-    .. doxygenfunction:: PDM_closest_points_tgt_in_src_dist_get
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_tgt_in_src_get
-      .. f:autosubroutine:: PDM_closest_points_tgt_in_src_dist_get
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.ClosestPoints.tgt_in_src_get
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-19" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-19">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_tgt_in_src_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_tgt_in_src_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em>, <em class="sig-param"><span class="pre">i_part_src</span></em>, <em class="sig-param"><span class="pre">tgt_in_src_idx</span></em>, <em class="sig-param"><span class="pre">tgt_in_src</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_tgt_in_src_get" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_closest_points instance</p></li>
+<li><p class="sd-card-text"><strong>i_part_src</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>tgt_in_src_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index for source-&gt;target correspondence</p></li>
+<li><p class="sd-card-text"><strong>tgt_in_src</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Source-&gt;target correspondence (global IDs)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_tgt_in_src_dist_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_tgt_in_src_dist_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em>, <em class="sig-param"><span class="pre">i_part_src</span></em>, <em class="sig-param"><span class="pre">tgt_in_src_idx</span></em>, <em class="sig-param"><span class="pre">tgt_in_src_dist</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_tgt_in_src_dist_get" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_closest_points instance</p></li>
+<li><p class="sd-card-text"><strong>i_part_src</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>tgt_in_src_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index for source-&gt;target correspondence</p></li>
+<li><p class="sd-card-text"><strong>tgt_in_src_dist</strong> (*)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Source-&gt;target squared distance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-20" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-20">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.tgt_in_src_get">
+<span class="sig-prename descclassname"><span class="pre">ClosestPoints.</span></span><span class="sig-name descname"><span class="pre">tgt_in_src_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part_src</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.tgt_in_src_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get source-to-target mapping and distances</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>i_part_src</strong> (<em>int</em>) – Partition identifier</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Dictionary</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;tgt_in_src_idx&quot;</span></code>   (<cite>np.ndarray[np.int32_t]</cite>)     : Index for source-to-target mapping</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;tgt_in_src&quot;</span></code>       (<cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Source-to-target mapping (global ids)</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;tgt_in_src_dist2&quot;</span></code> (<cite>np.ndarray[np.double_t]</cite>)    : Squared source-to-target distance</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details></div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Data transfer<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
+<span class="sd-summary-text">Data transfer</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
 <p class="sd-card-text">Data can be transferred between the source mesh and each point cloud using the <span class="xref std std-ref">PDM_part_to_part</span> instance created by <strong>Closest points</strong>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p class="sd-card-text"><em>Direct</em> exchanges go from source to target and <em>reverse</em> exchanges go from target to source.</p>
 </div>
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 334)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-21" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-21">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv435PDM_closest_points_part_to_part_getP19PDM_closest_point_tPP18PDM_part_to_part_t15PDM_ownership_t">
+<span id="_CPPv335PDM_closest_points_part_to_part_getP19PDM_closest_point_tPP18PDM_part_to_part_t15PDM_ownership_t"></span><span id="_CPPv235PDM_closest_points_part_to_part_getP19PDM_closest_point_tPP18PDM_part_to_part_t15PDM_ownership_t"></span><span id="PDM_closest_points_part_to_part_get__PDM_closest_point_tP.PDM_part_to_part_tPP.PDM_ownership_t"></span><span class="target" id="pdm__closest__points_8h_1a3ba84d4655fa3baaf74bb80fd3034f93"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_part_to_part_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span>, <span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv435PDM_closest_points_part_to_part_getP19PDM_closest_point_tPP18PDM_part_to_part_t15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get PDM_part_to_part_t object to exchange data between the source and target point clouds (both in user frame) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_point_t object </p></li>
+<li><p class="sd-card-text"><strong>ptp</strong> – <strong>[out]</strong> Pointer to PDM_part_to_part_t object </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">ptp</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_closest_points_part_to_part_get
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_part_to_part_get
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.ClosestPoints.part_to_part_get
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-22" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-22">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_part_to_part_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_part_to_part_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em>, <em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">owner</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_part_to_part_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get part_to_part object to exchange data between the source and target point clouds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: PDM_closest_points instance</p></li>
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>]</em> :: Pointer to PDM_part_to_part object</p></li>
+<li><p class="sd-card-text"><strong>owner</strong><em> [</em><em>integer</em><em>,</em><em>value</em><em>]</em> :: Ownership for <code class="docutils literal notranslate"><span class="pre">ptp</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-23" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-23">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.ClosestPoints.part_to_part_get">
+<span class="sig-prename descclassname"><span class="pre">ClosestPoints.</span></span><span class="sig-name descname"><span class="pre">part_to_part_get</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.ClosestPoints.part_to_part_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the PartToPart object to exchange data between
+the source and target point clouds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text">PartToPart object (<a class="reference internal" href="../comm_graph/ptp.html#PartToPart" title="PartToPart"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartToPart</span></code></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Finalization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/prepro_algo/closest_points.rst</span>, line 375)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-24" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-24">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423PDM_closest_points_freeP19PDM_closest_point_t">
+<span id="_CPPv323PDM_closest_points_freeP19PDM_closest_point_t"></span><span id="_CPPv223PDM_closest_points_freeP19PDM_closest_point_t"></span><span id="PDM_closest_points_free__PDM_closest_point_tP"></span><span class="target" id="pdm__closest__points_8h_1a3d0bd0cbd01452e9731761b284919f31"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_closest_points_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_closest_point_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cls</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423PDM_closest_points_freeP19PDM_closest_point_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free a PDM_closest_points_t instance. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>cls</strong> – <strong>[in]</strong> Pointer to PDM_closest_points_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_closest_points_free
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_closest_points_free
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    |python_gc|
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-25" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-25">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_closest_points_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_closest_points_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_closest_points_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free a PDM_closest_points instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>cls</strong><em> [</em><em>c_ptr</em><em>,</em><em>inout</em><em>]</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-26" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-26">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -864,7 +1032,30 @@ unknown option: “sync-group”.</p>
             <ul>
 <li><a class="reference internal" href="#">Closest points</a><ul>
 <li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv425PDM_closest_points_createK12PDM_MPI_CommKiK15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_create()</span></code></a></li>
+<li><a class="reference internal" href="#ClosestPoints"><code class="docutils literal notranslate"><span class="pre">ClosestPoints</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.__init__"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv435PDM_closest_points_n_part_cloud_setP19PDM_closest_point_tKiKi"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_n_part_cloud_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.n_part_cloud_set"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.n_part_cloud_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_closest_points_src_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_src_cloud_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_closest_points_tgt_cloud_setP19PDM_closest_point_tKiKiPdP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_tgt_cloud_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.src_cloud_set"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.src_cloud_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.tgt_cloud_set"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.tgt_cloud_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv426PDM_closest_points_computeP19PDM_closest_point_t"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_compute()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.compute"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.compute()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv429PDM_closest_points_dump_timesP19PDM_closest_point_t"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_dump_times()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.dump_times"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.dump_times()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_closest_points_getP19PDM_closest_point_tKiPP11PDM_g_num_tPPd"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.points_get"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.points_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv433PDM_closest_points_tgt_in_src_getP19PDM_closest_point_tKiPPiPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_tgt_in_src_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv438PDM_closest_points_tgt_in_src_dist_getP19PDM_closest_point_tKiPPiPPd"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_tgt_in_src_dist_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.tgt_in_src_get"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.tgt_in_src_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv435PDM_closest_points_part_to_part_getP19PDM_closest_point_tPP18PDM_part_to_part_t15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_part_to_part_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.ClosestPoints.part_to_part_get"><code class="docutils literal notranslate"><span class="pre">ClosestPoints.part_to_part_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv423PDM_closest_points_freeP19PDM_closest_point_t"><code class="docutils literal notranslate"><span class="pre">PDM_closest_points_free()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -876,13 +1067,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

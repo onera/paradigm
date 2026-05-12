@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Mesh Evaluation Utils" href="mesh_eval.html" /><link rel="prev" title="Rotations in 3D" href="rot.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Connectivity transformation - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,109 +332,459 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="connectivity-transformation">
-<span id="connec-transform"></span><h1>Connectivity transformation<a class="headerlink" href="#connectivity-transformation" title="Permalink to this heading">¶</a></h1>
+<span id="connec-transform"></span><h1>Connectivity transformation<a class="headerlink" href="#connectivity-transformation" title="Link to this heading">¶</a></h1>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Partitioned connectivity transformations<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/util/connec_transform.rst</span>, line 13)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Partitioned connectivity transformations</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424PDM_combine_connectivityiPiPiPiPiPPiPPi">
+<span id="_CPPv324PDM_combine_connectivityiPiPiPiPiPPiPPi"></span><span id="_CPPv224PDM_combine_connectivityiPiPiPiPiPPiPPi"></span><span id="PDM_combine_connectivity__i.iP.iP.iP.iP.iPP.iPP"></span><span class="target" id="pdm__part__connectivity__transform_8h_1abfed2bde21064bca22570de895318ab5"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_combine_connectivity</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_entity1</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity2_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity2</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity2_entity3_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity2_entity3</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity3_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity3</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_combine_connectivityiPiPiPiPiPPiPPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Combine <code class="docutils literal notranslate"><span class="pre">entity1_entity2</span></code> and <code class="docutils literal notranslate"><span class="pre">entity2_entity3</span></code> connectivities to get <code class="docutils literal notranslate"><span class="pre">entity1_entity3</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_entity1</strong> – <strong>[in]</strong> Number of entity1 </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2_idx</strong> – <strong>[in]</strong> Connectivity index between entity1 and entity2 (size = <code class="docutils literal notranslate"><span class="pre">n_entity1</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2</strong> – <strong>[in]</strong> Connectivity between entity1 and entity2 (size = <code class="docutils literal notranslate"><span class="pre">entity1_entity2_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_entity1</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>entity2_entity3_idx</strong> – <strong>[in]</strong> Connectivity index between entity2 and entity3 (size = <code class="docutils literal notranslate"><span class="pre">n_entity2</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>entity2_entity3</strong> – <strong>[in]</strong> Connectivity between entity2 and entity3 (size = <code class="docutils literal notranslate"><span class="pre">entity2_entity3_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_entity2</span></code>] ) </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity3_idx</strong> – <strong>[out]</strong> Connectivity index between entity1 and entity3 (size = <code class="docutils literal notranslate"><span class="pre">n_entity1</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity3</strong> – <strong>[out]</strong> Connectivity between entity1 and entity3 (size = <code class="docutils literal notranslate"><span class="pre">entity1_entity3_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_entity1</span></code>]) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_connectivity_transposeKiKiPiPiPPiPPi">
+<span id="_CPPv326PDM_connectivity_transposeKiKiPiPiPPiPPi"></span><span id="_CPPv226PDM_connectivity_transposeKiKiPiPiPPiPPi"></span><span id="PDM_connectivity_transpose__iC.iC.iP.iP.iPP.iPP"></span><span class="target" id="pdm__part__connectivity__transform_8h_1a9aea98e8bc53bf21a5745545dc27a8ee"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_connectivity_transpose</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_entity1</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_entity2</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity2_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity2</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity2_entity1_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity2_entity1</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_connectivity_transposeKiKiPiPiPPiPPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Transpose connectivity <code class="docutils literal notranslate"><span class="pre">entity1_entity2</span></code> to get <code class="docutils literal notranslate"><span class="pre">entity2_entity1</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_entity1</strong> – <strong>[in]</strong> Number of entity1 </p></li>
+<li><p class="sd-card-text"><strong>n_entity1</strong> – <strong>[in]</strong> Number of entity2 </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2_idx</strong> – <strong>[in]</strong> Connectivity index between entity1 and entity2 (size = <code class="docutils literal notranslate"><span class="pre">n_entity1</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2</strong> – <strong>[in]</strong> Connectivity between entity1 and entity2 (size = <code class="docutils literal notranslate"><span class="pre">entity1_entity2_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_entity1</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>entity2_entity1_idx</strong> – <strong>[out]</strong> Connectivity index between entity2 and entity1 (size = <code class="docutils literal notranslate"><span class="pre">n_entity2</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>entity2_entity1</strong> – <strong>[out]</strong> Connectivity between entity2 and entity1 (size = <code class="docutils literal notranslate"><span class="pre">entity2_entity1_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_entity2</span></code>] ) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_combine_connectivity
-    .. doxygenfunction:: PDM_connectivity_transpose
-    .. doxygenfunction:: PDM_compute_face_vtx_from_face_and_edge
-    .. doxygenfunction:: PDM_compute_face_vtx_from_face_and_edge_unsigned
-    .. doxygenfunction:: PDM_part_connectivity_to_connectivity_idx
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv439PDM_compute_face_vtx_from_face_and_edgeiPiPiPiPPi">
+<span id="_CPPv339PDM_compute_face_vtx_from_face_and_edgeiPiPiPiPPi"></span><span id="_CPPv239PDM_compute_face_vtx_from_face_and_edgeiPiPiPiPPi"></span><span id="PDM_compute_face_vtx_from_face_and_edge__i.iP.iP.iP.iPP"></span><span class="target" id="pdm__part__connectivity__transform_8h_1a023fa60f21a3e0802f91a8e73e775994"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_compute_face_vtx_from_face_and_edge</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_face</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_edge_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_edge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">edge_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_vtx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv439PDM_compute_face_vtx_from_face_and_edgeiPiPiPiPPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Generate face-&gt;vtx connectivity from (<em>signed</em>) face-&gt;edge and edge-&gt;vtx connectivities. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_face</strong> – <strong>[in]</strong> Number of faces </p></li>
+<li><p class="sd-card-text"><strong>face_edge_idx</strong> – <strong>[in]</strong> Index for face-&gt;edge connectivity (size = <code class="docutils literal notranslate"><span class="pre">n_face</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>face_edge</strong> – <strong>[in]</strong> Face-&gt;edge connectivity (1-based, signed) (size = <code class="docutils literal notranslate"><span class="pre">face_edge_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_face</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>edge_vtx</strong> – <strong>[in]</strong> Edge-&gt;vertex connectivity (size = 2 * n_edge) </p></li>
+<li><p class="sd-card-text"><strong>face_vtx</strong> – <strong>[out]</strong> Face-&gt;vertex (size = <code class="docutils literal notranslate"><span class="pre">face_edge_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_face</span></code>]) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv448PDM_compute_face_vtx_from_face_and_edge_unsignediPiPiPiPPi">
+<span id="_CPPv348PDM_compute_face_vtx_from_face_and_edge_unsignediPiPiPiPPi"></span><span id="_CPPv248PDM_compute_face_vtx_from_face_and_edge_unsignediPiPiPiPPi"></span><span id="PDM_compute_face_vtx_from_face_and_edge_unsigned__i.iP.iP.iP.iPP"></span><span class="target" id="pdm__part__connectivity__transform_8h_1abe5fb6f42f0425bb08830830f5b6834f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_compute_face_vtx_from_face_and_edge_unsigned</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_face</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_edge_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_edge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">edge_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_vtx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv448PDM_compute_face_vtx_from_face_and_edge_unsignediPiPiPiPPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Generate face-&gt;vtx connectivity from (<em>unsigned</em>) face-&gt;edge and edge-&gt;vtx connectivities. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_face</strong> – <strong>[in]</strong> Number of faces </p></li>
+<li><p class="sd-card-text"><strong>face_edge_idx</strong> – <strong>[in]</strong> Index for face-&gt;edge connectivity (size = <code class="docutils literal notranslate"><span class="pre">n_face</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>face_edge</strong> – <strong>[in]</strong> Face-&gt;edge connectivity (1-based, unsigned) (size = <code class="docutils literal notranslate"><span class="pre">face_edge_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_face</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>edge_vtx</strong> – <strong>[in]</strong> Edge-&gt;vertex connectivity (size = 2 * n_edge) </p></li>
+<li><p class="sd-card-text"><strong>face_vtx</strong> – <strong>[out]</strong> Face-&gt;vertex (size = <code class="docutils literal notranslate"><span class="pre">face_edge_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_face</span></code>]) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv441PDM_part_connectivity_to_connectivity_idxKiPKiPPiPPPiPPPi">
+<span id="_CPPv341PDM_part_connectivity_to_connectivity_idxKiPKiPPiPPPiPPPi"></span><span id="_CPPv241PDM_part_connectivity_to_connectivity_idxKiPKiPPiPPPiPPPi"></span><span id="PDM_part_connectivity_to_connectivity_idx__iC.iCP.iPP.iPPP.iPPP"></span><span class="target" id="pdm__part__connectivity__transform_8h_1a4515a3e891dc293680b71e56d0118e91"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_connectivity_to_connectivity_idx</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_entity1</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity2_in</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity2_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_entity2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv441PDM_part_connectivity_to_connectivity_idxKiPKiPPiPPPiPPPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Convert implicit pair connectivity, to a connectivity with index. Useful for converting face_cell or edge_vtx. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of partitions in current process </p></li>
+<li><p class="sd-card-text"><strong>n_entity1</strong> – <strong>[in]</strong> Number of entity1 </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2_in</strong> – <strong>[in]</strong> Implicit connectivity (face_cell for example with right cell is boundary face[2*i+1] == 0) </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2_idx</strong> – <strong>[out]</strong> Connectivity index between entity1 and entity2 (size = <code class="docutils literal notranslate"><span class="pre">n_entity1</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2</strong> – <strong>[out]</strong> Connectivity between entity1 and entity2 (size = <code class="docutils literal notranslate"><span class="pre">entity1_entity2_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_entity1</span></code>]) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_combine_connectivity
-      .. f:autosubroutine:: PDM_connectivity_transpose
-      .. f:autosubroutine:: PDM_compute_face_vtx_from_face_and_edge
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.combine_connectivity
-      .. autofunction:: Pypdm.Pypdm.connectivity_transpose
-      .. autofunction:: Pypdm.Pypdm.compute_face_vtx_from_face_and_edge
-      .. autofunction:: Pypdm.Pypdm.part_connectivity_to_connectivity_idx
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_combine_connectivity">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_combine_connectivity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n_entity1</span></em>, <em class="sig-param"><span class="pre">entity1_entity2_idx</span></em>, <em class="sig-param"><span class="pre">entity1_entity2</span></em>, <em class="sig-param"><span class="pre">entity2_entity3_idx</span></em>, <em class="sig-param"><span class="pre">entity2_entity3</span></em>, <em class="sig-param"><span class="pre">entity1_entity3_idx</span></em>, <em class="sig-param"><span class="pre">entity1_entity3</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_combine_connectivity" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_entity1</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of entity1</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity index between entity1 and entity2 (size = n_entity1+1)</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity between entity1 and entity2 (size = entity1_entity2_idx(n_entity1+1) )</p></li>
+<li><p class="sd-card-text"><strong>entity2_entity3_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity index between entity2 and entity3 (size = n_entity2+1)</p></li>
+<li><p class="sd-card-text"><strong>entity2_entity3</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity between entity2 and entity3 (size = entity1_entity2_idx(n_entity2+1) )</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity3_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity index between entity1 and entity3 (size = n_entity1+1)</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity3</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity between entity1 and entity3 (size = entity1_entity2_idx(n_entity1+1) )</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_connectivity_transpose">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_connectivity_transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n_entity1</span></em>, <em class="sig-param"><span class="pre">n_entity2</span></em>, <em class="sig-param"><span class="pre">entity1_entity2_idx</span></em>, <em class="sig-param"><span class="pre">entity1_entity2</span></em>, <em class="sig-param"><span class="pre">entity2_entity1_idx</span></em>, <em class="sig-param"><span class="pre">entity2_entity1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_connectivity_transpose" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_entity1</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of entity1</p></li>
+<li><p class="sd-card-text"><strong>n_entity2</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of entity2</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity index between entity1 and entity2 (size = n_entity1+1)</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity between entity1 and entity2 (size = entity1_entity2_idx(n_entity1+1) )</p></li>
+<li><p class="sd-card-text"><strong>entity2_entity1_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity index between entity2 and entity1 (size = n_entity2+1)</p></li>
+<li><p class="sd-card-text"><strong>entity2_entity1</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity between entity2 and entity1 (size = entity1_entity2_idx(n_entity2+1) )</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_compute_face_vtx_from_face_and_edge">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_compute_face_vtx_from_face_and_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n_face</span></em>, <em class="sig-param"><span class="pre">face_edge_idx</span></em>, <em class="sig-param"><span class="pre">face_edge</span></em>, <em class="sig-param"><span class="pre">edge_vtx</span></em>, <em class="sig-param"><span class="pre">face_vtx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_compute_face_vtx_from_face_and_edge" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Combine face-&gt;edge with edge-vtx to create face-vtx preserving orientation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_face</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of faces</p></li>
+<li><p class="sd-card-text"><strong>face_edge_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index of face-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><strong>face_edge</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Face-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><strong>edge_vtx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Edge-&gt;vtx connectivity</p></li>
+<li><p class="sd-card-text"><strong>face_vtx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Face-&gt;vtx connectivity</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.combine_connectivity">
+<span class="sig-name descname"><span class="pre">combine_connectivity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity1_entity2_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity1_entity2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity2_entity3_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity2_entity3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.combine_connectivity" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Combine <strong>entity1_entity2</strong> and <strong>entity2_entity3</strong> connectivities to get <strong>entity1_entity3</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>entity1_entity2_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Connectivity index between entity1 and entity2 (size = n_entity1 + 1)</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1])</p></li>
+<li><p class="sd-card-text"><strong>entity2_entity3_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Connectivity index between entity2 and entity3 (size = n_entity2 + 1)</p></li>
+<li><p class="sd-card-text"><strong>entity2_entity3</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Connectivity between entity2 and entity3 (size = entity2_entity3_idx[n_entity2] )</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Index of <strong>entity1_entity3</strong> connectivity (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity3</strong> connectivity          (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.connectivity_transpose">
+<span class="sig-name descname"><span class="pre">connectivity_transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_entity2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity1_entity2_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity1_entity2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.connectivity_transpose" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Transpose connectivity <strong>entity1_entity2</strong> to get <strong>entity2_entity1</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_entity2</strong> (<em>int</em>) – Number of entity2</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Connectivity index between entity1 and entity2 (size = n_entity1 + 1)</p></li>
+<li><p class="sd-card-text"><strong>entity1_entity2</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1])</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Index of <strong>entity2_entity1</strong> connectivity (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+<li><p class="sd-card-text"><strong>entity2_entity1</strong> connectivity          (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.compute_face_vtx_from_face_and_edge">
+<span class="sig-name descname"><span class="pre">compute_face_vtx_from_face_and_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">face_edge_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_edge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_vtx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.compute_face_vtx_from_face_and_edge" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Generate face-&gt;vtx connectivity from (<em>signed</em>) face-&gt;edge and edge-&gt;vtx connectivities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>face_edge_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Index for face-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><strong>face_edge</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Face-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><strong>edge_vtx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Edge-&gt;vtx connectivity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Face-&gt;vtx connectivity (<cite>np.ndarray[np.int32_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.part_connectivity_to_connectivity_idx">
+<span class="sig-name descname"><span class="pre">part_connectivity_to_connectivity_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_entity1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_entity1_entity2_in</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.part_connectivity_to_connectivity_idx" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Convert implicit pair connectivity, to a connectivity with index. Useful for converting face_cell or edge_vtx</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_entity1</strong> (<em>list</em><em> of </em><em>int</em>) – Number of entity1 for each part</p></li>
+<li><p class="sd-card-text"><strong>l_entity1_entity2_in</strong> (<em>list</em><em> of </em><em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Implicit <strong>entity1_entity2</strong> connectivity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Index of explicit <strong>entity1_entity2</strong> connectivity (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>)</p></li>
+<li><p class="sd-card-text">Explicit <strong>entity1_entity2</strong> connectivity          (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Block-distributed connectivity transformations<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/util/connec_transform.rst</span>, line 62)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Block-distributed connectivity transformations</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_deduce_combine_connectivityK12PDM_MPI_CommPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPKiPK11PDM_g_num_tKiPPiPP11PDM_g_num_t">
+<span id="_CPPv331PDM_deduce_combine_connectivityK12PDM_MPI_CommPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPKiPK11PDM_g_num_tKiPPiPP11PDM_g_num_t"></span><span id="_CPPv231PDM_deduce_combine_connectivityK12PDM_MPI_CommPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPKiPK11PDM_g_num_tKiPPiPP11PDM_g_num_t"></span><span id="PDM_deduce_combine_connectivity__PDM_MPI_CommC.PDM_g_num_tCP.PDM_g_num_tCP.iCP.PDM_g_num_tCP.iCP.PDM_g_num_tCP.iC.iPP.PDM_g_num_tPP"></span><span class="target" id="pdm__dconnectivity__transform_8h_1a907d38957e615693844cc1466f245595"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_deduce_combine_connectivity</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_distrib</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity2_distrib</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity1_entity2_idx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity1_entity2</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity2_entity3_idx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity2_entity3</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">is_signed</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity1_entity3_idx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity1_entity3</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_deduce_combine_connectivityK12PDM_MPI_CommPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPKiPK11PDM_g_num_tKiPPiPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Combine <code class="docutils literal notranslate"><span class="pre">dentity1_entity2</span></code> and <code class="docutils literal notranslate"><span class="pre">dentity2_entity3</span></code> connectivities to get <code class="docutils literal notranslate"><span class="pre">dentity1_entity3</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>entity1_distrib</strong> – <strong>[in]</strong> Distribution of entity1 </p></li>
+<li><p class="sd-card-text"><strong>entity2_distrib</strong> – <strong>[in]</strong> Distribution of entity2 </p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity2_idx</strong> – <strong>[in]</strong> Index of entity1-&gt;entity2 connectivity </p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity2</strong> – <strong>[in]</strong> Entity1-&gt;entity2 connectivity </p></li>
+<li><p class="sd-card-text"><strong>dentity2_entity3_idx</strong> – <strong>[in]</strong> Index of entity2-&gt;entity3 connectivity </p></li>
+<li><p class="sd-card-text"><strong>dentity2_entity3</strong> – <strong>[in]</strong> Entity2-&gt;entity3 connectivity </p></li>
+<li><p class="sd-card-text"><strong>is_signed</strong> – <strong>[in]</strong> If connectivity is signed </p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity3_idx</strong> – <strong>[out]</strong> Index of entity1-&gt;entity3 connectivity </p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity3</strong> – <strong>[out]</strong> Entity1-&gt;entity3 connectivity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv427PDM_dconnectivity_transposeK12PDM_MPI_CommPK11PDM_g_num_tP11PDM_g_num_tPKiPK11PDM_g_num_tiPPiPP11PDM_g_num_t">
+<span id="_CPPv327PDM_dconnectivity_transposeK12PDM_MPI_CommPK11PDM_g_num_tP11PDM_g_num_tPKiPK11PDM_g_num_tiPPiPP11PDM_g_num_t"></span><span id="_CPPv227PDM_dconnectivity_transposeK12PDM_MPI_CommPK11PDM_g_num_tP11PDM_g_num_tPKiPK11PDM_g_num_tiPPiPP11PDM_g_num_t"></span><span id="PDM_dconnectivity_transpose__PDM_MPI_CommC.PDM_g_num_tCP.PDM_g_num_tP.iCP.PDM_g_num_tCP.i.iPP.PDM_g_num_tPP"></span><span class="target" id="pdm__dconnectivity__transform_8h_1a98e4c9d644a5f806f47ca3355650ef16"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dconnectivity_transpose</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity1_distrib</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity2_distrib</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity1_entity2_idx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity1_entity2</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">is_signed</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity2_entity1_idx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dentity2_entity1</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv427PDM_dconnectivity_transposeK12PDM_MPI_CommPK11PDM_g_num_tP11PDM_g_num_tPKiPK11PDM_g_num_tiPPiPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Transpose <code class="docutils literal notranslate"><span class="pre">dentity1_entity2</span></code> connectivity to get <code class="docutils literal notranslate"><span class="pre">dentity2_entity3</span></code> connectivity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> PDM_MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>entity1_distrib</strong> – <strong>[in]</strong> Distribution of entity1 over the procs (size=n_rank+1) </p></li>
+<li><p class="sd-card-text"><strong>entity2_distrib</strong> – <strong>[in]</strong> Distribution of entity2 over the procs (size=n_rank+1) </p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity2_idx</strong> – <strong>[in]</strong> Index of dentitiy1-&gt;dentity2 connectivity </p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity2</strong> – <strong>[in]</strong> Connectivity of dentitiy1-&gt;dentity2 </p></li>
+<li><p class="sd-card-text"><strong>is_signed</strong> – <strong>[in]</strong> If connectivity is signed </p></li>
+<li><p class="sd-card-text"><strong>dentity2_entity1_idx</strong> – <strong>[out]</strong> Index of dentitiy2-&gt;dentity1 connectivity </p></li>
+<li><p class="sd-card-text"><strong>dentity2_entity1</strong> – <strong>[out]</strong> Connectivity of dentitiy2-&gt;dentity1 </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_deduce_combine_connectivity
-    .. doxygenfunction:: PDM_dconnectivity_transpose
-    .. doxygenfunction:: PDM_dconnectivity_dface_vtx_from_face_and_edge
-    .. doxygenfunction:: PDM_dfacecell_to_dcellface
-    .. doxygenfunction:: PDM_dcellface_to_dfacecell
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv446PDM_dconnectivity_dface_vtx_from_face_and_edgeK12PDM_MPI_CommP11PDM_g_num_tP11PDM_g_num_tPiP11PDM_g_num_tP11PDM_g_num_tPP11PDM_g_num_t">
+<span id="_CPPv346PDM_dconnectivity_dface_vtx_from_face_and_edgeK12PDM_MPI_CommP11PDM_g_num_tP11PDM_g_num_tPiP11PDM_g_num_tP11PDM_g_num_tPP11PDM_g_num_t"></span><span id="_CPPv246PDM_dconnectivity_dface_vtx_from_face_and_edgeK12PDM_MPI_CommP11PDM_g_num_tP11PDM_g_num_tPiP11PDM_g_num_tP11PDM_g_num_tPP11PDM_g_num_t"></span><span id="PDM_dconnectivity_dface_vtx_from_face_and_edge__PDM_MPI_CommC.PDM_g_num_tP.PDM_g_num_tP.iP.PDM_g_num_tP.PDM_g_num_tP.PDM_g_num_tPP"></span><span class="target" id="pdm__dconnectivity__transform_8h_1a108e69921a8981f226e39d852f03f26e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dconnectivity_dface_vtx_from_face_and_edge</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">distrib_face</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">distrib_edge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dface_edge_idx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dface_edge</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dedge_vtx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dface_vtx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv446PDM_dconnectivity_dface_vtx_from_face_and_edgeK12PDM_MPI_CommP11PDM_g_num_tP11PDM_g_num_tPiP11PDM_g_num_tP11PDM_g_num_tPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Generate <code class="docutils literal notranslate"><span class="pre">dface_vtx</span></code> connectivity from <code class="docutils literal notranslate"><span class="pre">dface_edge</span></code> and <code class="docutils literal notranslate"><span class="pre">dedge_vtx</span></code> connectivities. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>distrib_face</strong> – <strong>[in]</strong> Distribution of faces </p></li>
+<li><p class="sd-card-text"><strong>distrib_edge</strong> – <strong>[in]</strong> Distribution of edges </p></li>
+<li><p class="sd-card-text"><strong>dface_edge_idx</strong> – <strong>[in]</strong> Index of face-&gt;edge connectivity </p></li>
+<li><p class="sd-card-text"><strong>dface_edge</strong> – <strong>[in]</strong> Face-&gt;edge connectivity </p></li>
+<li><p class="sd-card-text"><strong>dedge_vtx</strong> – <strong>[in]</strong> Edge-&gt;vtx connectivity </p></li>
+<li><p class="sd-card-text"><strong>dface_vtx</strong> – <strong>[out]</strong> Face-&gt;vtx connectivity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_dfacecell_to_dcellfacePK11PDM_g_num_tPK11PDM_g_num_tPK11PDM_g_num_tPPiPP11PDM_g_num_t12PDM_MPI_Comm">
+<span id="_CPPv326PDM_dfacecell_to_dcellfacePK11PDM_g_num_tPK11PDM_g_num_tPK11PDM_g_num_tPPiPP11PDM_g_num_t12PDM_MPI_Comm"></span><span id="_CPPv226PDM_dfacecell_to_dcellfacePK11PDM_g_num_tPK11PDM_g_num_tPK11PDM_g_num_tPPiPP11PDM_g_num_t12PDM_MPI_Comm"></span><span id="PDM_dfacecell_to_dcellface__PDM_g_num_tCP.PDM_g_num_tCP.PDM_g_num_tCP.iPP.PDM_g_num_tPP.PDM_MPI_Comm"></span><span class="target" id="pdm__dconnectivity__transform_8h_1a28b3d2ccbc604e2651ca2637bbc2307d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dfacecell_to_dcellface</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_distri</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cell_distri</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dface_cell</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcell_face_idx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcell_face</span></span>, <span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_dfacecell_to_dcellfacePK11PDM_g_num_tPK11PDM_g_num_tPK11PDM_g_num_tPPiPP11PDM_g_num_t12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Shortcut to PDM_dconnectivity_transpose for facecell like connectivity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>face_distri</strong> – <strong>[in]</strong> distribution of faces over the procs (size=n_rank+1) </p></li>
+<li><p class="sd-card-text"><strong>cell_distri</strong> – <strong>[in]</strong> distribution of cells over the procs (size=n_rank+1) </p></li>
+<li><p class="sd-card-text"><strong>dface_cell</strong> – <strong>[in]</strong> Facecell array, including zeros (size=2*dn_face) </p></li>
+<li><p class="sd-card-text"><strong>dcell_face_idx</strong> – <strong>[out]</strong> Output cell_face_idx. Will be allocated (size=dn_cell+1) </p></li>
+<li><p class="sd-card-text"><strong>dcell_face</strong> – <strong>[out]</strong> Ouput cell_face. Will be allocated (size=cell_face_idx[dn_cell]) </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> PDM_MPI communicator </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: Python
-    :sync: Python
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_dcellface_to_dfacecellPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPP11PDM_g_num_t12PDM_MPI_Comm">
+<span id="_CPPv326PDM_dcellface_to_dfacecellPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPP11PDM_g_num_t12PDM_MPI_Comm"></span><span id="_CPPv226PDM_dcellface_to_dfacecellPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPP11PDM_g_num_t12PDM_MPI_Comm"></span><span id="PDM_dcellface_to_dfacecell__PDM_g_num_tCP.PDM_g_num_tCP.iCP.PDM_g_num_tCP.PDM_g_num_tPP.PDM_MPI_Comm"></span><span class="target" id="pdm__dconnectivity__transform_8h_1a81b0cbefef3d73caedb77998f97e24bc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dcellface_to_dfacecell</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_distri</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cell_distri</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcell_face_idx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcell_face</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dface_cell</span></span>, <span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_dcellface_to_dfacecellPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPP11PDM_g_num_t12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Shortcut to PDM_dconnectivity_transpose to obtain facecell like connectivity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>face_distri</strong> – <strong>[in]</strong> distribution of faces over the procs (size=n_rank+1) </p></li>
+<li><p class="sd-card-text"><strong>cell_distri</strong> – <strong>[in]</strong> distribution of cells over the procs (size=n_rank+1) </p></li>
+<li><p class="sd-card-text"><strong>dcell_face_idx</strong> – <strong>[in]</strong> cell_face idx array (size = dn_cell) </p></li>
+<li><p class="sd-card-text"><strong>dcell_face</strong> – <strong>[in]</strong> cell_face array (size = cell_face_idx[dn_cell]) </p></li>
+<li><p class="sd-card-text"><strong>dface_cell</strong> – <strong>[out]</strong> Output face_cell. Will be allocated (size = 2*dn_face) </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> PDM_MPI communicator </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.dconnectivity_combine
-      .. autofunction:: Pypdm.Pypdm.dconnectivity_transpose
-      .. autofunction:: Pypdm.Pypdm.dfacecell_to_dcellface
-      .. autofunction:: Pypdm.Pypdm.dcellface_to_dfacecell
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-4">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.dconnectivity_combine">
+<span class="sig-name descname"><span class="pre">dconnectivity_combine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity1_distrib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity2_distrib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dentity1_entity2_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dentity1_entity2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dentity2_entity3_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dentity2_entity3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_signed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.dconnectivity_combine" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Combine <strong>dentity1_entity2</strong> and <strong>dentity2_entity3</strong> connectivities to get <strong>dentity1_entity3</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>entity1_distrib</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Distribution of entity1</p></li>
+<li><p class="sd-card-text"><strong>entity2_distrib</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Distribution of entity1</p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity2_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Index of entity1-&gt;entity2 connectivity</p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity2</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Entity1-&gt;entity2 connectivity</p></li>
+<li><p class="sd-card-text"><strong>dentity2_entity3_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Index of entity2-&gt;entity3 connectivity</p></li>
+<li><p class="sd-card-text"><strong>dentity2_entity3</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Entity2-&gt;entity3 connectivity</p></li>
+<li><p class="sd-card-text"><strong>is_signed</strong> (<em>bool</em>) – If connectivity is signed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Index of entity1-&gt;entity3 connectivity (np.ndarray[np.int32_t])</p></li>
+<li><p class="sd-card-text">Entity1-&gt;entity3 connectivity          (np.ndarray[npy_pdm_gnum_t])</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.dconnectivity_transpose">
+<span class="sig-name descname"><span class="pre">dconnectivity_transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity1_distrib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity2_distrib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dentity1_entity2_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dentity1_entity2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_signed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.dconnectivity_transpose" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Transpose <strong>dentity1_entity2</strong> connectivity to get <strong>dentity2_entity3</strong> connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>entity1_distrib</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Distribution of entity1</p></li>
+<li><p class="sd-card-text"><strong>entity2_distrib</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Distribution of entity1</p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity2_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Index of entity1-&gt;entity2 connectivity</p></li>
+<li><p class="sd-card-text"><strong>dentity1_entity2</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Entity1-&gt;entity2 connectivity</p></li>
+<li><p class="sd-card-text"><strong>is_signed</strong> (<em>bool</em>) – If connectivity is signed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Index of entity2-&gt;entity1 connectivity (np.ndarray[np.int12_t])</p></li>
+<li><p class="sd-card-text">Entity2-&gt;entity1 connectivity          (np.ndarray[npy_pdm_gnum_t])</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.dfacecell_to_dcellface">
+<span class="sig-name descname"><span class="pre">dfacecell_to_dcellface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_distri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_distri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dface_cell</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.dfacecell_to_dcellface" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Shortcut to PDM_dconnectivity_transpose for facecell like connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>face_distri</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Distribution of faces</p></li>
+<li><p class="sd-card-text"><strong>cell_distri</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Distribution of cells</p></li>
+<li><p class="sd-card-text"><strong>dface_cell</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Face-&gt;cell connectivity (size = 2*dn_face : cell_left/cell_right)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Index of cell-&gt;face connectivity (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+<li><p class="sd-card-text">Cell-&gt;face connectivity          (<cite>np.ndarray[npy_pdm_gnum_t]</cite>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.dcellface_to_dfacecell">
+<span class="sig-name descname"><span class="pre">dcellface_to_dfacecell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_distri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_distri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dcell_face_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dcell_face</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.dcellface_to_dfacecell" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Shortcut to PDM_dconnectivity_transpose for facecell like connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>face_distri</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Distribution of faces</p></li>
+<li><p class="sd-card-text"><strong>cell_distri</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Distribution of cells</p></li>
+<li><p class="sd-card-text"><strong>dcell_face_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Index of cell-&gt;face connectivity</p></li>
+<li><p class="sd-card-text"><strong>dcell_face</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Cell-&gt;face connectivity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">cell_left/cell_right)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text">Face-&gt;cell connectivity (<cite>np.ndarray[npy_pdm_gnum_t]</cite>,  size = 2*dn_face</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -495,7 +845,27 @@ unknown option: “sync-group”.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Connectivity transformation</a><ul>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv424PDM_combine_connectivityiPiPiPiPiPPiPPi"><code class="docutils literal notranslate"><span class="pre">PDM_combine_connectivity()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv426PDM_connectivity_transposeKiKiPiPiPPiPPi"><code class="docutils literal notranslate"><span class="pre">PDM_connectivity_transpose()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv439PDM_compute_face_vtx_from_face_and_edgeiPiPiPiPPi"><code class="docutils literal notranslate"><span class="pre">PDM_compute_face_vtx_from_face_and_edge()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv448PDM_compute_face_vtx_from_face_and_edge_unsignediPiPiPiPPi"><code class="docutils literal notranslate"><span class="pre">PDM_compute_face_vtx_from_face_and_edge_unsigned()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv441PDM_part_connectivity_to_connectivity_idxKiPKiPPiPPPiPPPi"><code class="docutils literal notranslate"><span class="pre">PDM_part_connectivity_to_connectivity_idx()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.combine_connectivity"><code class="docutils literal notranslate"><span class="pre">combine_connectivity()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.connectivity_transpose"><code class="docutils literal notranslate"><span class="pre">connectivity_transpose()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.compute_face_vtx_from_face_and_edge"><code class="docutils literal notranslate"><span class="pre">compute_face_vtx_from_face_and_edge()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.part_connectivity_to_connectivity_idx"><code class="docutils literal notranslate"><span class="pre">part_connectivity_to_connectivity_idx()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_deduce_combine_connectivityK12PDM_MPI_CommPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPKiPK11PDM_g_num_tKiPPiPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_deduce_combine_connectivity()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv427PDM_dconnectivity_transposeK12PDM_MPI_CommPK11PDM_g_num_tP11PDM_g_num_tPKiPK11PDM_g_num_tiPPiPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_dconnectivity_transpose()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv446PDM_dconnectivity_dface_vtx_from_face_and_edgeK12PDM_MPI_CommP11PDM_g_num_tP11PDM_g_num_tPiP11PDM_g_num_tP11PDM_g_num_tPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_dconnectivity_dface_vtx_from_face_and_edge()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv426PDM_dfacecell_to_dcellfacePK11PDM_g_num_tPK11PDM_g_num_tPK11PDM_g_num_tPPiPP11PDM_g_num_t12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_dfacecell_to_dcellface()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv426PDM_dcellface_to_dfacecellPK11PDM_g_num_tPK11PDM_g_num_tPKiPK11PDM_g_num_tPP11PDM_g_num_t12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_dcellface_to_dfacecell()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.dconnectivity_combine"><code class="docutils literal notranslate"><span class="pre">dconnectivity_combine()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.dconnectivity_transpose"><code class="docutils literal notranslate"><span class="pre">dconnectivity_transpose()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.dfacecell_to_dcellface"><code class="docutils literal notranslate"><span class="pre">dfacecell_to_dcellface()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.dcellface_to_dfacecell"><code class="docutils literal notranslate"><span class="pre">dcellface_to_dfacecell()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -507,13 +877,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

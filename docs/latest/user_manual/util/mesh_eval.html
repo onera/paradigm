@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Coding rules &amp; guidelines" href="../../developer_manual/coding_rules.html" /><link rel="prev" title="Connectivity transformation" href="connec_transform.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Mesh Evaluation Utils - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,101 +332,590 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="mesh-evaluation-utils">
-<span id="mesh-eval"></span><h1>Mesh Evaluation Utils<a class="headerlink" href="#mesh-evaluation-utils" title="Permalink to this heading">¶</a></h1>
+<span id="mesh-eval"></span><h1>Mesh Evaluation Utils<a class="headerlink" href="#mesh-evaluation-utils" title="Link to this heading">¶</a></h1>
 <section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
 <p><strong>PDM_mesh_eval</strong> is a set of free functions for evaluating mesh quality using (metric-based) geometric and topological criteria.</p>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Metric-based<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/util/mesh_eval.rst</span>, line 16)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Metric-based</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<blockquote>
+<div><dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425PDM_mesh_eval_edge_lengthPdPdPdPd17PDM_metric_type_t">
+<span id="_CPPv325PDM_mesh_eval_edge_lengthPdPdPdPd17PDM_metric_type_t"></span><span id="_CPPv225PDM_mesh_eval_edge_lengthPdPdPdPd17PDM_metric_type_t"></span><span id="PDM_mesh_eval_edge_length__doubleP.doubleP.doubleP.doubleP.PDM_metric_type_t"></span><span class="target" id="pdm__mesh__eval_8h_1a89eb246a9b462f955830393e081b8963"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_edge_length</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pt_a</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pt_b</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">m_a</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">m_b</span></span>, <span class="n"><span class="pre">PDM_metric_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metric_t</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425PDM_mesh_eval_edge_lengthPdPdPdPd17PDM_metric_type_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute edge length for a given metric. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pt_a</strong> – <strong>[in]</strong> Coordinates of point A </p></li>
+<li><p class="sd-card-text"><strong>pt_b</strong> – <strong>[in]</strong> Coordinates of point B </p></li>
+<li><p class="sd-card-text"><strong>m_a</strong> – <strong>[in]</strong> Metric at point A </p></li>
+<li><p class="sd-card-text"><strong>m_b</strong> – <strong>[in]</strong> Metric at point B </p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> – <strong>[in]</strong> Metric type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Edge length </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv428PDM_mesh_eval_elt_edge_ratio20PDM_Mesh_nodal_elt_tA_PdA_Pd17PDM_metric_type_t">
+<span id="_CPPv328PDM_mesh_eval_elt_edge_ratio20PDM_Mesh_nodal_elt_tA_PdA_Pd17PDM_metric_type_t"></span><span id="_CPPv228PDM_mesh_eval_elt_edge_ratio20PDM_Mesh_nodal_elt_tA_PdA_Pd17PDM_metric_type_t"></span><span id="PDM_mesh_eval_elt_edge_ratio__PDM_Mesh_nodal_elt_t.doublePA.doublePA.PDM_metric_type_t"></span><span class="target" id="pdm__mesh__eval_8h_1ab7e0baf630f7f254a1a86ce65c2f79f8"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_elt_edge_ratio</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_Mesh_nodal_elt_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">elt_t</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">m</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span>, <span class="n"><span class="pre">PDM_metric_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metric_t</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428PDM_mesh_eval_elt_edge_ratio20PDM_Mesh_nodal_elt_tA_PdA_Pd17PDM_metric_type_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute edge ratio (l_max / l_min) for a given metric. (Optimum : 1) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>elt_t</strong> – <strong>[in]</strong> Standard element type </p></li>
+<li><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates of the element’s vertices </p></li>
+<li><p class="sd-card-text"><strong>m</strong> – <strong>[in]</strong> Metric at the element’s vertices </p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> – <strong>[in]</strong> Metric type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Edge ratio (== Aspect ratio) </p>
+</dd>
+</dl>
+</dd></dl>
 
-      .. doxygenfunction:: PDM_mesh_eval_edge_length
-      .. doxygenfunction:: PDM_mesh_eval_elt_edge_ratio
-      .. doxygenfunction:: PDM_mesh_eval_triangle_quality
-      .. doxygenfunction:: PDM_mesh_eval_tetrahedron_quality
-      .. doxygenfunction:: PDM_mesh_eval_elt_anisotropy_ratio
-      .. doxygenfunction:: PDM_mesh_eval_triangle_skewness
-      .. doxygenfunction:: PDM_mesh_eval_tetrahedron_skewness
-      .. doxygenfunction:: PDM_mesh_eval_triangle_radii_ratio
-      .. doxygenfunction:: PDM_mesh_eval_dmesh_complexity
-      .. doxygenfunction:: PDM_mesh_eval_pmesh_complexity
-      .. doxygenfunction:: PDM_mesh_eval_elt_natural_metric
-      .. doxygenfunction:: PDM_mesh_eval_triangle_load
-      .. doxygenfunction:: PDM_mesh_eval_tetrahedron_load
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_edge_length
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_elt_edge_ratio
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_triangle_quality
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_tetrahedron_quality
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_elt_anisotropy_ratio
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_triangle_skewness
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_tetrahedron_skewness
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_triangle_radii_ratio
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_elt_natural_metric
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_triangle_load
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_tetrahedron_load
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_dmesh_complexity
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_pmesh_complexity
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_mesh_eval_triangle_qualityAL3E_PdAL3E_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t">
+<span id="_CPPv330PDM_mesh_eval_triangle_qualityAL3E_PdAL3E_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t"></span><span id="_CPPv230PDM_mesh_eval_triangle_qualityA3_PdA3_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t"></span><span id="PDM_mesh_eval_triangle_quality__doublePA.doublePA.PDM_metric_type_t.PDM_mesh_eval_quality_t"></span><span class="target" id="pdm__mesh__eval_8h_1a49d2a04fb1509d3fb7db518db20c0465"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_triangle_quality</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">m</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="n"><span class="pre">PDM_metric_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metric_t</span></span>, <a class="reference internal" href="#_CPPv423PDM_mesh_eval_quality_t" title="PDM_mesh_eval_quality_t"><span class="n"><span class="pre">PDM_mesh_eval_quality_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">q_t</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_mesh_eval_triangle_qualityAL3E_PdAL3E_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute triangle quality. (Optimum : 1) </p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Call PDM_predicate_exactinit first</p>
 </div>
-</aside>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates of the triangle’s vertices </p></li>
+<li><p class="sd-card-text"><strong>m</strong> – <strong>[in]</strong> Metric at the triangle’s vertices </p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> – <strong>[in]</strong> Metric type </p></li>
+<li><p class="sd-card-text"><strong>q_t</strong> – <strong>[in]</strong> Quality computation type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Triangle quality </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv433PDM_mesh_eval_tetrahedron_qualityAL4E_PdAL4E_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t">
+<span id="_CPPv333PDM_mesh_eval_tetrahedron_qualityAL4E_PdAL4E_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t"></span><span id="_CPPv233PDM_mesh_eval_tetrahedron_qualityA4_PdA4_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t"></span><span id="PDM_mesh_eval_tetrahedron_quality__doublePA.doublePA.PDM_metric_type_t.PDM_mesh_eval_quality_t"></span><span class="target" id="pdm__mesh__eval_8h_1afe8e7d8f8da0ac595e87619a1e9cea93"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_tetrahedron_quality</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">4</span></span><span class="p"><span class="pre">]</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">m</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">4</span></span><span class="p"><span class="pre">]</span></span>, <span class="n"><span class="pre">PDM_metric_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metric_t</span></span>, <a class="reference internal" href="#_CPPv423PDM_mesh_eval_quality_t" title="PDM_mesh_eval_quality_t"><span class="n"><span class="pre">PDM_mesh_eval_quality_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">q_t</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv433PDM_mesh_eval_tetrahedron_qualityAL4E_PdAL4E_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute tetrahedron quality. (Optimum : 1) </p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Call PDM_predicate_exactinit first</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates of the tetrahedron’s vertices </p></li>
+<li><p class="sd-card-text"><strong>m</strong> – <strong>[in]</strong> Metric at the tetrahedron’s vertices </p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> – <strong>[in]</strong> Metric type </p></li>
+<li><p class="sd-card-text"><strong>q_t</strong> – <strong>[in]</strong> Quality computation type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Tetrahedron quality </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv434PDM_mesh_eval_elt_anisotropy_ratioiA_PdA_d">
+<span id="_CPPv334PDM_mesh_eval_elt_anisotropy_ratioiA_PdA_d"></span><span id="_CPPv234PDM_mesh_eval_elt_anisotropy_ratioiA_PdA_d"></span><span id="PDM_mesh_eval_elt_anisotropy_ratio__i.doublePA.doubleA"></span><span class="target" id="pdm__mesh__eval_8h_1a93d065b42f8076080de8dededacb33b4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_elt_anisotropy_ratio</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">m</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ratios</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv434PDM_mesh_eval_elt_anisotropy_ratioiA_PdA_d" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute anisotropy ratio. (3D : Interpreted as volume ratio) </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in A. Loseille’s PhD thesis</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dim</strong> – <strong>[in]</strong> Mesh Dimension </p></li>
+<li><p class="sd-card-text"><strong>m</strong> – <strong>[in]</strong> Metric </p></li>
+<li><p class="sd-card-text"><strong>ratios</strong> – <strong>[out]</strong> Array of anisotropy ratio (size=<code class="docutils literal notranslate"><span class="pre">dim</span></code>) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_mesh_eval_triangle_skewnessAL3E_Pd">
+<span id="_CPPv331PDM_mesh_eval_triangle_skewnessAL3E_Pd"></span><span id="_CPPv231PDM_mesh_eval_triangle_skewnessA3_Pd"></span><span id="PDM_mesh_eval_triangle_skewness__doublePA"></span><span class="target" id="pdm__mesh__eval_8h_1a5170db8d67d6d769321b406aa65b5773"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_triangle_skewness</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_mesh_eval_triangle_skewnessAL3E_Pd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute triangle skewness. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in H. Rakotoarivelo’s PhD thesis</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Call PDM_predicate_exactinit first. Triangle orientation is not taken into account</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates the triangle’s vertices</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Triangle skewness </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv434PDM_mesh_eval_tetrahedron_skewnessAL4E_Pd">
+<span id="_CPPv334PDM_mesh_eval_tetrahedron_skewnessAL4E_Pd"></span><span id="_CPPv234PDM_mesh_eval_tetrahedron_skewnessA4_Pd"></span><span id="PDM_mesh_eval_tetrahedron_skewness__doublePA"></span><span class="target" id="pdm__mesh__eval_8h_1a88da6b3cb3d59d03428594424f455ab5"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_tetrahedron_skewness</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">4</span></span><span class="p"><span class="pre">]</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv434PDM_mesh_eval_tetrahedron_skewnessAL4E_Pd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute tetrahedron skewness. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in “Mesh adaptation for large-eddy simulations in complex geometries”, Benard et al., IJNMF (2016)</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Call PDM_predicate_exactinit first</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates of the tetrahedron’s vertices</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Tetrahedron skewness </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv434PDM_mesh_eval_triangle_radii_ratioAL3E_Pd">
+<span id="_CPPv334PDM_mesh_eval_triangle_radii_ratioAL3E_Pd"></span><span id="_CPPv234PDM_mesh_eval_triangle_radii_ratioA3_Pd"></span><span id="PDM_mesh_eval_triangle_radii_ratio__doublePA"></span><span class="target" id="pdm__mesh__eval_8h_1a809cb499841f9fad81f55a899e9a3685"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_triangle_radii_ratio</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv434PDM_mesh_eval_triangle_radii_ratioAL3E_Pd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute ratio (R/2r) of circumscribed and inscribed circle radii (Optimum : 1) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates the triangle’s vertices</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Triangle ratio (R/2r) of circumscribed and inscribed circle radii </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_mesh_eval_dmesh_complexityK12PDM_MPI_CommKiP11PDM_g_num_tP11PDM_g_num_tP11PDM_g_num_tPdPd17PDM_metric_type_t">
+<span id="_CPPv330PDM_mesh_eval_dmesh_complexityK12PDM_MPI_CommKiP11PDM_g_num_tP11PDM_g_num_tP11PDM_g_num_tPdPd17PDM_metric_type_t"></span><span id="_CPPv230PDM_mesh_eval_dmesh_complexityK12PDM_MPI_CommKiP11PDM_g_num_tP11PDM_g_num_tP11PDM_g_num_tPdPd17PDM_metric_type_t"></span><span id="PDM_mesh_eval_dmesh_complexity__PDM_MPI_CommC.iC.PDM_g_num_tP.PDM_g_num_tP.PDM_g_num_tP.doubleP.doubleP.PDM_metric_type_t"></span><span class="target" id="pdm__mesh__eval_8h_1a13d2f5bb897c0240fdda3b065e12cf28"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_dmesh_complexity</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">distrib_elt</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">distrib_vtx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">delt_vtx</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dvtx_coord</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dvtx_metric</span></span>, <span class="n"><span class="pre">PDM_metric_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metric_t</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_mesh_eval_dmesh_complexityK12PDM_MPI_CommKiP11PDM_g_num_tP11PDM_g_num_tP11PDM_g_num_tPdPd17PDM_metric_type_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute complexity on a block-distributed mesh. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>dim</strong> – <strong>[in]</strong> Mesh dimension </p></li>
+<li><p class="sd-card-text"><strong>distrib_elt</strong> – <strong>[in]</strong> Element distribution </p></li>
+<li><p class="sd-card-text"><strong>distrib_vtx</strong> – <strong>[in]</strong> Vertex distribution </p></li>
+<li><p class="sd-card-text"><strong>delt_vtx</strong> – <strong>[in]</strong> Element-&gt;Vertex connectivity </p></li>
+<li><p class="sd-card-text"><strong>dvtx_coord</strong> – <strong>[in]</strong> Vertex coordinates </p></li>
+<li><p class="sd-card-text"><strong>dvtx_metric</strong> – <strong>[in]</strong> Metric field at mesh vertices </p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> – <strong>[in]</strong> Metric type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Mesh complexity </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_mesh_eval_pmesh_complexityK12PDM_MPI_CommKiiPiPdPd17PDM_metric_type_t">
+<span id="_CPPv330PDM_mesh_eval_pmesh_complexityK12PDM_MPI_CommKiiPiPdPd17PDM_metric_type_t"></span><span id="_CPPv230PDM_mesh_eval_pmesh_complexityK12PDM_MPI_CommKiiPiPdPd17PDM_metric_type_t"></span><span id="PDM_mesh_eval_pmesh_complexity__PDM_MPI_CommC.iC.i.iP.doubleP.doubleP.PDM_metric_type_t"></span><span class="target" id="pdm__mesh__eval_8h_1a0c178e1301add4387ff8fe7481371b4a"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_pmesh_complexity</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_elt</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">elt_vtx</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_coord</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_metric</span></span>, <span class="n"><span class="pre">PDM_metric_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metric_t</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_mesh_eval_pmesh_complexityK12PDM_MPI_CommKiiPiPdPd17PDM_metric_type_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute complexity on a partitioned mesh. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>dim</strong> – <strong>[in]</strong> Mesh dimension </p></li>
+<li><p class="sd-card-text"><strong>n_elt</strong> – <strong>[in]</strong> Number of elements </p></li>
+<li><p class="sd-card-text"><strong>elt_vtx</strong> – <strong>[in]</strong> Element-&gt;Vertex connectivity </p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> – <strong>[in]</strong> Vertex coordinates </p></li>
+<li><p class="sd-card-text"><strong>vtx_metric</strong> – <strong>[in]</strong> Metric field at mesh vertices </p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> – <strong>[in]</strong> Metric type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Mesh complexity </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_mesh_eval_elt_natural_metriciiPiPdPd">
+<span id="_CPPv332PDM_mesh_eval_elt_natural_metriciiPiPdPd"></span><span id="_CPPv232PDM_mesh_eval_elt_natural_metriciiPiPdPd"></span><span id="PDM_mesh_eval_elt_natural_metric__i.i.iP.doubleP.doubleP"></span><span class="target" id="pdm__mesh__eval_8h_1acf4c352897b14aef5cc26825246f749a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_elt_natural_metric</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_elt</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">connec</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coord</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">metric</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_mesh_eval_elt_natural_metriciiPiPdPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute natural metric for simplicial elements. </p>
+<p class="sd-card-text">The natural metric of an element is the unique metric tensor such that all edges of that element have unit length.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in “Continuous mesh framework part I: well-posed continuous interpolation error” by A. Loseille and F. Alauzet (Section 2.1)</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dim</strong> – <strong>[in]</strong> Mesh dimension (2 or 3) </p></li>
+<li><p class="sd-card-text"><strong>n_elt</strong> – <strong>[in]</strong> Number of elements </p></li>
+<li><p class="sd-card-text"><strong>connec</strong> – <strong>[in]</strong> Element-&gt;vertex connectivity (size = (<code class="docutils literal notranslate"><span class="pre">dim</span></code> + 1) * <code class="docutils literal notranslate"><span class="pre">n_elt</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>coord</strong> – <strong>[in]</strong> Vertex coordinates (always three-dimensional) </p></li>
+<li><p class="sd-card-text"><strong>metric</strong> – <strong>[out]</strong> Natural metric (size = 6 * <code class="docutils literal notranslate"><span class="pre">n_elt</span></code>) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv427PDM_mesh_eval_triangle_loadAL3E_PdAL3E_Pd17PDM_metric_type_tPd">
+<span id="_CPPv327PDM_mesh_eval_triangle_loadAL3E_PdAL3E_Pd17PDM_metric_type_tPd"></span><span id="_CPPv227PDM_mesh_eval_triangle_loadA3_PdA3_Pd17PDM_metric_type_tPd"></span><span id="PDM_mesh_eval_triangle_load__doublePA.doublePA.PDM_metric_type_t.doubleP"></span><span class="target" id="pdm__mesh__eval_8h_1ace4b26a96e7c0bbf85526e1d1f8adae3"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_triangle_load</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">m</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="n"><span class="pre">PDM_metric_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metric_t</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">op_factors</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv427PDM_mesh_eval_triangle_loadAL3E_PdAL3E_Pd17PDM_metric_type_tPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute triangle remeshing load. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in “Unique cavity-based operator and hierarchical domain partitioning for fast parallel generation of anisotropic meshes”</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates of triangle’s vertices </p></li>
+<li><p class="sd-card-text"><strong>m</strong> – <strong>[in]</strong> Metric at the triangle’s vertices </p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> – <strong>[in]</strong> Metric type </p></li>
+<li><p class="sd-card-text"><strong>op_factors</strong> – <strong>[in]</strong> Operation load factor ([insertion, deletion, optimization])</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Triangle remeshing load </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_mesh_eval_tetrahedron_loadAL4E_PdAL4E_Pd17PDM_metric_type_tPd">
+<span id="_CPPv330PDM_mesh_eval_tetrahedron_loadAL4E_PdAL4E_Pd17PDM_metric_type_tPd"></span><span id="_CPPv230PDM_mesh_eval_tetrahedron_loadA4_PdA4_Pd17PDM_metric_type_tPd"></span><span id="PDM_mesh_eval_tetrahedron_load__doublePA.doublePA.PDM_metric_type_t.doubleP"></span><span class="target" id="pdm__mesh__eval_8h_1a935b09958b0328ef455b482006ce2668"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_tetrahedron_load</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">4</span></span><span class="p"><span class="pre">]</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">m</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">4</span></span><span class="p"><span class="pre">]</span></span>, <span class="n"><span class="pre">PDM_metric_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metric_t</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">op_factors</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_mesh_eval_tetrahedron_loadAL4E_PdAL4E_Pd17PDM_metric_type_tPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute tetrahedron remeshing load. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in “Unique cavity-based operator and hierarchical domain partitioning for fast parallel generation of anisotropic meshes”, Loseille et al., CAD (2017)</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates of the tetrahedron’s vertices </p></li>
+<li><p class="sd-card-text"><strong>m</strong> – <strong>[in]</strong> Metric at the tetrahedron’s vertices </p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> – <strong>[in]</strong> Metric type </p></li>
+<li><p class="sd-card-text"><strong>op_factors</strong> – <strong>[in]</strong> Operation load factor ([insertion, deletion, optimization])</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Tetrahedron remeshing load </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-1">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_edge_length">
+<span class="sig-name descname"><span class="pre">mesh_eval_edge_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pt_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pt_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_edge_length" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute edge length for a given metric</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pt_a</strong> (<em>numpy.double_t array</em>) – Coordinates of point A</p></li>
+<li><p class="sd-card-text"><strong>pt_b</strong> (<em>numpy.double_t array</em>) – Coordinates of point B</p></li>
+<li><p class="sd-card-text"><strong>m_a</strong> (<em>numpy.double_t array</em>) – Metric at point A</p></li>
+<li><p class="sd-card-text"><strong>m_b</strong> (<em>numpy.double_t array</em>) – Metric at point B</p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> (<em>PDM_metric_type_t</em>) – Metric type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Edge length</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_elt_edge_ratio">
+<span class="sig-name descname"><span class="pre">mesh_eval_elt_edge_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elt_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_elt_edge_ratio" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute edge ratio (l_max / l_min) for a given metric.
+(Optimum : 1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>elt_t</strong> (<em>PDM_Mesh_nodal_elt_t</em>) – Standard element type</p></li>
+<li><p class="sd-card-text"><strong>coords</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Coordinates of the element’s vertices</p></li>
+<li><p class="sd-card-text"><strong>m</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Metric at the element’s vertices</p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> (<em>PDM_metric_type_t</em>) – Metric type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Edge ratio (== Aspect ratio)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_triangle_quality">
+<span class="sig-name descname"><span class="pre">mesh_eval_triangle_quality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_triangle_quality" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute triangle quality.
+(Optimum : 1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>coords</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Coordinates of the triangle’s vertices</p></li>
+<li><p class="sd-card-text"><strong>m</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Metric at the triangle’s vertices</p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> (<em>PDM_metric_type_t</em>) – Metric type</p></li>
+<li><p class="sd-card-text"><strong>q_t</strong> (<em>PDM_mesh_eval_quality_t</em>) – Quality computation type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Triangle quality</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_tetrahedron_quality">
+<span class="sig-name descname"><span class="pre">mesh_eval_tetrahedron_quality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_tetrahedron_quality" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute tetrahedron quality.
+(Optimum : 1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>coords</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Coordinates of the tetrahedron’s vertices</p></li>
+<li><p class="sd-card-text"><strong>m</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Metric at the tetrahedron’s vertices</p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> (<em>PDM_metric_type_t</em>) – Metric type</p></li>
+<li><p class="sd-card-text"><strong>q_t</strong> (<em>PDM_mesh_eval_quality_t</em>) – Quality computation type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Tetrahedron quality</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_elt_anisotropy_ratio">
+<span class="sig-name descname"><span class="pre">mesh_eval_elt_anisotropy_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_elt_anisotropy_ratio" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute anisotropy ratio.
+(3D : Interpreted as volume ratio)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in A. Loseille’s PhD thesis</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dim</strong> (<em>int</em>) – Mesh Dimension</p></li>
+<li><p class="sd-card-text"><strong>m</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Metric at the element’s vertices</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">List of anisotropy ratios</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_triangle_skewness">
+<span class="sig-name descname"><span class="pre">mesh_eval_triangle_skewness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_triangle_skewness" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute triangle skewness</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in H. Rakotoarivelo’s PhD thesis</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>coords</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Coordinates the triangle’s vertices</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Triangle skewness</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_tetrahedron_skewness">
+<span class="sig-name descname"><span class="pre">mesh_eval_tetrahedron_skewness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_tetrahedron_skewness" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute tetrahedron skewness</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in “Mesh adaptation for large-eddy simulations in complex geometries”, Benard et al., IJNMF (2016)</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>coords</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Coordinates of the tetrahedron’s vertices</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Tetrahedron skewness</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_triangle_radii_ratio">
+<span class="sig-name descname"><span class="pre">mesh_eval_triangle_radii_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_triangle_radii_ratio" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute ratio (R/2r) of circumscribed and inscribed circle radii.
+(Optimum : 1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>coords</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Coordinates the triangle’s vertices</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Triangle ratio (R/2r) of circumscribed and inscribed circle radii</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_elt_natural_metric">
+<span class="sig-name descname"><span class="pre">mesh_eval_elt_natural_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_elt_natural_metric" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute natural metric for simplicial elements</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Theory in “Continuous mesh framework part I: well-posed continuous interpolation error” by A. Loseille and F. Alauzet (Section 2.1)</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dim</strong> (<em>int</em>) – Mesh dimension (2 or 3)</p></li>
+<li><p class="sd-card-text"><strong>connec</strong> (<em>numpy.int32_t array</em>) – Element-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>coord</strong> (<em>numpy.double_t array</em>) – Vertex coordinates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Natural metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_triangle_load">
+<span class="sig-name descname"><span class="pre">mesh_eval_triangle_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_factors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_triangle_load" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute triangle remeshing load</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>coords</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Coordinates of triangle’s vertices</p></li>
+<li><p class="sd-card-text"><strong>m</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Metric at the triangle’s vertices</p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> (<em>PDM_metric_type_t</em>) – Metric type</p></li>
+<li><p class="sd-card-text"><strong>op_factors</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Operation load factor ([insertion, deletion, optimization])</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Triangle remeshing load</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_tetrahedron_load">
+<span class="sig-name descname"><span class="pre">mesh_eval_tetrahedron_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_factors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_tetrahedron_load" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute tetrahedron remeshing load</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>coords</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Coordinates of the tetrahedron’s vertices</p></li>
+<li><p class="sd-card-text"><strong>m</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Metric at the tetrahedron’s vertices</p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> (<em>PDM_metric_type_t</em>) – Metric type</p></li>
+<li><p class="sd-card-text"><strong>op_factors</strong> (<em>list</em><em> of </em><em>numpy.double_t arrays</em>) – Operation load factor ([insertion, deletion, optimization])</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Tetrahedron remeshing load</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_dmesh_complexity">
+<span class="sig-name descname"><span class="pre">mesh_eval_dmesh_complexity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distrib_elt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distrib_vtx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delt_vtx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvtx_coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvtx_metric</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_dmesh_complexity" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute complexity on a block-distributed mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>dim</strong> (<em>int</em>) – Mesh dimension</p></li>
+<li><p class="sd-card-text"><strong>distrib_elt</strong> (<em>npy_pdm_gnum_t array</em>) – Element distribution</p></li>
+<li><p class="sd-card-text"><strong>distrib_vtx</strong> (<em>npy_pdm_gnum_t array</em>) – Vertex distribution</p></li>
+<li><p class="sd-card-text"><strong>delt_vtx</strong> (<em>npy_pdm_gnum_t array</em>) – Element-&gt;Vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>dvtx_coord</strong> (<em>numpy.double_t array</em>) – Vertex coordinates</p></li>
+<li><p class="sd-card-text"><strong>dvtx_metric</strong> (<em>numpy.double_t array</em>) – Metric field at mesh vertices</p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> (<em>PDM_metric_type_t</em>) – Metric type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Mesh complexity</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_pmesh_complexity">
+<span class="sig-name descname"><span class="pre">mesh_eval_pmesh_complexity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elt_vtx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_pmesh_complexity" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute complexity on a partitioned mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>dim</strong> (<em>int</em>) – Mesh dimension</p></li>
+<li><p class="sd-card-text"><strong>elt_vtx</strong> (<em>numpy.int32_t array</em>) – Element-&gt;Vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> (<em>numpy.double_t array</em>) – Vertex coordinates</p></li>
+<li><p class="sd-card-text"><strong>vtx_metric</strong> (<em>numpy.double_t array</em>) – Metric field at mesh vertices</p></li>
+<li><p class="sd-card-text"><strong>metric_t</strong> (<em>PDM_metric_type_t</em>) – Metric type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Mesh complexity</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 <p class="sd-card-text">In Riemannian metric fields, quality evaluations can be performed with multiple strategies:</p>
 <dl class="cpp enum">
 <dt class="sig sig-object cpp" id="_CPPv423PDM_mesh_eval_quality_t">
-<span id="_CPPv323PDM_mesh_eval_quality_t"></span><span id="_CPPv223PDM_mesh_eval_quality_t"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_quality_t</span></span></span><br /></dt>
+<span id="_CPPv323PDM_mesh_eval_quality_t"></span><span id="_CPPv223PDM_mesh_eval_quality_t"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_quality_t</span></span></span><a class="headerlink" href="#_CPPv423PDM_mesh_eval_quality_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p class="sd-card-text">Different element quality computation methods. </p>
 <p class="sd-card-text"><em>Values:</em></p>
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N23PDM_mesh_eval_quality_t37PDM_MESH_EVAL_CENTERED_METRIC_QUALITYE">
-<span id="_CPPv3N23PDM_mesh_eval_quality_t37PDM_MESH_EVAL_CENTERED_METRIC_QUALITYE"></span><span id="_CPPv2N23PDM_mesh_eval_quality_t37PDM_MESH_EVAL_CENTERED_METRIC_QUALITYE"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070a48130fda0096830a816eab8335e1fc45"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_MESH_EVAL_CENTERED_METRIC_QUALITY</span></span></span><br /></dt>
+<span id="_CPPv3N23PDM_mesh_eval_quality_t37PDM_MESH_EVAL_CENTERED_METRIC_QUALITYE"></span><span id="_CPPv2N23PDM_mesh_eval_quality_t37PDM_MESH_EVAL_CENTERED_METRIC_QUALITYE"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070a48130fda0096830a816eab8335e1fc45"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_MESH_EVAL_CENTERED_METRIC_QUALITY</span></span></span><a class="headerlink" href="#_CPPv4N23PDM_mesh_eval_quality_t37PDM_MESH_EVAL_CENTERED_METRIC_QUALITYE" title="Link to this definition">¶</a><br /></dt>
 <dd><p class="sd-card-text">Use metric interpolated at element centroid </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N23PDM_mesh_eval_quality_t27PDM_MESH_EVAL_WORST_QUALITYE">
-<span id="_CPPv3N23PDM_mesh_eval_quality_t27PDM_MESH_EVAL_WORST_QUALITYE"></span><span id="_CPPv2N23PDM_mesh_eval_quality_t27PDM_MESH_EVAL_WORST_QUALITYE"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070a96203ec1df035e62d4f5a0fd4c75dd63"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_MESH_EVAL_WORST_QUALITY</span></span></span><br /></dt>
+<span id="_CPPv3N23PDM_mesh_eval_quality_t27PDM_MESH_EVAL_WORST_QUALITYE"></span><span id="_CPPv2N23PDM_mesh_eval_quality_t27PDM_MESH_EVAL_WORST_QUALITYE"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070a96203ec1df035e62d4f5a0fd4c75dd63"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_MESH_EVAL_WORST_QUALITY</span></span></span><a class="headerlink" href="#_CPPv4N23PDM_mesh_eval_quality_t27PDM_MESH_EVAL_WORST_QUALITYE" title="Link to this definition">¶</a><br /></dt>
 <dd><p class="sd-card-text">Use metric that gives worst quality </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N23PDM_mesh_eval_quality_t33PDM_MESH_EVAL_LARGEST_DET_QUALITYE">
-<span id="_CPPv3N23PDM_mesh_eval_quality_t33PDM_MESH_EVAL_LARGEST_DET_QUALITYE"></span><span id="_CPPv2N23PDM_mesh_eval_quality_t33PDM_MESH_EVAL_LARGEST_DET_QUALITYE"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070aa5357cb391ceb2683120cad8561c648c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_MESH_EVAL_LARGEST_DET_QUALITY</span></span></span><br /></dt>
+<span id="_CPPv3N23PDM_mesh_eval_quality_t33PDM_MESH_EVAL_LARGEST_DET_QUALITYE"></span><span id="_CPPv2N23PDM_mesh_eval_quality_t33PDM_MESH_EVAL_LARGEST_DET_QUALITYE"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070aa5357cb391ceb2683120cad8561c648c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_MESH_EVAL_LARGEST_DET_QUALITY</span></span></span><a class="headerlink" href="#_CPPv4N23PDM_mesh_eval_quality_t33PDM_MESH_EVAL_LARGEST_DET_QUALITYE" title="Link to this definition">¶</a><br /></dt>
 <dd><p class="sd-card-text">Use metric with largest determinant </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N23PDM_mesh_eval_quality_t18PDM_MESH_EVAL_NONEE">
-<span id="_CPPv3N23PDM_mesh_eval_quality_t18PDM_MESH_EVAL_NONEE"></span><span id="_CPPv2N23PDM_mesh_eval_quality_t18PDM_MESH_EVAL_NONEE"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070a665268d37d22eec465fbe4413a2bfbd9"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_MESH_EVAL_NONE</span></span></span><br /></dt>
+<span id="_CPPv3N23PDM_mesh_eval_quality_t18PDM_MESH_EVAL_NONEE"></span><span id="_CPPv2N23PDM_mesh_eval_quality_t18PDM_MESH_EVAL_NONEE"></span><span class="target" id="pdm__mesh__eval_8h_1a7c2bcf0e0085a88230ed40d6a67c8070a665268d37d22eec465fbe4413a2bfbd9"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_MESH_EVAL_NONE</span></span></span><a class="headerlink" href="#_CPPv4N23PDM_mesh_eval_quality_t18PDM_MESH_EVAL_NONEE" title="Link to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -434,39 +923,65 @@ unknown option: “sync-group”.</p>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Topological<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/util/mesh_eval.rst</span>, line 70)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
-
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_mesh_eval_pvtx_valency
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.mesh_eval_pvtx_valency
-
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
+<span class="sd-summary-text">Topological</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-2">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_mesh_eval_pvtx_valencyK12PDM_MPI_CommKiiPiiP11PDM_g_num_t">
+<span id="_CPPv326PDM_mesh_eval_pvtx_valencyK12PDM_MPI_CommKiiPiiP11PDM_g_num_t"></span><span id="_CPPv226PDM_mesh_eval_pvtx_valencyK12PDM_MPI_CommKiiPiiP11PDM_g_num_t"></span><span id="PDM_mesh_eval_pvtx_valency__PDM_MPI_CommC.iC.i.iP.i.PDM_g_num_tP"></span><span class="target" id="pdm__mesh__eval_8h_1af580632f4de70b9c34888e43d682b5e6"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_eval_pvtx_valency</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">p_n_elt</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">p_elt_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">p_n_vtx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">p_vtx_ln_to_gn</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_mesh_eval_pvtx_valencyK12PDM_MPI_CommKiiPiiP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute valency at each vertex of a partitioned mesh. </p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Implementation valid only for triangles and tetrahedra</p>
 </div>
-</aside>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>dim</strong> – <strong>[in]</strong> Mesh dimension </p></li>
+<li><p class="sd-card-text"><strong>p_n_elt</strong> – <strong>[in]</strong> Number of elements </p></li>
+<li><p class="sd-card-text"><strong>p_elt_vtx</strong> – <strong>[in]</strong> Element-&gt;Vertex connectivity </p></li>
+<li><p class="sd-card-text"><strong>p_n_vtx</strong> – <strong>[in]</strong> Number of vertices </p></li>
+<li><p class="sd-card-text"><strong>p_vtx_ln_to_gn</strong> – <strong>[in]</strong> Vertex global numbering</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Valency at each vertex </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-3">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.mesh_eval_pvtx_valency">
+<span class="sig-name descname"><span class="pre">mesh_eval_pvtx_valency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_elt_vtx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_vtx_ln_to_gn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.mesh_eval_pvtx_valency" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute valency at each vertex of a partitioned mesh</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Implementation valid only for triangles and tetrahedra</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>dim</strong> (<em>int</em>) – Mesh dimension</p></li>
+<li><p class="sd-card-text"><strong>p_elt_vtx</strong> (<em>npy_pdm_gnum_t array</em>) – Element-&gt;Vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>p_vtx_ln_to_gn</strong> (<em>numpy.int32_t array</em>) – Vertex global numbering</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Valency at each vertex</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -528,7 +1043,44 @@ unknown option: “sync-group”.</p>
             <ul>
 <li><a class="reference internal" href="#">Mesh Evaluation Utils</a><ul>
 <li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv425PDM_mesh_eval_edge_lengthPdPdPdPd17PDM_metric_type_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_edge_length()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv428PDM_mesh_eval_elt_edge_ratio20PDM_Mesh_nodal_elt_tA_PdA_Pd17PDM_metric_type_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_elt_edge_ratio()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_mesh_eval_triangle_qualityAL3E_PdAL3E_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_triangle_quality()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv433PDM_mesh_eval_tetrahedron_qualityAL4E_PdAL4E_Pd17PDM_metric_type_t23PDM_mesh_eval_quality_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_tetrahedron_quality()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv434PDM_mesh_eval_elt_anisotropy_ratioiA_PdA_d"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_elt_anisotropy_ratio()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_mesh_eval_triangle_skewnessAL3E_Pd"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_triangle_skewness()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv434PDM_mesh_eval_tetrahedron_skewnessAL4E_Pd"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_tetrahedron_skewness()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv434PDM_mesh_eval_triangle_radii_ratioAL3E_Pd"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_triangle_radii_ratio()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_mesh_eval_dmesh_complexityK12PDM_MPI_CommKiP11PDM_g_num_tP11PDM_g_num_tP11PDM_g_num_tPdPd17PDM_metric_type_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_dmesh_complexity()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_mesh_eval_pmesh_complexityK12PDM_MPI_CommKiiPiPdPd17PDM_metric_type_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_pmesh_complexity()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_mesh_eval_elt_natural_metriciiPiPdPd"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_elt_natural_metric()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv427PDM_mesh_eval_triangle_loadAL3E_PdAL3E_Pd17PDM_metric_type_tPd"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_triangle_load()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_mesh_eval_tetrahedron_loadAL4E_PdAL4E_Pd17PDM_metric_type_tPd"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_tetrahedron_load()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_edge_length"><code class="docutils literal notranslate"><span class="pre">mesh_eval_edge_length()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_elt_edge_ratio"><code class="docutils literal notranslate"><span class="pre">mesh_eval_elt_edge_ratio()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_triangle_quality"><code class="docutils literal notranslate"><span class="pre">mesh_eval_triangle_quality()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_tetrahedron_quality"><code class="docutils literal notranslate"><span class="pre">mesh_eval_tetrahedron_quality()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_elt_anisotropy_ratio"><code class="docutils literal notranslate"><span class="pre">mesh_eval_elt_anisotropy_ratio()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_triangle_skewness"><code class="docutils literal notranslate"><span class="pre">mesh_eval_triangle_skewness()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_tetrahedron_skewness"><code class="docutils literal notranslate"><span class="pre">mesh_eval_tetrahedron_skewness()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_triangle_radii_ratio"><code class="docutils literal notranslate"><span class="pre">mesh_eval_triangle_radii_ratio()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_elt_natural_metric"><code class="docutils literal notranslate"><span class="pre">mesh_eval_elt_natural_metric()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_triangle_load"><code class="docutils literal notranslate"><span class="pre">mesh_eval_triangle_load()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_tetrahedron_load"><code class="docutils literal notranslate"><span class="pre">mesh_eval_tetrahedron_load()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_dmesh_complexity"><code class="docutils literal notranslate"><span class="pre">mesh_eval_dmesh_complexity()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_pmesh_complexity"><code class="docutils literal notranslate"><span class="pre">mesh_eval_pmesh_complexity()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv423PDM_mesh_eval_quality_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_quality_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N23PDM_mesh_eval_quality_t37PDM_MESH_EVAL_CENTERED_METRIC_QUALITYE"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_quality_t::PDM_MESH_EVAL_CENTERED_METRIC_QUALITY</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N23PDM_mesh_eval_quality_t27PDM_MESH_EVAL_WORST_QUALITYE"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_quality_t::PDM_MESH_EVAL_WORST_QUALITY</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N23PDM_mesh_eval_quality_t33PDM_MESH_EVAL_LARGEST_DET_QUALITYE"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_quality_t::PDM_MESH_EVAL_LARGEST_DET_QUALITY</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N23PDM_mesh_eval_quality_t18PDM_MESH_EVAL_NONEE"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_quality_t::PDM_MESH_EVAL_NONE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv426PDM_mesh_eval_pvtx_valencyK12PDM_MPI_CommKiiPiiP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_eval_pvtx_valency()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.mesh_eval_pvtx_valency"><code class="docutils literal notranslate"><span class="pre">mesh_eval_pvtx_valency()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -540,13 +1092,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Communication graphs" href="../comm_graph/index.html" /><link rel="prev" title="Part extension" href="part_extension.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Renumbering - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,9 +332,9 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="renumbering">
-<span id="id1"></span><h1>Renumbering<a class="headerlink" href="#renumbering" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Renumbering<a class="headerlink" href="#renumbering" title="Link to this heading">¶</a></h1>
 <section id="why-renumber-mesh-entities-within-a-partition">
-<h2>Why renumber mesh entities within a partition?<a class="headerlink" href="#why-renumber-mesh-entities-within-a-partition" title="Permalink to this heading">¶</a></h2>
+<h2>Why renumber mesh entities within a partition?<a class="headerlink" href="#why-renumber-mesh-entities-within-a-partition" title="Link to this heading">¶</a></h2>
 <p>After <a class="reference internal" href="multipart.html#multipart"><span class="std std-ref">partitioning</span></a> an unstructured mesh (e.g. with parallel partitioners such as <a class="reference external" href="https://gitlab.inria.fr/scotch/scotch">PT-Scotch</a> or <a class="reference external" href="https://github.com/KarypisLab/ParMETIS">ParMETIS</a>), the entities (cells, faces, edges, vertices) of the mesh are ordered nearly randomly within each MPI rank or process.
 This initial numbering produced by the partitioner may not be optimal for performance reasons related to data locality, memory usage, or solver convergence.</p>
 <p>Renumbering the partitioned mesh entities aims to:</p>
@@ -346,39 +346,26 @@ This initial numbering produced by the partitioner may not be optimal for perfor
 </ul>
 </section>
 <section id="renumbering-methods-for-mesh-entities">
-<h2>Renumbering methods for mesh entities<a class="headerlink" href="#renumbering-methods-for-mesh-entities" title="Permalink to this heading">¶</a></h2>
+<h2>Renumbering methods for mesh entities<a class="headerlink" href="#renumbering-methods-for-mesh-entities" title="Link to this heading">¶</a></h2>
 <p><strong>ParaDiGM</strong> features multiple renumbering methods for different mesh entity types (cells, faces, edges, vertices).</p>
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/renumbering.rst</span>, line 25)</p>
-<p>Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-    :sync-group: language
-
-    .. tab-item:: C
-      :sync: C
-
-      .. note:: Renumbering methods must be enabled by calling the ``PDM_plugin_load()`` function.
-
-
-    .. tab-item:: Fortran
-      :sync: Fortran
-
-      .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-        .. note:: Renumbering methods must be enabled by calling the ``PDM_plugin_load()`` subroutine.
-
-      .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-          .. warning::
-            Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-
-</pre></div>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Renumbering methods must be enabled by calling the <code class="docutils literal notranslate"><span class="pre">PDM_plugin_load()</span></code> function.</p>
 </div>
-</aside>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Renumbering methods must be enabled by calling the <code class="docutils literal notranslate"><span class="pre">PDM_plugin_load()</span></code> subroutine.</p>
+</div>
+</div>
+</div>
 <p>The following methods are available:</p>
 <ul class="simple">
 <li><p><strong>Cells (PDM_MESH_ENTITY_CELL)</strong>:</p>
@@ -410,7 +397,7 @@ unknown option: “sync-group”.</p>
 </ul>
 </section>
 <section id="hpc-renumbering-paradigma">
-<h2>HPC renumbering (<strong>ParaDiGMA</strong>)<a class="headerlink" href="#hpc-renumbering-paradigma" title="Permalink to this heading">¶</a></h2>
+<h2>HPC renumbering (<strong>ParaDiGMA</strong>)<a class="headerlink" href="#hpc-renumbering-paradigma" title="Link to this heading">¶</a></h2>
 <p>The <cite>PDM_PART_RENUM_CELL/FACE/VTX_HPC</cite> methods perform renumbering of cells/faces/vertices using high-performance computing (HPC) optimizations tailored for cell-centered or vertex-centered solvers.</p>
 <p>The following parameters allow fine control over the renumbering process:</p>
 <ul class="simple">
@@ -433,21 +420,21 @@ unknown option: “sync-group”.</p>
 <p>These parameters provide flexible tuning to adapt the renumbering to specific hardware architectures and problem characteristics, enabling efficient and scalable mesh computations.</p>
 </section>
 <section id="importance-of-gauss-seidel-smoothing">
-<span id="gauss-seidel-smoothing"></span><h2>Importance of Gauss-Seidel smoothing<a class="headerlink" href="#importance-of-gauss-seidel-smoothing" title="Permalink to this heading">¶</a></h2>
+<span id="gauss-seidel-smoothing"></span><h2>Importance of Gauss-Seidel smoothing<a class="headerlink" href="#importance-of-gauss-seidel-smoothing" title="Link to this heading">¶</a></h2>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Gauss%E2%80%93Seidel_method">Gauss-Seidel</a> is an iterative method used for solving linear systems of the form <span class="math notranslate nohighlight">\(Ax = b\)</span>, where <span class="math notranslate nohighlight">\(A\)</span> is a matrix and <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(b\)</span> are vectors. It improves convergence by successively refining the solution estimate, using already updated values within an iteration. This results in a faster convergence compared to simpler methods like <a class="reference external" href="https://en.wikipedia.org/wiki/Jacobi_method">Jacobi</a>.</p>
 <p>In the context of renumbering and mesh computations, Gauss-Seidel smoothing can help improve the quality of the numbering by reducing the bandwidth of the associated system matrix, which in turn enhances solver efficiency and reduces iteration counts in implicit solvers.</p>
 <p>However, if your computations are explicit — that is, if no linear system is implicitly solved at each step — applying Gauss-Seidel smoothing offers little benefit. Explicit methods update solutions directly using known values, so the iterative smoothing to accelerate convergence is unnecessary. In fact, enabling Gauss-Seidel in explicit schemes may add unwarranted computational cost without improving results.</p>
 <p>Therefore, Gauss-Seidel smoothing is particularly valuable when the renumbering interacts with implicit solvers or iterative linear system resolutions, but should generally be disabled for explicit computations.</p>
 </section>
 <section id="enforce-rank-in-subdomain">
-<span id="id2"></span><h2>Enforce rank in subdomain<a class="headerlink" href="#enforce-rank-in-subdomain" title="Permalink to this heading">¶</a></h2>
+<span id="id2"></span><h2>Enforce rank in subdomain<a class="headerlink" href="#enforce-rank-in-subdomain" title="Link to this heading">¶</a></h2>
 <p>This option enhances the implicit ordering of cells within subdomains after partitioning. Typically, the cells are organized by subdomain using a prefix-sum structure that defines the continuous range of cell indices for each subdomain. Additionally, the subdomains themselves are numbered so that adjacent subdomains have close numbering — achieved by performing a breadth-first search (BFS) traversal over the subdomain adjacency graph.</p>
 <p>The role of <cite>enforce_rank_in_subdomain</cite> is to enforce a refined ordering of cells on the boundaries between two adjacent subdomains. Specifically, cells that lie on the interface between subdomains are placed first in the subdomain with the higher rank.</p>
 <p>This strategy leverages the fact that the renumbering scheme treats the lower-ranked subdomain as a master relative to higher-ranked neighbors. Therefore, placing boundary cells first in the higher-ranked subdomain simplifies initialization and iteration over just the interface cells within the current subdomain by allowing range-based loops without gaps.</p>
 <p>As a result, this option improves data locality and facilitates efficient traversal of boundary elements during computations, benefiting overall solver performance and communication patterns in parallel HPC simulations.</p>
 </section>
 <section id="importance-of-post-processing-renumbered-partitions-within-solvers">
-<h2>Importance of post-processing renumbered partitions within solvers<a class="headerlink" href="#importance-of-post-processing-renumbered-partitions-within-solvers" title="Permalink to this heading">¶</a></h2>
+<h2>Importance of post-processing renumbered partitions within solvers<a class="headerlink" href="#importance-of-post-processing-renumbered-partitions-within-solvers" title="Link to this heading">¶</a></h2>
 <p>Renumbering the mesh partition is a crucial step to optimize data locality and computational efficiency. However, the renumbering alone is often insufficient to fully exploit these benefits in solver computations.</p>
 <p>A key aspect for achieving optimal performance is <strong>post-processing the renumbered information inside the solvers</strong>. This post-treatment involves reorganizing data to:</p>
 <ul class="simple">
@@ -461,7 +448,7 @@ unknown option: “sync-group”.</p>
 <p>Therefore, the renumbering step and the solver post-processing form a complementary pair, both necessary to realize the full potential of optimizing mesh partitioning for HPC contexts.</p>
 </section>
 <section id="user-recommendations-verifying-vectorization-quality-and-subdomain-balancing">
-<h2>User recommendations: verifying vectorization quality and subdomain balancing<a class="headerlink" href="#user-recommendations-verifying-vectorization-quality-and-subdomain-balancing" title="Permalink to this heading">¶</a></h2>
+<h2>User recommendations: verifying vectorization quality and subdomain balancing<a class="headerlink" href="#user-recommendations-verifying-vectorization-quality-and-subdomain-balancing" title="Link to this heading">¶</a></h2>
 <p>After completing the post-processing of the renumbered mesh partitions, it is strongly recommended that users verify the effectiveness of the vectorization and the balance of subdomains.</p>
 <p>Using tools such as histograms to analyze the distribution of vector packets and the workload per subdomain provides a quick and intuitive assessment of the partition quality.</p>
 <p>Balanced histograms indicate good load distribution across subdomains, which is essential for efficient parallel computations, while uniform vector packet sizes ensure optimal hardware utilization through vectorization.</p>
@@ -543,13 +530,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>

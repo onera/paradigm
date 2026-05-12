@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Location from global ids - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,16 +332,16 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="location-from-global-ids">
-<span id="gnum-location"></span><h1>Location from global ids<a class="headerlink" href="#location-from-global-ids" title="Permalink to this heading">¶</a></h1>
+<span id="gnum-location"></span><h1>Location from global ids<a class="headerlink" href="#location-from-global-ids" title="Link to this heading">¶</a></h1>
 <p>Retrieve the location triplet <em>(rank, part id, local id)</em> of all instances of an entity identified by its global id.
 <em>(schéma ?)</em></p>
 <section id="c-api">
-<h2>C API<a class="headerlink" href="#c-api" title="Permalink to this heading">¶</a></h2>
+<h2>C API<a class="headerlink" href="#c-api" title="Link to this heading">¶</a></h2>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv419PDM_gnum_location_t">
-<span id="_CPPv319PDM_gnum_location_t"></span><span id="_CPPv219PDM_gnum_location_t"></span><span id="PDM_gnum_location_t"></span><span class="target" id="pdm__gnum__location_8h_1ae3e5728f510e427d7ce8038cd0bc9939"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">_pdm_gnum_location_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></span><a class="headerlink" href="#_CPPv419PDM_gnum_location_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv319PDM_gnum_location_t"></span><span id="_CPPv219PDM_gnum_location_t"></span><span id="PDM_gnum_location_t"></span><span class="target" id="pdm__gnum__location_8h_1ae3e5728f510e427d7ce8038cd0bc9939"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="n"><span class="pre">_pdm_gnum_location_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></span><a class="headerlink" href="#_CPPv419PDM_gnum_location_t" title="Link to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 </div>
@@ -349,7 +349,7 @@
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv424PDM_gnum_location_createKiKiK12PDM_MPI_CommK15PDM_ownership_t">
-<span id="_CPPv324PDM_gnum_location_createKiKiK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="_CPPv224PDM_gnum_location_createKiKiK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="PDM_gnum_location_create__iC.iC.PDM_MPI_CommC.PDM_ownership_tC"></span><span class="target" id="pdm__gnum__location_8h_1a684b9c6bf70a8b4b15d4a06851bb6184"></span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part_in</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part_out</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">owner</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_gnum_location_createKiKiK12PDM_MPI_CommK15PDM_ownership_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv324PDM_gnum_location_createKiKiK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="_CPPv224PDM_gnum_location_createKiKiK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="PDM_gnum_location_create__iC.iC.PDM_MPI_CommC.PDM_ownership_tC"></span><span class="target" id="pdm__gnum__location_8h_1a684b9c6bf70a8b4b15d4a06851bb6184"></span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part_in</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part_out</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">owner</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_gnum_location_createKiKiK12PDM_MPI_CommK15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Create a structure to retrieve the locations of elements with given global ids. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -368,7 +368,7 @@
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv430PDM_gnum_location_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t">
-<span id="_CPPv330PDM_gnum_location_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"></span><span id="_CPPv230PDM_gnum_location_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"></span><span id="PDM_gnum_location_elements_set__PDM_gnum_location_tP.iC.iC.PDM_g_num_tCP"></span><span class="target" id="pdm__gnum__location_8h_1ab45a6d9c88ca0126ce9cd1e2c884bff6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_elements_set</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_in</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_elts_in</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_in</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_gnum_location_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv330PDM_gnum_location_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"></span><span id="_CPPv230PDM_gnum_location_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"></span><span id="PDM_gnum_location_elements_set__PDM_gnum_location_tP.iC.iC.PDM_g_num_tCP"></span><span class="target" id="pdm__gnum__location_8h_1ab45a6d9c88ca0126ce9cd1e2c884bff6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_elements_set</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_in</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_elts_in</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_in</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_gnum_location_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Set global ids. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -384,7 +384,7 @@
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv440PDM_gnum_location_requested_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t">
-<span id="_CPPv340PDM_gnum_location_requested_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"></span><span id="_CPPv240PDM_gnum_location_requested_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"></span><span id="PDM_gnum_location_requested_elements_set__PDM_gnum_location_tP.iC.iC.PDM_g_num_tCP"></span><span class="target" id="pdm__gnum__location_8h_1aab6a3b9b696f8e2bb60e418ff3cc9a56"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_requested_elements_set</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_out</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_elts_out</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_out</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv440PDM_gnum_location_requested_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv340PDM_gnum_location_requested_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"></span><span id="_CPPv240PDM_gnum_location_requested_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"></span><span id="PDM_gnum_location_requested_elements_set__PDM_gnum_location_tP.iC.iC.PDM_g_num_tCP"></span><span class="target" id="pdm__gnum__location_8h_1aab6a3b9b696f8e2bb60e418ff3cc9a56"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_requested_elements_set</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_out</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_elts_out</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_out</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv440PDM_gnum_location_requested_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Set requested elements. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -400,7 +400,7 @@
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv425PDM_gnum_location_computeP19PDM_gnum_location_t">
-<span id="_CPPv325PDM_gnum_location_computeP19PDM_gnum_location_t"></span><span id="_CPPv225PDM_gnum_location_computeP19PDM_gnum_location_t"></span><span id="PDM_gnum_location_compute__PDM_gnum_location_tP"></span><span class="target" id="pdm__gnum__location_8h_1a7b6d16bc9d000786b0df1af77dd0809a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_compute</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425PDM_gnum_location_computeP19PDM_gnum_location_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv325PDM_gnum_location_computeP19PDM_gnum_location_t"></span><span id="_CPPv225PDM_gnum_location_computeP19PDM_gnum_location_t"></span><span id="PDM_gnum_location_compute__PDM_gnum_location_tP"></span><span class="target" id="pdm__gnum__location_8h_1a7b6d16bc9d000786b0df1af77dd0809a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_compute</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425PDM_gnum_location_computeP19PDM_gnum_location_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Compute the location (MPI rank, partition, local id in the partition) </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -411,7 +411,7 @@
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv421PDM_gnum_location_getP19PDM_gnum_location_tKiPPiPPi">
-<span id="_CPPv321PDM_gnum_location_getP19PDM_gnum_location_tKiPPiPPi"></span><span id="_CPPv221PDM_gnum_location_getP19PDM_gnum_location_tKiPPiPPi"></span><span id="PDM_gnum_location_get__PDM_gnum_location_tP.iC.iPP.iPP"></span><span class="target" id="pdm__gnum__location_8h_1ab9068eeb083541eaab5860b45f6be69c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_get</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_out</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">location_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">location</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421PDM_gnum_location_getP19PDM_gnum_location_tKiPPiPPi" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv321PDM_gnum_location_getP19PDM_gnum_location_tKiPPiPPi"></span><span id="_CPPv221PDM_gnum_location_getP19PDM_gnum_location_tKiPPiPPi"></span><span id="PDM_gnum_location_get__PDM_gnum_location_tP.iC.iPP.iPP"></span><span class="target" id="pdm__gnum__location_8h_1ab9068eeb083541eaab5860b45f6be69c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_get</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_out</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">location_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">location</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421PDM_gnum_location_getP19PDM_gnum_location_tKiPPiPPi" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Get requested locations. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -427,7 +427,7 @@
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv422PDM_gnum_location_freeP19PDM_gnum_location_t">
-<span id="_CPPv322PDM_gnum_location_freeP19PDM_gnum_location_t"></span><span id="_CPPv222PDM_gnum_location_freeP19PDM_gnum_location_t"></span><span id="PDM_gnum_location_free__PDM_gnum_location_tP"></span><span class="target" id="pdm__gnum__location_8h_1abf8ebbbc0af0e16cc57b18a051077392"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_free</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_gnum_location_freeP19PDM_gnum_location_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv322PDM_gnum_location_freeP19PDM_gnum_location_t"></span><span id="_CPPv222PDM_gnum_location_freeP19PDM_gnum_location_t"></span><span id="PDM_gnum_location_free__PDM_gnum_location_tP"></span><span class="target" id="pdm__gnum__location_8h_1abf8ebbbc0af0e16cc57b18a051077392"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_free</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_gnum_location_freeP19PDM_gnum_location_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Free a PDM_gnum_location_t object. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -438,7 +438,7 @@
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv437PDM_gnum_location_n_requested_elt_getP19PDM_gnum_location_tKi">
-<span id="_CPPv337PDM_gnum_location_n_requested_elt_getP19PDM_gnum_location_tKi"></span><span id="_CPPv237PDM_gnum_location_n_requested_elt_getP19PDM_gnum_location_tKi"></span><span id="PDM_gnum_location_n_requested_elt_get__PDM_gnum_location_tP.iC"></span><span class="target" id="pdm__gnum__location_8h_1a8f77a30e430a4875cf1238ea7679bb9c"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_n_requested_elt_get</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_out</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv437PDM_gnum_location_n_requested_elt_getP19PDM_gnum_location_tKi" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv337PDM_gnum_location_n_requested_elt_getP19PDM_gnum_location_tKi"></span><span id="_CPPv237PDM_gnum_location_n_requested_elt_getP19PDM_gnum_location_tKi"></span><span id="PDM_gnum_location_n_requested_elt_get__PDM_gnum_location_tP.iC"></span><span class="target" id="pdm__gnum__location_8h_1a8f77a30e430a4875cf1238ea7679bb9c"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_location_n_requested_elt_get</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv419PDM_gnum_location_t" title="PDM_gnum_location_t"><span class="n"><span class="pre">PDM_gnum_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_loc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part_out</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv437PDM_gnum_location_n_requested_elt_getP19PDM_gnum_location_tKi" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Get the number of requested elements in a given partition. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -495,7 +495,17 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Location from global ids</a><ul>
-<li><a class="reference internal" href="#c-api">C API</a></li>
+<li><a class="reference internal" href="#c-api">C API</a><ul>
+<li><a class="reference internal" href="#_CPPv419PDM_gnum_location_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_location_t</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv424PDM_gnum_location_createKiKiK12PDM_MPI_CommK15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_location_create()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_gnum_location_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_location_elements_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv440PDM_gnum_location_requested_elements_setP19PDM_gnum_location_tKiKiPK11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_location_requested_elements_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv425PDM_gnum_location_computeP19PDM_gnum_location_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_location_compute()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv421PDM_gnum_location_getP19PDM_gnum_location_tKiPPiPPi"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_location_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_gnum_location_freeP19PDM_gnum_location_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_location_free()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv437PDM_gnum_location_n_requested_elt_getP19PDM_gnum_location_tKi"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_location_n_requested_elt_get()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -507,13 +517,13 @@
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

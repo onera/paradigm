@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Partitioning" href="../partitioning/index.html" /><link rel="prev" title="Distributed Nodal Square/Cube Mesh" href="dcube_nodal.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Generation of simple partitioned meshes - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -207,7 +208,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -325,14 +325,14 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
           <section id="generation-of-simple-partitioned-meshes">
-<span id="generate-mesh"></span><h1>Generation of simple partitioned meshes<a class="headerlink" href="#generation-of-simple-partitioned-meshes" title="Permalink to this heading">¶</a></h1>
+<span id="generate-mesh"></span><h1>Generation of simple partitioned meshes<a class="headerlink" href="#generation-of-simple-partitioned-meshes" title="Link to this heading">¶</a></h1>
 <p><strong>ParaDiGM</strong> offers shortcut functions to generate simple partitioned meshes.
 These functions embed calls to <a class="reference internal" href="dcube_nodal.html#dcube-nodal-gen"><span class="std std-ref">Dcube Nodal Gen</span></a> and <a class="reference internal" href="../partitioning/multipart.html#multipart"><span class="std std-ref">Multipart</span></a>.</p>
 <div class="line-block">
@@ -340,103 +340,334 @@ These functions embed calls to <a class="reference internal" href="dcube_nodal.h
 </div>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Rectangle NGon<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/simple_mesh_gen/generate_mesh.rst</span>, line 13)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
-
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_generate_mesh_rectangle_ngon
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_generate_mesh_rectangle_ngon
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.generate_mesh_rectangle_ngon
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
+<span class="sd-summary-text">Rectangle NGon</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_generate_mesh_rectangle_ngonK12PDM_MPI_CommK20PDM_Mesh_nodal_elt_tKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tKdPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_t">
+<span id="_CPPv332PDM_generate_mesh_rectangle_ngonK12PDM_MPI_CommK20PDM_Mesh_nodal_elt_tKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tKdPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_t"></span><span id="_CPPv232PDM_generate_mesh_rectangle_ngonK12PDM_MPI_CommK20PDM_Mesh_nodal_elt_tKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tKdPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_t"></span><span id="PDM_generate_mesh_rectangle_ngon__PDM_MPI_CommC.PDM_Mesh_nodal_elt_tC.doubleC.doubleC.doubleC.doubleC.doubleC.PDM_g_num_tC.PDM_g_num_tC.iC.PDM_split_dual_tC.doubleC.iPP.iPP.iPP.doublePPP.iPPP.iPPP.iPPP.iPPP.PDM_g_num_tPPP.PDM_g_num_tPPP.PDM_g_num_tPPP"></span><span class="target" id="pdm__generate__mesh_8h_1a318985d82f7054d44622bf1299bab74d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_generate_mesh_rectangle_ngon</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_Mesh_nodal_elt_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">elt_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">xmin</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ymin</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zmin</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lengthx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lengthy</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_x</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_y</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../partitioning/multipart.html#_CPPv416PDM_split_dual_t" title="PDM_split_dual_t"><span class="n"><span class="pre">PDM_split_dual_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">part_method</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">random_factor</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_edge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_face</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pvtx_coord</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pedge_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pface_edge_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pface_edge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pface_vtx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pvtx_ln_to_gn</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pedge_ln_to_gn</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pface_ln_to_gn</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_generate_mesh_rectangle_ngonK12PDM_MPI_CommK20PDM_Mesh_nodal_elt_tKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tKdPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a partitioned rectangular mesh (2D) with descending connectivities. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Admissible values for <code class="docutils literal notranslate"><span class="pre">elt_type:</span></code> <ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">PDM_MESH_NODAL_TRIA3</span></code> : triangles</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">PDM_MESH_NODAL_QUAD4</span></code> : quadrangles</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">PDM_MESH_NODAL_POLY_2D</span></code> : mixed polygons (triangles, quadrangles and octagons) </p></li>
+</ul>
+</p>
 </div>
-</aside>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>elt_type</strong> – <strong>[in]</strong> Element type </p></li>
+<li><p class="sd-card-text"><strong>xmin</strong> – <strong>[in]</strong> Minimal x-coordinate </p></li>
+<li><p class="sd-card-text"><strong>ymin</strong> – <strong>[in]</strong> Minimal y-coordinate </p></li>
+<li><p class="sd-card-text"><strong>zmin</strong> – <strong>[in]</strong> Minimal z-coordinate </p></li>
+<li><p class="sd-card-text"><strong>lengthx</strong> – <strong>[in]</strong> Length of the rectangle in the x-direction </p></li>
+<li><p class="sd-card-text"><strong>lengthy</strong> – <strong>[in]</strong> Length of the rectangle in the y-direction </p></li>
+<li><p class="sd-card-text"><strong>n_x</strong> – <strong>[in]</strong> Number of points in the x-direction </p></li>
+<li><p class="sd-card-text"><strong>n_y</strong> – <strong>[in]</strong> Number of points in the y-direction </p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of partitions </p></li>
+<li><p class="sd-card-text"><strong>part_method</strong> – <strong>[in]</strong> Partitioning method </p></li>
+<li><p class="sd-card-text"><strong>random_factor</strong> – <strong>[in]</strong> Randomization factor (between 0 and 1) </p></li>
+<li><p class="sd-card-text"><strong>pn_vtx</strong> – <strong>[out]</strong> Number of vertices (size = <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pn_edge</strong> – <strong>[out]</strong> Number of edges (size = <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pn_face</strong> – <strong>[out]</strong> Number of faces (size = <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pvtx_coord</strong> – <strong>[out]</strong> Vertex coordinates (for each part, size = <code class="docutils literal notranslate"><span class="pre">pn_vtx</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pedge_vtx</strong> – <strong>[out]</strong> Edge-&gt;vertex connectivity (for each part, size = 2 * <code class="docutils literal notranslate"><span class="pre">pn_edge</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pface_edge_idx</strong> – <strong>[out]</strong> Index of face-&gt;edge and face-&gt;vtx connectivities (for each part, size = <code class="docutils literal notranslate"><span class="pre">pn_face</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>pface_edge</strong> – <strong>[out]</strong> Face-&gt;edge connectivity (for each part, size = <code class="docutils literal notranslate"><span class="pre">face_edge_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">pn_face</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>pface_vtx</strong> – <strong>[out]</strong> Face-&gt;vertex connectivity (for each part, size = <code class="docutils literal notranslate"><span class="pre">face_edge_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">pn_face</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>pvtx_ln_to_gn</strong> – <strong>[out]</strong> Vertex global ids (for each part, size = <code class="docutils literal notranslate"><span class="pre">pn_vtx</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pedge_ln_to_gn</strong> – <strong>[out]</strong> Edge global ids (for each part, size = <code class="docutils literal notranslate"><span class="pre">pn_edge</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pface_ln_to_gn</strong> – <strong>[out]</strong> Face global ids (for each part, size = <code class="docutils literal notranslate"><span class="pre">pn_face</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_generate_mesh_rectangle_ngon">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_generate_mesh_rectangle_ngon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">comm</span></em>, <em class="sig-param"><span class="pre">elt_type</span></em>, <em class="sig-param"><span class="pre">xmin</span></em>, <em class="sig-param"><span class="pre">ymin</span></em>, <em class="sig-param"><span class="pre">zmin</span></em>, <em class="sig-param"><span class="pre">lengthx</span></em>, <em class="sig-param"><span class="pre">lengthy</span></em>, <em class="sig-param"><span class="pre">n_x</span></em>, <em class="sig-param"><span class="pre">n_y</span></em>, <em class="sig-param"><span class="pre">n_part</span></em>, <em class="sig-param"><span class="pre">part_method</span></em>, <em class="sig-param"><span class="pre">pn_vtx</span></em>, <em class="sig-param"><span class="pre">pn_edge</span></em>, <em class="sig-param"><span class="pre">pn_face</span></em>, <em class="sig-param"><span class="pre">pvtx_coord</span></em>, <em class="sig-param"><span class="pre">pedge_vtx</span></em>, <em class="sig-param"><span class="pre">pface_edge_idx</span></em>, <em class="sig-param"><span class="pre">pface_edge</span></em>, <em class="sig-param"><span class="pre">pface_vtx</span></em>, <em class="sig-param"><span class="pre">pvtx_ln_to_gn</span></em>, <em class="sig-param"><span class="pre">pedge_ln_to_gn</span></em>, <em class="sig-param"><span class="pre">pface_ln_to_gn</span></em><span class="optional">[</span>, <em class="sig-param"><span class="pre">random_factor_opt</span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_generate_mesh_rectangle_ngon" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a partitioned rectangular mesh (2D) with descending connectivities</p>
+<dl class="simple">
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">elt_type</span></code>:</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">PDM_MESH_NODAL_TRIA3</span></code>   : triangles</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">PDM_MESH_NODAL_QUAD4</span></code>   : quadrangles</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">PDM_MESH_NODAL_POLY_2D</span></code> : mixed polygons (triangles, quadrangles and octagons)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>elt_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Element type</p></li>
+<li><p class="sd-card-text"><strong>xmin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal x-coordinate</p></li>
+<li><p class="sd-card-text"><strong>ymin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal y-coordinate</p></li>
+<li><p class="sd-card-text"><strong>zmin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal z-coordinate</p></li>
+<li><p class="sd-card-text"><strong>lengthx</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Length of the rectangle in the x-direction</p></li>
+<li><p class="sd-card-text"><strong>lengthy</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Length of the rectangle in the y-direction</p></li>
+<li><p class="sd-card-text"><strong>n_x</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of points in the x-direction</p></li>
+<li><p class="sd-card-text"><strong>n_y</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of points in the y-direction</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions</p></li>
+<li><p class="sd-card-text"><strong>part_method</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partitioning method</p></li>
+<li><p class="sd-card-text"><strong>pn_vtx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of vertices</p></li>
+<li><p class="sd-card-text"><strong>pn_edge</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of edges</p></li>
+<li><p class="sd-card-text"><strong>pn_face</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of faces</p></li>
+<li><p class="sd-card-text"><strong>pvtx_coord</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Vertex coordinates</p></li>
+<li><p class="sd-card-text"><strong>pedge_vtx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Edge-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>pface_edge_idx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Index of face-&gt;edge and face-&gt;vtx connectivities</p></li>
+<li><p class="sd-card-text"><strong>pface_edge</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Face-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><strong>pface_vtx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Face-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>pvtx_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Vertex global ids</p></li>
+<li><p class="sd-card-text"><strong>pedge_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Edge global ids</p></li>
+<li><p class="sd-card-text"><strong>pface_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Face global ids</p></li>
+<li><p class="sd-card-text"><strong>random_factor_opt</strong><em> [</em><em>real</em><em>,</em><em>in,</em><em>]</em> :: Randomization factor (between 0 and 1)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.generate_mesh_rectangle_ngon">
+<span class="sig-name descname"><span class="pre">generate_mesh_rectangle_ngon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elt_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.generate_mesh_rectangle_ngon" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a partitioned rectangular mesh (2D) with descending connectivities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>elt_type</strong> (<em>int</em>) – Element type</p></li>
+<li><p class="sd-card-text"><strong>xmin</strong> (<em>double</em>) – Minimal x-coordinate</p></li>
+<li><p class="sd-card-text"><strong>ymin</strong> (<em>double</em>) – Minimal y-coordinate</p></li>
+<li><p class="sd-card-text"><strong>zmin</strong> (<em>double</em>) – Minimal z-coordinate</p></li>
+<li><p class="sd-card-text"><strong>lengthx</strong> (<em>double</em>) – Length of the rectangle in the x-direction</p></li>
+<li><p class="sd-card-text"><strong>lengthy</strong> (<em>double</em>) – Length of the rectangle in the y-direction</p></li>
+<li><p class="sd-card-text"><strong>n_x</strong> (<em>int</em>) – Number of points in the x-direction</p></li>
+<li><p class="sd-card-text"><strong>n_y</strong> (<em>int</em>) – Number of points in the y-direction</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> (<em>int</em>) – Number of partitions</p></li>
+<li><p class="sd-card-text"><strong>part_method</strong> (<em>int</em>) – Partitioning method</p></li>
+<li><p class="sd-card-text"><strong>random_factor</strong> (<em>double</em><em>, </em><em>optional</em>) – Randomization factor (between 0 and 1, default = 0)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Dictionary</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_vtx&quot;</span></code>         (<cite>list</cite> of <cite>int</cite>)                        : Number of vertices</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_edge&quot;</span></code>        (<cite>list</cite> of <cite>int</cite>)                        : Number of edges</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_face&quot;</span></code>        (<cite>list</cite> of <cite>int</cite>)                        : Number of faces</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pvtx_coord&quot;</span></code>     (<cite>list</cite> of <cite>np.ndarray[np.double_t]</cite>)    : Vertex coordinates</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pedge_vtx&quot;</span></code>      (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>)     : Edge-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pface_edge_idx&quot;</span></code> (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>)     : Index of face-&gt;edge and face-&gt;vtx connectivities</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pface_edge&quot;</span></code>     (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>)     : Face-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pface_vtx&quot;</span></code>      (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>)     : Face-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pvtx_ln_to_gn&quot;</span></code>  (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Vertex global ids</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pedge_ln_to_gn&quot;</span></code> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Edge global ids</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pface_ln_to_gn&quot;</span></code> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Face global ids</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">elt_type</span></code>:</dt><dd><ul class="simple">
+<li><p class="sd-card-text">2 : triangles</p></li>
+<li><p class="sd-card-text">3 : quadrangles</p></li>
+<li><p class="sd-card-text">4 : mixed polygons (triangles, quadrangles and octagons)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Parallelepiped NGon<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/simple_mesh_gen/generate_mesh.rst</span>, line 53)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Parallelepiped NGon</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv437PDM_generate_mesh_parallelepiped_ngonK12PDM_MPI_Comm20PDM_Mesh_nodal_elt_tiPKcKdKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tPPiPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_t">
+<span id="_CPPv337PDM_generate_mesh_parallelepiped_ngonK12PDM_MPI_Comm20PDM_Mesh_nodal_elt_tiPKcKdKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tPPiPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_t"></span><span id="_CPPv237PDM_generate_mesh_parallelepiped_ngonK12PDM_MPI_Comm20PDM_Mesh_nodal_elt_tiPKcKdKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tPPiPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_t"></span><span id="PDM_generate_mesh_parallelepiped_ngon__PDM_MPI_CommC.PDM_Mesh_nodal_elt_t.i.cCP.doubleC.doubleC.doubleC.doubleC.doubleC.doubleC.PDM_g_num_tC.PDM_g_num_tC.PDM_g_num_tC.iC.PDM_split_dual_tC.iPP.iPP.iPP.iPP.doublePPP.iPPP.iPPP.iPPP.iPPP.iPPP.iPPP.PDM_g_num_tPPP.PDM_g_num_tPPP.PDM_g_num_tPPP.PDM_g_num_tPPP.iPP.iPPP.iPPP.PDM_g_num_tPPP.iPP.iPPP.iPPP.PDM_g_num_tPPP"></span><span class="target" id="pdm__generate__mesh_8h_1a9cd58ffd32e9f771ae1c7b90f95443e1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_generate_mesh_parallelepiped_ngon</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="n"><span class="pre">PDM_Mesh_nodal_elt_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">elt_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">order</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ho_ordering</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">xmin</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ymin</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zmin</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lengthx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lengthy</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lengthz</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_x</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_y</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_z</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../partitioning/multipart.html#_CPPv416PDM_split_dual_t" title="PDM_split_dual_t"><span class="n"><span class="pre">PDM_split_dual_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">part_method</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_edge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_face</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_cell</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pvtx_coord</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pedge_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pface_edge_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pface_edge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pface_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcell_face_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcell_face</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pvtx_ln_to_gn</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pedge_ln_to_gn</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pface_ln_to_gn</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcell_ln_to_gn</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_surface</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">psurface_face_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">psurface_face</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">psurface_face_ln_to_gn</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_ridge</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pridge_edge_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pridge_edge</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pridge_edge_ln_to_gn</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv437PDM_generate_mesh_parallelepiped_ngonK12PDM_MPI_Comm20PDM_Mesh_nodal_elt_tiPKcKdKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tPPiPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a partitioned parallelepiped mesh (3D) with descending connectivities. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>elt_type</strong> – <strong>[in]</strong> Mesh element type </p></li>
+<li><p class="sd-card-text"><strong>order</strong> – <strong>[in]</strong> Mesh element order </p></li>
+<li><p class="sd-card-text"><strong>ho_ordering</strong> – <strong>[in]</strong> High order nodes ordering type </p></li>
+<li><p class="sd-card-text"><strong>xmin</strong> – <strong>[in]</strong> Minimal x-coordinate </p></li>
+<li><p class="sd-card-text"><strong>ymin</strong> – <strong>[in]</strong> Minimal y-coordinate </p></li>
+<li><p class="sd-card-text"><strong>zmin</strong> – <strong>[in]</strong> Minimal z-coordinate </p></li>
+<li><p class="sd-card-text"><strong>lengthx</strong> – <strong>[in]</strong> Length of the rectangle in the x-direction </p></li>
+<li><p class="sd-card-text"><strong>lengthy</strong> – <strong>[in]</strong> Length of the rectangle in the y-direction </p></li>
+<li><p class="sd-card-text"><strong>lengthz</strong> – <strong>[in]</strong> Length of the rectangle in the z-direction </p></li>
+<li><p class="sd-card-text"><strong>n_x</strong> – <strong>[in]</strong> Number of points in the x-direction </p></li>
+<li><p class="sd-card-text"><strong>n_y</strong> – <strong>[in]</strong> Number of points in the y-direction </p></li>
+<li><p class="sd-card-text"><strong>n_z</strong> – <strong>[in]</strong> Number of points in the z-direction </p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of mesh partitions </p></li>
+<li><p class="sd-card-text"><strong>part_method</strong> – <strong>[in]</strong> Mesh partitioning method </p></li>
+<li><p class="sd-card-text"><strong>pn_vtx</strong> – <strong>[out]</strong> Number of vertices </p></li>
+<li><p class="sd-card-text"><strong>pn_edge</strong> – <strong>[out]</strong> Number of edges </p></li>
+<li><p class="sd-card-text"><strong>pn_face</strong> – <strong>[out]</strong> Number of faces </p></li>
+<li><p class="sd-card-text"><strong>pn_cell</strong> – <strong>[out]</strong> Number of cells </p></li>
+<li><p class="sd-card-text"><strong>pvtx_coord</strong> – <strong>[out]</strong> Vertex coordinates </p></li>
+<li><p class="sd-card-text"><strong>pedge_vtx</strong> – <strong>[out]</strong> Edge-&gt;vertex connectivity </p></li>
+<li><p class="sd-card-text"><strong>pface_edge_idx</strong> – <strong>[out]</strong> Index of face-&gt;edge and face-&gt;vtx connectivities </p></li>
+<li><p class="sd-card-text"><strong>pface_edge</strong> – <strong>[out]</strong> Face-&gt;edge connectivity </p></li>
+<li><p class="sd-card-text"><strong>pface_vtx</strong> – <strong>[out]</strong> Face-&gt;vertex connectivity </p></li>
+<li><p class="sd-card-text"><strong>pcell_face_idx</strong> – <strong>[out]</strong> Index of cell-&gt;face connectivity </p></li>
+<li><p class="sd-card-text"><strong>pcell_face</strong> – <strong>[out]</strong> Cell-&gt;face connectivity </p></li>
+<li><p class="sd-card-text"><strong>pvtx_ln_to_gn</strong> – <strong>[out]</strong> Vertex global IDs </p></li>
+<li><p class="sd-card-text"><strong>pedge_ln_to_gn</strong> – <strong>[out]</strong> Edge global IDs </p></li>
+<li><p class="sd-card-text"><strong>pface_ln_to_gn</strong> – <strong>[out]</strong> Face global IDs </p></li>
+<li><p class="sd-card-text"><strong>pcell_ln_to_gn</strong> – <strong>[out]</strong> Cell global IDs </p></li>
+<li><p class="sd-card-text"><strong>pn_surface</strong> – <strong>[out]</strong> Number of surfaces </p></li>
+<li><p class="sd-card-text"><strong>psurface_face_idx</strong> – <strong>[out]</strong> Surface-&gt;face connectivity index </p></li>
+<li><p class="sd-card-text"><strong>psurface_face</strong> – <strong>[out]</strong> Surface-&gt;face connectivity </p></li>
+<li><p class="sd-card-text"><strong>psurface_face_ln_to_gn</strong> – <strong>[out]</strong> Surface-&gt;face connectivity with global IDs </p></li>
+<li><p class="sd-card-text"><strong>pn_ridge</strong> – <strong>[out]</strong> Number of ridges </p></li>
+<li><p class="sd-card-text"><strong>pridge_edge_idx</strong> – <strong>[out]</strong> Ridge-&gt;edge connectivity index </p></li>
+<li><p class="sd-card-text"><strong>pridge_edge</strong> – <strong>[out]</strong> Ridge-&gt;edge connectivity </p></li>
+<li><p class="sd-card-text"><strong>pridge_edge_ln_to_gn</strong> – <strong>[out]</strong> Ridge-&gt;edge connectivity with global IDs </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_generate_mesh_parallelepiped_ngon
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_generate_mesh_parallelepiped_ngon
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.generate_mesh_parallelepiped_ngon
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_generate_mesh_parallelepiped_ngon">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_generate_mesh_parallelepiped_ngon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">comm</span></em>, <em class="sig-param"><span class="pre">elt_type</span></em>, <em class="sig-param"><span class="pre">order</span></em>, <em class="sig-param"><span class="pre">ho_ordering</span></em>, <em class="sig-param"><span class="pre">xmin</span></em>, <em class="sig-param"><span class="pre">ymin</span></em>, <em class="sig-param"><span class="pre">zmin</span></em>, <em class="sig-param"><span class="pre">lengthx</span></em>, <em class="sig-param"><span class="pre">lengthy</span></em>, <em class="sig-param"><span class="pre">lengthz</span></em>, <em class="sig-param"><span class="pre">n_x</span></em>, <em class="sig-param"><span class="pre">n_y</span></em>, <em class="sig-param"><span class="pre">n_z</span></em>, <em class="sig-param"><span class="pre">n_part</span></em>, <em class="sig-param"><span class="pre">part_method</span></em>, <em class="sig-param"><span class="pre">pn_vtx</span></em>, <em class="sig-param"><span class="pre">pn_edge</span></em>, <em class="sig-param"><span class="pre">pn_face</span></em>, <em class="sig-param"><span class="pre">pn_cell</span></em>, <em class="sig-param"><span class="pre">pvtx_coord</span></em>, <em class="sig-param"><span class="pre">pedge_vtx</span></em>, <em class="sig-param"><span class="pre">pface_edge_idx</span></em>, <em class="sig-param"><span class="pre">pface_edge</span></em>, <em class="sig-param"><span class="pre">pface_vtx</span></em>, <em class="sig-param"><span class="pre">pcell_face_idx</span></em>, <em class="sig-param"><span class="pre">pcell_face</span></em>, <em class="sig-param"><span class="pre">pvtx_ln_to_gn</span></em>, <em class="sig-param"><span class="pre">pedge_ln_to_gn</span></em>, <em class="sig-param"><span class="pre">pface_ln_to_gn</span></em>, <em class="sig-param"><span class="pre">pcell_ln_to_gn</span></em>, <em class="sig-param"><span class="pre">pn_surface</span></em>, <em class="sig-param"><span class="pre">psurface_face_idx</span></em>, <em class="sig-param"><span class="pre">psurface_face</span></em>, <em class="sig-param"><span class="pre">psurface_face_ln_to_gn</span></em>, <em class="sig-param"><span class="pre">pn_ridge</span></em>, <em class="sig-param"><span class="pre">pridge_edge_idx</span></em>, <em class="sig-param"><span class="pre">pridge_edge</span></em>, <em class="sig-param"><span class="pre">pridge_edge_ln_to_gn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_generate_mesh_parallelepiped_ngon" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>elt_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Mesh element type</p></li>
+<li><p class="sd-card-text"><strong>order</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Mesh element order</p></li>
+<li><p class="sd-card-text"><strong>ho_ordering</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: High order nodes ordering type</p></li>
+<li><p class="sd-card-text"><strong>xmin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal x-coordinate</p></li>
+<li><p class="sd-card-text"><strong>ymin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal y-coordinate</p></li>
+<li><p class="sd-card-text"><strong>zmin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal z-coordinate</p></li>
+<li><p class="sd-card-text"><strong>lengthx</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Length of the rectangle in the x-direction</p></li>
+<li><p class="sd-card-text"><strong>lengthy</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Length of the rectangle in the y-direction</p></li>
+<li><p class="sd-card-text"><strong>lengthz</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Length of the rectangle in the z-direction</p></li>
+<li><p class="sd-card-text"><strong>n_x</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of points in the x-direction</p></li>
+<li><p class="sd-card-text"><strong>n_y</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of points in the y-direction</p></li>
+<li><p class="sd-card-text"><strong>n_z</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of points in the z-direction</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of mesh partitions</p></li>
+<li><p class="sd-card-text"><strong>part_method</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Mesh partitioning method</p></li>
+<li><p class="sd-card-text"><strong>pn_vtx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of vertices</p></li>
+<li><p class="sd-card-text"><strong>pn_edge</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of edges</p></li>
+<li><p class="sd-card-text"><strong>pn_face</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of face</p></li>
+<li><p class="sd-card-text"><strong>pn_cell</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of cells</p></li>
+<li><p class="sd-card-text"><strong>pvtx_coord</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Vertex coordinates</p></li>
+<li><p class="sd-card-text"><strong>pedge_vtx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Edge-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>pface_edge_idx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Index of face-&gt;edge and face-&gt;vtx connectivities</p></li>
+<li><p class="sd-card-text"><strong>pface_edge</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Face-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><strong>pface_vtx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Face-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>pcell_face_idx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Index of cell-&gt;face connectivity</p></li>
+<li><p class="sd-card-text"><strong>pcell_face</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Cell-&gt;face connectivity</p></li>
+<li><p class="sd-card-text"><strong>pvtx_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Vertex global IDs</p></li>
+<li><p class="sd-card-text"><strong>pedge_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Edge global IDs</p></li>
+<li><p class="sd-card-text"><strong>pface_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Face global IDs</p></li>
+<li><p class="sd-card-text"><strong>pcell_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Cell global IDs</p></li>
+<li><p class="sd-card-text"><strong>pn_surface</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of surfaces</p></li>
+<li><p class="sd-card-text"><strong>psurface_face_idx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Surface-&gt;face connectivity index</p></li>
+<li><p class="sd-card-text"><strong>psurface_face</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Surface-&gt;face connectivity</p></li>
+<li><p class="sd-card-text"><strong>psurface_face_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Surface-&gt;face connectivity with global IDs</p></li>
+<li><p class="sd-card-text"><strong>pn_ridge</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Number of ridges</p></li>
+<li><p class="sd-card-text"><strong>pridge_edge_idx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Ridge-&gt;edge connectivity index</p></li>
+<li><p class="sd-card-text"><strong>pridge_edge</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Ridge-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><strong>pridge_edge_ln_to_gn</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out,pointer</em><em>]</em> :: Ridge-&gt;edge connectivity with global IDs</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.generate_mesh_parallelepiped_ngon">
+<span class="sig-name descname"><span class="pre">generate_mesh_parallelepiped_ngon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elt_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ho_ordering</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.generate_mesh_parallelepiped_ngon" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a partitioned parallelepiped mesh (3D) with descending connectivities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>elt_type</strong> (<em>int</em>) – Element type</p></li>
+<li><p class="sd-card-text"><strong>order</strong> (<em>int</em>) – Element order</p></li>
+<li><p class="sd-card-text"><strong>ho_ordering</strong> (<em>str</em>) – Ordering format</p></li>
+<li><p class="sd-card-text"><strong>xmin</strong> (<em>double</em>) – Minimal x-coordinate</p></li>
+<li><p class="sd-card-text"><strong>ymin</strong> (<em>double</em>) – Minimal y-coordinate</p></li>
+<li><p class="sd-card-text"><strong>zmin</strong> (<em>double</em>) – Minimal z-coordinate</p></li>
+<li><p class="sd-card-text"><strong>lengthx</strong> (<em>double</em>) – Length of the rectangle in the x-direction</p></li>
+<li><p class="sd-card-text"><strong>lengthy</strong> (<em>double</em>) – Length of the rectangle in the y-direction</p></li>
+<li><p class="sd-card-text"><strong>lengthz</strong> (<em>double</em>) – Length of the rectangle in the z-direction</p></li>
+<li><p class="sd-card-text"><strong>n_x</strong> (<em>int</em>) – Number of points in the x-direction</p></li>
+<li><p class="sd-card-text"><strong>n_y</strong> (<em>int</em>) – Number of points in the y-direction</p></li>
+<li><p class="sd-card-text"><strong>n_z</strong> (<em>int</em>) – Number of points in the z-direction</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> (<em>int</em>) – Number of partitions</p></li>
+<li><p class="sd-card-text"><strong>part_method</strong> (<em>int</em>) – Partitioning method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Dictionary</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_vtx&quot;</span></code>                 (<cite>list</cite> of <cite>int</cite>)                        : Number of vertices</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_edge&quot;</span></code>                (<cite>list</cite> of <cite>int</cite>)                        : Number of edges</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_face&quot;</span></code>                (<cite>list</cite> of <cite>int</cite>)                        : Number of faces</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_cell&quot;</span></code>                (<cite>list</cite> of <cite>int</cite>)                        : Number of cells</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pvtx_coord&quot;</span></code>             (<cite>list</cite> of <cite>np.ndarray[np.double_t]</cite>)    : Vertex coordinates</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pedge_vtx&quot;</span></code>              (<cite>np.ndarray[np.int32_t]</cite>)               : Edge-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pface_edge_idx&quot;</span></code>         (<cite>np.ndarray[np.int32_t]</cite>)               : Index of face-&gt;edge and face-&gt;vtx connectivities</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pface_edge&quot;</span></code>             (<cite>np.ndarray[np.int32_t]</cite>)               : Face-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pface_vtx&quot;</span></code>              (<cite>np.ndarray[np.int32_t]</cite>)               : Face-&gt;vertex connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pcell_face_idx&quot;</span></code>         (<cite>np.ndarray[np.int32_t]</cite>)               : Index of cell-&gt;face connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pcell_face&quot;</span></code>             (<cite>np.ndarray[np.int32_t]</cite>)               : Cell-&gt;face connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pvtx_ln_to_gn&quot;</span></code>          (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Vertex global number</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pedge_ln_to_gn&quot;</span></code>         (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Edge global number</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pface_ln_to_gn&quot;</span></code>         (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Face global number</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pcell_ln_to_gn&quot;</span></code>         (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Cell global number</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_surface&quot;</span></code>             (<cite>list</cite> of <cite>int</cite>)                        : Number of surfaces</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;psurface_face_idx&quot;</span></code>      (<cite>np.ndarray[np.int32_t]</cite>)               : Surface-&gt;face connectivity index</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;psurface_face&quot;</span></code>          (<cite>np.ndarray[np.int32_t]</cite>)               : Surface-&gt;face connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;psurface_face_ln_to_gn&quot;</span></code> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Surface-&gt;face connectivity with global numbers</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pn_ridge&quot;</span></code>               (<cite>list</cite> of <cite>int</cite>)                        : Number of ridges</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pridge_edge_idx&quot;</span></code>        (<cite>np.ndarray[np.int32_t]</cite>)               : Ridge-&gt;edge connectivity index</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pridge_edge&quot;</span></code>            (<cite>np.ndarray[np.int32_t]</cite>)               : Ridge-&gt;edge connectivity</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;pridge_edge_ln_to_gn&quot;</span></code>   (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Ridge-&gt;edge connectivity with global numbers</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details></section>
 
@@ -483,19 +714,41 @@ unknown option: “sync-group”.</p>
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Generation of simple partitioned meshes</a><ul>
+<li><a class="reference internal" href="#_CPPv432PDM_generate_mesh_rectangle_ngonK12PDM_MPI_CommK20PDM_Mesh_nodal_elt_tKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tKdPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_generate_mesh_rectangle_ngon()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.generate_mesh_rectangle_ngon"><code class="docutils literal notranslate"><span class="pre">generate_mesh_rectangle_ngon()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv437PDM_generate_mesh_parallelepiped_ngonK12PDM_MPI_Comm20PDM_Mesh_nodal_elt_tiPKcKdKdKdKdKdKdK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKiK16PDM_split_dual_tPPiPPiPPiPPiPPPdPPPiPPPiPPPiPPPiPPPiPPPiPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_tPPiPPPiPPPiPPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_generate_mesh_parallelepiped_ngon()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.generate_mesh_parallelepiped_ngon"><code class="docutils literal notranslate"><span class="pre">generate_mesh_parallelepiped_ngon()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

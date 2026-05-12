@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Pre-/co-/post-processing" href="../prepro_algo/index.html" /><link rel="prev" title="Part to Block" href="../comm_graph/ptb.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Global numbering - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,342 +332,529 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="global-numbering">
-<span id="gnum"></span><h1>Global numbering<a class="headerlink" href="#global-numbering" title="Permalink to this heading">¶</a></h1>
+<span id="gnum"></span><h1>Global numbering<a class="headerlink" href="#global-numbering" title="Link to this heading">¶</a></h1>
 <section id="global-numbering-generation">
-<span id="gen-gnum"></span><h2>Global numbering generation<a class="headerlink" href="#global-numbering-generation" title="Permalink to this heading">¶</a></h2>
+<span id="gen-gnum"></span><h2>Global numbering generation<a class="headerlink" href="#global-numbering-generation" title="Link to this heading">¶</a></h2>
 <p><strong>ParaDiGM</strong> relies heavily on the notion of <a class="reference internal" href="../../getting_started/general.html#concept-global-id"><span class="std std-ref">global numbering</span></a>.
 If your code does not use global IDs, these can be generated from geometric data.
 Such global numbering is achieved by encoding Cartesian coordinates along the <a class="reference external" href="https://en.wikipedia.org/wiki/Z-order_curve">Morton space-filling curve</a>.</p>
 <section id="api">
-<h3>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h3>
+<h3>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h3>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Initialization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/gnum/index.rst</span>, line 24)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv415PDM_gnum_createKiKiK10PDM_bool_tKdK12PDM_MPI_CommK15PDM_ownership_t">
+<span id="_CPPv315PDM_gnum_createKiKiK10PDM_bool_tKdK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="_CPPv215PDM_gnum_createKiKiK10PDM_bool_tKdK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="PDM_gnum_create__iC.iC.PDM_bool_tC.doubleC.PDM_MPI_CommC.PDM_ownership_tC"></span><span class="target" id="pdm__gnum_8h_1a6c547fcfc632dd287d1e657f9da6f8c1"></span><span class="n"><span class="pre">PDM_gen_gnum_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">merge</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tolerance</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">owner</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415PDM_gnum_createKiKiK10PDM_bool_tKdK12PDM_MPI_CommK15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a structure to build a global numbering. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dim</strong> – <strong>[in]</strong> Spatial dimension </p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of local partitions </p></li>
+<li><p class="sd-card-text"><strong>merge</strong> – <strong>[in]</strong> Merge double points or not </p></li>
+<li><p class="sd-card-text"><strong>tolerance</strong> – <strong>[in]</strong> Geometric tolerance (used if <code class="docutils literal notranslate"><span class="pre">merge</span></code> is set to PDM_TRUE) </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> PDM_MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>owner</strong> – <strong>[in]</strong> Ownership of results</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Pointer to PDM_gen_gnum_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_gnum_create
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_gnum_create
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.GlobalNumbering.__init__
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_gnum_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_gnum_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">gen_gnum</span></em>, <em class="sig-param"><span class="pre">dim</span></em>, <em class="sig-param"><span class="pre">n_part</span></em>, <em class="sig-param"><span class="pre">merge</span></em>, <em class="sig-param"><span class="pre">tolerance</span></em>, <em class="sig-param"><span class="pre">f_comm</span></em>, <em class="sig-param"><span class="pre">owner</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_gnum_create" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Build a global numbering structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong><em> [</em><em>c_ptr</em><em>]</em> :: C pointer to PDM_gen_gnum_t object</p></li>
+<li><p class="sd-card-text"><strong>dim</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Spatial dimension</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of local partitions</p></li>
+<li><p class="sd-card-text"><strong>merge</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Merge coincident points or not</p></li>
+<li><p class="sd-card-text"><strong>tolerance</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Geometric tolerance (used only if <code class="docutils literal notranslate"><span class="pre">merge</span></code> is enabled)</p></li>
+<li><p class="sd-card-text"><strong>f_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Fortran MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>owner</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Ownership</p></li>
+</ul>
+</dd>
+<dt class="field-even">Use <span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><code class="xref f f-mod docutils literal notranslate"><span class="pre">iso_c_binding</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Set inputs<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/gnum/index.rst</span>, line 65)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.GlobalNumbering.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.GlobalNumbering.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a structure to build a global numbering</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dim</strong> (<em>int</em>) – Spatial dimension</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> (<em>int</em>) – Number of local partitions</p></li>
+<li><p class="sd-card-text"><strong>merge</strong> (<em>PDM_bool_t</em>) – Merge double points or not</p></li>
+<li><p class="sd-card-text"><strong>tolerance</strong> (<em>double</em>) – Geometric tolerance (used if <code class="docutils literal notranslate"><span class="pre">merge</span></code> is set to <code class="docutils literal notranslate"><span class="pre">PDM_TRUE</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_gnum_set_from_coords
-    .. doxygenfunction:: PDM_gnum_set_from_parents
-    .. doxygenfunction:: PDM_gnum_set_parents_nuplet
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-        .. f:autosubroutine:: PDM_gnum_set_from_coords
-        .. f:autosubroutine:: PDM_gnum_set_from_parents
-        .. f:autosubroutine:: PDM_gnum_set_parents_nuplet
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_coords
-      .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_parent
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Build global numbering<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/gnum/index.rst</span>, line 111)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
-
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_gnum_compute
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:subroutine:: pdm_gnum_compute(gen_gnum)
-
-        Build global numbering
-
-        :p c_ptr gen_gnum [in]:  C pointer to PDM_gen_gnum_t object
-
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.GlobalNumbering.compute
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
+<span class="sd-summary-text">Set inputs</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424PDM_gnum_set_from_coordsP14PDM_gen_gnum_tKiKiPKdPKd">
+<span id="_CPPv324PDM_gnum_set_from_coordsP14PDM_gen_gnum_tKiKiPKdPKd"></span><span id="_CPPv224PDM_gnum_set_from_coordsP14PDM_gen_gnum_tKiKiPKdPKd"></span><span id="PDM_gnum_set_from_coords__PDM_gen_gnum_tP.iC.iC.doubleCP.doubleCP"></span><span class="target" id="pdm__gnum_8h_1a3a1ed9596f5033fa5d511bca6d9f794c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_set_from_coords</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_gen_gnum_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gen_gnum</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_elts</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coords</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">char_length</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_gnum_set_from_coordsP14PDM_gen_gnum_tKiKiPKdPKd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set from coordinates. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">The ordering is based on the <a class="reference external" href="https://en.wikipedia.org/wiki/Z-order_curve">Morton space-filling curve</a>. Elements are expected to be unique (i.e. not duplicated on 2 or more ranks). If two elements share the same Morton code, their global id will be determined by lexicographical ordering of coordinates.</p>
 </div>
-</aside>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong> – <strong>[in]</strong> Pointer to PDM_gen_gnum_t object </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Current partition </p></li>
+<li><p class="sd-card-text"><strong>n_elts</strong> – <strong>[in]</strong> Number of elements </p></li>
+<li><p class="sd-card-text"><strong>coords</strong> – <strong>[in]</strong> Coordinates (size = 3 * <code class="docutils literal notranslate"><span class="pre">n_elts</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>char_length</strong> – <strong>[in]</strong> Characteristic length (or NULL) (used only if <code class="docutils literal notranslate"><span class="pre">merge</span></code> is set to PDM_TRUE) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425PDM_gnum_set_from_parentsP14PDM_gen_gnum_tKiKiPK11PDM_g_num_t">
+<span id="_CPPv325PDM_gnum_set_from_parentsP14PDM_gen_gnum_tKiKiPK11PDM_g_num_t"></span><span id="_CPPv225PDM_gnum_set_from_parentsP14PDM_gen_gnum_tKiKiPK11PDM_g_num_t"></span><span id="PDM_gnum_set_from_parents__PDM_gen_gnum_tP.iC.iC.PDM_g_num_tCP"></span><span class="target" id="pdm__gnum_8h_1a91d79b4145fa58786fed3f2f53b2c897"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_set_from_parents</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_gen_gnum_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gen_gnum</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_elts</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">parent_gnum</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425PDM_gnum_set_from_parentsP14PDM_gen_gnum_tKiKiPK11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set parent global numbering. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong> – <strong>[in]</strong> Pointer to PDM_gen_gnum_t object </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Current partition </p></li>
+<li><p class="sd-card-text"><strong>n_elts</strong> – <strong>[in]</strong> Number of elements </p></li>
+<li><p class="sd-card-text"><strong>parent_gnum</strong> – <strong>[in]</strong> Parent global ids (size = <code class="docutils literal notranslate"><span class="pre">n_elts</span></code>) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv427PDM_gnum_set_parents_nupletP14PDM_gen_gnum_tKi">
+<span id="_CPPv327PDM_gnum_set_parents_nupletP14PDM_gen_gnum_tKi"></span><span id="_CPPv227PDM_gnum_set_parents_nupletP14PDM_gen_gnum_tKi"></span><span id="PDM_gnum_set_parents_nuplet__PDM_gen_gnum_tP.iC"></span><span class="target" id="pdm__gnum_8h_1a80d30c75faf07eccebb6e4564395fe96"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_set_parents_nuplet</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_gen_gnum_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gen_gnum</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nuplet</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv427PDM_gnum_set_parents_nupletP14PDM_gen_gnum_tKi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set size of tuple for nuplet. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong> – <strong>[in]</strong> Pointer to PDM_gen_gnum_t object </p></li>
+<li><p class="sd-card-text"><strong>nuplet</strong> – <strong>[in]</strong> Size of tuple </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_gnum_set_from_coords">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_gnum_set_from_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">gen_gnum</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">n_elts</span></em>, <em class="sig-param"><span class="pre">coords</span></em>, <em class="sig-param"><span class="pre">char_length</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_gnum_set_from_coords" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set from coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: C pointer to PDM_gen_gnum_t object</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Current partition</p></li>
+<li><p class="sd-card-text"><strong>n_elts</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of elements</p></li>
+<li><p class="sd-card-text"><strong>coords</strong> (,)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Coordinates (size = 3 * <code class="docutils literal notranslate"><span class="pre">n_elts</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>char_length</strong> (*)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Characteristic length (or <em>null()</em>) (used only if <code class="docutils literal notranslate"><span class="pre">merge</span></code> was enabled in PDM_gnum_create)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Use <span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><code class="xref f f-mod docutils literal notranslate"><span class="pre">iso_c_binding</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_gnum_set_from_parents">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_gnum_set_from_parents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">gen_gnum</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">n_elts</span></em>, <em class="sig-param"><span class="pre">parent_gnum</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_gnum_set_from_parents" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set parent global numbering</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: C pointer to PDM_gen_gnum_t object</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Current partition</p></li>
+<li><p class="sd-card-text"><strong>n_elts</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of elements</p></li>
+<li><p class="sd-card-text"><strong>parent_gnum</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Parent global numbering (size = <code class="docutils literal notranslate"><span class="pre">n_elts</span></code>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Use <span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><code class="xref f f-mod docutils literal notranslate"><span class="pre">iso_c_binding</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_gnum_set_parents_nuplet">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_gnum_set_parents_nuplet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">gen_gnum</span></em>, <em class="sig-param"><span class="pre">nuplet</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_gnum_set_parents_nuplet" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set size of tuple for nuplet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: C pointer to PDM_gen_gnum_t object</p></li>
+<li><p class="sd-card-text"><strong>nuplet</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Size of tuple</p></li>
+</ul>
+</dd>
+<dt class="field-even">Use <span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><code class="xref f f-mod docutils literal notranslate"><span class="pre">iso_c_binding</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.GlobalNumbering.set_from_coords">
+<span class="sig-name descname"><span class="pre">set_from_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">char_length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.GlobalNumbering.set_from_coords" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set from coordinates</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">The ordering is based on the <a class="reference external" href="https://en.wikipedia.org/wiki/Z-order_curve">Morton space-filling curve</a>.
+Elements are expected to be unique (i.e. not duplicated on 2 or more ranks).
+If two elements share the same Morton code, their global
+id will be determined by lexicographical ordering of coordinates.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Coordinates are assumed to be 3-dimensional, even if a lower dimension was specified when creating the <code class="docutils literal notranslate"><span class="pre">GlobalNumbering</span></code> instance.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Current partition</p></li>
+<li><p class="sd-card-text"><strong>coords</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Coordinates (size = 3 * <em>n_elts</em>)</p></li>
+<li><p class="sd-card-text"><strong>char_length</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Characteristic length (or <em>None</em>, used only if <code class="docutils literal notranslate"><span class="pre">merge</span></code> is set to <code class="docutils literal notranslate"><span class="pre">PDM_TRUE</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.GlobalNumbering.set_from_parent">
+<span class="sig-name descname"><span class="pre">set_from_parent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_elts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_gnum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nuplet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.GlobalNumbering.set_from_parent" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set parent global numbering</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Current partition</p></li>
+<li><p class="sd-card-text"><strong>parent_gnum</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em>) – Parent global ids</p></li>
+<li><p class="sd-card-text"><strong>nuplet</strong> (<em>int</em><em>, </em><em>optional</em>) – If provided, trigger nuplet mode with the specified size</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Get outputs<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/gnum/index.rst</span>, line 157)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Build global numbering</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv416PDM_gnum_computeP14PDM_gen_gnum_t">
+<span id="_CPPv316PDM_gnum_computeP14PDM_gen_gnum_t"></span><span id="_CPPv216PDM_gnum_computeP14PDM_gen_gnum_t"></span><span id="PDM_gnum_compute__PDM_gen_gnum_tP"></span><span class="target" id="pdm__gnum_8h_1a8f412fc0896d31b6e44ae6287468e221"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_compute</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_gen_gnum_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gen_gnum</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv416PDM_gnum_computeP14PDM_gen_gnum_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Build global numbering. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>gen_gnum</strong> – <strong>[in]</strong> Pointer to PDM_gen_gnum_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_gnum_get
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_gnum_get
-
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. autofunction:: Pypdm.Pypdm.GlobalNumbering.get
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_gnum_compute">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_gnum_compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">gen_gnum</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_gnum_compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Build global numbering</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>gen_gnum</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: C pointer to PDM_gen_gnum_t object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-8">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.GlobalNumbering.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.GlobalNumbering.compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Build global numbering</p>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Finalization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/gnum/index.rst</span>, line 199)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Get outputs</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-9">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412PDM_gnum_getP14PDM_gen_gnum_tKi">
+<span id="_CPPv312PDM_gnum_getP14PDM_gen_gnum_tKi"></span><span id="_CPPv212PDM_gnum_getP14PDM_gen_gnum_tKi"></span><span id="PDM_gnum_get__PDM_gen_gnum_tP.iC"></span><span class="target" id="pdm__gnum_8h_1a01df81c206a55ff662841367ccedb38d"></span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_gen_gnum_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gen_gnum</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412PDM_gnum_getP14PDM_gen_gnum_tKi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get global ids for a given partition. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong> – <strong>[in]</strong> Pointer to PDM_gen_gnum_t object </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Current partition</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Array of global ids </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_gnum_free
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:subroutine:: pdm_gnum_free(gen_gnum)
-
-        Free the Global Numbering Generation object
-
-        :p c_ptr gen_gnum [in]:  C pointer to PDM_gen_gnum_t object
-
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    |python_gc|
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-10">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_gnum_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_gnum_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">gen_gnum</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">g_nums</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_gnum_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get global ids for a given partition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gen_gnum</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: C pointer to PDM_gen_gnum_t object</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Current partition</p></li>
+<li><p class="sd-card-text"><strong>g_nums</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Array of global ids</p></li>
+</ul>
+</dd>
+<dt class="field-even">Use <span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><code class="xref f f-mod docutils literal notranslate"><span class="pre">iso_c_binding</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-11">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.GlobalNumbering.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.GlobalNumbering.get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get global ids for a given partition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Current partition</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Array of global ids (<cite>np.ndarray[npy_pdm_gnum_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-12">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv413PDM_gnum_freeP14PDM_gen_gnum_t">
+<span id="_CPPv313PDM_gnum_freeP14PDM_gen_gnum_t"></span><span id="_CPPv213PDM_gnum_freeP14PDM_gen_gnum_t"></span><span id="PDM_gnum_free__PDM_gen_gnum_tP"></span><span class="target" id="pdm__gnum_8h_1a58ec4c879b916e9c145ada00e708676d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_gnum_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_gen_gnum_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gen_gnum</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv413PDM_gnum_freeP14PDM_gen_gnum_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free a PDM_gen_gnum_t object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>gen_gnum</strong> – <strong>[in]</strong> Pointer to PDM_gen_gnum_t object </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-13" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-13">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_gnum_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_gnum_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">gen_gnum</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_gnum_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free the Global Numbering Generation object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>gen_gnum</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: C pointer to PDM_gen_gnum_t object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-14" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-14">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
 </div>
 </details></section>
 <section id="examples">
-<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h3>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-From coordinates<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/gnum/index.rst</span>, line 242)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">From coordinates</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-15" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-15">
+C</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">(Extract from <code class="docutils literal notranslate"><span class="pre">test/pdm_t_gen_gnum.c</span></code>)</p>
+<div class="highlight-c notranslate" id="c-gen-gnum-ex"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pdm.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pdm_gnum.h&quot;</span>
 
-  .. tab-item:: C
-    :sync: C
+<span class="w">  </span><span class="c1">// First, create a PDM_gen_gnum_t instance and set some parameters</span>
+<span class="w">  </span><span class="n">PDM_gen_gnum_t</span><span class="w"> </span><span class="o">*</span><span class="n">gen_gnum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PDM_gnum_create</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w">     </span><span class="c1">// dimension</span>
+<span class="w">                                             </span><span class="n">n_part</span><span class="p">,</span>
+<span class="w">                                             </span><span class="n">merge</span><span class="p">,</span>
+<span class="w">                                             </span><span class="mf">1.</span><span class="n">e</span><span class="mi">-3</span><span class="p">,</span><span class="w"> </span><span class="c1">// tolerance</span>
+<span class="w">                                             </span><span class="n">comm</span><span class="p">,</span>
+<span class="w">                                             </span><span class="n">PDM_OWNERSHIP_USER</span><span class="p">);</span>
 
-    (Extract from ``test/pdm_t_gen_gnum.c``)
+<span class="w">  </span><span class="c1">// Then, provide the coordinates array for each partition</span>
+<span class="w">  </span><span class="c1">// (`char_length` can be NULL if `merge` is set to PDM_FALSE)</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i_part</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i_part</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n_part</span><span class="p">;</span><span class="w"> </span><span class="n">i_part</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">PDM_gnum_set_from_coords</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">i_part</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">n_elts</span><span class="p">[</span><span class="n">i_part</span><span class="p">],</span>
+<span class="w">                             </span><span class="n">coords</span><span class="p">[</span><span class="n">i_part</span><span class="p">],</span>
+<span class="w">                             </span><span class="n">char_length</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
 
-    .. literalinclude:: ../../../../../test/pdm_t_gen_gnum.c
-      :name: c_gen_gnum_ex
-      :language: c
-      :lines: 6-7, 158-186
+<span class="w">  </span><span class="c1">// Once all partitions have been set, build the global numbering</span>
+<span class="w">  </span><span class="n">PDM_gnum_compute</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">);</span>
 
+<span class="w">  </span><span class="c1">// Finally, retrieve the computed global IDs</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i_part</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i_part</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n_part</span><span class="p">;</span><span class="w"> </span><span class="n">i_part</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">gnum</span><span class="p">[</span><span class="n">i_part</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PDM_gnum_get</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">,</span><span class="w"> </span><span class="n">i_part</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
 
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      (Extract from ``test/pdm_t_gnum_f.F90``)
-
-      .. literalinclude:: ../../../../../test/pdm_t_gnum_f.F90
-        :name: fortran_gen_gnum_ex
-        :language: fortran
-        :dedent: 2
-        :lines: 25, 29, 42-46, 70-99
-
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      (Extract from ``test/pdm_t_gnum_p.py``)
-
-      .. literalinclude:: ../../../../../test/pdm_t_gnum_p.py
-        :name: python_gen_gnum_ex
-        :language: python
-        :dedent: 2
-        :lines: 63-83
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
+<span class="w">  </span><span class="c1">// Deallocate the PDM_gen_gnum_t instance</span>
+<span class="w">  </span><span class="n">PDM_gnum_free</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">);</span>
 </pre></div>
 </div>
-</aside>
+</div>
+<input id="sd-tab-item-16" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-16">
+Fortran</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">(Extract from <code class="docutils literal notranslate"><span class="pre">test/pdm_t_gnum_f.F90</span></code>)</p>
+<div class="highlight-fortran notranslate" id="fortran-gen-gnum-ex"><div class="highlight"><pre><span></span><span class="k">use </span><span class="n">pdm</span>
+<span class="k">use </span><span class="n">pdm_gnum</span>
+
+<span class="k">type</span><span class="p">(</span><span class="kt">c_ptr</span><span class="p">)</span><span class="w">                          </span><span class="kd">::</span><span class="w"> </span><span class="n">gen_gnum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">C_NULL_PTR</span>
+<span class="kt">double precision</span><span class="p">,</span><span class="w">          </span><span class="k">pointer</span><span class="w">   </span><span class="kd">::</span><span class="w"> </span><span class="n">pts_coord</span><span class="p">(:,:)</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">null</span><span class="p">()</span>
+<span class="kt">integer</span><span class="p">(</span><span class="nb">kind</span><span class="o">=</span><span class="n">pdm_g_num_s</span><span class="p">),</span><span class="w"> </span><span class="k">pointer</span><span class="w">   </span><span class="kd">::</span><span class="w"> </span><span class="n">pts_ln_to_gn</span><span class="p">(:)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">null</span><span class="p">()</span>
+<span class="kt">double precision</span><span class="p">,</span><span class="w">          </span><span class="k">pointer</span><span class="w">   </span><span class="kd">::</span><span class="w"> </span><span class="n">char_length</span><span class="p">(:)</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">null</span><span class="p">()</span>
+
+<span class="c">! Create PDM_gen_gnum object</span>
+<span class="k">call </span><span class="n">pdm_gnum_create</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">,</span><span class="w">           </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! -&gt; GenGnum object</span>
+<span class="w">                     </span><span class="mi">3</span><span class="p">,</span><span class="w">                  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- Dimension</span>
+<span class="w">                     </span><span class="mi">1</span><span class="p">,</span><span class="w">                  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- Number of parts on current MPI rank</span>
+<span class="w">                     </span><span class="mi">0</span><span class="p">,</span><span class="w">                  </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- Merge duplicate points</span>
+<span class="w">                     </span><span class="mf">1.d-3</span><span class="p">,</span><span class="w">              </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- Global tolerance</span>
+<span class="w">                     </span><span class="n">comm</span><span class="p">,</span><span class="w">               </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- MPI communicator</span>
+<span class="w">                     </span><span class="n">PDM_OWNERSHIP_USER</span><span class="p">)</span><span class="w">   </span><span class="c">! &lt;- Ownership of result</span>
+
+<span class="c">! Set coordinates</span>
+<span class="k">call </span><span class="n">pdm_gnum_set_from_coords</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">,</span><span class="w">    </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- GenGnum object</span>
+<span class="w">                              </span><span class="mi">0</span><span class="p">,</span><span class="w">           </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- Part identifier</span>
+<span class="w">                              </span><span class="n">n_pts</span><span class="p">,</span><span class="w">       </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- Number of points</span>
+<span class="w">                              </span><span class="n">pts_coord</span><span class="p">,</span><span class="w">   </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- Coordinates</span>
+<span class="w">                              </span><span class="n">char_length</span><span class="p">)</span><span class="w">   </span><span class="c">! &lt;- Characteristic length</span>
+
+
+<span class="c">! Compute global numbering</span>
+<span class="k">call </span><span class="n">pdm_gnum_compute</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">)</span>
+
+
+<span class="c">! Get global IDs</span>
+<span class="k">call </span><span class="n">pdm_gnum_get</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">,</span><span class="w">     </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- GenGnum object</span>
+<span class="w">                  </span><span class="mi">0</span><span class="p">,</span><span class="w">            </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! &lt;- Part identifier</span>
+<span class="w">                  </span><span class="n">pts_ln_to_gn</span><span class="p">)</span><span class="w">   </span><span class="c">! -&gt; Global IDs</span>
+
+<span class="c">! Free memory</span>
+<span class="k">call </span><span class="n">pdm_gnum_free</span><span class="p">(</span><span class="n">gen_gnum</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-17" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-17">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">(Extract from <code class="docutils literal notranslate"><span class="pre">test/pdm_t_gnum_p.py</span></code>)</p>
+<div class="highlight-python notranslate" id="python-gen-gnum-ex"><div class="highlight"><pre><span></span><span class="c1"># First, create a GlobalNumbering instance and set some parameters</span>
+<span class="n">gen_gnum</span> <span class="o">=</span> <span class="n">PDM</span><span class="o">.</span><span class="n">GlobalNumbering</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span>    <span class="c1"># dim</span>
+                               <span class="n">n_part</span><span class="p">,</span>
+                               <span class="n">merge</span><span class="p">,</span>
+                               <span class="mf">1e-3</span><span class="p">,</span> <span class="c1"># tolerance</span>
+                               <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">)</span>
+
+<span class="c1"># Then, provide the coordinates array for each partition</span>
+<span class="c1"># (`coords` is a list of numpy arrays of type double)</span>
+<span class="c1"># (`char_length` can be set to None if `merge` is disabled)</span>
+<span class="k">for</span> <span class="n">i_part</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_part</span><span class="p">):</span>
+  <span class="n">gen_gnum</span><span class="o">.</span><span class="n">set_from_coords</span><span class="p">(</span><span class="n">i_part</span><span class="p">,</span>
+                           <span class="n">coords</span><span class="p">[</span><span class="n">i_part</span><span class="p">],</span>
+                           <span class="n">char_length</span><span class="p">)</span>
+
+<span class="c1"># Once all partitions have been set, build the global numbering</span>
+<span class="n">gen_gnum</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+<span class="c1"># Finally, retrieve the computed global id arrays</span>
+<span class="k">for</span> <span class="n">i_part</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_part</span><span class="p">):</span>
+  <span class="n">gnum</span><span class="p">[</span><span class="n">i_part</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen_gnum</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i_part</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -730,7 +917,21 @@ unknown option: “sync-group”.</p>
             <ul>
 <li><a class="reference internal" href="#">Global numbering</a><ul>
 <li><a class="reference internal" href="#global-numbering-generation">Global numbering generation</a><ul>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv415PDM_gnum_createKiKiK10PDM_bool_tKdK12PDM_MPI_CommK15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_create()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.GlobalNumbering.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv424PDM_gnum_set_from_coordsP14PDM_gen_gnum_tKiKiPKdPKd"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_set_from_coords()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv425PDM_gnum_set_from_parentsP14PDM_gen_gnum_tKiKiPK11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_set_from_parents()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv427PDM_gnum_set_parents_nupletP14PDM_gen_gnum_tKi"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_set_parents_nuplet()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.GlobalNumbering.set_from_coords"><code class="docutils literal notranslate"><span class="pre">set_from_coords()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.GlobalNumbering.set_from_parent"><code class="docutils literal notranslate"><span class="pre">set_from_parent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv416PDM_gnum_computeP14PDM_gen_gnum_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_compute()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.GlobalNumbering.compute"><code class="docutils literal notranslate"><span class="pre">compute()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv412PDM_gnum_getP14PDM_gen_gnum_tKi"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.GlobalNumbering.get"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv413PDM_gnum_freeP14PDM_gen_gnum_t"><code class="docutils literal notranslate"><span class="pre">PDM_gnum_free()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
@@ -745,13 +946,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

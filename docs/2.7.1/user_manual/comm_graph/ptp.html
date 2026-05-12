@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Block to Part" href="btp.html" /><link rel="prev" title="Communication graphs" href="index.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Part to Part - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,228 +332,622 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="part-to-part">
-<span id="id1"></span><h1>Part to Part<a class="headerlink" href="#part-to-part" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Part to Part<a class="headerlink" href="#part-to-part" title="Link to this heading">¶</a></h1>
 <section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
 <p><strong>Part to Part</strong> is a service for managing MPI data transfers between two arbitrarily partitioned sets of entities.</p>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Initialization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/comm_graph/ptp.rst</span>, line 17)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423PDM_part_to_part_createPPK11PDM_g_num_tPKiKiPPK11PDM_g_num_tPKiKiPPKiPPK11PDM_g_num_tK12PDM_MPI_Comm">
+<span id="_CPPv323PDM_part_to_part_createPPK11PDM_g_num_tPKiKiPPK11PDM_g_num_tPKiKiPPKiPPK11PDM_g_num_tK12PDM_MPI_Comm"></span><span id="_CPPv223PDM_part_to_part_createPPK11PDM_g_num_tPKiKiPPK11PDM_g_num_tPKiKiPPKiPPK11PDM_g_num_tK12PDM_MPI_Comm"></span><span id="PDM_part_to_part_create__PDM_g_num_tCPP.iCP.iC.PDM_g_num_tCPP.iCP.iC.iCPP.PDM_g_num_tCPP.PDM_MPI_CommC"></span><span class="target" id="pdm__part__to__part_8h_1a06139ccd7945a7068899f0312918d84a"></span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_elt1</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_elt1</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part1</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_elt2</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_elt2</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part2</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_to_part2_idx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_to_part2</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423PDM_part_to_part_createPPK11PDM_g_num_tPKiKiPPK11PDM_g_num_tPKiKiPPKiPPK11PDM_g_num_tK12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a Partition-to-Partition redistribution from global ids. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gnum_elt1</strong> – <strong>[in]</strong> Element global ids in Part1 (size : <code class="docutils literal notranslate"><span class="pre">n_part1</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_elt1</strong> – <strong>[in]</strong> Local number of elements in Part1 (size : <code class="docutils literal notranslate"><span class="pre">n_part1</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_part1</strong> – <strong>[in]</strong> Number of partitions in Part1 </p></li>
+<li><p class="sd-card-text"><strong>gnum_elt2</strong> – <strong>[in]</strong> Element global ids in Part2 (size : <code class="docutils literal notranslate"><span class="pre">n_part2</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_elt2</strong> – <strong>[in]</strong> Local number of elements in Part2 (size : <code class="docutils literal notranslate"><span class="pre">n_part2</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_part2</strong> – <strong>[in]</strong> Number of partitions in Part2 </p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2_idx</strong> – <strong>[in]</strong> <p class="sd-card-text">Index for Part1→Part2 mapping</p>
+<p class="sd-card-text">(for each part, size :</p>
+<code class="docutils literal notranslate"><span class="pre">n_elt1</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2</strong> – <strong>[in]</strong> <p class="sd-card-text">Part1→Part2 mapping (global ids)</p>
+<p class="sd-card-text">(for each part, size :</p>
+<code class="docutils literal notranslate"><span class="pre">part1_to_part2_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_elt1</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Initialized PDM_part_to_part instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv441PDM_part_to_part_create_from_num2_tripletPPK11PDM_g_num_tPKiKiPKiKiPPKiPPKiPPKiK12PDM_MPI_Comm">
+<span id="_CPPv341PDM_part_to_part_create_from_num2_tripletPPK11PDM_g_num_tPKiKiPKiKiPPKiPPKiPPKiK12PDM_MPI_Comm"></span><span id="_CPPv241PDM_part_to_part_create_from_num2_tripletPPK11PDM_g_num_tPKiKiPKiKiPPKiPPKiPPKiK12PDM_MPI_Comm"></span><span id="PDM_part_to_part_create_from_num2_triplet__PDM_g_num_tCPP.iCP.iC.iCP.iC.iCPP.iCPP.iCPP.PDM_MPI_CommC"></span><span class="target" id="pdm__part__to__part_8h_1a2bc527daa422da4370d1deba0ad74c1e"></span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_create_from_num2_triplet</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_elt1</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_elt1</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part1</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_elt2</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part2</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_to_part2_idx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_to_part2_triplet_idx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_to_part2_triplet</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv441PDM_part_to_part_create_from_num2_tripletPPK11PDM_g_num_tPKiKiPKiKiPPKiPPKiPPKiK12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a Partition-to-Partition redistribution from location triplets. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>gnum_elt1</strong> – <strong>[in]</strong> Element global numbers in Part1 (size : <code class="docutils literal notranslate"><span class="pre">n_part1</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_elt1</strong> – <strong>[in]</strong> Local number of elements in Part1 (size : <code class="docutils literal notranslate"><span class="pre">n_part1</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_part1</strong> – <strong>[in]</strong> Number of partitions in Part1 </p></li>
+<li><p class="sd-card-text"><strong>n_elt2</strong> – <strong>[in]</strong> Local number of elements in Part2 (size : <code class="docutils literal notranslate"><span class="pre">n_part2</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_part2</strong> – <strong>[in]</strong> Number of partitions in Part2 </p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2_idx</strong> – <strong>[in]</strong> <p class="sd-card-text">Index for Part1→Part2 mapping</p>
+<p class="sd-card-text">(for each part, size :</p>
+<code class="docutils literal notranslate"><span class="pre">n_elt1</span></code> + 1) </p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2_triplet_idx</strong> – <strong>[in]</strong> <p class="sd-card-text">Index for multiple locations in Part2</p>
+<p class="sd-card-text">(for each part, size :</p>
+<code class="docutils literal notranslate"><span class="pre">part1_to_part2_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_elt1</span></code>] + 1) </p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2_triplet</strong> – <strong>[in]</strong> Part1→Part2 mapping (location triplets: (<em>irank2</em>, <em>ipart2</em>, <em>ielt2</em><p class="sd-card-text">))</p>
+<p class="sd-card-text">(for each part, size :</p>
+<code class="docutils literal notranslate"><span class="pre">part1_to_part2_triplet_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">part1_to_part2_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_elt1</span></code>]] + 1) </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Initialized PDM_part_to_part instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_part_to_part_create
-    .. doxygenfunction:: PDM_part_to_part_create_from_num2_triplet
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_to_part_create
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. py:class:: PartToPart
-
-        .. automethod:: Pypdm.Pypdm.PartToPart.__init__
-
-        .. automethod:: Pypdm.Pypdm.PartToPart.from_triplet
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">gnum_elt1</span></em>, <em class="sig-param"><span class="pre">n_elt1</span></em>, <em class="sig-param"><span class="pre">n_part1</span></em>, <em class="sig-param"><span class="pre">gnum_elt2</span></em>, <em class="sig-param"><span class="pre">n_elt2</span></em>, <em class="sig-param"><span class="pre">n_part2</span></em>, <em class="sig-param"><span class="pre">part1_to_part2_idx</span></em>, <em class="sig-param"><span class="pre">part1_to_part2</span></em>, <em class="sig-param"><span class="pre">comm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_create" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a Part-to-Part redistribution from global IDs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>]</em> :: Part-to-part instance</p></li>
+<li><p class="sd-card-text"><strong>gnum_elt1</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Element global ids in Part1 (size : <code class="docutils literal notranslate"><span class="pre">n_part1</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>n_elt1</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Local number of elements in Part1 (size : <code class="docutils literal notranslate"><span class="pre">n_part1</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>n_part1</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions in Part1</p></li>
+<li><p class="sd-card-text"><strong>gnum_elt2</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Element global ids in Part2 (size : <code class="docutils literal notranslate"><span class="pre">n_part2</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>n_elt2</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Local number of elements in Part2 (size : <code class="docutils literal notranslate"><span class="pre">n_part2</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>n_part2</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions in Part2</p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2_idx</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Index for Part1→Part2 mapping (for each part, size : <code class="docutils literal notranslate"><span class="pre">n_elt1</span></code> + 1)</p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Part1→Part2 mapping (global ids) (for each part, size : <code class="docutils literal notranslate"><span class="pre">part1_to_part2_idx(n_elt1</span> <span class="pre">+</span> <span class="pre">1)</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Information on Part 2 side<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/comm_graph/ptp.rst</span>, line 63)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py class">
+<dt class="sig sig-object py" id="PartToPart">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PartToPart</span></span><a class="headerlink" href="#PartToPart" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_ln_to_gn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part2_ln_to_gn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_to_part2_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_to_part2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a Part-to-Part redistribution from global ids</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>part1_ln_to_gn</strong> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Element global ids in Part1</p></li>
+<li><p class="sd-card-text"><strong>part2_ln_to_gn</strong> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Element global ids in Part2</p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2_idx</strong> (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>) – Index for Part1→Part2 mapping</p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2</strong> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Part1→Part2 mapping (global ids)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.from_triplet">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_triplet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_ln_to_gn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_elt2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_to_part2_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_to_part2_triplet_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_to_part2_triplet</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.from_triplet" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">An alternative constructor (classmethod) that create a PDM_part_to_part object from part2 triplet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>part1_ln_to_gn</strong> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Element global ids in Part1</p></li>
+<li><p class="sd-card-text"><strong>n_elt2</strong> (<cite>list</cite> of <cite>int</cite>) – Number of elements in Part2</p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2_idx</strong> (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>) – Index for Part1→Part2 mapping</p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2_triplet_idx</strong> (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>) – Index for Part2 triplets</p></li>
+<li><p class="sd-card-text"><strong>part1_to_part2</strong> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Part1→Part2 mapping (i_rank, i_part, lnum) triplet</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_part_to_part_ref_lnum2_get
-    .. doxygenfunction:: PDM_part_to_part_unref_lnum2_get
-    .. doxygenfunction:: PDM_part_to_part_gnum1_come_from_get
+</dd></dl>
 
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_to_part_ref_lnum2_get
-      .. f:autosubroutine:: PDM_part_to_part_unref_lnum2_get
-      .. f:autosubroutine:: PDM_part_to_part_gnum1_come_from_get
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
-
-      .. automethod:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
-
-      .. automethod:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
-
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Exchange<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/comm_graph/ptp.rst</span>, line 113)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
-
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_part_to_part_iexch
-    .. doxygenfunction:: PDM_part_to_part_iexch_wait
-    .. doxygenfunction:: PDM_part_to_part_reverse_iexch
-    .. doxygenfunction:: PDM_part_to_part_reverse_iexch_wait
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_to_part_iexch
-      .. f:autosubroutine:: PDM_part_to_part_iexch_wait
-
-      .. f:autosubroutine:: PDM_part_to_part_reverse_iexch
-      .. f:autosubroutine:: PDM_part_to_part_reverse_iexch_wait
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.PartToPart.iexch
-      .. automethod:: Pypdm.Pypdm.PartToPart.wait
-      .. automethod:: Pypdm.Pypdm.PartToPart.reverse_iexch
-      .. automethod:: Pypdm.Pypdm.PartToPart.reverse_wait
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
-</div>
-</aside>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Finalization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/comm_graph/ptp.rst</span>, line 162)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Information on Part 2 side</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_part_to_part_ref_lnum2_getP18PDM_part_to_part_tPPiPPPi">
+<span id="_CPPv330PDM_part_to_part_ref_lnum2_getP18PDM_part_to_part_tPPiPPPi"></span><span id="_CPPv230PDM_part_to_part_ref_lnum2_getP18PDM_part_to_part_tPPiPPPi"></span><span id="PDM_part_to_part_ref_lnum2_get__PDM_part_to_part_tP.iPP.iPPP"></span><span class="target" id="pdm__part__to__part_8h_1adec7282ed2b2dcdbad5a5aa342259398"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_ref_lnum2_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_ref_lnum2</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ref_lnum2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_part_to_part_ref_lnum2_getP18PDM_part_to_part_tPPiPPPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get referenced Part2 elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong> – <strong>[in]</strong> Part-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>n_ref_lnum2</strong> – <strong>[out]</strong> Number of referenced Part2 elements </p></li>
+<li><p class="sd-card-text"><strong>ref_lnum2</strong> – <strong>[out]</strong> Referenced Part2 elements (1-based local ids) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_part_to_part_unref_lnum2_getP18PDM_part_to_part_tPPiPPPi">
+<span id="_CPPv332PDM_part_to_part_unref_lnum2_getP18PDM_part_to_part_tPPiPPPi"></span><span id="_CPPv232PDM_part_to_part_unref_lnum2_getP18PDM_part_to_part_tPPiPPPi"></span><span id="PDM_part_to_part_unref_lnum2_get__PDM_part_to_part_tP.iPP.iPPP"></span><span class="target" id="pdm__part__to__part_8h_1a18295e76427a3283c0d91e488037a15b"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_unref_lnum2_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_unref_lnum2</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">unref_lnum2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_part_to_part_unref_lnum2_getP18PDM_part_to_part_tPPiPPPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get unreferenced Part2 elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong> – <strong>[in]</strong> Part-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>n_unref_lnum2</strong> – <strong>[out]</strong> Number of referenced Part2 elements </p></li>
+<li><p class="sd-card-text"><strong>unref_lnum2</strong> – <strong>[out]</strong> Unreferenced Part2 elements (1-based local ids) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_part_to_part_free
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv436PDM_part_to_part_gnum1_come_from_getP18PDM_part_to_part_tPPPiPPP11PDM_g_num_t">
+<span id="_CPPv336PDM_part_to_part_gnum1_come_from_getP18PDM_part_to_part_tPPPiPPP11PDM_g_num_t"></span><span id="_CPPv236PDM_part_to_part_gnum1_come_from_getP18PDM_part_to_part_tPPPiPPP11PDM_g_num_t"></span><span id="PDM_part_to_part_gnum1_come_from_get__PDM_part_to_part_tP.iPPP.PDM_g_num_tPPP"></span><span class="target" id="pdm__part__to__part_8h_1a04cdd8b7a14b96d87070bda04852f18e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_gnum1_come_from_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum1_come_from_idx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum1_come_from</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv436PDM_part_to_part_gnum1_come_from_getP18PDM_part_to_part_tPPPiPPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get Part2→Part1 mapping for referenced Part2 elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong> – <strong>[in]</strong> Part-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>gnum1_come_from_idx</strong> – <strong>[out]</strong> Index for Part2→Part1 mapping (size = <em>n_part2</em>) </p></li>
+<li><p class="sd-card-text"><strong>gnum1_come_from</strong> – <strong>[out]</strong> <p class="sd-card-text">Part2→Part1 mapping (global ids)</p>
+<p class="sd-card-text">(for each part, size =</p>
+<code class="docutils literal notranslate"><span class="pre">gnum1_come_from_idx</span></code>[<em>n_ref_lnum2</em>]) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_to_part_free
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    |python_gc|
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_ref_lnum2_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_ref_lnum2_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">n_ref_lnum2</span></em>, <em class="sig-param"><span class="pre">ref_lnum2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_ref_lnum2_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get referenced Part2 elements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part-to-Part instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>n_ref_lnum2</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of referenced Part2 elements</p></li>
+<li><p class="sd-card-text"><strong>ref_lnum2</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Referenced Part2 elements (1-based local ids)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_unref_lnum2_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_unref_lnum2_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">n_unref_lnum2</span></em>, <em class="sig-param"><span class="pre">unref_lnum2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_unref_lnum2_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get unreferenced Part2 elements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part-to-Part instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>n_unref_lnum2</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of unreferenced Part2 elements</p></li>
+<li><p class="sd-card-text"><strong>unref_lnum2</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Uneferenced Part2 elements (1-based local ids)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_gnum1_come_from_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_gnum1_come_from_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">gnum1_come_from_idx</span></em>, <em class="sig-param"><span class="pre">gnum1_come_from</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_gnum1_come_from_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get Part2→Part1 mapping for referenced Part2 elements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part-to-Part instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>gnum1_come_from_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index for Part2→Part1 mapping (size = <em>n_elt2</em> + 1)</p></li>
+<li><p class="sd-card-text"><strong>gnum1_come_from</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Part2→Part1 mapping (global ids) (size = <code class="docutils literal notranslate"><span class="pre">gnum1_come_from_idx(n_ref_lnum2</span> <span class="pre">+</span> <span class="pre">1)</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.get_referenced_lnum2">
+<span class="sig-prename descclassname"><span class="pre">PartToPart.</span></span><span class="sig-name descname"><span class="pre">get_referenced_lnum2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.get_referenced_lnum2" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get referenced Part2 elements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text">Referenced Part2 elements (1-based local ids) (<cite>list</cite> of <cite>np.ndarray[np_int32_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2">
+<span class="sig-prename descclassname"><span class="pre">PartToPart.</span></span><span class="sig-name descname"><span class="pre">get_unreferenced_lnum2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get unreferenced Part2 elements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text">Unreferenced Part2 elements (1-based local ids) (<cite>list</cite> of <cite>np.ndarray[np_int32_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.get_gnum1_come_from">
+<span class="sig-prename descclassname"><span class="pre">PartToPart.</span></span><span class="sig-name descname"><span class="pre">get_gnum1_come_from</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.get_gnum1_come_from" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get Part2→Part1 mapping for referenced Part2 elements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><dl class="simple">
+<dt>Dictionary</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;come_from_idx&quot;</span></code> (<cite>list</cite> of <cite>np.ndarray[np.int32_t]</cite>)     : Index for Part2→Part1 mapping</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;come_from&quot;</span></code>     (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Part2→Part1 mapping (global ids)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Exchange</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_part_to_part_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi">
+<span id="_CPPv322PDM_part_to_part_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi"></span><span id="_CPPv222PDM_part_to_part_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi"></span><span id="PDM_part_to_part_iexch__PDM_part_to_part_tP.PDM_mpi_comm_kind_tC.PDM_stride_tC.PDM_part_to_part_data_def_tC.iC.sC.iCPP.voidCPP.iPPP.voidPPP.iP"></span><span class="target" id="pdm__part__to__part_8h_1a28c063ac470643cc410fc7e96750f715"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_iexch</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_mpi_comm_kind_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">k_comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_stride</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_part_to_part_data_def_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_part1_data_def</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">cst_stride</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s_data</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_stride</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part2_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part2_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">request</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_part_to_part_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Initiate a non-blocking exchange (Part1→Part2) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong> – <strong>[in]</strong> Part-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>k_comm</strong> – <strong>[in]</strong> Kind of MPI communication </p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong> – <strong>[in]</strong> Kind of stride </p></li>
+<li><p class="sd-card-text"><strong>t_part1_data_def</strong> – <strong>[in]</strong> Kind of Part1 data definition </p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong> – <strong>[in]</strong> Constant stride </p></li>
+<li><p class="sd-card-text"><strong>s_data</strong> – <strong>[in]</strong> Data size </p></li>
+<li><p class="sd-card-text"><strong>part1_stride</strong> – <strong>[in]</strong> Stride of Part1 data (according to <code class="docutils literal notranslate"><span class="pre">t_part1_data_def</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>part1_data</strong> – <strong>[in]</strong> Part1 data (according to <code class="docutils literal notranslate"><span class="pre">t_part1_data_def</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>part2_stride</strong> – <strong>[out]</strong> Stride of Part2 data (order given by <em>gnum1_come_from</em> and <em>ref_lnum2</em> arrays) </p></li>
+<li><p class="sd-card-text"><strong>part2_data</strong> – <strong>[out]</strong> Part2 data (order given by <em>gnum1_come_from</em> and <em>ref_lnum2</em> arrays) </p></li>
+<li><p class="sd-card-text"><strong>request</strong> – <strong>[out]</strong> Request </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv427PDM_part_to_part_iexch_waitP18PDM_part_to_part_tKi">
+<span id="_CPPv327PDM_part_to_part_iexch_waitP18PDM_part_to_part_tKi"></span><span id="_CPPv227PDM_part_to_part_iexch_waitP18PDM_part_to_part_tKi"></span><span id="PDM_part_to_part_iexch_wait__PDM_part_to_part_tP.iC"></span><span class="target" id="pdm__part__to__part_8h_1abf42f3dfcaea34137188684570c600f8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_iexch_wait</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">request</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv427PDM_part_to_part_iexch_waitP18PDM_part_to_part_tKi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Finalize a non-blocking exchange (Part1→Part2) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong> – <strong>[in]</strong> Part-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>request</strong> – <strong>[in]</strong> Request </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_part_to_part_reverse_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi">
+<span id="_CPPv330PDM_part_to_part_reverse_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi"></span><span id="_CPPv230PDM_part_to_part_reverse_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi"></span><span id="PDM_part_to_part_reverse_iexch__PDM_part_to_part_tP.PDM_mpi_comm_kind_tC.PDM_stride_tC.PDM_part_to_part_data_def_tC.iC.sC.iCPP.voidCPP.iPPP.voidPPP.iP"></span><span class="target" id="pdm__part__to__part_8h_1adefa9036d3139217d913c1b0645b3441"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_reverse_iexch</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_mpi_comm_kind_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">k_comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_stride</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_part_to_part_data_def_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_part2_data_def</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">cst_stride</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s_data</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part2_stride</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part2_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part1_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">request</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_part_to_part_reverse_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Initiate a non-blocking exchange (Part2→Part1) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong> – <strong>[in]</strong> Part-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>k_comm</strong> – <strong>[in]</strong> Kind of MPI communication </p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong> – <strong>[in]</strong> Kind of stride </p></li>
+<li><p class="sd-card-text"><strong>t_part2_data_def</strong> – <strong>[in]</strong> Kind of Part2 data definition </p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong> – <strong>[in]</strong> Constant stride </p></li>
+<li><p class="sd-card-text"><strong>s_data</strong> – <strong>[in]</strong> Data size </p></li>
+<li><p class="sd-card-text"><strong>part2_stride</strong> – <strong>[in]</strong> Stride of Part1 data (according to <code class="docutils literal notranslate"><span class="pre">t_part2_data_def</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>part2_data</strong> – <strong>[in]</strong> Part1 data (according to <code class="docutils literal notranslate"><span class="pre">t_part2_data_def</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>part1_stride</strong> – <strong>[out]</strong> Stride of Part2 data (order given by <em>part1_to_part2</em>) </p></li>
+<li><p class="sd-card-text"><strong>part1_data</strong> – <strong>[out]</strong> Part2 data (order given by <em>part1_to_part2</em>) </p></li>
+<li><p class="sd-card-text"><strong>request</strong> – <strong>[out]</strong> Request </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv435PDM_part_to_part_reverse_iexch_waitP18PDM_part_to_part_tKi">
+<span id="_CPPv335PDM_part_to_part_reverse_iexch_waitP18PDM_part_to_part_tKi"></span><span id="_CPPv235PDM_part_to_part_reverse_iexch_waitP18PDM_part_to_part_tKi"></span><span id="PDM_part_to_part_reverse_iexch_wait__PDM_part_to_part_tP.iC"></span><span class="target" id="pdm__part__to__part_8h_1aa95f88c7e59a6e6b862e024420d7d241"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_reverse_iexch_wait</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">request</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv435PDM_part_to_part_reverse_iexch_waitP18PDM_part_to_part_tKi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Finalize a non-blocking exchange (Part2→Part1) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong> – <strong>[in]</strong> Part-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>request</strong> – <strong>[in]</strong> Request </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_iexch">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_iexch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">k_comm</span></em>, <em class="sig-param"><span class="pre">t_stride</span></em>, <em class="sig-param"><span class="pre">t_part1_data_def</span></em>, <em class="sig-param"><span class="pre">cst_stride</span></em>, <em class="sig-param"><span class="pre">part1_stride</span></em>, <em class="sig-param"><span class="pre">part1_data</span></em>, <em class="sig-param"><span class="pre">part2_stride</span></em>, <em class="sig-param"><span class="pre">part2_data</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_iexch" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Initiate a non-blocking exchange (Part1→Part2)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part-to-part instance</p></li>
+<li><p class="sd-card-text"><strong>k_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of MPI communication</p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of stride</p></li>
+<li><p class="sd-card-text"><strong>t_part1_data_def</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of Part1 data definition</p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Constant stride</p></li>
+<li><p class="sd-card-text"><strong>part1_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of Part1 data</p></li>
+<li><p class="sd-card-text"><strong>part1_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Part1 data</p></li>
+<li><p class="sd-card-text"><strong>part2_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of Part2 data</p></li>
+<li><p class="sd-card-text"><strong>part2_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Part2 data</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Request</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_iexch_wait">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_iexch_wait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_iexch_wait" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Finalize a non-blocking exchange (Part1→Part2)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part-to-Part instance</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Request</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_reverse_iexch">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_reverse_iexch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">k_comm</span></em>, <em class="sig-param"><span class="pre">t_stride</span></em>, <em class="sig-param"><span class="pre">t_part2_data_def</span></em>, <em class="sig-param"><span class="pre">cst_stride</span></em>, <em class="sig-param"><span class="pre">part2_stride</span></em>, <em class="sig-param"><span class="pre">part2_data</span></em>, <em class="sig-param"><span class="pre">part1_stride</span></em>, <em class="sig-param"><span class="pre">part1_data</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_reverse_iexch" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Initiate a non-blocking exchange (Part2→Part1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part-to-part instance</p></li>
+<li><p class="sd-card-text"><strong>k_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of MPI communication</p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of stride</p></li>
+<li><p class="sd-card-text"><strong>t_part2_data_def</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of Part2 data definition</p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Constant stride</p></li>
+<li><p class="sd-card-text"><strong>part2_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of Part1 data</p></li>
+<li><p class="sd-card-text"><strong>part2_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Part1 data</p></li>
+<li><p class="sd-card-text"><strong>part1_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of Part2 data</p></li>
+<li><p class="sd-card-text"><strong>part1_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Part2 data</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Request</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_reverse_iexch_wait">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_reverse_iexch_wait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_reverse_iexch_wait" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Finalize a non-blocking exchange (Part2→Part1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part-to-Part instance</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Request</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-8">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.iexch">
+<span class="sig-prename descclassname"><span class="pre">PartToPart.</span></span><span class="sig-name descname"><span class="pre">iexch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k_comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_part1_data_def</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part1_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interlaced_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.iexch" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Initiate a non-blocking exchange (Part1→Part2)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>k_comm</strong> (<em>int</em>) – Kind of MPI communication</p></li>
+<li><p class="sd-card-text"><strong>t_part1_data_def</strong> (<em>int</em>) – Kind of Part1 data definition</p></li>
+<li><p class="sd-card-text"><strong>part1_data</strong> (<em>list</em>) – Part1 data</p></li>
+<li><p class="sd-card-text"><strong>part1_stride</strong> (<cite>int</cite> or <cite>list, optional</cite>) – Stride of Part1 data</p></li>
+<li><p class="sd-card-text"><strong>interlaced_str</strong> (<em>bool</em><em>, </em><em>optional</em>) – Is the data interlaced? (default = <strong>True</strong>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Request ID (<cite>int</cite>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">k_comm</span></code>:</dt><dd><ul class="simple">
+<li><p class="sd-card-text">0 : Peer-to-peer (<code class="docutils literal notranslate"><span class="pre">MPI_issend</span></code>/<code class="docutils literal notranslate"><span class="pre">MPI_irecv</span></code>)</p></li>
+<li><p class="sd-card-text">1 : Collective (<code class="docutils literal notranslate"><span class="pre">MPI_Ialltoall</span></code> and alike)</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Additional communication kinds will be available in the future</p>
+</div>
+<dl class="simple">
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">t_part1_data_def</span></code>:</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">PartToPart.DATA_DEF_ORDER_PART1</span></code>          : Data defined according to the <cite>part1</cite> arrays order</p></li>
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">PartToPart.DATA_DEF_ORDER_PART1_TO_PART2</span></code> : Data defined according to the <cite>part1_to_part2</cite> arrays order</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.wait">
+<span class="sig-prename descclassname"><span class="pre">PartToPart.</span></span><span class="sig-name descname"><span class="pre">wait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.wait" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Finalize a non-blocking exchange (Part1→Part2)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>request_id</strong> (<em>int</em>) – Request ID</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Part2 stride (same dtype as <code class="docutils literal notranslate"><span class="pre">part1_stride</span></code> in <a class="reference internal" href="#Pypdm.Pypdm.PartToPart.iexch" title="Pypdm.Pypdm.PartToPart.iexch"><code class="xref py py-func docutils literal notranslate"><span class="pre">iexch()</span></code></a>)</p></li>
+<li><p class="sd-card-text">Part2 data   (<cite>list</cite> of same dtype as <code class="docutils literal notranslate"><span class="pre">part1_data</span></code> in <a class="reference internal" href="#Pypdm.Pypdm.PartToPart.iexch" title="Pypdm.Pypdm.PartToPart.iexch"><code class="xref py py-func docutils literal notranslate"><span class="pre">iexch()</span></code></a>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.reverse_iexch">
+<span class="sig-prename descclassname"><span class="pre">PartToPart.</span></span><span class="sig-name descname"><span class="pre">reverse_iexch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k_comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_part2_data_def</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part2_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part2_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interlaced_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.reverse_iexch" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Initiate a non-blocking exchange (Part2→Part1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>k_comm</strong> (<em>int</em>) – Kind of MPI communication</p></li>
+<li><p class="sd-card-text"><strong>t_part2_data_def</strong> (<em>int</em>) – Kind of Part2 data definition</p></li>
+<li><p class="sd-card-text"><strong>part2_data</strong> (<em>list</em>) – Part2 data</p></li>
+<li><p class="sd-card-text"><strong>part2_stride</strong> (<cite>int</cite> or <cite>list, optional</cite>) – Stride of Part2 data</p></li>
+<li><p class="sd-card-text"><strong>interlaced_str</strong> (<em>bool</em><em>, </em><em>optional</em>) – Is the data interlaced? (default = <strong>True</strong>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Request ID (<cite>int</cite>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">k_comm</span></code>:</dt><dd><ul class="simple">
+<li><p class="sd-card-text">0 : Peer-to-peer (<code class="docutils literal notranslate"><span class="pre">MPI_issend</span></code>/<code class="docutils literal notranslate"><span class="pre">MPI_irecv</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">Additional communication kinds will be available in the future</p>
+</div>
+<dl class="simple">
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">t_part2_data_def</span></code>:</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">PartToPart.DATA_DEF_ORDER_PART2</span></code>           : Data defined according to the <cite>part2</cite> arrays order</p></li>
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">PartToPart.DATA_DEF_ORDER_GNUM1_COME_FROM</span></code> : Data defined according to the <cite>gnum1_come_from</cite> arrays order</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartToPart.reverse_wait">
+<span class="sig-prename descclassname"><span class="pre">PartToPart.</span></span><span class="sig-name descname"><span class="pre">reverse_wait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartToPart.reverse_wait" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Finalize a non-blocking exchange (Part2→Part1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>request_id</strong> (<em>int</em>) – Request ID</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Part1 stride (same dtype as <code class="docutils literal notranslate"><span class="pre">part2_stride</span></code> in <a class="reference internal" href="#Pypdm.Pypdm.PartToPart.reverse_iexch" title="Pypdm.Pypdm.PartToPart.reverse_iexch"><code class="xref py py-func docutils literal notranslate"><span class="pre">reverse_iexch()</span></code></a>)</p></li>
+<li><p class="sd-card-text">Part1 data   (<cite>list</cite> of same dtype as <code class="docutils literal notranslate"><span class="pre">part2_data</span></code> in <a class="reference internal" href="#Pypdm.Pypdm.PartToPart.reverse_iexch" title="Pypdm.Pypdm.PartToPart.reverse_iexch"><code class="xref py py-func docutils literal notranslate"><span class="pre">reverse_iexch()</span></code></a>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-9">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv421PDM_part_to_part_freeP18PDM_part_to_part_t">
+<span id="_CPPv321PDM_part_to_part_freeP18PDM_part_to_part_t"></span><span id="_CPPv221PDM_part_to_part_freeP18PDM_part_to_part_t"></span><span id="PDM_part_to_part_free__PDM_part_to_part_tP"></span><span class="target" id="pdm__part__to__part_8h_1a8acd3681bceb5a79fa380399010b9785"></span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_to_part_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptp</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421PDM_part_to_part_freeP18PDM_part_to_part_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free a Part-to-Part structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>ptp</strong> – <strong>[inout]</strong> Part-to-Part structure</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">NULL </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-10">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_to_part_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_to_part_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ptp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_to_part_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free a Part-to-part instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>ptp</strong><em> [</em><em>c_ptr</em><em>,</em><em>inout</em><em>]</em> :: Part-to-Part instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-11">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -615,7 +1009,29 @@ unknown option: “sync-group”.</p>
             <ul>
 <li><a class="reference internal" href="#">Part to Part</a><ul>
 <li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv423PDM_part_to_part_createPPK11PDM_g_num_tPKiKiPPK11PDM_g_num_tPKiKiPPKiPPK11PDM_g_num_tK12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_create()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv441PDM_part_to_part_create_from_num2_tripletPPK11PDM_g_num_tPKiKiPKiKiPPKiPPKiPPKiK12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_create_from_num2_triplet()</span></code></a></li>
+<li><a class="reference internal" href="#PartToPart"><code class="docutils literal notranslate"><span class="pre">PartToPart</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.__init__"><code class="docutils literal notranslate"><span class="pre">PartToPart.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.from_triplet"><code class="docutils literal notranslate"><span class="pre">PartToPart.from_triplet()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_part_to_part_ref_lnum2_getP18PDM_part_to_part_tPPiPPPi"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_ref_lnum2_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_part_to_part_unref_lnum2_getP18PDM_part_to_part_tPPiPPPi"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_unref_lnum2_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv436PDM_part_to_part_gnum1_come_from_getP18PDM_part_to_part_tPPPiPPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_gnum1_come_from_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.get_referenced_lnum2"><code class="docutils literal notranslate"><span class="pre">PartToPart.get_referenced_lnum2()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2"><code class="docutils literal notranslate"><span class="pre">PartToPart.get_unreferenced_lnum2()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.get_gnum1_come_from"><code class="docutils literal notranslate"><span class="pre">PartToPart.get_gnum1_come_from()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_part_to_part_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_iexch()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv427PDM_part_to_part_iexch_waitP18PDM_part_to_part_tKi"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_iexch_wait()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_part_to_part_reverse_iexchP18PDM_part_to_part_tK19PDM_mpi_comm_kind_tK12PDM_stride_tK27PDM_part_to_part_data_def_tKiK6size_tPPKiPPKvPPPiPPPvPi"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_reverse_iexch()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv435PDM_part_to_part_reverse_iexch_waitP18PDM_part_to_part_tKi"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_reverse_iexch_wait()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.iexch"><code class="docutils literal notranslate"><span class="pre">PartToPart.iexch()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.wait"><code class="docutils literal notranslate"><span class="pre">PartToPart.wait()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.reverse_iexch"><code class="docutils literal notranslate"><span class="pre">PartToPart.reverse_iexch()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartToPart.reverse_wait"><code class="docutils literal notranslate"><span class="pre">PartToPart.reverse_wait()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv421PDM_part_to_part_freeP18PDM_part_to_part_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_to_part_free()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -627,13 +1043,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

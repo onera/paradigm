@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Generation of simple partitioned meshes" href="generate_mesh.html" /><link rel="prev" title="Simple mesh generation" href="index.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Distributed Nodal Square/Cube Mesh - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,214 +332,319 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="distributed-nodal-square-cube-mesh">
-<span id="dcube-nodal-gen"></span><h1>Distributed Nodal Square/Cube Mesh<a class="headerlink" href="#distributed-nodal-square-cube-mesh" title="Permalink to this heading">¶</a></h1>
+<span id="dcube-nodal-gen"></span><h1>Distributed Nodal Square/Cube Mesh<a class="headerlink" href="#distributed-nodal-square-cube-mesh" title="Link to this heading">¶</a></h1>
 <section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
 <p><strong>Dcube nodal gen</strong> is a service for generating 2D or 3D block-distributed cuboid nodal meshes.
 All standard of mesh elements are supported: triangles, quadrangles, tetrahedra, pyramids, prisms, hexahedra, as well as high-order, curved elements.</p>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Initialization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/simple_mesh_gen/dcube_nodal.rst</span>, line 18)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_dcube_nodal_gen_create12PDM_MPI_CommK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKdKdKdKd20PDM_Mesh_nodal_elt_tKi15PDM_ownership_t">
+<span id="_CPPv326PDM_dcube_nodal_gen_create12PDM_MPI_CommK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKdKdKdKd20PDM_Mesh_nodal_elt_tKi15PDM_ownership_t"></span><span id="_CPPv226PDM_dcube_nodal_gen_create12PDM_MPI_CommK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKdKdKdKd20PDM_Mesh_nodal_elt_tKi15PDM_ownership_t"></span><span id="PDM_dcube_nodal_gen_create__PDM_MPI_Comm.PDM_g_num_tC.PDM_g_num_tC.PDM_g_num_tC.doubleC.doubleC.doubleC.doubleC.PDM_Mesh_nodal_elt_t.iC.PDM_ownership_t"></span><span class="target" id="pdm__dcube__nodal__gen_8h_1a1062c0a80fb72dc46c0c2d929d91a256"></span><span class="n"><span class="pre">PDM_dcube_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dcube_nodal_gen_create</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_vtx_x</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_vtx_y</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_vtx_z</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">length</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zero_x</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zero_y</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zero_z</span></span>, <span class="n"><span class="pre">PDM_Mesh_nodal_elt_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_elt</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">order</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">owner</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_dcube_nodal_gen_create12PDM_MPI_CommK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKdKdKdKd20PDM_Mesh_nodal_elt_tKi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Initialize a PDM_dcube_nodal_t structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>n_vtx_x</strong> – <strong>[in]</strong> Number of vertices on segments in x-direction </p></li>
+<li><p class="sd-card-text"><strong>n_vtx_y</strong> – <strong>[in]</strong> Number of vertices on segments in y-direction </p></li>
+<li><p class="sd-card-text"><strong>n_vtx_z</strong> – <strong>[in]</strong> Number of vertices on segments in z-direction </p></li>
+<li><p class="sd-card-text"><strong>length</strong> – <strong>[in]</strong> Segment length </p></li>
+<li><p class="sd-card-text"><strong>zero_x</strong> – <strong>[in]</strong> x-coordinate of the origin </p></li>
+<li><p class="sd-card-text"><strong>zero_y</strong> – <strong>[in]</strong> y-coordinate of the origin </p></li>
+<li><p class="sd-card-text"><strong>zero_z</strong> – <strong>[in]</strong> z-coordinate of the origin </p></li>
+<li><p class="sd-card-text"><strong>t_elt</strong> – <strong>[in]</strong> Element type </p></li>
+<li><p class="sd-card-text"><strong>order</strong> – <strong>[in]</strong> Element order </p></li>
+<li><p class="sd-card-text"><strong>owner</strong> – <strong>[in]</strong> Ownership</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Pointer to new PDM_dcube_nodal_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_dcube_nodal_gen_create
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_dcube_nodal_gen_create
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. py:class:: DCubeNodalGenerator
-
-        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_dcube_nodal_gen_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_dcube_nodal_gen_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dcube</span></em>, <em class="sig-param"><span class="pre">f_comm</span></em>, <em class="sig-param"><span class="pre">n_x</span></em>, <em class="sig-param"><span class="pre">n_y</span></em>, <em class="sig-param"><span class="pre">n_z</span></em>, <em class="sig-param"><span class="pre">length</span></em>, <em class="sig-param"><span class="pre">xmin</span></em>, <em class="sig-param"><span class="pre">ymin</span></em>, <em class="sig-param"><span class="pre">zmin</span></em>, <em class="sig-param"><span class="pre">elt_type</span></em>, <em class="sig-param"><span class="pre">order</span></em>, <em class="sig-param"><span class="pre">ownership</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_dcube_nodal_gen_create" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a distributed nodal cube mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dcube</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: Pointer to PDM_dcube_nodal_t instance</p></li>
+<li><p class="sd-card-text"><strong>f_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Communicator</p></li>
+<li><p class="sd-card-text"><strong>n_x</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of elements in x-direction</p></li>
+<li><p class="sd-card-text"><strong>n_y</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of elements in y-direction</p></li>
+<li><p class="sd-card-text"><strong>n_z</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of elements in z-direction</p></li>
+<li><p class="sd-card-text"><strong>length</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Length of cube side</p></li>
+<li><p class="sd-card-text"><strong>xmin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal x-coordinate</p></li>
+<li><p class="sd-card-text"><strong>ymin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal y-coordinate</p></li>
+<li><p class="sd-card-text"><strong>zmin</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Minimal z-coordinate</p></li>
+<li><p class="sd-card-text"><strong>elt_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Element type</p></li>
+<li><p class="sd-card-text"><strong>order</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Element order</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: instance ownership</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Set options<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/simple_mesh_gen/dcube_nodal.rst</span>, line 60)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py class">
+<dt class="sig sig-object py" id="DCubeNodalGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DCubeNodalGenerator</span></span><a class="headerlink" href="#DCubeNodalGenerator" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.DCubeNodalGenerator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_elmt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.DCubeNodalGenerator.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Initialize a distributed mesh generator structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>nx</strong> (<em>npy_pdm_gnum_t</em>) – Number of vertices on segments in x-direction</p></li>
+<li><p class="sd-card-text"><strong>ny</strong> (<em>npy_pdm_gnum_t</em>) – Number of vertices on segments in y-direction</p></li>
+<li><p class="sd-card-text"><strong>nz</strong> (<em>npy_pdm_gnum_t</em>) – Number of vertices on segments in z-direction</p></li>
+<li><p class="sd-card-text"><strong>length</strong> (<em>double</em>) – Segment length</p></li>
+<li><p class="sd-card-text"><strong>zero_x</strong> (<em>double</em>) – x-coordinate of the origin</p></li>
+<li><p class="sd-card-text"><strong>zero_y</strong> (<em>double</em>) – y-coordinate of the origin</p></li>
+<li><p class="sd-card-text"><strong>zero_z</strong> (<em>double</em>) – z-coordinate of the origin</p></li>
+<li><p class="sd-card-text"><strong>t_elmt</strong> (<em>PDM_Mesh_nodal_elt_t</em>) – Element type</p></li>
+<li><p class="sd-card-text"><strong>order</strong> (<em>int</em>) – Element order</p></li>
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+</dd></dl>
 
-    .. doxygenfunction:: PDM_dcube_nodal_gen_random_factor_set
-    .. doxygenfunction:: PDM_dcube_nodal_gen_ordering_set
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_dcube_nodal_gen_random_factor_set
-      .. .. f:autosubroutine:: PDM_dcube_nodal_gen_ordering_set
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
-      .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Generate mesh<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/simple_mesh_gen/dcube_nodal.rst</span>, line 103)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Set options</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv437PDM_dcube_nodal_gen_random_factor_setP17PDM_dcube_nodal_td">
+<span id="_CPPv337PDM_dcube_nodal_gen_random_factor_setP17PDM_dcube_nodal_td"></span><span id="_CPPv237PDM_dcube_nodal_gen_random_factor_setP17PDM_dcube_nodal_td"></span><span id="PDM_dcube_nodal_gen_random_factor_set__PDM_dcube_nodal_tP.double"></span><span class="target" id="pdm__dcube__nodal__gen_8h_1ad729367d5e478045989266730fc964b0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dcube_nodal_gen_random_factor_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_dcube_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcube</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">random_factor</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv437PDM_dcube_nodal_gen_random_factor_setP17PDM_dcube_nodal_td" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set randomization factor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dcube</strong> – <strong>[in]</strong> Pointer to PDM_dcube_nodal_t object </p></li>
+<li><p class="sd-card-text"><strong>random_factor</strong> – <strong>[in]</strong> Randomization factor (between 0 and 1) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_dcube_nodal_gen_ordering_setP17PDM_dcube_nodal_tPKc">
+<span id="_CPPv332PDM_dcube_nodal_gen_ordering_setP17PDM_dcube_nodal_tPKc"></span><span id="_CPPv232PDM_dcube_nodal_gen_ordering_setP17PDM_dcube_nodal_tPKc"></span><span id="PDM_dcube_nodal_gen_ordering_set__PDM_dcube_nodal_tP.cCP"></span><span class="target" id="pdm__dcube__nodal__gen_8h_1a2bec05f624f38c42c283b0fa3d32c3e7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dcube_nodal_gen_ordering_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_dcube_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcube</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ordering</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_dcube_nodal_gen_ordering_setP17PDM_dcube_nodal_tPKc" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set the HO-ordering for a PDM_dcube_nodal_t structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dcube</strong> – <strong>[in]</strong> Pointer to PDM_dcube_nodal_t object </p></li>
+<li><p class="sd-card-text"><strong>ordering</strong> – <strong>[in]</strong> Name of the HO-ordering </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_dcube_nodal_gen_build
-    .. doxygenfunction:: PDM_dcube_nodal_gen_dmesh_nodal_get
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_dcube_nodal_gen_build
-      .. f:autosubroutine:: PDM_dcube_nodal_gen_dmesh_nodal_get
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.compute
-      .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_dcube_nodal_gen_random_factor_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_dcube_nodal_gen_random_factor_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dcube</span></em>, <em class="sig-param"><span class="pre">random_factor</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_dcube_nodal_gen_random_factor_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set randomization factor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dcube</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Pointer to PDM_dcube_nodal_t instance</p></li>
+<li><p class="sd-card-text"><strong>random_factor</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Randomization factor (between 0 and 1)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor">
+<span class="sig-prename descclassname"><span class="pre">DCubeNodalGenerator.</span></span><span class="sig-name descname"><span class="pre">set_random_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">random_factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set randomization factor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>random_factor</strong> (<em>double</em>) – Randomization factor (between 0 and 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.DCubeNodalGenerator.set_ordering">
+<span class="sig-prename descclassname"><span class="pre">DCubeNodalGenerator.</span></span><span class="sig-name descname"><span class="pre">set_ordering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdm_ho_ordering</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.DCubeNodalGenerator.set_ordering" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the HO-ordering</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>pdm_ho_ordering</strong> (<em>str</em>) – Name of the HO-ordering</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Finalization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/simple_mesh_gen/dcube_nodal.rst</span>, line 147)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Generate mesh</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425PDM_dcube_nodal_gen_buildP17PDM_dcube_nodal_t">
+<span id="_CPPv325PDM_dcube_nodal_gen_buildP17PDM_dcube_nodal_t"></span><span id="_CPPv225PDM_dcube_nodal_gen_buildP17PDM_dcube_nodal_t"></span><span id="PDM_dcube_nodal_gen_build__PDM_dcube_nodal_tP"></span><span class="target" id="pdm__dcube__nodal__gen_8h_1af01b261652620922e38b849f3a1aebfe"></span><span class="n"><span class="pre">PDM_dmesh_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dcube_nodal_gen_build</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_dcube_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcube</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425PDM_dcube_nodal_gen_buildP17PDM_dcube_nodal_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Build a PDM_dcube_nodal_t structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>dcube</strong> – <strong>[in]</strong> Pointer to PDM_dcube_nodal_t object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Pointer to the associated PDM_dmesh_nodal_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv435PDM_dcube_nodal_gen_dmesh_nodal_getP17PDM_dcube_nodal_t">
+<span id="_CPPv335PDM_dcube_nodal_gen_dmesh_nodal_getP17PDM_dcube_nodal_t"></span><span id="_CPPv235PDM_dcube_nodal_gen_dmesh_nodal_getP17PDM_dcube_nodal_t"></span><span id="PDM_dcube_nodal_gen_dmesh_nodal_get__PDM_dcube_nodal_tP"></span><span class="target" id="pdm__dcube__nodal__gen_8h_1aab88f1efed9177604fb6ef61a3ebd241"></span><span class="n"><span class="pre">PDM_dmesh_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dcube_nodal_gen_dmesh_nodal_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_dcube_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcube</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv435PDM_dcube_nodal_gen_dmesh_nodal_getP17PDM_dcube_nodal_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the PDM_dmesh_nodal_t associated to a PDM_dcube_nodal_t. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>dcube</strong> – <strong>[in]</strong> Pointer to PDM_dcube_nodal_t object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Pointer to the associated PDM_dmesh_nodal_t object </p>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_dcube_nodal_gen_free
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_dcube_nodal_gen_free
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    |python_gc|
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_dcube_nodal_gen_build">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_dcube_nodal_gen_build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dcube</span></em>, <em class="sig-param"><span class="pre">dmn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_dcube_nodal_gen_build" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dcube</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Pointer to PDM_dcube_nodal_t instance</p></li>
+<li><p class="sd-card-text"><strong>dmn</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: Pointer to PDM_mesh_nodal_t instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_dcube_nodal_gen_dmesh_nodal_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_dcube_nodal_gen_dmesh_nodal_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dcube</span></em>, <em class="sig-param"><span class="pre">dmn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_dcube_nodal_gen_dmesh_nodal_get" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dcube</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Pointer to PDM_dcube_nodal_t instance</p></li>
+<li><p class="sd-card-text"><strong>dmn</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: Pointer to PDM_mesh_nodal_t instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-8">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.DCubeNodalGenerator.compute">
+<span class="sig-prename descclassname"><span class="pre">DCubeNodalGenerator.</span></span><span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.DCubeNodalGenerator.compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Generate a distributed nodal mesh</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal">
+<span class="sig-prename descclassname"><span class="pre">DCubeNodalGenerator.</span></span><span class="sig-name descname"><span class="pre">get_dmesh_nodal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the associated distributed nodal mesh object</p>
+<dl class="simple">
+<dt>Returns</dt><dd><p class="sd-card-text">Distributed nodal mesh object (<code class="xref py py-class docutils literal notranslate"><span class="pre">DistributedMeshNodalCaspule</span></code>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-9">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424PDM_dcube_nodal_gen_freeP17PDM_dcube_nodal_t">
+<span id="_CPPv324PDM_dcube_nodal_gen_freeP17PDM_dcube_nodal_t"></span><span id="_CPPv224PDM_dcube_nodal_gen_freeP17PDM_dcube_nodal_t"></span><span id="PDM_dcube_nodal_gen_free__PDM_dcube_nodal_tP"></span><span class="target" id="pdm__dcube__nodal__gen_8h_1a0919e70e6f2d2fb6c151cec9a9c7ed7c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_dcube_nodal_gen_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_dcube_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dcube</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_dcube_nodal_gen_freeP17PDM_dcube_nodal_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free a PDM_dcube_nodal_t structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>dcube</strong> – <strong>[in]</strong> Pointer to PDM_dcube_nodal_t object </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-10">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_dcube_nodal_gen_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_dcube_nodal_gen_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dcube</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_dcube_nodal_gen_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free a PDM_dcube_nodal_gen_t instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>dcube</strong><em> [</em><em>c_ptr</em><em>,</em><em>inout</em><em>]</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-11">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -601,7 +706,21 @@ unknown option: “sync-group”.</p>
             <ul>
 <li><a class="reference internal" href="#">Distributed Nodal Square/Cube Mesh</a><ul>
 <li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv426PDM_dcube_nodal_gen_create12PDM_MPI_CommK11PDM_g_num_tK11PDM_g_num_tK11PDM_g_num_tKdKdKdKd20PDM_Mesh_nodal_elt_tKi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_dcube_nodal_gen_create()</span></code></a></li>
+<li><a class="reference internal" href="#DCubeNodalGenerator"><code class="docutils literal notranslate"><span class="pre">DCubeNodalGenerator</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.DCubeNodalGenerator.__init__"><code class="docutils literal notranslate"><span class="pre">DCubeNodalGenerator.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv437PDM_dcube_nodal_gen_random_factor_setP17PDM_dcube_nodal_td"><code class="docutils literal notranslate"><span class="pre">PDM_dcube_nodal_gen_random_factor_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_dcube_nodal_gen_ordering_setP17PDM_dcube_nodal_tPKc"><code class="docutils literal notranslate"><span class="pre">PDM_dcube_nodal_gen_ordering_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor"><code class="docutils literal notranslate"><span class="pre">DCubeNodalGenerator.set_random_factor()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.DCubeNodalGenerator.set_ordering"><code class="docutils literal notranslate"><span class="pre">DCubeNodalGenerator.set_ordering()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv425PDM_dcube_nodal_gen_buildP17PDM_dcube_nodal_t"><code class="docutils literal notranslate"><span class="pre">PDM_dcube_nodal_gen_build()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv435PDM_dcube_nodal_gen_dmesh_nodal_getP17PDM_dcube_nodal_t"><code class="docutils literal notranslate"><span class="pre">PDM_dcube_nodal_gen_dmesh_nodal_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.DCubeNodalGenerator.compute"><code class="docutils literal notranslate"><span class="pre">DCubeNodalGenerator.compute()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal"><code class="docutils literal notranslate"><span class="pre">DCubeNodalGenerator.get_dmesh_nodal()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv424PDM_dcube_nodal_gen_freeP17PDM_dcube_nodal_t"><code class="docutils literal notranslate"><span class="pre">PDM_dcube_nodal_gen_free()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -613,13 +732,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Parallel I/O" href="../io/index.html" /><link rel="prev" title="Mesh Transformations" href="index.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Mesh Deform - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,283 +332,721 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="mesh-deform">
-<span id="id1"></span><h1>Mesh Deform<a class="headerlink" href="#mesh-deform" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Mesh Deform<a class="headerlink" href="#mesh-deform" title="Link to this heading">¶</a></h1>
 <section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
 <p><strong>Mesh deform</strong> is a service for deforming a point cloud by interpolating the given deformation of a surface mesh.</p>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Initialization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/mesh_transform/mesh_deform.rst</span>, line 18)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_mesh_deform_createKiKiKiK21PDM_clustering_kind_tKiPKiPKdKdKi12PDM_MPI_Comm">
+<span id="_CPPv322PDM_mesh_deform_createKiKiKiK21PDM_clustering_kind_tKiPKiPKdKdKi12PDM_MPI_Comm"></span><span id="_CPPv222PDM_mesh_deform_createKiKiKiK21PDM_clustering_kind_tKiPKiPKdKdKi12PDM_MPI_Comm"></span><span id="PDM_mesh_deform_create__iC.iC.iC.PDM_clustering_kind_tC.iC.iCP.doubleCP.doubleC.iC.PDM_MPI_Comm"></span><span class="target" id="pdm__mesh__deform_8h_1aafe0a682d8301a1c67d6222632a05ace"></span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part_surf</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part_cloud</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_aux_geom</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_clustering_kind_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">clustering_kind</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_layer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_vtx_in_leaf_per_layer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">disp_in_leaf_per_layer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">min_dist_d</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">min_dist_n_vtx</span></span>, <span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_mesh_deform_createKiKiKiK21PDM_clustering_kind_tKiPKiPKdKdKi12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a structure to generate multiple clusters of vertices (surface mesh) in parallel, associate source vertices and clusters to target cloud points and propagate deformation (and auxiliary geometric variables) from source to target. Target cloud points are reequilibrated. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_part_surf</strong> – <strong>[in]</strong> Number of partitions of the surface mesh </p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud</strong> – <strong>[in]</strong> Number of partitions of the points cloud </p></li>
+<li><p class="sd-card-text"><strong>n_aux_geom</strong> – <strong>[in]</strong> Number of auxiliary geometric variables </p></li>
+<li><p class="sd-card-text"><strong>clustering_kind</strong> – <strong>[in]</strong> Kind of clustering </p></li>
+<li><p class="sd-card-text"><strong>n_layer</strong> – <strong>[in]</strong> Number of clustering layers (&gt;= 1) </p></li>
+<li><p class="sd-card-text"><strong>n_vtx_in_leaf_per_layer</strong> – <strong>[in]</strong> Number of vertices in leaves per clustering layer </p></li>
+<li><p class="sd-card-text"><strong>disp_in_leaf_per_layer</strong> – <strong>[in]</strong> Dispersion of variables in leaves per clustering layer </p></li>
+<li><p class="sd-card-text"><strong>min_dist_d</strong> – <strong>[in]</strong> Minimal distance of cloud point to surface vertex for which surface vertices are used without clustering (inactive if negative) </p></li>
+<li><p class="sd-card-text"><strong>min_dist_n_vtx</strong> – <strong>[in]</strong> Number of closest surface vertices to use for each cloud point without clustering </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Initialized PDM_mesh_deform instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_mesh_deform_create
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_mesh_deform_create
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. py:class:: MeshDeform
-
-        .. automethod:: Pypdm.Pypdm.MeshDeform.__init__
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em>, <em class="sig-param"><span class="pre">n_part_surf</span></em>, <em class="sig-param"><span class="pre">n_part_cloud</span></em>, <em class="sig-param"><span class="pre">n_aux_geom</span></em>, <em class="sig-param"><span class="pre">clustering_kind</span></em>, <em class="sig-param"><span class="pre">n_layer</span></em>, <em class="sig-param"><span class="pre">n_vtx_in_leaf_per_layer</span></em>, <em class="sig-param"><span class="pre">disp_in_leaf_per_layer</span></em>, <em class="sig-param"><span class="pre">min_dist_d</span></em>, <em class="sig-param"><span class="pre">min_dist_n_vtx</span></em>, <em class="sig-param"><span class="pre">f_comm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_create" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: Initialized PDM_mesh_deform instance</p></li>
+<li><p class="sd-card-text"><strong>n_part_surf</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions of the surface mesh</p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions of the points cloud</p></li>
+<li><p class="sd-card-text"><strong>n_aux_geom</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of auxiliary geometric variables</p></li>
+<li><p class="sd-card-text"><strong>clustering_kind</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of clustering</p></li>
+<li><p class="sd-card-text"><strong>n_layer</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of clustering layers (&gt;= 1)</p></li>
+<li><p class="sd-card-text"><strong>n_vtx_in_leaf_per_layer</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of vertices in leaves per clustering layer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong><em> [</em><em>double</em><em>]</em> :: Dispersion of variables in leaves per clustering layer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong> :: Minimal distance of cloud point to surface vertex for which surface are used without clustering (inactive if negative)</p></li>
+<li><p class="sd-card-text"><strong>min_dist_n_vtx</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of closest surface vertices to use for each cloud point without clustering</p></li>
+<li><p class="sd-card-text"><strong>f_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Set inputs<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/mesh_transform/mesh_deform.rst</span>, line 62)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py class">
+<dt class="sig sig-object py" id="MeshDeform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MeshDeform</span></span><a class="headerlink" href="#MeshDeform" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_part_surf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_part_cloud</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_aux_geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clustering_kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_vtx_in_leaf_per_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp_in_leaf_per_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dist_d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dist_n_vtx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create mesh deformation object instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_part_surf</strong> (<em>int</em>) – Number of partitions of the surface mesh</p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud</strong> (<em>int</em>) – Number of partitions of the points cloud</p></li>
+<li><p class="sd-card-text"><strong>n_aux_geom</strong> (<em>int</em>) – Number of auxiliary geometric variables</p></li>
+<li><p class="sd-card-text"><strong>clustering_kind</strong> (<em>PDM_clustering_kind_t</em>) – Kind of clustering</p></li>
+<li><p class="sd-card-text"><strong>n_vtx_in_leaf_per_layer</strong> (<em>numpy.int32_t array</em>) – Number of vertices in leaves per clustering layer</p></li>
+<li><p class="sd-card-text"><strong>disp_in_leaf_per_layer</strong> (<em>numpy.double_t array</em>) – Dispersion of variables in leaves per clustering layer</p></li>
+<li><p class="sd-card-text"><strong>min_dist_d</strong> (<em>double</em>) – Minimal distance of cloud point to surface vertex for which surface vertices are used without clustering (inactive if negative)</p></li>
+<li><p class="sd-card-text"><strong>min_dist_n_vtx</strong> (<em>int</em>) – Number of closest surface vertices to use for each cloud point without clustering</p></li>
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Mesh deformation object</p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+</dd></dl>
 
-    .. doxygenfunction:: PDM_mesh_deform_surf_part_set
-    .. doxygenfunction:: PDM_mesh_deform_cloud_part_set
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_mesh_deform_create
-      .. f:autosubroutine:: PDM_mesh_deform_create
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.MeshDeform.surf_part_set
-      .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_part_set
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Perform deformation<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/mesh_transform/mesh_deform.rst</span>, line 107)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Set inputs</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv429PDM_mesh_deform_surf_part_setP17PDM_mesh_deform_tiiiPiPiP11PDM_g_num_tP11PDM_g_num_tPdPdPd">
+<span id="_CPPv329PDM_mesh_deform_surf_part_setP17PDM_mesh_deform_tiiiPiPiP11PDM_g_num_tP11PDM_g_num_tPdPdPd"></span><span id="_CPPv229PDM_mesh_deform_surf_part_setP17PDM_mesh_deform_tiiiPiPiP11PDM_g_num_tP11PDM_g_num_tPdPdPd"></span><span id="PDM_mesh_deform_surf_part_set__PDM_mesh_deform_tP.i.i.i.iP.iP.PDM_g_num_tP.PDM_g_num_tP.doubleP.doubleP.doubleP"></span><span class="target" id="pdm__mesh__deform_8h_1ad749463a6b96d0447edc43484317c18a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_surf_part_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_face</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_vtx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_vtx_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_vtx</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">face_ln_to_gn</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_ln_to_gn</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_coord</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_displ</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_aux_geom</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429PDM_mesh_deform_surf_part_setP17PDM_mesh_deform_tiiiPiPiP11PDM_g_num_tP11PDM_g_num_tPdPdPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set surface mesh partition. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong> – <strong>[inout]</strong> PDM_mesh_deform instance </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Index of partition </p></li>
+<li><p class="sd-card-text"><strong>n_face</strong> – <strong>[in]</strong> Number of faces </p></li>
+<li><p class="sd-card-text"><strong>n_vtx</strong> – <strong>[in]</strong> Number of vertices </p></li>
+<li><p class="sd-card-text"><strong>face_vtx_idx</strong> – <strong>[in]</strong> Index of face -&gt; vertex connectivity </p></li>
+<li><p class="sd-card-text"><strong>face_vtx</strong> – <strong>[in]</strong> Face -&gt; vertex connectivity </p></li>
+<li><p class="sd-card-text"><strong>face_ln_to_gn</strong> – <strong>[in]</strong> Local to global faces numbering </p></li>
+<li><p class="sd-card-text"><strong>vtx_ln_to_gn</strong> – <strong>[in]</strong> Local to global vertices numbering </p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> – <strong>[in]</strong> Vertices coordinates </p></li>
+<li><p class="sd-card-text"><strong>vtx_displ</strong> – <strong>[in]</strong> Vertices displacements </p></li>
+<li><p class="sd-card-text"><strong>vtx_aux_geom</strong> – <strong>[in]</strong> Vertices auxiliary geometric variables </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_mesh_deform_cloud_part_setP17PDM_mesh_deform_tiiP11PDM_g_num_tPd">
+<span id="_CPPv330PDM_mesh_deform_cloud_part_setP17PDM_mesh_deform_tiiP11PDM_g_num_tPd"></span><span id="_CPPv230PDM_mesh_deform_cloud_part_setP17PDM_mesh_deform_tiiP11PDM_g_num_tPd"></span><span id="PDM_mesh_deform_cloud_part_set__PDM_mesh_deform_tP.i.i.PDM_g_num_tP.doubleP"></span><span class="target" id="pdm__mesh__deform_8h_1a618d5eb1885689b7692b7e7b00386f9b"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_cloud_part_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_points</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">coord</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_mesh_deform_cloud_part_setP17PDM_mesh_deform_tiiP11PDM_g_num_tPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set point cloud partition. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong> – <strong>[inout]</strong> PDM_mesh_deform instance </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Index of partition </p></li>
+<li><p class="sd-card-text"><strong>n_points</strong> – <strong>[in]</strong> Number of points </p></li>
+<li><p class="sd-card-text"><strong>gnum</strong> – <strong>[in]</strong> Local to global points numbering </p></li>
+<li><p class="sd-card-text"><strong>coord</strong> – <strong>[in]</strong> Points coordinates </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_mesh_deform_compute
-    .. doxygenfunction:: PDM_mesh_deform_cloud_displ_finalize
-    .. doxygenfunction:: PDM_mesh_deform_dump_times
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_mesh_deform_compute
-      .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_finalize
-      .. f:autosubroutine:: PDM_mesh_deform_dump_times
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.MeshDeform.compute
-      .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_displ_finalize
-      .. automethod:: Pypdm.Pypdm.MeshDeform.dump_times
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em>, <em class="sig-param"><span class="pre">n_part_surf</span></em>, <em class="sig-param"><span class="pre">n_part_cloud</span></em>, <em class="sig-param"><span class="pre">n_aux_geom</span></em>, <em class="sig-param"><span class="pre">clustering_kind</span></em>, <em class="sig-param"><span class="pre">n_layer</span></em>, <em class="sig-param"><span class="pre">n_vtx_in_leaf_per_layer</span></em>, <em class="sig-param"><span class="pre">disp_in_leaf_per_layer</span></em>, <em class="sig-param"><span class="pre">min_dist_d</span></em>, <em class="sig-param"><span class="pre">min_dist_n_vtx</span></em>, <em class="sig-param"><span class="pre">f_comm</span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: Initialized PDM_mesh_deform instance</p></li>
+<li><p class="sd-card-text"><strong>n_part_surf</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions of the surface mesh</p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions of the points cloud</p></li>
+<li><p class="sd-card-text"><strong>n_aux_geom</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of auxiliary geometric variables</p></li>
+<li><p class="sd-card-text"><strong>clustering_kind</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of clustering</p></li>
+<li><p class="sd-card-text"><strong>n_layer</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of clustering layers (&gt;= 1)</p></li>
+<li><p class="sd-card-text"><strong>n_vtx_in_leaf_per_layer</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of vertices in leaves per clustering layer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong><em> [</em><em>double</em><em>]</em> :: Dispersion of variables in leaves per clustering layer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong> :: Minimal distance of cloud point to surface vertex for which surface are used without clustering (inactive if negative)</p></li>
+<li><p class="sd-card-text"><strong>min_dist_n_vtx</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of closest surface vertices to use for each cloud point without clustering</p></li>
+<li><p class="sd-card-text"><strong>f_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em>, <em class="sig-param"><span class="pre">n_part_surf</span></em>, <em class="sig-param"><span class="pre">n_part_cloud</span></em>, <em class="sig-param"><span class="pre">n_aux_geom</span></em>, <em class="sig-param"><span class="pre">clustering_kind</span></em>, <em class="sig-param"><span class="pre">n_layer</span></em>, <em class="sig-param"><span class="pre">n_vtx_in_leaf_per_layer</span></em>, <em class="sig-param"><span class="pre">disp_in_leaf_per_layer</span></em>, <em class="sig-param"><span class="pre">min_dist_d</span></em>, <em class="sig-param"><span class="pre">min_dist_n_vtx</span></em>, <em class="sig-param"><span class="pre">f_comm</span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: Initialized PDM_mesh_deform instance</p></li>
+<li><p class="sd-card-text"><strong>n_part_surf</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions of the surface mesh</p></li>
+<li><p class="sd-card-text"><strong>n_part_cloud</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions of the points cloud</p></li>
+<li><p class="sd-card-text"><strong>n_aux_geom</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of auxiliary geometric variables</p></li>
+<li><p class="sd-card-text"><strong>clustering_kind</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of clustering</p></li>
+<li><p class="sd-card-text"><strong>n_layer</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of clustering layers (&gt;= 1)</p></li>
+<li><p class="sd-card-text"><strong>n_vtx_in_leaf_per_layer</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of vertices in leaves per clustering layer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong><em> [</em><em>double</em><em>]</em> :: Dispersion of variables in leaves per clustering layer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong> :: Minimal distance of cloud point to surface vertex for which surface are used without clustering (inactive if negative)</p></li>
+<li><p class="sd-card-text"><strong>min_dist_n_vtx</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of closest surface vertices to use for each cloud point without clustering</p></li>
+<li><p class="sd-card-text"><strong>f_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.surf_part_set">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">surf_part_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_vtx_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_vtx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_ln_to_gn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_ln_to_gn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_displ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_aux_geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.surf_part_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set surface mesh partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Index of partition</p></li>
+<li><p class="sd-card-text"><strong>face_vtx_idx</strong> (<em>numpy.int32_t array</em>) – Index of face -&gt; vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>face_vtx</strong> (<em>numpy.int32_t array</em>) – Face -&gt; vertex connectivity</p></li>
+<li><p class="sd-card-text"><strong>face_ln_to_gn</strong> (<em>Pypdm.npy_pdm_gnum_t array</em>) – Local to global faces numbering</p></li>
+<li><p class="sd-card-text"><strong>vtx_ln_to_gn</strong> (<em>Pypdm.npy_pdm_gnum_t array</em>) – Local to global vertices numbering</p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> (<em>numpy.double_t array</em>) – Vertices coordinates</p></li>
+<li><p class="sd-card-text"><strong>vtx_displ</strong> (<em>numpy.double_t array</em>) – Vertices displacements</p></li>
+<li><p class="sd-card-text"><strong>vtx_aux_geom</strong> (<em>numpy.double_t array</em>) – Vertices auxiliary geometric variables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.cloud_part_set">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">cloud_part_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_ln_to_gn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_coord</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.cloud_part_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set point cloud partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Index of partition</p></li>
+<li><p class="sd-card-text"><strong>vtx_ln_to_gn</strong> (<em>Pypdm.npy_pdm_gnum_t array</em>) – Local to global points numbering</p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> (<em>numpy.double_t array</em>) – Points coordinates</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Get outputs<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/mesh_transform/mesh_deform.rst</span>, line 155)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Perform deformation</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423PDM_mesh_deform_computeP17PDM_mesh_deform_t">
+<span id="_CPPv323PDM_mesh_deform_computeP17PDM_mesh_deform_t"></span><span id="_CPPv223PDM_mesh_deform_computeP17PDM_mesh_deform_t"></span><span id="PDM_mesh_deform_compute__PDM_mesh_deform_tP"></span><span class="target" id="pdm__mesh__deform_8h_1ac3ff43d3cc23ec1eace77ac7d03a2222"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_compute</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423PDM_mesh_deform_computeP17PDM_mesh_deform_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute clusters and source to target connectivity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong> – <strong>[inout]</strong> PDM_mesh_deform instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv436PDM_mesh_deform_cloud_displ_finalizeP17PDM_mesh_deform_t">
+<span id="_CPPv336PDM_mesh_deform_cloud_displ_finalizeP17PDM_mesh_deform_t"></span><span id="_CPPv236PDM_mesh_deform_cloud_displ_finalizeP17PDM_mesh_deform_t"></span><span id="PDM_mesh_deform_cloud_displ_finalize__PDM_mesh_deform_tP"></span><span class="target" id="pdm__mesh__deform_8h_1a67be5187676d6171e4f8415da757dacb"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_cloud_displ_finalize</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv436PDM_mesh_deform_cloud_displ_finalizeP17PDM_mesh_deform_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Finalize the computation of target cloud points displacements. Cloud points are reequilibrated in block. Exchanges back to partition are performed here. PDM_mesh_deform_cloud_displ_finalize is to be called after computing target displacements according to user-defined mesh deformation strategy (inverse distance weighting for example). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong> – <strong>[inout]</strong> PDM_mesh_deform instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_mesh_deform_n_aux_geom_get
-    .. doxygenfunction:: PDM_mesh_deform_cloud_block_n_points_get
-    .. doxygenfunction:: PDM_mesh_deform_cloud_block_buffer_size_get
-    .. doxygenfunction:: PDM_mesh_deform_cloud_block_buffer_from_surf_get
-    .. doxygenfunction:: PDM_mesh_deform_cloud_block_get
-    .. doxygenfunction:: PDM_mesh_deform_cloud_n_points_part_get
-    .. doxygenfunction:: PDM_mesh_deform_cloud_displ_part_get
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_mesh_deform_dump_timesP17PDM_mesh_deform_t">
+<span id="_CPPv326PDM_mesh_deform_dump_timesP17PDM_mesh_deform_t"></span><span id="_CPPv226PDM_mesh_deform_dump_timesP17PDM_mesh_deform_t"></span><span id="PDM_mesh_deform_dump_times__PDM_mesh_deform_tP"></span><span class="target" id="pdm__mesh__deform_8h_1af37d08f0397fa2fbfaa5fc1c8855fc71"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_dump_times</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_mesh_deform_dump_timesP17PDM_mesh_deform_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get execution times. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong> – <strong>[inout]</strong> PDM_mesh_deform instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autofunction::   PDM_mesh_deform_n_aux_geom_get
-      .. f:autosubroutine:: PDM_mesh_deform_cloud_block_n_points_get
-      .. f:autosubroutine:: PDM_mesh_deform_cloud_block_buffer_size_get
-      .. f:autosubroutine:: PDM_mesh_deform_cloud_block_buffer_from_surf_get
-      .. f:autosubroutine:: PDM_mesh_deform_cloud_block_get
-      .. f:autosubroutine:: PDM_mesh_deform_cloud_n_points_part_get
-      .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_part_get
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get
-      .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_displ_part_get
-      .. automethod:: Pypdm.Pypdm.MeshDeform.n_aux_geom
-      .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_n_points
-      .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get
-      .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_get
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_compute">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute clusters and source to target connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_cloud_displ_finalize">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_cloud_displ_finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_cloud_displ_finalize" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Finalize the computation of target cloud points displacements. Cloud points
+are reequilibrated in block. Exchanges back to partition are performed here.
+PDM_mesh_deform_cloud_displ_finalize is to be called after computing
+target displacements according to user-defined mesh deformation strategy
+(inverse distance weighting for example).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_dump_times">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_dump_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_dump_times" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get execution times</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-8">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.compute">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute clusters and source to target connectivity.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.cloud_displ_finalize">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">cloud_displ_finalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.cloud_displ_finalize" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Finalize the computation of target cloud points displacements. Cloud points
+are reequilibrated in block. Exchanges back to partition are performed here.
+PDM_mesh_deform_cloud_displ_finalize is to be called after computing
+target displacements according to user-defined mesh deformation strategy
+(inverse distance weighting for example).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.dump_times">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">dump_times</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.dump_times" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get execution times.</p>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Finalization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/mesh_transform/mesh_deform.rst</span>, line 213)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Get outputs</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-9">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_mesh_deform_n_aux_geom_getP17PDM_mesh_deform_t">
+<span id="_CPPv330PDM_mesh_deform_n_aux_geom_getP17PDM_mesh_deform_t"></span><span id="_CPPv230PDM_mesh_deform_n_aux_geom_getP17PDM_mesh_deform_t"></span><span id="PDM_mesh_deform_n_aux_geom_get__PDM_mesh_deform_tP"></span><span class="target" id="pdm__mesh__deform_8h_1a9dcad848a00b4fe034b006ffc91fe21f"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_n_aux_geom_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_mesh_deform_n_aux_geom_getP17PDM_mesh_deform_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get number of auxiliary geometric variables. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong> – <strong>[in]</strong> PDM_mesh_deform instance</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of auxiliary geometric variables </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv440PDM_mesh_deform_cloud_block_n_points_getP17PDM_mesh_deform_t">
+<span id="_CPPv340PDM_mesh_deform_cloud_block_n_points_getP17PDM_mesh_deform_t"></span><span id="_CPPv240PDM_mesh_deform_cloud_block_n_points_getP17PDM_mesh_deform_t"></span><span id="PDM_mesh_deform_cloud_block_n_points_get__PDM_mesh_deform_tP"></span><span class="target" id="pdm__mesh__deform_8h_1a1221d72191a8f04837eb874e007ab350"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_cloud_block_n_points_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv440PDM_mesh_deform_cloud_block_n_points_getP17PDM_mesh_deform_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get number of points in block. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong> – <strong>[in]</strong> PDM_mesh_deform instance</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of points in block </p>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_mesh_deform_free
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv443PDM_mesh_deform_cloud_block_buffer_size_getP17PDM_mesh_deform_t">
+<span id="_CPPv343PDM_mesh_deform_cloud_block_buffer_size_getP17PDM_mesh_deform_t"></span><span id="_CPPv243PDM_mesh_deform_cloud_block_buffer_size_getP17PDM_mesh_deform_t"></span><span id="PDM_mesh_deform_cloud_block_buffer_size_get__PDM_mesh_deform_tP"></span><span class="target" id="pdm__mesh__deform_8h_1a1464c32f86fa2b2ee2e2059c3576952b"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_cloud_block_buffer_size_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv443PDM_mesh_deform_cloud_block_buffer_size_getP17PDM_mesh_deform_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get size of block buffer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong> – <strong>[in]</strong> PDM_mesh_deform instance</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Size of block buffer </p>
+</dd>
+</dl>
+</dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv448PDM_mesh_deform_cloud_block_buffer_from_surf_getP17PDM_mesh_deform_tPPiPPi15PDM_ownership_t">
+<span id="_CPPv348PDM_mesh_deform_cloud_block_buffer_from_surf_getP17PDM_mesh_deform_tPPiPPi15PDM_ownership_t"></span><span id="_CPPv248PDM_mesh_deform_cloud_block_buffer_from_surf_getP17PDM_mesh_deform_tPPiPPi15PDM_ownership_t"></span><span id="PDM_mesh_deform_cloud_block_buffer_from_surf_get__PDM_mesh_deform_tP.iPP.iPP.PDM_ownership_t"></span><span class="target" id="pdm__mesh__deform_8h_1a00d134a0be88d9855e5af3ed06fd72c1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_cloud_block_buffer_from_surf_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">blk_buffer_from_surf_nb</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">blk_buffer_from_surf</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv448PDM_mesh_deform_cloud_block_buffer_from_surf_getP17PDM_mesh_deform_tPPiPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get source -&gt; target connectivity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong> – <strong>[in]</strong> PDM_mesh_deform instance </p></li>
+<li><p class="sd-card-text"><strong>blk_buffer_from_surf_nb</strong> – <strong>[out]</strong> Number of entities in cloud point -&gt; block buffer connectivity </p></li>
+<li><p class="sd-card-text"><strong>blk_buffer_from_surf</strong> – <strong>[out]</strong> Cloud point -&gt; block buffer compressed connectivity [1st negative index only for layers] </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Choice of ownership of the resulting arrays PDM_ownership_t </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_mesh_deform_cloud_block_getP17PDM_mesh_deform_tPPdPPdPPdPPdPPd15PDM_ownership_t">
+<span id="_CPPv331PDM_mesh_deform_cloud_block_getP17PDM_mesh_deform_tPPdPPdPPdPPdPPd15PDM_ownership_t"></span><span id="_CPPv231PDM_mesh_deform_cloud_block_getP17PDM_mesh_deform_tPPdPPdPPdPPdPPd15PDM_ownership_t"></span><span id="PDM_mesh_deform_cloud_block_get__PDM_mesh_deform_tP.doublePP.doublePP.doublePP.doublePP.doublePP.PDM_ownership_t"></span><span class="target" id="pdm__mesh__deform_8h_1a8b3e7849e80397ba2beb20bf7978062c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_cloud_block_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">blk_coords_from_surf</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">blk_displ_from_surf</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">blk_aux_geom_from_surf</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">blk_cloud_coords</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">blk_cloud_displ</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_mesh_deform_cloud_block_getP17PDM_mesh_deform_tPPdPPdPPdPPdPPd15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get source coordinates, displacements and auxiliary geometric variables, and target coordinates and displacements. Cloud points are reequilibrated in block. Exchanges to block are performed here. Target displacements are to be filled according to user-defined mesh deformation strategy (inverse distance weighting for example) after calling PDM_mesh_deform_cloud_block_get. ParaDiGM keeps ownership on source data in shared memory mode. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong> – <strong>[inout]</strong> PDM_mesh_deform instance </p></li>
+<li><p class="sd-card-text"><strong>blk_coords_from_surf</strong> – <strong>[out]</strong> Surface vertices and clusters coordinates in block buffer </p></li>
+<li><p class="sd-card-text"><strong>blk_displ_from_surf</strong> – <strong>[out]</strong> Surface vertices and clusters displacements in block buffer </p></li>
+<li><p class="sd-card-text"><strong>blk_aux_geom_from_surf</strong> – <strong>[out]</strong> Surface vertices and clusters auxiliary geometric variables in block buffer </p></li>
+<li><p class="sd-card-text"><strong>blk_cloud_coords</strong> – <strong>[out]</strong> Points coordinates in block </p></li>
+<li><p class="sd-card-text"><strong>blk_cloud_displ</strong> – <strong>[out]</strong> Points displacements in block </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Choice of ownership of the resulting arrays PDM_ownership_t </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: Fortran
-    :sync: Fortran
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv439PDM_mesh_deform_cloud_n_points_part_getP17PDM_mesh_deform_tKi">
+<span id="_CPPv339PDM_mesh_deform_cloud_n_points_part_getP17PDM_mesh_deform_tKi"></span><span id="_CPPv239PDM_mesh_deform_cloud_n_points_part_getP17PDM_mesh_deform_tKi"></span><span id="PDM_mesh_deform_cloud_n_points_part_get__PDM_mesh_deform_tP.iC"></span><span class="target" id="pdm__mesh__deform_8h_1a5628ab59a910d0bbe7e8d289fc178de3"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_cloud_n_points_part_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv439PDM_mesh_deform_cloud_n_points_part_getP17PDM_mesh_deform_tKi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get number of cloud points. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong> – <strong>[in]</strong> PDM_mesh_deform instance </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Index of partition</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of cloud points </p>
+</dd>
+</dl>
+</dd></dl>
 
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv436PDM_mesh_deform_cloud_displ_part_getP17PDM_mesh_deform_tKiPPd15PDM_ownership_t">
+<span id="_CPPv336PDM_mesh_deform_cloud_displ_part_getP17PDM_mesh_deform_tKiPPd15PDM_ownership_t"></span><span id="_CPPv236PDM_mesh_deform_cloud_displ_part_getP17PDM_mesh_deform_tKiPPd15PDM_ownership_t"></span><span id="PDM_mesh_deform_cloud_displ_part_get__PDM_mesh_deform_tP.iC.doublePP.PDM_ownership_t"></span><span class="target" id="pdm__mesh__deform_8h_1a34d1079a67e24ac48efa60f820b5cf8c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_cloud_displ_part_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cloud_displ</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv436PDM_mesh_deform_cloud_displ_part_getP17PDM_mesh_deform_tKiPPd15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get cloud points displacements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong> – <strong>[in]</strong> PDM_mesh_deform instance </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Index of partition </p></li>
+<li><p class="sd-card-text"><strong>cloud_displ</strong> – <strong>[out]</strong> Points displacements </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Choice of ownership of the resulting arrays PDM_ownership_t </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-      .. f:autosubroutine:: PDM_mesh_deform_free
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    |python_gc|
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-10">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_n_aux_geom_get">
+<em class="property"><span class="pre">function</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_n_aux_geom_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_n_aux_geom_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get number of auxiliary geometric variables</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><strong>n_aux_geom</strong><em> [</em><em>integer</em><em>]</em> :: Number of auxiliary geometric variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_cloud_block_n_points_get">
+<em class="property"><span class="pre">function</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_cloud_block_n_points_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_cloud_block_n_points_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get number of points in block</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><strong>n_points</strong><em> [</em><em>integer</em><em>]</em> :: Number of points in block</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_cloud_block_buffer_size_get">
+<em class="property"><span class="pre">function</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_cloud_block_buffer_size_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_cloud_block_buffer_size_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get size of block buffer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><strong>s_buffer</strong><em> [</em><em>integer</em><em>]</em> :: Size of block buffer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_cloud_block_buffer_from_surf_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_cloud_block_buffer_from_surf_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em>, <em class="sig-param"><span class="pre">blk_buffer_from_surf_nb</span></em>, <em class="sig-param"><span class="pre">blk_buffer_from_surf</span></em>, <em class="sig-param"><span class="pre">ownership</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_cloud_block_buffer_from_surf_get" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p></li>
+<li><p class="sd-card-text"><strong>blk_buffer_from_surf_nb</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of entities in cloud point -&gt; block buffer connectivity</p></li>
+<li><p class="sd-card-text"><strong>blk_buffer_from_surf</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Cloud point -&gt; block buffer compressed connectivity [1st negative index only for layers]</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Choice of ownership of the resulting arrays</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_cloud_block_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_cloud_block_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em>, <em class="sig-param"><span class="pre">blk_coords_from_surf</span></em>, <em class="sig-param"><span class="pre">blk_displ_from_surf</span></em>, <em class="sig-param"><span class="pre">blk_aux_geom_from_surf</span></em>, <em class="sig-param"><span class="pre">blk_cloud_coords</span></em>, <em class="sig-param"><span class="pre">blk_cloud_displ</span></em>, <em class="sig-param"><span class="pre">ownership</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_cloud_block_get" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p></li>
+<li><p class="sd-card-text"><strong>precision</strong><em> [</em><em>double</em><em>]</em> :: Surface vertices and clusters coordinates in block buffer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong> :: Surface vertices and clusters displacements in block buffer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong> :: Surface vertices and clusters auxiliary geometric variables in block buffer</p></li>
+<li><p class="sd-card-text"><strong>precision</strong> :: Points coordinates in block</p></li>
+<li><p class="sd-card-text"><strong>precision</strong> :: Points displacements in block</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Choice of ownership of the resulting arrays</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_cloud_n_points_part_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_cloud_n_points_part_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">cloud_n_points</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_cloud_n_points_part_get" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Index of partition</p></li>
+<li><p class="sd-card-text"><strong>cloud_n_points</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of cloud points</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_cloud_displ_part_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_cloud_displ_part_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">cloud_displ</span></em>, <em class="sig-param"><span class="pre">ownership</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_cloud_displ_part_get" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_mesh_deform instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Index of partition</p></li>
+<li><p class="sd-card-text"><strong>precision</strong><em> [</em><em>double</em><em>]</em> :: Points displacements</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Choice of ownership of the resulting arrays</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-11">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">cloud_n_points_part_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get number of cloud points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Index of partition</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of cloud points</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.cloud_displ_part_get">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">cloud_displ_part_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.cloud_displ_part_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get cloud points displacements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Index of partition</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Points displacements</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.n_aux_geom">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">n_aux_geom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.n_aux_geom" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get number of auxiliary geometric variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text">Number of auxiliary geometric variables</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.cloud_block_n_points">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">cloud_block_n_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.cloud_block_n_points" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get number of points in block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text">Number of points in block</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">cloud_block_buffer_from_surf_get</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get source -&gt; target connectivity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">‘blk_buffer_from_surf_nb’ : Number of entities in cloud point -&gt; block buffer connectivity</p></li>
+<li><p class="sd-card-text">’blk_buffer_from_surf’    : Cloud point -&gt; block buffer compressed connectivity [1st negative index only for layers]</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">A dictionary containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MeshDeform.cloud_block_get">
+<span class="sig-prename descclassname"><span class="pre">MeshDeform.</span></span><span class="sig-name descname"><span class="pre">cloud_block_get</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MeshDeform.cloud_block_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get source coordinates, displacements and auxiliary geometric variables,
+and target coordinates and displacements.
+Cloud points are reequilibrated in block. Exchanges to block are performed
+here. Target displacements are to be filled according to user-defined
+mesh deformation strategy (inverse distance weighting for example) after
+calling PDM_mesh_deform_cloud_block_get. ParaDiGM keeps ownership on
+source data in shared memory mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">‘blk_coords_from_surf’   : Surface vertices and clusters coordinates in block buffer</p></li>
+<li><p class="sd-card-text">’blk_displ_from_surf’    : Surface vertices and clusters displacements in block buffer</p></li>
+<li><p class="sd-card-text">’blk_aux_geom_from_surf’ : Surface vertices and clusters auxiliary geometric variables in block buffer</p></li>
+<li><p class="sd-card-text">’blk_cloud_coords’       : Points coordinates in block</p></li>
+<li><p class="sd-card-text">’blk_cloud_displ’        : Points displacements in block</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">A dictionary containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-12">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv420PDM_mesh_deform_freeP17PDM_mesh_deform_t">
+<span id="_CPPv320PDM_mesh_deform_freeP17PDM_mesh_deform_t"></span><span id="_CPPv220PDM_mesh_deform_freeP17PDM_mesh_deform_t"></span><span id="PDM_mesh_deform_free__PDM_mesh_deform_tP"></span><span class="target" id="pdm__mesh__deform_8h_1a96194db2fa4d45b28591ab57fe18510c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_mesh_deform_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_mesh_deform_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420PDM_mesh_deform_freeP17PDM_mesh_deform_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free PDM_mesh_deform instance. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong> – <strong>[inout]</strong> PDM_mesh_deform instance </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-13" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-13">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_mesh_deform_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_mesh_deform_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">def</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_mesh_deform_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free PDM_mesh_deform instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>def</strong><em> [</em><em>c_ptr</em><em>,</em><em>inout</em><em>]</em> :: PDM_mesh_deform instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-14" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-14">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -670,7 +1108,36 @@ unknown option: “sync-group”.</p>
             <ul>
 <li><a class="reference internal" href="#">Mesh Deform</a><ul>
 <li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv422PDM_mesh_deform_createKiKiKiK21PDM_clustering_kind_tKiPKiPKdKdKi12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_create()</span></code></a></li>
+<li><a class="reference internal" href="#MeshDeform"><code class="docutils literal notranslate"><span class="pre">MeshDeform</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.__init__"><code class="docutils literal notranslate"><span class="pre">MeshDeform.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv429PDM_mesh_deform_surf_part_setP17PDM_mesh_deform_tiiiPiPiP11PDM_g_num_tP11PDM_g_num_tPdPdPd"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_surf_part_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_mesh_deform_cloud_part_setP17PDM_mesh_deform_tiiP11PDM_g_num_tPd"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_cloud_part_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.surf_part_set"><code class="docutils literal notranslate"><span class="pre">MeshDeform.surf_part_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.cloud_part_set"><code class="docutils literal notranslate"><span class="pre">MeshDeform.cloud_part_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv423PDM_mesh_deform_computeP17PDM_mesh_deform_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_compute()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv436PDM_mesh_deform_cloud_displ_finalizeP17PDM_mesh_deform_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_cloud_displ_finalize()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv426PDM_mesh_deform_dump_timesP17PDM_mesh_deform_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_dump_times()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.compute"><code class="docutils literal notranslate"><span class="pre">MeshDeform.compute()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.cloud_displ_finalize"><code class="docutils literal notranslate"><span class="pre">MeshDeform.cloud_displ_finalize()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.dump_times"><code class="docutils literal notranslate"><span class="pre">MeshDeform.dump_times()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_mesh_deform_n_aux_geom_getP17PDM_mesh_deform_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_n_aux_geom_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv440PDM_mesh_deform_cloud_block_n_points_getP17PDM_mesh_deform_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_cloud_block_n_points_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv443PDM_mesh_deform_cloud_block_buffer_size_getP17PDM_mesh_deform_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_cloud_block_buffer_size_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv448PDM_mesh_deform_cloud_block_buffer_from_surf_getP17PDM_mesh_deform_tPPiPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_cloud_block_buffer_from_surf_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_mesh_deform_cloud_block_getP17PDM_mesh_deform_tPPdPPdPPdPPdPPd15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_cloud_block_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv439PDM_mesh_deform_cloud_n_points_part_getP17PDM_mesh_deform_tKi"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_cloud_n_points_part_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv436PDM_mesh_deform_cloud_displ_part_getP17PDM_mesh_deform_tKiPPd15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_cloud_displ_part_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get"><code class="docutils literal notranslate"><span class="pre">MeshDeform.cloud_n_points_part_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.cloud_displ_part_get"><code class="docutils literal notranslate"><span class="pre">MeshDeform.cloud_displ_part_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.n_aux_geom"><code class="docutils literal notranslate"><span class="pre">MeshDeform.n_aux_geom()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.cloud_block_n_points"><code class="docutils literal notranslate"><span class="pre">MeshDeform.cloud_block_n_points()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get"><code class="docutils literal notranslate"><span class="pre">MeshDeform.cloud_block_buffer_from_surf_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MeshDeform.cloud_block_get"><code class="docutils literal notranslate"><span class="pre">MeshDeform.cloud_block_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv420PDM_mesh_deform_freeP17PDM_mesh_deform_t"><code class="docutils literal notranslate"><span class="pre">PDM_mesh_deform_free()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -682,13 +1149,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

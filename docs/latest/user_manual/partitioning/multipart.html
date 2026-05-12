@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Extract part" href="extract_part.html" /><link rel="prev" title="Partitioning" href="index.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Multipart - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,37 +332,37 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="multipart">
-<span id="id1"></span><h1>Multipart<a class="headerlink" href="#multipart" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Multipart<a class="headerlink" href="#multipart" title="Link to this heading">¶</a></h1>
 <section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
 <p><strong>Multipart</strong> is a service for partitioning (possibly multi-domain) block-distributed meshes.
 Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.</p>
 <p>The partitioning can be performed using different graph-splitting or geometric methods:</p>
-<span class="target" id="pdm-split-dual-t"></span><dl class="cpp enum">
+<dl class="cpp enum" id="pdm-split-dual-t">
 <dt class="sig sig-object cpp" id="_CPPv416PDM_split_dual_t">
-<span id="_CPPv316PDM_split_dual_t"></span><span id="_CPPv216PDM_split_dual_t"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910d"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_split_dual_t</span></span></span><a class="headerlink" href="#_CPPv416PDM_split_dual_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv316PDM_split_dual_t"></span><span id="_CPPv216PDM_split_dual_t"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910d"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_split_dual_t</span></span></span><a class="headerlink" href="#_CPPv416PDM_split_dual_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p><em>Values:</em></p>
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PARMETISE">
-<span id="_CPPv3N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PARMETISE"></span><span id="_CPPv2N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PARMETISE"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910dad9edfe21577bce6f5a68dee59108c473"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_SPLIT_DUAL_WITH_PARMETIS</span></span></span><a class="headerlink" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PARMETISE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PARMETISE"></span><span id="_CPPv2N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PARMETISE"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910dad9edfe21577bce6f5a68dee59108c473"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_SPLIT_DUAL_WITH_PARMETIS</span></span></span><a class="headerlink" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PARMETISE" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Use the <a class="reference external" href="https://github.com/KarypisLab/ParMETIS">ParMETIS</a> graph partitioning library </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PTSCOTCHE">
-<span id="_CPPv3N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PTSCOTCHE"></span><span id="_CPPv2N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PTSCOTCHE"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910dacdb60db97df10822b0de8ea49f7779cd"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_SPLIT_DUAL_WITH_PTSCOTCH</span></span></span><a class="headerlink" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PTSCOTCHE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PTSCOTCHE"></span><span id="_CPPv2N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PTSCOTCHE"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910dacdb60db97df10822b0de8ea49f7779cd"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_SPLIT_DUAL_WITH_PTSCOTCH</span></span></span><a class="headerlink" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PTSCOTCHE" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Use the <a class="reference external" href="https://gitlab.inria.fr/scotch/scotch">PT-Scotch</a> graph partitioning library </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N16PDM_split_dual_t27PDM_SPLIT_DUAL_WITH_HILBERTE">
-<span id="_CPPv3N16PDM_split_dual_t27PDM_SPLIT_DUAL_WITH_HILBERTE"></span><span id="_CPPv2N16PDM_split_dual_t27PDM_SPLIT_DUAL_WITH_HILBERTE"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910da9c67ee07db6456672e6af262c16c0b83"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_SPLIT_DUAL_WITH_HILBERT</span></span></span><a class="headerlink" href="#_CPPv4N16PDM_split_dual_t27PDM_SPLIT_DUAL_WITH_HILBERTE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N16PDM_split_dual_t27PDM_SPLIT_DUAL_WITH_HILBERTE"></span><span id="_CPPv2N16PDM_split_dual_t27PDM_SPLIT_DUAL_WITH_HILBERTE"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910da9c67ee07db6456672e6af262c16c0b83"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_SPLIT_DUAL_WITH_HILBERT</span></span></span><a class="headerlink" href="#_CPPv4N16PDM_split_dual_t27PDM_SPLIT_DUAL_WITH_HILBERTE" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Use in-house method based on the <a class="reference external" href="https://en.wikipedia.org/wiki/Hilbert_curve">Hilbert space-filling</a> curve </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_IMPLICITE">
-<span id="_CPPv3N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_IMPLICITE"></span><span id="_CPPv2N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_IMPLICITE"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910da8cde34e35b5f5c781818857b75448d0d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_SPLIT_DUAL_WITH_IMPLICIT</span></span></span><a class="headerlink" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_IMPLICITE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_IMPLICITE"></span><span id="_CPPv2N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_IMPLICITE"></span><span class="target" id="pdm_8h_1ae70a2ef0b46ea38b79323ad5af7e910da8cde34e35b5f5c781818857b75448d0d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_SPLIT_DUAL_WITH_IMPLICIT</span></span></span><a class="headerlink" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_IMPLICITE" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Split into contiguous chunks of global IDs </p>
 </dd></dl>
 
@@ -372,20 +372,20 @@ Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.</p>
 <div class="line"><br /></div>
 </div>
 <p>Partitions can be homogeneous or heterogeneous in size :</p>
-<span class="target" id="pdm-part-size-t"></span><dl class="cpp enum">
+<dl class="cpp enum" id="pdm-part-size-t">
 <dt class="sig sig-object cpp" id="_CPPv415PDM_part_size_t">
-<span id="_CPPv315PDM_part_size_t"></span><span id="_CPPv215PDM_part_size_t"></span><span class="target" id="pdm__multipart_8h_1a7e3d9755e7f0d5ed84631d1d989e7e36"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_size_t</span></span></span><a class="headerlink" href="#_CPPv415PDM_part_size_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv315PDM_part_size_t"></span><span id="_CPPv215PDM_part_size_t"></span><span class="target" id="pdm__multipart_8h_1a7e3d9755e7f0d5ed84631d1d989e7e36"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_size_t</span></span></span><a class="headerlink" href="#_CPPv415PDM_part_size_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Use homogeneous or heterogeneous partition sizes (only for ParMETIS method) </p>
 <p><em>Values:</em></p>
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N15PDM_part_size_t25PDM_PART_SIZE_HOMOGENEOUSE">
-<span id="_CPPv3N15PDM_part_size_t25PDM_PART_SIZE_HOMOGENEOUSE"></span><span id="_CPPv2N15PDM_part_size_t25PDM_PART_SIZE_HOMOGENEOUSE"></span><span class="target" id="pdm__multipart_8h_1a7e3d9755e7f0d5ed84631d1d989e7e36a3fe479402e8f4a341dbe113d97e5575d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_PART_SIZE_HOMOGENEOUS</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_part_size_t25PDM_PART_SIZE_HOMOGENEOUSE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N15PDM_part_size_t25PDM_PART_SIZE_HOMOGENEOUSE"></span><span id="_CPPv2N15PDM_part_size_t25PDM_PART_SIZE_HOMOGENEOUSE"></span><span class="target" id="pdm__multipart_8h_1a7e3d9755e7f0d5ed84631d1d989e7e36a3fe479402e8f4a341dbe113d97e5575d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_PART_SIZE_HOMOGENEOUS</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_part_size_t25PDM_PART_SIZE_HOMOGENEOUSE" title="Link to this definition">¶</a><br /></dt>
 <dd><p>All requested partition have the same size </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N15PDM_part_size_t27PDM_PART_SIZE_HETEROGENEOUSE">
-<span id="_CPPv3N15PDM_part_size_t27PDM_PART_SIZE_HETEROGENEOUSE"></span><span id="_CPPv2N15PDM_part_size_t27PDM_PART_SIZE_HETEROGENEOUSE"></span><span class="target" id="pdm__multipart_8h_1a7e3d9755e7f0d5ed84631d1d989e7e36a55fdc4e7090250546fc4212397c89888"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_PART_SIZE_HETEROGENEOUS</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_part_size_t27PDM_PART_SIZE_HETEROGENEOUSE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N15PDM_part_size_t27PDM_PART_SIZE_HETEROGENEOUSE"></span><span id="_CPPv2N15PDM_part_size_t27PDM_PART_SIZE_HETEROGENEOUSE"></span><span class="target" id="pdm__multipart_8h_1a7e3d9755e7f0d5ed84631d1d989e7e36a55fdc4e7090250546fc4212397c89888"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_PART_SIZE_HETEROGENEOUS</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_part_size_t27PDM_PART_SIZE_HETEROGENEOUSE" title="Link to this definition">¶</a><br /></dt>
 <dd><p>Each requested partition can have a portion (between 0 and 1) of the mesh </p>
 </dd></dl>
 
@@ -393,343 +393,1053 @@ Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.</p>
 
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Initialization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/multipart.rst</span>, line 35)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv420PDM_multipart_createKiPKiK10PDM_bool_tK16PDM_split_dual_tK15PDM_part_size_tPKdK12PDM_MPI_CommK15PDM_ownership_t">
+<span id="_CPPv320PDM_multipart_createKiPKiK10PDM_bool_tK16PDM_split_dual_tK15PDM_part_size_tPKdK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="_CPPv220PDM_multipart_createKiPKiK10PDM_bool_tK16PDM_split_dual_tK15PDM_part_size_tPKdK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="PDM_multipart_create__iC.iCP.PDM_bool_tC.PDM_split_dual_tC.PDM_part_size_tC.doubleCP.PDM_MPI_CommC.PDM_ownership_tC"></span><span class="target" id="pdm__multipart_8h_1a1817e7a6e44722d07155f72fc4a526b6"></span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">merge_domains</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv416PDM_split_dual_t" title="PDM_split_dual_t"><span class="n"><span class="pre">PDM_split_dual_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">split_method</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv415PDM_part_size_t" title="PDM_part_size_t"><span class="n"><span class="pre">PDM_part_size_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">part_size_method</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_fraction</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">owner</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420PDM_multipart_createKiPKiK10PDM_bool_tK16PDM_split_dual_tK15PDM_part_size_tPKdK12PDM_MPI_CommK15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Build a multipart structure. This method allows to split multiple domains. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_domain</strong> – <strong>[in]</strong> Number of domains in the original mesh </p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of partition per rank in each domain </p></li>
+<li><p class="sd-card-text"><strong>merge_domains</strong> – <strong>[in]</strong> Merge or not the domains before splitting (<em>Not implemented</em>) </p></li>
+<li><p class="sd-card-text"><strong>split_method</strong> – <strong>[in]</strong> Choice of library used to split the mesh </p></li>
+<li><p class="sd-card-text"><strong>part_size_method</strong> – <strong>[in]</strong> Choice of homogeneous or heterogeneous partitions </p></li>
+<li><p class="sd-card-text"><strong>part_fraction</strong> – <strong>[in]</strong> Weight (in %) of each partition in heterogeneous case (i.e. if <code class="docutils literal notranslate"><span class="pre">part_size_method</span></code> is set to <code class="docutils literal notranslate"><span class="pre">PDM_PART_SIZE_HETEROGENEOUS</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> PDM_MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Pointer to a new PDM_multipart_t instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_multipart_create
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_multipart_create
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. py:class:: MultiPart
-
-        .. automethod:: Pypdm.Pypdm.MultiPart.__init__
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">n_domain</span></em>, <em class="sig-param"><span class="pre">n_part</span></em>, <em class="sig-param"><span class="pre">merge_domains</span></em>, <em class="sig-param"><span class="pre">split_method</span></em>, <em class="sig-param"><span class="pre">part_size_method</span></em>, <em class="sig-param"><span class="pre">part_fraction</span></em>, <em class="sig-param"><span class="pre">comm</span></em>, <em class="sig-param"><span class="pre">owner</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_create" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Build a Multipart structure instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: Pointer to a new PDM_multipart_t object</p></li>
+<li><p class="sd-card-text"><strong>n_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of domains in the original mesh</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of partition per proc in each domain (size = <code class="docutils literal notranslate"><span class="pre">n_domain</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>merge_domains</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Merge or not the domains before splitting</p></li>
+<li><p class="sd-card-text"><strong>split_method</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Choice of <a class="reference internal" href="#pdm-split-dual-t"><span class="std std-ref">method</span></a> used to split the mesh</p></li>
+<li><p class="sd-card-text"><strong>part_size_method</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Choice of <a class="reference internal" href="#pdm-part-size-t"><span class="std std-ref">homogeneous or heterogeneous</span></a> partitions</p></li>
+<li><p class="sd-card-text"><strong>part_fraction</strong> (*)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Weight (between 0 and 1) of each partition in heterogeneous case</p></li>
+<li><p class="sd-card-text"><strong>comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>owner</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Data ownership</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Set inputs<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/multipart.rst</span>, line 77)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py class">
+<dt class="sig sig-object py" id="MultiPart">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultiPart</span></span><a class="headerlink" href="#MultiPart" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_domains</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_size_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Build a MultiPart structure. This method allows to split multiple domains.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_domain</strong> (<em>int</em>) – Number of domains in the original mesh</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Number of partitions per rank in each domain</p></li>
+<li><p class="sd-card-text"><strong>merge_domains</strong> (<em>int</em>) – Merge or not the domains before splitting</p></li>
+<li><p class="sd-card-text"><strong>split_method</strong> (<em>PDM_split_dual_t</em>) – Choice of library used to split the mesh</p></li>
+<li><p class="sd-card-text"><strong>part_size_method</strong> (<em>PDM_part_size_t</em>) – Choice of homogeneous or heterogeneous partitions</p></li>
+<li><p class="sd-card-text"><strong>part_fraction</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Weight (in %) of each partition in heterogeneous case if <code class="docutils literal notranslate"><span class="pre">part_size_method</span></code> is set to <code class="docutils literal notranslate"><span class="pre">PDM_PART_SIZE_HETEROGENEOUS</span></code></p></li>
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">split_method</span></code> are:</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MultiPart.HILBERT</span></code></p></li>
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MultiPart.PARMETIS</span></code></p></li>
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MultiPart.PTSCOTCH</span></code></p></li>
+</ul>
+</dd>
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">part_size_method</span></code> are:</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MultiPart.HOMOGENEOUS</span></code>: All requested partition have the same size</p></li>
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MultiPart.HETEROGENEOUS</span></code>: Each requested partition can have a portion (within 0. and 1.) of the mesh</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+</dd></dl>
 
-    .. doxygenfunction:: PDM_multipart_dmesh_nodal_set
-
-    .. doxygenfunction:: PDM_multipart_dmesh_set
-
-    .. doxygenfunction:: PDM_multipart_domain_interface_shared_set
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_multipart_dmesh_nodal_set
-
-      .. f:autosubroutine:: PDM_multipart_dmesh_set
-
-      .. f:autosubroutine:: PDM_multipart_domain_interface_shared_set
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
-      .. automethod:: Pypdm.Pypdm.MultiPart.dmesh_set
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Renumbering options<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
+<span class="sd-summary-text">Set inputs</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv429PDM_multipart_dmesh_nodal_setP15PDM_multipart_tKiP17PDM_dmesh_nodal_t">
+<span id="_CPPv329PDM_multipart_dmesh_nodal_setP15PDM_multipart_tKiP17PDM_dmesh_nodal_t"></span><span id="_CPPv229PDM_multipart_dmesh_nodal_setP15PDM_multipart_tKiP17PDM_dmesh_nodal_t"></span><span id="PDM_multipart_dmesh_nodal_set__PDM_multipart_tP.iC.PDM_dmesh_nodal_tP"></span><span class="target" id="pdm__multipart_8h_1a9a8d62f47cf091d8d49ec21769fa3dad"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_dmesh_nodal_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">domain_id</span></span>, <span class="n"><span class="pre">PDM_dmesh_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dmesh_nodal</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429PDM_multipart_dmesh_nodal_setP15PDM_multipart_tKiP17PDM_dmesh_nodal_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set distributed mesh data for the input domain. The mesh is described by nodal connectivity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>dmesh_nodal</strong> – <strong>[in]</strong> Pointer on PDM_dmesh_nodal_t </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423PDM_multipart_dmesh_setP15PDM_multipart_tKiP11PDM_dmesh_t">
+<span id="_CPPv323PDM_multipart_dmesh_setP15PDM_multipart_tKiP11PDM_dmesh_t"></span><span id="_CPPv223PDM_multipart_dmesh_setP15PDM_multipart_tKiP11PDM_dmesh_t"></span><span id="PDM_multipart_dmesh_set__PDM_multipart_tP.iC.PDM_dmesh_tP"></span><span class="target" id="pdm__multipart_8h_1a66d128abdc3b86c1116a4e199c82f91e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_dmesh_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">domain_id</span></span>, <span class="n"><span class="pre">PDM_dmesh_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dmesh</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423PDM_multipart_dmesh_setP15PDM_multipart_tKiP11PDM_dmesh_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set distributed mesh data for the input domain. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>dmesh</strong> – <strong>[in]</strong> Pointer on PDM_dmesh_t containing all distributed connectivities </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv441PDM_multipart_domain_interface_shared_setP15PDM_multipart_tP22PDM_domain_interface_t">
+<span id="_CPPv341PDM_multipart_domain_interface_shared_setP15PDM_multipart_tP22PDM_domain_interface_t"></span><span id="_CPPv241PDM_multipart_domain_interface_shared_setP15PDM_multipart_tP22PDM_domain_interface_t"></span><span id="PDM_multipart_domain_interface_shared_set__PDM_multipart_tP.PDM_domain_interface_tP"></span><span class="target" id="pdm__multipart_8h_1a260201a3c7809e01af23730161300f20"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_domain_interface_shared_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="n"><span class="pre">PDM_domain_interface_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ditrf</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv441PDM_multipart_domain_interface_shared_setP15PDM_multipart_tP22PDM_domain_interface_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Specify interface between domain (see PDM_multidomain_interface) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>ditrf</strong> – <strong>[in]</strong> Pointer to PDM_domain_interface_t instance </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_dmesh_nodal_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_dmesh_nodal_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">domain_id</span></em>, <em class="sig-param"><span class="pre">dmesh_nodal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_dmesh_nodal_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set distributed mesh data for the input domain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>domain_id</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>dmesh_nodal</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Distributed nodal mesh structure</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_dmesh_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_dmesh_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">domain_id</span></em>, <em class="sig-param"><span class="pre">dmesh</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_dmesh_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set distributed mesh data for the input domain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>domain_id</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>dmesh</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Distributed mesh structure</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_domain_interface_shared_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_domain_interface_shared_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">ditrf</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_domain_interface_shared_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the domain interface</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>ditrf</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Domain interface</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.dmesh_nodal_set">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">dmesh_nodal_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dmn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.dmesh_nodal_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set distributed mesh data for the input domain.
+The mesh is described by nodal connectivity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>dmn</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DMeshNodal</span></code>) – Distributed nodal mesh structure</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.dmesh_set">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">dmesh_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dmesh</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.dmesh_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set distributed mesh data for the input domain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>dmesh</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DMesh</span></code>) – Distributed mesh structure</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Renumbering options</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
 <p class="sd-card-text">Check out <a class="reference internal" href="renumbering.html#renumbering"><span class="std std-ref">this page</span></a> to know which renumbering method you should use.</p>
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/multipart.rst</span>, line 127)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv436PDM_multipart_set_reordering_optionsP15PDM_multipart_tKiPKcPKiPKc">
+<span id="_CPPv336PDM_multipart_set_reordering_optionsP15PDM_multipart_tKiPKcPKiPKc"></span><span id="_CPPv236PDM_multipart_set_reordering_optionsP15PDM_multipart_tKiPKcPKiPKc"></span><span id="PDM_multipart_set_reordering_options__PDM_multipart_tP.iC.cCP.iCP.cCP"></span><span class="target" id="pdm__multipart_8h_1addca7eed13dfd37e8f6acf006a0a8e65"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_set_reordering_options</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">renum_cell_method</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">renum_cell_properties</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">renum_face_method</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv436PDM_multipart_set_reordering_optionsP15PDM_multipart_tKiPKcPKiPKc" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set the reordering methods to be used after partitioning. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain which parameters apply (or -1 for all domains) </p></li>
+<li><p class="sd-card-text"><strong>renum_cell_method</strong> – <strong>[in]</strong> Choice of renumbering method for cells </p></li>
+<li><p class="sd-card-text"><strong>renum_cell_properties</strong> – <strong>[in]</strong> Renumbering parameters for chosen method (can be <em>NULL</em>, check out<span> <a class="reference internal" href="renumbering.html#renumbering"><span class="std std-ref">this page</span></a> </span> for more details) </p></li>
+<li><p class="sd-card-text"><strong>renum_face_method</strong> – <strong>[in]</strong> Choice of renumbering method for faces </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv440PDM_multipart_set_reordering_options_vtxP15PDM_multipart_tKiPKc">
+<span id="_CPPv340PDM_multipart_set_reordering_options_vtxP15PDM_multipart_tKiPKc"></span><span id="_CPPv240PDM_multipart_set_reordering_options_vtxP15PDM_multipart_tKiPKc"></span><span id="PDM_multipart_set_reordering_options_vtx__PDM_multipart_tP.iC.cCP"></span><span class="target" id="pdm__multipart_8h_1a7698ed0ae59567e1da3e37fe161c7a00"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_set_reordering_options_vtx</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">renum_vtx_method</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv440PDM_multipart_set_reordering_options_vtxP15PDM_multipart_tKiPKc" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set the vertex reordering methods to be used after partitioning. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain which parameters apply (or -1 for all domains) </p></li>
+<li><p class="sd-card-text"><strong>renum_vtx_method</strong> – <strong>[in]</strong> Choice of renumbering method for vertices </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_multipart_set_reordering_options
-    .. doxygenfunction:: PDM_multipart_set_reordering_options_vtx
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_multipart_set_reordering_options
-      .. f:autosubroutine:: PDM_multipart_set_reordering_options_vtx
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.MultiPart.reordering_set
-      .. automethod:: Pypdm.Pypdm.MultiPart.reordering_vtx_set
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_set_reordering_options">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_set_reordering_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">renum_cell_method</span></em>, <em class="sig-param"><span class="pre">renum_cell_properties</span></em>, <em class="sig-param"><span class="pre">renum_face_method</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_set_reordering_options" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the reordering methods to be used after partitioning</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of domain which parameters apply (or -1 for all domains)</p></li>
+<li><p class="sd-card-text"><strong>renum_cell_method</strong><em> [</em><em>character</em><em>]</em> :: Choice of renumbering method for cells</p></li>
+<li><p class="sd-card-text"><strong>renum_cell_properties</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Parameters used by cache-blocking method : [<em>n_cell_per_cache_wanted</em>, <em>is_asynchronous</em>, <em>is_vectorisation</em>, <em>n_vect_face</em>, <em>split_method</em>]</p></li>
+<li><p class="sd-card-text"><strong>renum_face_method</strong><em> [</em><em>character</em><em>]</em> :: Choice of renumbering method for faces</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_set_reordering_options_vtx">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_set_reordering_options_vtx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">renum_vtx_method</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_set_reordering_options_vtx" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the reordering methods to be used after partitioning</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of domain which parameters apply (or -1 for all domains)</p></li>
+<li><p class="sd-card-text"><strong>renum_vtx_method</strong><em> [</em><em>character</em><em>]</em> :: Choice of renumbering method for vertices</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Perform partitioning<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/multipart.rst</span>, line 172)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-8">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.reordering_set">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">reordering_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renum_cell_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renum_face_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renum_properties_cell</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.reordering_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the reordering methods to be used after partitioning</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Id of domain which parameters apply (or -1 for all domains)</p></li>
+<li><p class="sd-card-text"><strong>renum_cell_method</strong> (<em>str</em>) – Choice of renumbering method for cells</p></li>
+<li><p class="sd-card-text"><strong>renum_cell_properties</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Parameters used by cache-blocking method : (<em>n_cell_per_cache_wanted</em>, <em>is_asynchronous</em>, <em>is_vectorisation</em>, <em>n_vect_face</em>, <em>split_method</em>)</p></li>
+<li><p class="sd-card-text"><strong>renum_face_method</strong> (<em>str</em>) – Choice of renumbering method for faces</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.reordering_vtx_set">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">reordering_vtx_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renum_vtx_method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.reordering_vtx_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the vertex reordering methods to be used after partitioning</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Id of domain which parameters apply (or -1 for all domains)</p></li>
+<li><p class="sd-card-text"><strong>renum_vtx_method</strong> (<em>str</em>) – Choice of renumbering method for vertices</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_multipart_compute
-    .. doxygenfunction:: PDM_multipart_stat_get
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_multipart_compute
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.MultiPart.compute
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Get outputs<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/multipart.rst</span>, line 215)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
-
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_multipart_get_part_mesh_nodal
-
-    .. doxygenfunction:: PDM_multipart_part_n_entity_get
-    .. doxygenfunction:: PDM_multipart_part_connectivity_get
-    .. doxygenfunction:: PDM_multipart_part_ln_to_gn_get
-    .. doxygenfunction:: PDM_multipart_part_vtx_coord_get
-    .. doxygenfunction:: PDM_multipart_group_get
-    .. doxygenfunction:: PDM_multipart_part_graph_comm_get
-    .. doxygenfunction:: PDM_multipart_part_ghost_infomation_get
-    .. doxygenfunction:: PDM_multipart_partition_color_get
-    .. doxygenfunction:: PDM_multipart_part_hyperplane_color_get
-    .. doxygenfunction:: PDM_multipart_part_thread_color_get
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_multipart_get_part_mesh_nodal
-
-      .. f:autosubroutine:: PDM_multipart_part_connectivity_get
-      .. f:autosubroutine:: PDM_multipart_part_ln_to_gn_get
-      .. f:autosubroutine:: PDM_multipart_part_vtx_coord_get
-      .. f:autosubroutine:: PDM_multipart_group_get
-      .. f:autosubroutine:: PDM_multipart_part_graph_comm_get
-      .. f:autosubroutine:: PDM_multipart_part_ghost_infomation_get
-      .. f:autosubroutine:: PDM_multipart_partition_color_get
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.MultiPart.part_mesh_nodal_get
-
-      .. automethod:: Pypdm.Pypdm.MultiPart.n_entity_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.connectivity_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.ln_to_gn_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.vtx_coord_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.group_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.graph_comm_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.ghost_information_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.color_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.hyper_plane_color_get
-      .. automethod:: Pypdm.Pypdm.MultiPart.thread_color_get
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
-</div>
-</aside>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Finalization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/multipart.rst</span>, line 286)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Perform partitioning</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-9">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv421PDM_multipart_computeP15PDM_multipart_t">
+<span id="_CPPv321PDM_multipart_computeP15PDM_multipart_t"></span><span id="_CPPv221PDM_multipart_computeP15PDM_multipart_t"></span><span id="PDM_multipart_compute__PDM_multipart_tP"></span><span class="target" id="pdm__multipart_8h_1a1a80ba3e13036e80f74574b37a808fc8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_compute</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421PDM_multipart_computeP15PDM_multipart_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Construct the partitioned meshes on all domains. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_multipart_stat_getP15PDM_multipart_tiPiPiPdPiPiPiPiPdPiPiPi">
+<span id="_CPPv322PDM_multipart_stat_getP15PDM_multipart_tiPiPiPdPiPiPiPiPdPiPiPi"></span><span id="_CPPv222PDM_multipart_stat_getP15PDM_multipart_tiPiPiPdPiPiPiPiPdPiPiPi"></span><span id="PDM_multipart_stat_get__PDM_multipart_tP.i.iP.iP.doubleP.iP.iP.iP.iP.doubleP.iP.iP.iP"></span><span class="target" id="pdm__multipart_8h_1a89bf55996c42fe266f827b5d74e5b2cd"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_stat_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cells_average</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cells_median</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cells_std_deviation</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cells_min</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">cells_max</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bound_part_faces_average</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bound_part_faces_median</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bound_part_faces_std_deviation</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bound_part_faces_min</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bound_part_faces_max</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">bound_part_faces_sum</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_multipart_stat_getP15PDM_multipart_tiPiPiPdPiPiPiPiPdPiPiPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Return statistics. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart instance </p></li>
+<li><p class="sd-card-text"><strong>cells_average</strong> – <strong>[out]</strong> average of cells number </p></li>
+<li><p class="sd-card-text"><strong>cells_median</strong> – <strong>[out]</strong> median of cells number </p></li>
+<li><p class="sd-card-text"><strong>cells_std_deviation</strong> – <strong>[out]</strong> standard deviation of cells number </p></li>
+<li><p class="sd-card-text"><strong>cells_min</strong> – <strong>[out]</strong> minimum of cells number </p></li>
+<li><p class="sd-card-text"><strong>cells_max</strong> – <strong>[out]</strong> maximum of cells number </p></li>
+<li><p class="sd-card-text"><strong>bound_part_faces_average</strong> – <strong>[out]</strong> average of partitioning boundary faces </p></li>
+<li><p class="sd-card-text"><strong>bound_part_faces_median</strong> – <strong>[out]</strong> median of partitioning boundary faces </p></li>
+<li><p class="sd-card-text"><strong>bound_part_faces_std_deviation</strong> – <strong>[out]</strong> standard deviation of partitioning boundary faces </p></li>
+<li><p class="sd-card-text"><strong>bound_part_faces_min</strong> – <strong>[out]</strong> minimum of partitioning boundary faces </p></li>
+<li><p class="sd-card-text"><strong>bound_part_faces_max</strong> – <strong>[out]</strong> maximum of partitioning boundary faces </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_multipart_free
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_multipart_free
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    |python_gc|
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-10">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_compute">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Construct the partitioned meshes on every domains</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-11">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.compute">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Construct the partitioned meshes on all domains</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Get outputs</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-12">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv433PDM_multipart_get_part_mesh_nodalP15PDM_multipart_tKiPP21PDM_part_mesh_nodal_t15PDM_ownership_t">
+<span id="_CPPv333PDM_multipart_get_part_mesh_nodalP15PDM_multipart_tKiPP21PDM_part_mesh_nodal_t15PDM_ownership_t"></span><span id="_CPPv233PDM_multipart_get_part_mesh_nodalP15PDM_multipart_tKiPP21PDM_part_mesh_nodal_t15PDM_ownership_t"></span><span id="PDM_multipart_get_part_mesh_nodal__PDM_multipart_tP.iC.PDM_part_mesh_nodal_tPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1ad3fe65f64d207838835da2c7ecbd4dba"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_get_part_mesh_nodal</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="n"><span class="pre">PDM_part_mesh_nodal_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pmesh_nodal</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv433PDM_multipart_get_part_mesh_nodalP15PDM_multipart_tKiPP21PDM_part_mesh_nodal_t15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Retrieve the partitioned nodal mesh. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>pmesh_nodal</strong> – <strong>[out]</strong> Partitioned nodal mesh </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Who is responsible to free retrieved data ? </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_multipart_part_n_entity_getP15PDM_multipart_tKiKi19PDM_mesh_entities_t">
+<span id="_CPPv331PDM_multipart_part_n_entity_getP15PDM_multipart_tKiKi19PDM_mesh_entities_t"></span><span id="_CPPv231PDM_multipart_part_n_entity_getP15PDM_multipart_tKiKi19PDM_mesh_entities_t"></span><span id="PDM_multipart_part_n_entity_get__PDM_multipart_tP.iC.iC.PDM_mesh_entities_t"></span><span class="target" id="pdm__multipart_8h_1a21addf8878b37602d1d8f85a7d9d37c0"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_part_n_entity_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">entity_type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_multipart_part_n_entity_getP15PDM_multipart_tKiKi19PDM_mesh_entities_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the number of entities with given type. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> – <strong>[in]</strong> Entity kind PDM_mesh_entities_t</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of entities </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv435PDM_multipart_part_connectivity_getP15PDM_multipart_tKiKi23PDM_connectivity_type_tPPiPPi15PDM_ownership_t">
+<span id="_CPPv335PDM_multipart_part_connectivity_getP15PDM_multipart_tKiKi23PDM_connectivity_type_tPPiPPi15PDM_ownership_t"></span><span id="_CPPv235PDM_multipart_part_connectivity_getP15PDM_multipart_tKiKi23PDM_connectivity_type_tPPiPPi15PDM_ownership_t"></span><span id="PDM_multipart_part_connectivity_get__PDM_multipart_tP.iC.iC.PDM_connectivity_type_t.iPP.iPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1a9d8fc99c562f4cfd5b6a8af4d923b01e"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_part_connectivity_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_connectivity_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">connectivity_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">connect_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">connect</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv435PDM_multipart_part_connectivity_getP15PDM_multipart_tKiKi23PDM_connectivity_type_tPPiPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get a partitioned connectivity. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">If the return <code class="docutils literal notranslate"><span class="pre">connect</span></code> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, you may build the missing connectivity using the appropriate <strong>Connectivity transformation</strong> function.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong> – <strong>[in]</strong> Connectivity kind PDM_connectivity_type_t </p></li>
+<li><p class="sd-card-text"><strong>connect_idx</strong> – <strong>[in]</strong> Connectivity index (size = <em>n_entity</em> + 1 ) </p></li>
+<li><p class="sd-card-text"><strong>connect</strong> – <strong>[in]</strong> Connectivity array (size = <code class="docutils literal notranslate"><span class="pre">connect_idx</span></code>[<em>n_entity</em>] ) </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Choice of ownership of the resulting arrays PDM_ownership_t</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of leading entities </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_multipart_part_ln_to_gn_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPP11PDM_g_num_t15PDM_ownership_t">
+<span id="_CPPv331PDM_multipart_part_ln_to_gn_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPP11PDM_g_num_t15PDM_ownership_t"></span><span id="_CPPv231PDM_multipart_part_ln_to_gn_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPP11PDM_g_num_t15PDM_ownership_t"></span><span id="PDM_multipart_part_ln_to_gn_get__PDM_multipart_tP.iC.iC.PDM_mesh_entities_t.PDM_g_num_tPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1adc22e0e5152e895a787f8a3afbc8eae3"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_part_ln_to_gn_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">entity_type</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity_ln_to_gn</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_multipart_part_ln_to_gn_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPP11PDM_g_num_t15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the global ids of entities with given type. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> – <strong>[in]</strong> Entity kind </p></li>
+<li><p class="sd-card-text"><strong>entity_ln_to_gn</strong> – <strong>[out]</strong> Entity local numbering to global numbering (size = n_entity, numbering : 1 to n) </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">entity_ln_to_gn</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of entities </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_multipart_part_vtx_coord_getP15PDM_multipart_tKiKiPPd15PDM_ownership_t">
+<span id="_CPPv332PDM_multipart_part_vtx_coord_getP15PDM_multipart_tKiKiPPd15PDM_ownership_t"></span><span id="_CPPv232PDM_multipart_part_vtx_coord_getP15PDM_multipart_tKiKiPPd15PDM_ownership_t"></span><span id="PDM_multipart_part_vtx_coord_get__PDM_multipart_tP.iC.iC.doublePP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1a7b6ec5fc930553d5803705bd1aa21d56"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_part_vtx_coord_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_coord</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_multipart_part_vtx_coord_getP15PDM_multipart_tKiKiPPd15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the vertex coordinates on current i_domain, i_part partition and return number of vertices. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of current domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> – <strong>[out]</strong> Vertex coordinate (size = 3 * n_vtx) </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">vtx_coord</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of vertices </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423PDM_multipart_group_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPiPPiPPiPP11PDM_g_num_t15PDM_ownership_t">
+<span id="_CPPv323PDM_multipart_group_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPiPPiPPiPP11PDM_g_num_t15PDM_ownership_t"></span><span id="_CPPv223PDM_multipart_group_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPiPPiPPiPP11PDM_g_num_t15PDM_ownership_t"></span><span id="PDM_multipart_group_get__PDM_multipart_tP.iC.iC.PDM_mesh_entities_t.iP.iPP.iPP.PDM_g_num_tPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1adb896ffd47d37c8d325f11f5bd8a4f03"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_group_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">entity_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_group_entity</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_entity_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_entity</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_entity_ln_to_gn</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423PDM_multipart_group_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPiPPiPPiPP11PDM_g_num_t15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the group description for a given entity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> – <strong>[in]</strong> Type of mesh entity </p></li>
+<li><p class="sd-card-text"><strong>n_group</strong> – <strong>[out]</strong> Number of groups </p></li>
+<li><p class="sd-card-text"><strong>group_entity_idx</strong> – <strong>[out]</strong> Index for group-&gt;entity connectivity (size = <code class="docutils literal notranslate"><span class="pre">n_group</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>group_entity</strong> – <strong>[out]</strong> Group-&gt;entity connectivity (1-based local ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_group</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>group_entity_ln_to_gn</strong> – <strong>[out]</strong> Group-&gt;entity connectivity (group-specific global ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_group</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv433PDM_multipart_part_graph_comm_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPiPPiPPi15PDM_ownership_t">
+<span id="_CPPv333PDM_multipart_part_graph_comm_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPiPPiPPi15PDM_ownership_t"></span><span id="_CPPv233PDM_multipart_part_graph_comm_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPiPPiPPi15PDM_ownership_t"></span><span id="PDM_multipart_part_graph_comm_get__PDM_multipart_tP.iC.iC.PDM_mesh_entities_t.iPP.iPP.iPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1a9ca952e9da682b2b909a08811597d237"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_part_graph_comm_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">entity_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ppart_bound_proc_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ppart_bound_part_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ppart_bound</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv433PDM_multipart_part_graph_comm_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPiPPiPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the connection graph between partition for the requested entity type. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> – <strong>[in]</strong> Type of mesh entity </p></li>
+<li><p class="sd-card-text"><strong>ppart_bound_proc_idx</strong> – <strong>[out]</strong> Partitioning boundary entities index from process (size = n_proc + 1) </p></li>
+<li><p class="sd-card-text"><strong>ppart_bound_part_idx</strong> – <strong>[out]</strong> Partitioning boundary entities index from partition (size = n_total_part + 1) </p></li>
+<li><p class="sd-card-text"><strong>ppart_bound</strong> – <strong>[out]</strong> Partitioning boundary entities (size = 4 * n_entity_part_bound) </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Choice of ownership of the resulting arrays PDM_ownership_t </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv439PDM_multipart_part_ghost_infomation_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t">
+<span id="_CPPv339PDM_multipart_part_ghost_infomation_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"></span><span id="_CPPv239PDM_multipart_part_ghost_infomation_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"></span><span id="PDM_multipart_part_ghost_infomation_get__PDM_multipart_tP.iC.iC.iPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1a93d1262a4feca6eb2b8013efff2d4510"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_part_ghost_infomation_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_ghost_information</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv439PDM_multipart_part_ghost_infomation_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get array containing vtx_ghost_information, useful to have a priority on vertex between multiple partitions. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>vtx_ghost_information</strong> – <strong>[in]</strong> Integer that gives the current priority of vertices on current partitions </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">vtx_ghost_information</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv433PDM_multipart_partition_color_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPi15PDM_ownership_t">
+<span id="_CPPv333PDM_multipart_partition_color_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPi15PDM_ownership_t"></span><span id="_CPPv233PDM_multipart_partition_color_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPi15PDM_ownership_t"></span><span id="PDM_multipart_partition_color_get__PDM_multipart_tP.iC.iC.PDM_mesh_entities_t.iPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1aba19effbe78545c12d3fa2b81604902e"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_partition_color_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">entity_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity_color</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv433PDM_multipart_partition_color_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the color of entities with given type. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> – <strong>[in]</strong> Entity kind </p></li>
+<li><p class="sd-card-text"><strong>entity_color</strong> – <strong>[out]</strong> Entity color (only for specific renumbering option, size = n_entity) </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">entity_color</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of entities </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv439PDM_multipart_part_hyperplane_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t">
+<span id="_CPPv339PDM_multipart_part_hyperplane_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"></span><span id="_CPPv239PDM_multipart_part_hyperplane_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"></span><span id="PDM_multipart_part_hyperplane_color_get__PDM_multipart_tP.iC.iC.iPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1a13be1272f26734da01091f77f3e111fe"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_part_hyperplane_color_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">hyperplane_color</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv439PDM_multipart_part_hyperplane_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get array containing hyperplane color. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>hyperplane_color</strong> – <strong>[in]</strong> Hyperplane color </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">hyperplane_color</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv435PDM_multipart_part_thread_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t">
+<span id="_CPPv335PDM_multipart_part_thread_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"></span><span id="_CPPv235PDM_multipart_part_thread_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"></span><span id="PDM_multipart_part_thread_color_get__PDM_multipart_tP.iC.iC.iPP.PDM_ownership_t"></span><span class="target" id="pdm__multipart_8h_1a4d10080eb5aba5e3b308641e6f25f7e4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_part_thread_color_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">thread_color</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv435PDM_multipart_part_thread_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get array containing thread color - Only if specific reordering (in ParaDiGMA plugins) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Id of domain </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of part </p></li>
+<li><p class="sd-card-text"><strong>thread_color</strong> – <strong>[in]</strong> Thread color </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">thread_color</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-13" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-13">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_get_part_mesh_nodal">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_get_part_mesh_nodal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">pmesh_nodal</span></em>, <em class="sig-param"><span class="pre">ownership</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_get_part_mesh_nodal" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Retrieve the partitioned nodal mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of domain which parameters apply (or -1 for all domains)</p></li>
+<li><p class="sd-card-text"><strong>pmesh_nodal</strong><em> [</em><em>c_ptr</em><em>]</em> :: Partitioned nodal mesh</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Data ownership</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_part_connectivity_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_part_connectivity_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">connectivity_type</span></em>, <em class="sig-param"><span class="pre">connect_idx</span></em>, <em class="sig-param"><span class="pre">connect</span></em>, <em class="sig-param"><span class="pre">ownership</span></em>, <em class="sig-param"><span class="pre">n_entity</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_part_connectivity_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get a partitioned connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Connectivity type</p></li>
+<li><p class="sd-card-text"><strong>connect_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity index (size = <code class="docutils literal notranslate"><span class="pre">n_entity</span></code> + 1)</p></li>
+<li><p class="sd-card-text"><strong>connect</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity (size = <code class="docutils literal notranslate"><span class="pre">connect_idx(p_entity+1)</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Data ownership</p></li>
+<li><p class="sd-card-text"><strong>n_entity</strong><em> [</em><em>integer</em><em>]</em> :: Number of leading entities</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_part_ln_to_gn_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_part_ln_to_gn_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">entity_type</span></em>, <em class="sig-param"><span class="pre">entity_ln_to_gn</span></em>, <em class="sig-param"><span class="pre">ownership</span></em>, <em class="sig-param"><span class="pre">n_entity</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_part_ln_to_gn_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the global ids of entities with given type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Entity type</p></li>
+<li><p class="sd-card-text"><strong>entity_ln_to_gn</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Global ids (size = <code class="docutils literal notranslate"><span class="pre">n_entity</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Data ownership</p></li>
+<li><p class="sd-card-text"><strong>n_entity</strong><em> [</em><em>integer</em><em>]</em> :: Number of entities</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_part_vtx_coord_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_part_vtx_coord_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">vtx_coord</span></em>, <em class="sig-param"><span class="pre">ownership</span></em>, <em class="sig-param"><span class="pre">n_vtx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_part_vtx_coord_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get vertex coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> (,)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Vertex coordinates (shape = [3, <code class="docutils literal notranslate"><span class="pre">n_vtx</span></code>])</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Data ownership</p></li>
+<li><p class="sd-card-text"><strong>n_vtx</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of vertices</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_group_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_group_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">entity_type</span></em>, <em class="sig-param"><span class="pre">n_group</span></em>, <em class="sig-param"><span class="pre">group_entity_idx</span></em>, <em class="sig-param"><span class="pre">group_entity</span></em>, <em class="sig-param"><span class="pre">group_entity_ln_to_gn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_group_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the group description for a given entity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>n_group</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of groups</p></li>
+<li><p class="sd-card-text"><strong>group_entity_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index for group-&gt;entity connectivity (size = <code class="docutils literal notranslate"><span class="pre">n_group</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>group_entity</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Group-&gt;entity connectivity (1-based local ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx(n_group+1)</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>group_entity_ln_to_gn</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Group-&gt;entity connectivity (group-specific global ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx(n_group+1)</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_part_graph_comm_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_part_graph_comm_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">entity_type</span></em>, <em class="sig-param"><span class="pre">ppart_bound_proc_idx</span></em>, <em class="sig-param"><span class="pre">ppart_bound_part_idx</span></em>, <em class="sig-param"><span class="pre">ppart_bound</span></em>, <em class="sig-param"><span class="pre">ownership</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_part_graph_comm_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the connection graph between partition for the requested entity type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>ppart_bound_proc_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Partitioning boundary entities index from process (size = n_proc + 1)</p></li>
+<li><p class="sd-card-text"><strong>ppart_bound_part_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Partitioning boundary entities index from partition (size = n_total_part + 1)</p></li>
+<li><p class="sd-card-text"><strong>ppart_bound</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Partitioning boundary entities (size = 4 * n_entity_part_bound)</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>]</em> :: Data ownership</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_part_ghost_infomation_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_part_ghost_infomation_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">vtx_ghost_information</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_part_ghost_infomation_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get ghost vertex information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>vtx_ghost_information</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Integer that gives the current priority of vertices on current partitions</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_partition_color_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_partition_color_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">entity_type</span></em>, <em class="sig-param"><span class="pre">entity_color</span></em>, <em class="sig-param"><span class="pre">ownership</span></em>, <em class="sig-param"><span class="pre">n_entity</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_partition_color_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the color of entities with given type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Multipart instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Entity type</p></li>
+<li><p class="sd-card-text"><strong>entity_color</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Entity color (size = <code class="docutils literal notranslate"><span class="pre">n_entity</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Data ownership</p></li>
+<li><p class="sd-card-text"><strong>n_entity</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of entities</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-14" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-14">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.part_mesh_nodal_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">part_mesh_nodal_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.part_mesh_nodal_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Retrieve the partitioned nodal mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Partitioned nodal mesh object (<code class="xref py py-class docutils literal notranslate"><span class="pre">PartMeshNodalCapsule</span></code>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.n_entity_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">n_entity_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.n_entity_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the number of entities with given type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_mesh_entities_t</em>) – Entity type</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.connectivity_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">connectivity_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.connectivity_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get a partitioned connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong> (<em>PDM_connectivity_type_t</em>) – Connectivity type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Tuple</dt><dd><ul class="simple">
+<li><p class="sd-card-text">Connectivity index (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+<li><p class="sd-card-text">Connectivity       (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.ln_to_gn_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">ln_to_gn_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.ln_to_gn_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the global ids of entities with given type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_entity_type_t</em>) – Entity type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Global ids (<cite>np.ndarray[npy_pdm_gnum_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.vtx_coord_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">vtx_coord_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.vtx_coord_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get vertex coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Vertex coordinates (<cite>np.ndarray[np.double_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.group_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">group_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.group_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get vertex coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Dictionary</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;group_entity_idx&quot;</span></code>      (<cite>np.ndarray[np.int32_t]</cite>)     : Index for group-&gt;entity connectivity (size = <em>n_group</em>)</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;group_entity&quot;</span></code>          (<cite>np.ndarray[np.int32_t]</cite>)     : Group-&gt;entity connectivity (1-based local ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx[n_group]</span></code>)</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;group_entity_ln_to_gn&quot;</span></code> (<cite>np.ndarray[npy_pdm_gnum_t]</cite>) : Group-&gt;entity connectivity (group-specific global ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx[n_group]</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.graph_comm_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">graph_comm_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.graph_comm_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the connection graph between partition for the requested entity type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_mesh_entities_t</em>) – Type of mesh entity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Dictionary</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;np_entity_part_bound_proc_idx&quot;</span></code> (<cite>np.ndarray[np.int32_t]</cite>) : Partitioning boundary entities index from process</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;np_entity_part_bound_part_idx&quot;</span></code> (<cite>np.ndarray[np.int32_t]</cite>) : Partitioning boundary entities index from partition</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&quot;np_entity_part_bound&quot;</span></code>          (<cite>np.ndarray[np.int32_t]</cite>) : Partitioning boundary entities</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.ghost_information_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">ghost_information_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.ghost_information_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get array containing vtx_ghost_information, useful to have a priority on vertex between multiple partitions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Integer that gives the current priority of vertices on current partitions (<cite>np.ndarray[np.int32_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.color_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">color_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.color_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the color of entities with given type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_entity_type_t</em>) – Entity type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Entity color (<cite>np.ndarray[np.int32_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.hyper_plane_color_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">hyper_plane_color_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.hyper_plane_color_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get array containing hyperplane color</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Hyperplane color (<cite>np.ndarray[np.int32_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.MultiPart.thread_color_get">
+<span class="sig-prename descclassname"><span class="pre">MultiPart.</span></span><span class="sig-name descname"><span class="pre">thread_color_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.MultiPart.thread_color_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get array containing thread color.
+Only if specific reordering (in <strong>ParaDiGMA</strong> plugins).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Thread color (<cite>np.ndarray[np.int32_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-15" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-15">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418PDM_multipart_freeP15PDM_multipart_t">
+<span id="_CPPv318PDM_multipart_freeP15PDM_multipart_t"></span><span id="_CPPv218PDM_multipart_freeP15PDM_multipart_t"></span><span id="PDM_multipart_free__PDM_multipart_tP"></span><span class="target" id="pdm__multipart_8h_1a4f5ea9bb8d6a85af9f473e2dc1922100"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_multipart_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_multipart_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">multipart</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418PDM_multipart_freeP15PDM_multipart_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free the structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> Pointer to PDM_multipart_t instance </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-16" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-16">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_multipart_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_multipart_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">multipart</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_multipart_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free the structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>multipart</strong><em> [</em><em>c_ptr</em><em>,</em><em>inout</em><em>]</em> :: Multipart instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-17" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-17">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -790,8 +1500,62 @@ unknown option: “sync-group”.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Multipart</a><ul>
-<li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#description">Description</a><ul>
+<li><a class="reference internal" href="#_CPPv416PDM_split_dual_t"><code class="docutils literal notranslate"><span class="pre">PDM_split_dual_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PARMETISE"><code class="docutils literal notranslate"><span class="pre">PDM_split_dual_t::PDM_SPLIT_DUAL_WITH_PARMETIS</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_PTSCOTCHE"><code class="docutils literal notranslate"><span class="pre">PDM_split_dual_t::PDM_SPLIT_DUAL_WITH_PTSCOTCH</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N16PDM_split_dual_t27PDM_SPLIT_DUAL_WITH_HILBERTE"><code class="docutils literal notranslate"><span class="pre">PDM_split_dual_t::PDM_SPLIT_DUAL_WITH_HILBERT</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N16PDM_split_dual_t28PDM_SPLIT_DUAL_WITH_IMPLICITE"><code class="docutils literal notranslate"><span class="pre">PDM_split_dual_t::PDM_SPLIT_DUAL_WITH_IMPLICIT</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv415PDM_part_size_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_size_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N15PDM_part_size_t25PDM_PART_SIZE_HOMOGENEOUSE"><code class="docutils literal notranslate"><span class="pre">PDM_part_size_t::PDM_PART_SIZE_HOMOGENEOUS</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N15PDM_part_size_t27PDM_PART_SIZE_HETEROGENEOUSE"><code class="docutils literal notranslate"><span class="pre">PDM_part_size_t::PDM_PART_SIZE_HETEROGENEOUS</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv420PDM_multipart_createKiPKiK10PDM_bool_tK16PDM_split_dual_tK15PDM_part_size_tPKdK12PDM_MPI_CommK15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_create()</span></code></a></li>
+<li><a class="reference internal" href="#MultiPart"><code class="docutils literal notranslate"><span class="pre">MultiPart</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.__init__"><code class="docutils literal notranslate"><span class="pre">MultiPart.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv429PDM_multipart_dmesh_nodal_setP15PDM_multipart_tKiP17PDM_dmesh_nodal_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_dmesh_nodal_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv423PDM_multipart_dmesh_setP15PDM_multipart_tKiP11PDM_dmesh_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_dmesh_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv441PDM_multipart_domain_interface_shared_setP15PDM_multipart_tP22PDM_domain_interface_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_domain_interface_shared_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.dmesh_nodal_set"><code class="docutils literal notranslate"><span class="pre">MultiPart.dmesh_nodal_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.dmesh_set"><code class="docutils literal notranslate"><span class="pre">MultiPart.dmesh_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv436PDM_multipart_set_reordering_optionsP15PDM_multipart_tKiPKcPKiPKc"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_set_reordering_options()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv440PDM_multipart_set_reordering_options_vtxP15PDM_multipart_tKiPKc"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_set_reordering_options_vtx()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.reordering_set"><code class="docutils literal notranslate"><span class="pre">MultiPart.reordering_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.reordering_vtx_set"><code class="docutils literal notranslate"><span class="pre">MultiPart.reordering_vtx_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv421PDM_multipart_computeP15PDM_multipart_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_compute()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_multipart_stat_getP15PDM_multipart_tiPiPiPdPiPiPiPiPdPiPiPi"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_stat_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.compute"><code class="docutils literal notranslate"><span class="pre">MultiPart.compute()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv433PDM_multipart_get_part_mesh_nodalP15PDM_multipart_tKiPP21PDM_part_mesh_nodal_t15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_get_part_mesh_nodal()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_multipart_part_n_entity_getP15PDM_multipart_tKiKi19PDM_mesh_entities_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_part_n_entity_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv435PDM_multipart_part_connectivity_getP15PDM_multipart_tKiKi23PDM_connectivity_type_tPPiPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_part_connectivity_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_multipart_part_ln_to_gn_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPP11PDM_g_num_t15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_part_ln_to_gn_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_multipart_part_vtx_coord_getP15PDM_multipart_tKiKiPPd15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_part_vtx_coord_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv423PDM_multipart_group_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPiPPiPPiPP11PDM_g_num_t15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_group_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv433PDM_multipart_part_graph_comm_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPiPPiPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_part_graph_comm_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv439PDM_multipart_part_ghost_infomation_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_part_ghost_infomation_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv433PDM_multipart_partition_color_getP15PDM_multipart_tKiKi19PDM_mesh_entities_tPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_partition_color_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv439PDM_multipart_part_hyperplane_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_part_hyperplane_color_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv435PDM_multipart_part_thread_color_getP15PDM_multipart_tKiKiPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_part_thread_color_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.part_mesh_nodal_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.part_mesh_nodal_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.n_entity_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.n_entity_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.connectivity_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.connectivity_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.ln_to_gn_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.ln_to_gn_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.vtx_coord_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.vtx_coord_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.group_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.group_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.graph_comm_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.graph_comm_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.ghost_information_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.ghost_information_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.color_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.color_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.hyper_plane_color_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.hyper_plane_color_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.MultiPart.thread_color_get"><code class="docutils literal notranslate"><span class="pre">MultiPart.thread_color_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv418PDM_multipart_freeP15PDM_multipart_t"><code class="docutils literal notranslate"><span class="pre">PDM_multipart_free()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -803,13 +1567,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

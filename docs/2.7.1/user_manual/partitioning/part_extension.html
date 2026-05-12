@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Renumbering" href="renumbering.html" /><link rel="prev" title="Extract part" href="extract_part.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Part extension - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,301 +332,754 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="part-extension">
-<span id="id1"></span><h1>Part extension<a class="headerlink" href="#part-extension" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Part extension<a class="headerlink" href="#part-extension" title="Link to this heading">¶</a></h1>
 <section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
 <p><strong>Part extension</strong> is a service for computing extended partitions by fetching ghost cells topology and geometry.
 If provided, group information associated with extended entities is fetched as well.</p>
 <p>Extension to an arbitrary depth from vertices, edges or faces is supported :</p>
-<span class="target" id="pdm-extend-type-t"></span><dl class="cpp enum">
+<dl class="cpp enum" id="pdm-extend-type-t">
 <dt class="sig sig-object cpp" id="_CPPv417PDM_extend_type_t">
-<span id="_CPPv317PDM_extend_type_t"></span><span id="_CPPv217PDM_extend_type_t"></span><span class="target" id="pdm__part__extension_8h_1a4f21553003574bf2f67be6d7358057f1"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_extend_type_t</span></span></span><a class="headerlink" href="#_CPPv417PDM_extend_type_t" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv317PDM_extend_type_t"></span><span id="_CPPv217PDM_extend_type_t"></span><span class="target" id="pdm__part__extension_8h_1a4f21553003574bf2f67be6d7358057f1"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_extend_type_t</span></span></span><a class="headerlink" href="#_CPPv417PDM_extend_type_t" title="Link to this definition">¶</a><br /></dt>
 <dd><p><em>Values:</em></p>
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N17PDM_extend_type_t20PDM_EXTEND_FROM_FACEE">
-<span id="_CPPv3N17PDM_extend_type_t20PDM_EXTEND_FROM_FACEE"></span><span id="_CPPv2N17PDM_extend_type_t20PDM_EXTEND_FROM_FACEE"></span><span class="target" id="pdm__part__extension_8h_1a4f21553003574bf2f67be6d7358057f1a2ceb12f517000fc00d864f1434a1508a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_EXTEND_FROM_FACE</span></span></span><a class="headerlink" href="#_CPPv4N17PDM_extend_type_t20PDM_EXTEND_FROM_FACEE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N17PDM_extend_type_t20PDM_EXTEND_FROM_FACEE"></span><span id="_CPPv2N17PDM_extend_type_t20PDM_EXTEND_FROM_FACEE"></span><span class="target" id="pdm__part__extension_8h_1a4f21553003574bf2f67be6d7358057f1a2ceb12f517000fc00d864f1434a1508a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_EXTEND_FROM_FACE</span></span></span><a class="headerlink" href="#_CPPv4N17PDM_extend_type_t20PDM_EXTEND_FROM_FACEE" title="Link to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N17PDM_extend_type_t20PDM_EXTEND_FROM_EDGEE">
-<span id="_CPPv3N17PDM_extend_type_t20PDM_EXTEND_FROM_EDGEE"></span><span id="_CPPv2N17PDM_extend_type_t20PDM_EXTEND_FROM_EDGEE"></span><span class="target" id="pdm__part__extension_8h_1a4f21553003574bf2f67be6d7358057f1af29688ab9d53f9f1a5c0d2442d554a49"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_EXTEND_FROM_EDGE</span></span></span><a class="headerlink" href="#_CPPv4N17PDM_extend_type_t20PDM_EXTEND_FROM_EDGEE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N17PDM_extend_type_t20PDM_EXTEND_FROM_EDGEE"></span><span id="_CPPv2N17PDM_extend_type_t20PDM_EXTEND_FROM_EDGEE"></span><span class="target" id="pdm__part__extension_8h_1a4f21553003574bf2f67be6d7358057f1af29688ab9d53f9f1a5c0d2442d554a49"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_EXTEND_FROM_EDGE</span></span></span><a class="headerlink" href="#_CPPv4N17PDM_extend_type_t20PDM_EXTEND_FROM_EDGEE" title="Link to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N17PDM_extend_type_t19PDM_EXTEND_FROM_VTXE">
-<span id="_CPPv3N17PDM_extend_type_t19PDM_EXTEND_FROM_VTXE"></span><span id="_CPPv2N17PDM_extend_type_t19PDM_EXTEND_FROM_VTXE"></span><span class="target" id="pdm__part__extension_8h_1a4f21553003574bf2f67be6d7358057f1a1ffdcad46454a8c1327eb3f43e13ce65"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_EXTEND_FROM_VTX</span></span></span><a class="headerlink" href="#_CPPv4N17PDM_extend_type_t19PDM_EXTEND_FROM_VTXE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N17PDM_extend_type_t19PDM_EXTEND_FROM_VTXE"></span><span id="_CPPv2N17PDM_extend_type_t19PDM_EXTEND_FROM_VTXE"></span><span class="target" id="pdm__part__extension_8h_1a4f21553003574bf2f67be6d7358057f1a1ffdcad46454a8c1327eb3f43e13ce65"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_EXTEND_FROM_VTX</span></span></span><a class="headerlink" href="#_CPPv4N17PDM_extend_type_t19PDM_EXTEND_FROM_VTXE" title="Link to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Initialization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/part_extension.rst</span>, line 24)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425PDM_part_extension_createKiPKi17PDM_extend_type_tiK12PDM_MPI_CommK15PDM_ownership_t">
+<span id="_CPPv325PDM_part_extension_createKiPKi17PDM_extend_type_tiK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="_CPPv225PDM_part_extension_createKiPKi17PDM_extend_type_tiK12PDM_MPI_CommK15PDM_ownership_t"></span><span id="PDM_part_extension_create__iC.iCP.PDM_extend_type_t.i.PDM_MPI_CommC.PDM_ownership_tC"></span><span class="target" id="pdm__part__extension_8h_1a41bb02788ec07091e7ac731f1a355eea"></span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_domain</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_part</span></span>, <a class="reference internal" href="#_CPPv417PDM_extend_type_t" title="PDM_extend_type_t"><span class="n"><span class="pre">PDM_extend_type_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">extend_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">depth</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">owner</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425PDM_part_extension_createKiPKi17PDM_extend_type_tiK12PDM_MPI_CommK15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a Part Extension structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_domain</strong> – <strong>[in]</strong> Number of domains </p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of partitions per domain </p></li>
+<li><p class="sd-card-text"><strong>extend_type</strong> – <strong>[in]</strong> Extension from which entity ? </p></li>
+<li><p class="sd-card-text"><strong>depth</strong> – <strong>[in]</strong> Extension depth </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>owner</strong> – <strong>[in]</strong> Data ownership</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_part_extension_create
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_extension_create
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. py:class:: PartExtension
-
-        .. automethod:: Pypdm.Pypdm.PartExtension.__init__
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">n_domain</span></em>, <em class="sig-param"><span class="pre">n_part</span></em>, <em class="sig-param"><span class="pre">extend_type</span></em>, <em class="sig-param"><span class="pre">depth</span></em>, <em class="sig-param"><span class="pre">comm</span></em>, <em class="sig-param"><span class="pre">owner</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_create" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Initialize a part extension structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>n_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of domains</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of partitions per domain (size = <code class="docutils literal notranslate"><span class="pre">n_domain</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>extend_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: <a class="reference internal" href="#pdm-extend-type-t"><span class="std std-ref">Type of extension</span></a></p></li>
+<li><p class="sd-card-text"><strong>depth</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Extension depth</p></li>
+<li><p class="sd-card-text"><strong>comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>owner</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Data ownership</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
-</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
-<summary class="sd-summary-title sd-card-header">
-Set input mesh<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/part_extension.rst</span>, line 68)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py class">
+<dt class="sig sig-object py" id="PartExtension">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PartExtension</span></span><a class="headerlink" href="#PartExtension" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extend_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a part extension object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_domain</strong> (<em>int</em>) – Number of domains</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Number of partitions per domain</p></li>
+<li><p class="sd-card-text"><strong>extend_type</strong> (<em>int</em>) – Extension from which entity ?</p></li>
+<li><p class="sd-card-text"><strong>depth</strong> (<em>int</em>) – Extension depth</p></li>
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Admissible values for <code class="docutils literal notranslate"><span class="pre">extend_type</span></code> are :</dt><dd><ul class="simple">
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">PartExtension.FACE</span></code></p></li>
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">PartExtension.EDGE</span></code></p></li>
+<li><p class="sd-card-text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">PartExtension.VTX</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+</dd></dl>
 
-    .. doxygenfunction:: PDM_part_extension_connectivity_set
-    .. doxygenfunction:: PDM_part_extension_vtx_coord_set
-    .. doxygenfunction:: PDM_part_extension_ln_to_gn_set
-    .. doxygenfunction:: PDM_part_extension_part_bound_graph_set
-    .. doxygenfunction:: PDM_part_extension_group_set
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_extension_connectivity_set
-      .. f:autosubroutine:: PDM_part_extension_vtx_coord_set
-      .. f:autosubroutine:: PDM_part_extension_ln_to_gn_set
-      .. f:autosubroutine:: PDM_part_extension_part_bound_graph_set
-      .. f:autosubroutine:: PDM_part_extension_group_set
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.PartExtension.connectivity_set
-      .. automethod:: Pypdm.Pypdm.PartExtension.vtx_coord_set
-      .. automethod:: Pypdm.Pypdm.PartExtension.ln_to_gn_set
-      .. automethod:: Pypdm.Pypdm.PartExtension.part_bound_graph_set
-      .. automethod:: Pypdm.Pypdm.PartExtension.group_set
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Compute extended partitions<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/part_extension.rst</span>, line 121)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Set input mesh</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv435PDM_part_extension_connectivity_setP20PDM_part_extension_tii23PDM_connectivity_type_tPiPi">
+<span id="_CPPv335PDM_part_extension_connectivity_setP20PDM_part_extension_tii23PDM_connectivity_type_tPiPi"></span><span id="_CPPv235PDM_part_extension_connectivity_setP20PDM_part_extension_tii23PDM_connectivity_type_tPiPi"></span><span id="PDM_part_extension_connectivity_set__PDM_part_extension_tP.i.i.PDM_connectivity_type_t.iP.iP"></span><span class="target" id="pdm__part__extension_8h_1a92fc01868ada3afd6c7af94a30b34a0e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_connectivity_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_connectivity_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">connectivity_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">connect_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">connect</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv435PDM_part_extension_connectivity_setP20PDM_part_extension_tii23PDM_connectivity_type_tPiPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set connectivity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong> – <strong>[in]</strong> Type of connectivity </p></li>
+<li><p class="sd-card-text"><strong>connect_idx</strong> – <strong>[in]</strong> Index for connectivity (can be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for <code class="docutils literal notranslate"><span class="pre">PDM_CONNECTIVITY_TYPE_EDGE_VTX</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>connect</strong> – <strong>[in]</strong> Connectivity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_part_extension_vtx_coord_setP20PDM_part_extension_tiiPd">
+<span id="_CPPv332PDM_part_extension_vtx_coord_setP20PDM_part_extension_tiiPd"></span><span id="_CPPv232PDM_part_extension_vtx_coord_setP20PDM_part_extension_tiiPd"></span><span id="PDM_part_extension_vtx_coord_set__PDM_part_extension_tP.i.i.doubleP"></span><span class="target" id="pdm__part__extension_8h_1a6530717a40672ff1468405622e9baffc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_vtx_coord_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_coord</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_part_extension_vtx_coord_setP20PDM_part_extension_tiiPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set vertex coordinates. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> – <strong>[in]</strong> Vertex coordinates (size = 3 * <em>n_vtx</em>) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_part_extension_compute
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_part_extension_ln_to_gn_setP20PDM_part_extension_tii19PDM_mesh_entities_tiP11PDM_g_num_t">
+<span id="_CPPv331PDM_part_extension_ln_to_gn_setP20PDM_part_extension_tii19PDM_mesh_entities_tiP11PDM_g_num_t"></span><span id="_CPPv231PDM_part_extension_ln_to_gn_setP20PDM_part_extension_tii19PDM_mesh_entities_tiP11PDM_g_num_t"></span><span id="PDM_part_extension_ln_to_gn_set__PDM_part_extension_tP.i.i.PDM_mesh_entities_t.i.PDM_g_num_tP"></span><span class="target" id="pdm__part__extension_8h_1a3451561a37f864942068398b1e3c43dc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_ln_to_gn_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mesh_entity</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_entity</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ln_to_gn</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_part_extension_ln_to_gn_setP20PDM_part_extension_tii19PDM_mesh_entities_tiP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set global ids. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>mesh_entity</strong> – <strong>[in]</strong> Type of mesh entity </p></li>
+<li><p class="sd-card-text"><strong>n_entity</strong> – <strong>[in]</strong> Local number of entities </p></li>
+<li><p class="sd-card-text"><strong>ln_to_gn</strong> – <strong>[in]</strong> Global ids (size = <code class="docutils literal notranslate"><span class="pre">n_entity</span></code>) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv439PDM_part_extension_part_bound_graph_setP20PDM_part_extension_tii19PDM_mesh_entities_tPiPiPi">
+<span id="_CPPv339PDM_part_extension_part_bound_graph_setP20PDM_part_extension_tii19PDM_mesh_entities_tPiPiPi"></span><span id="_CPPv239PDM_part_extension_part_bound_graph_setP20PDM_part_extension_tii19PDM_mesh_entities_tPiPiPi"></span><span id="PDM_part_extension_part_bound_graph_set__PDM_part_extension_tP.i.i.PDM_mesh_entities_t.iP.iP.iP"></span><span class="target" id="pdm__part__extension_8h_1a015e4688ebe84b09afdee94aa36474a8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_part_bound_graph_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">entity_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_bound_proc_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_bound_part_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_bound</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv439PDM_part_extension_part_bound_graph_setP20PDM_part_extension_tii19PDM_mesh_entities_tPiPiPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set the connection graph between partitions for the requested entity type. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>multipart</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> – <strong>[in]</strong> Type of mesh entity </p></li>
+<li><p class="sd-card-text"><strong>part_bound_proc_idx</strong> – <strong>[in]</strong> Partitioning boundary entities index from process (size = <em>n_rank</em> + 1) </p></li>
+<li><p class="sd-card-text"><strong>part_bound_part_idx</strong> – <strong>[in]</strong> Partitioning boundary entities index from partition (size = <em>n_total_part</em> + 1) </p></li>
+<li><p class="sd-card-text"><strong>part_bound</strong> – <strong>[in]</strong> Partitioning boundary entities (size = 4 * <code class="docutils literal notranslate"><span class="pre">part_bound_proc_idx</span></code>[<em>n_rank</em>]) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv428PDM_part_extension_group_setP20PDM_part_extension_tii19PDM_mesh_entities_tiPiPiP11PDM_g_num_t">
+<span id="_CPPv328PDM_part_extension_group_setP20PDM_part_extension_tii19PDM_mesh_entities_tiPiPiP11PDM_g_num_t"></span><span id="_CPPv228PDM_part_extension_group_setP20PDM_part_extension_tii19PDM_mesh_entities_tiPiPiP11PDM_g_num_t"></span><span id="PDM_part_extension_group_set__PDM_part_extension_tP.i.i.PDM_mesh_entities_t.i.iP.iP.PDM_g_num_tP"></span><span class="target" id="pdm__part__extension_8h_1ae348222676b2c2d7d0d05db1e63212f0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_group_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">entity_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_group</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_entity_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_entity</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_entity_ln_to_gn</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428PDM_part_extension_group_setP20PDM_part_extension_tii19PDM_mesh_entities_tiPiPiP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set group description. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> – <strong>[in]</strong> Type of mesh entity </p></li>
+<li><p class="sd-card-text"><strong>n_group</strong> – <strong>[in]</strong> Number of groups </p></li>
+<li><p class="sd-card-text"><strong>group_entity_idx</strong> – <strong>[in]</strong> Index for group-&gt;entity connectivity (size = <code class="docutils literal notranslate"><span class="pre">n_group</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>group_entity</strong> – <strong>[in]</strong> Group-&gt;entity connectivity (1-based local ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_group</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>group_entity_ln_to_gn</strong> – <strong>[in]</strong> Group-&gt;entity connectivity (group-specific global ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_group</span></code>]) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_extension_compute
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.PartExtension.compute
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_connectivity_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_connectivity_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">connectivity_type</span></em>, <em class="sig-param"><span class="pre">connect_idx</span></em>, <em class="sig-param"><span class="pre">connect</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_connectivity_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of connectivity</p></li>
+<li><p class="sd-card-text"><strong>connect_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index for connectivity (can be <em>null()</em> for EDGE_VTX)</p></li>
+<li><p class="sd-card-text"><strong>connect</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Connectivity</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_vtx_coord_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_vtx_coord_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">vtx_coord</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_vtx_coord_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set vertex coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> (,)<em> [</em><em>real</em><em>,</em><em>pointer</em><em>]</em> :: Vertex coordinates (shape = [3, <em>n_vtx</em>])</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_ln_to_gn_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_ln_to_gn_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">mesh_entity</span></em>, <em class="sig-param"><span class="pre">n_entity</span></em>, <em class="sig-param"><span class="pre">ln_to_gn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_ln_to_gn_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set global ids</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>mesh_entity</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>n_entity</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Local number of entities</p></li>
+<li><p class="sd-card-text"><strong>ln_to_gn</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Global ids</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_part_bound_graph_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_part_bound_graph_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">entity_type</span></em>, <em class="sig-param"><span class="pre">part_bound_proc_idx</span></em>, <em class="sig-param"><span class="pre">part_bound_part_idx</span></em>, <em class="sig-param"><span class="pre">part_bound</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_part_bound_graph_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the connection graph between partitions for the requested entity type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>part_bound_proc_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Partitioning boundary entities index from process (size = <em>n_rank</em> + 1)</p></li>
+<li><p class="sd-card-text"><strong>part_bound_part_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Partitioning boundary entities index from partition (size = <em>n_total_part</em> + 1)</p></li>
+<li><p class="sd-card-text"><strong>part_bound</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Partitioning boundary entities (size = 4 * <code class="docutils literal notranslate"><span class="pre">part_bound_proc_idx(n_rank)</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_group_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_group_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">entity_type</span></em>, <em class="sig-param"><span class="pre">n_group</span></em>, <em class="sig-param"><span class="pre">group_entity_idx</span></em>, <em class="sig-param"><span class="pre">group_entity</span></em>, <em class="sig-param"><span class="pre">group_entity_ln_to_gn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_group_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set group description</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>n_group</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of groups</p></li>
+<li><p class="sd-card-text"><strong>group_entity_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index for group-&gt;entity connectivity (size = <code class="docutils literal notranslate"><span class="pre">n_group</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>group_entity</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Group-&gt;entity connectivity (1-based local ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx(n_group)</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>group_entity_ln_to_gn</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Group-&gt;entity connectivity (group-specific global ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx(``n_group)</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.connectivity_set">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">connectivity_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.connectivity_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong> (<em>PDM_connectivity_type_t</em>) – Type of connectivity</p></li>
+<li><p class="sd-card-text"><strong>connect_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Index for connectivity</p></li>
+<li><p class="sd-card-text"><strong>connect</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Connectivity</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.vtx_coord_set">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">vtx_coord_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vtx_coord</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.vtx_coord_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set vertex coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Vertex coordinates (size = 3 * <em>n_vtx</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.ln_to_gn_set">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">ln_to_gn_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ln_to_gn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.ln_to_gn_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set global ids</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_mesh_entities_t</em>) – Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>ln_to_gn</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Global ids</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.part_bound_graph_set">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">part_bound_graph_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_bound_proc_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_bound_part_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_bound</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.part_bound_graph_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the connection graph between partitions for the requested entity type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_mesh_entities_t</em>) – Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>part_bound_proc_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Partitioning boundary entities index from process (size = <em>n_rank</em> + 1)</p></li>
+<li><p class="sd-card-text"><strong>part_bound_part_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Partitioning boundary entities index from partition (size = <em>n_total_part</em> + 1)</p></li>
+<li><p class="sd-card-text"><strong>part_bound</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Partitioning boundary entities (size = 4 * <code class="docutils literal notranslate"><span class="pre">part_bound_proc_idx</span></code> [ <em>n_rank</em> ])</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.group_set">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">group_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_entity_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_entity_ln_to_gn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.group_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set group description</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_mesh_entities_t</em>) – Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>group_entity_idx</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Index for group-&gt;entity connectivity</p></li>
+<li><p class="sd-card-text"><strong>group_entity</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Group-&gt;entity connectivity (1-based local ids)</p></li>
+<li><p class="sd-card-text"><strong>group_entity_ln_to_gn</strong> (<em>np.ndarray</em><em>[</em><em>npy_pdm_gnum_t</em><em>]</em>) – Group-&gt;entity connectivity (bound-specific global ids)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Get extended entities<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/part_extension.rst</span>, line 163)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Compute extended partitions</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_part_extension_computeP20PDM_part_extension_t">
+<span id="_CPPv326PDM_part_extension_computeP20PDM_part_extension_t"></span><span id="_CPPv226PDM_part_extension_computeP20PDM_part_extension_t"></span><span id="PDM_part_extension_compute__PDM_part_extension_tP"></span><span class="target" id="pdm__part__extension_8h_1a4af5c6549534af83d385aa6fe6ea5fb8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_compute</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_part_extension_computeP20PDM_part_extension_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Compute extended partitions. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_part_extension_connectivity_get
-    .. doxygenfunction:: PDM_part_extension_vtx_coord_get
-    .. doxygenfunction:: PDM_part_extension_ln_to_gn_get
-    .. doxygenfunction:: PDM_part_extension_group_get
-
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_extension_connectivity_get
-      .. f:autosubroutine:: PDM_part_extension_vtx_coord_get
-      .. f:autosubroutine:: PDM_part_extension_ln_to_gn_get
-      .. f:autosubroutine:: PDM_part_extension_group_get
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    .. ifconfig:: enable_python_doc == &#39;ON&#39;
-
-      .. automethod:: Pypdm.Pypdm.PartExtension.connectivity_get
-      .. automethod:: Pypdm.Pypdm.PartExtension.vtx_coord_get
-      .. automethod:: Pypdm.Pypdm.PartExtension.ln_to_gn_get
-      .. automethod:: Pypdm.Pypdm.PartExtension.group_get
-
-    .. ifconfig:: enable_python_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_python_interface&gt;` to enable the Python API)
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_compute">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute a part extension structure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Extension instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-8">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.compute">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.compute" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Compute extended partitions</p>
+</dd></dl>
+
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Finalization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/partitioning/part_extension.rst</span>, line 213)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Get extended entities</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-9">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv435PDM_part_extension_connectivity_getP20PDM_part_extension_tii23PDM_connectivity_type_tPPiPPi">
+<span id="_CPPv335PDM_part_extension_connectivity_getP20PDM_part_extension_tii23PDM_connectivity_type_tPPiPPi"></span><span id="_CPPv235PDM_part_extension_connectivity_getP20PDM_part_extension_tii23PDM_connectivity_type_tPPiPPi"></span><span id="PDM_part_extension_connectivity_get__PDM_part_extension_tP.i.i.PDM_connectivity_type_t.iPP.iPP"></span><span class="target" id="pdm__part__extension_8h_1a235ff2b7aaed16aa467e918b102d3337"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_connectivity_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_connectivity_type_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">connectivity_type</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">connect_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">connect</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv435PDM_part_extension_connectivity_getP20PDM_part_extension_tii23PDM_connectivity_type_tPPiPPi" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get extended connectivity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong> – <strong>[in]</strong> Connectivity type </p></li>
+<li><p class="sd-card-text"><strong>connect_idx</strong> – <strong>[out]</strong> Connectivity index </p></li>
+<li><p class="sd-card-text"><strong>connect</strong> – <strong>[out]</strong> Connectivity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of leading entities </p>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_part_extension_vtx_coord_getP20PDM_part_extension_tiiPPd">
+<span id="_CPPv332PDM_part_extension_vtx_coord_getP20PDM_part_extension_tiiPPd"></span><span id="_CPPv232PDM_part_extension_vtx_coord_getP20PDM_part_extension_tiiPPd"></span><span id="PDM_part_extension_vtx_coord_get__PDM_part_extension_tP.i.i.doublePP"></span><span class="target" id="pdm__part__extension_8h_1a6bf3d20a4725f75b4cc957eeacdb2103"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_vtx_coord_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">vtx_coord</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_part_extension_vtx_coord_getP20PDM_part_extension_tiiPPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get coordinates of extended vertices. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> PDM_part_extension_t structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>vtx_coord</strong> – <strong>[out]</strong> Vertex coordinates (size = n_vtx * 3)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of extended vertices </p>
+</dd>
+</dl>
+</dd></dl>
 
-    .. doxygenfunction:: PDM_part_extension_free
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_part_extension_ln_to_gn_getP20PDM_part_extension_tii19PDM_mesh_entities_tPP11PDM_g_num_t">
+<span id="_CPPv331PDM_part_extension_ln_to_gn_getP20PDM_part_extension_tii19PDM_mesh_entities_tPP11PDM_g_num_t"></span><span id="_CPPv231PDM_part_extension_ln_to_gn_getP20PDM_part_extension_tii19PDM_mesh_entities_tPP11PDM_g_num_t"></span><span id="PDM_part_extension_ln_to_gn_get__PDM_part_extension_tP.i.i.PDM_mesh_entities_t.PDM_g_num_tPP"></span><span class="target" id="pdm__part__extension_8h_1a7606fbc539c8353fab03b1d79042b439"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_ln_to_gn_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mesh_entity</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ln_to_gn</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_part_extension_ln_to_gn_getP20PDM_part_extension_tii19PDM_mesh_entities_tPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get global ids of extended entities. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>mesh_entity</strong> – <strong>[in]</strong> Entity type </p></li>
+<li><p class="sd-card-text"><strong>ln_to_gn</strong> – <strong>[out]</strong> Global ids</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of entities </p>
+</dd>
+</dl>
+</dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv428PDM_part_extension_group_getP20PDM_part_extension_tii19PDM_mesh_entities_tPPiPPiPP11PDM_g_num_t">
+<span id="_CPPv328PDM_part_extension_group_getP20PDM_part_extension_tii19PDM_mesh_entities_tPPiPPiPP11PDM_g_num_t"></span><span id="_CPPv228PDM_part_extension_group_getP20PDM_part_extension_tii19PDM_mesh_entities_tPPiPPiPP11PDM_g_num_t"></span><span id="PDM_part_extension_group_get__PDM_part_extension_tP.i.i.PDM_mesh_entities_t.iPP.iPP.PDM_g_num_tPP"></span><span class="target" id="pdm__part__extension_8h_1a203a814bbbec9baa51fbf685191bc294"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_group_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_domain</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="n"><span class="pre">PDM_mesh_entities_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mesh_entity</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_entity_idx</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_entity</span></span>, <span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">group_ln_to_gn</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428PDM_part_extension_group_getP20PDM_part_extension_tii19PDM_mesh_entities_tPPiPPiPP11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get groups for extended entities with given type. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong> – <strong>[in]</strong> Domain identifier </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>mesh_entity</strong> – <strong>[in]</strong> Type of mesh entity </p></li>
+<li><p class="sd-card-text"><strong>group_entity_idx</strong> – <strong>[out]</strong> Group-&gt;entity connectivity (1-based local ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_group</span></code>]) </p></li>
+<li><p class="sd-card-text"><strong>group_entity</strong> – <strong>[out]</strong> Index for group-&gt;entity connectivity (size = <code class="docutils literal notranslate"><span class="pre">n_group</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>group_entity_ln_to_gn</strong> – <strong>[out]</strong> Group-&gt;entity connectivity (group-specific global ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx</span></code>[<code class="docutils literal notranslate"><span class="pre">n_group</span></code>])</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of groups </p>
+</dd>
+</dl>
+</dd></dl>
 
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. ifconfig:: enable_fortran_doc == &#39;ON&#39;
-
-      .. f:autosubroutine:: PDM_part_extension_free
-
-    .. ifconfig:: enable_fortran_doc == &#39;OFF&#39;
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide &lt;enable_fortran_interface&gt;` to enable the Fortran API)
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-    |python_gc|
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-10">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_connectivity_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_connectivity_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">connectivity_type</span></em>, <em class="sig-param"><span class="pre">n_elt</span></em>, <em class="sig-param"><span class="pre">connect_idx</span></em>, <em class="sig-param"><span class="pre">connect</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_connectivity_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get extended connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of current domain</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of current partition</p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>n_elt</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of elements</p></li>
+<li><p class="sd-card-text"><strong>connect_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index for entity-&gt;group graph (size = <code class="docutils literal notranslate"><span class="pre">n_elt</span></code> + 1)</p></li>
+<li><p class="sd-card-text"><strong>connect</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Entity-&gt;group graph (size = <code class="docutils literal notranslate"><span class="pre">connect_idx(n_elt)</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_vtx_coord_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_vtx_coord_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">n_vtx</span></em>, <em class="sig-param"><span class="pre">vtx_coord</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_vtx_coord_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get coordinates of extended vertices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of current domain</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of current partition</p></li>
+<li><p class="sd-card-text"><strong>n_vtx</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of vertices</p></li>
+<li><p class="sd-card-text"><strong>precision</strong><em> [</em><em>double</em><em>]</em> :: Vertex coordinates (shape = [3, <code class="docutils literal notranslate"><span class="pre">n_vtx</span></code>])</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_ln_to_gn_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_ln_to_gn_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">mesh_entity</span></em>, <em class="sig-param"><span class="pre">n_elt</span></em>, <em class="sig-param"><span class="pre">ln_to_gn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_ln_to_gn_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get global ids of extended entities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of current domain</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of current partition</p></li>
+<li><p class="sd-card-text"><strong>mesh_entity</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>n_elt</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of elements</p></li>
+<li><p class="sd-card-text"><strong>ln_to_gn</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Global ids (size = <code class="docutils literal notranslate"><span class="pre">n_elt</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_group_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_group_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em>, <em class="sig-param"><span class="pre">i_domain</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">mesh_entity</span></em>, <em class="sig-param"><span class="pre">n_group</span></em>, <em class="sig-param"><span class="pre">group_entity_idx</span></em>, <em class="sig-param"><span class="pre">group_entity</span></em>, <em class="sig-param"><span class="pre">group_entity_ln_to_gn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_group_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get groups for extended entities with given type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>value</em><em>]</em> :: Part Extension instance</p></li>
+<li><p class="sd-card-text"><strong>i_domain</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of current domain</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Id of current partition</p></li>
+<li><p class="sd-card-text"><strong>mesh_entity</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of mesh entity</p></li>
+<li><p class="sd-card-text"><strong>n_group</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Number of groups</p></li>
+<li><p class="sd-card-text"><strong>group_entity_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Index for group-&gt;entity connectivity (size = <code class="docutils literal notranslate"><span class="pre">n_group</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>group_entity</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Group-&gt;entity connectivity (1-based local ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx(n_group)</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>group_entity_ln_to_gn</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Group-&gt;entity connectivity (group-specific global ids, size = <code class="docutils literal notranslate"><span class="pre">group_entity_idx(n_group)</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-11">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.connectivity_get">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">connectivity_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.connectivity_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get extended connectivity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>connectivity_type</strong> (<em>PDM_connectivity_type_t</em>) – Connectivity type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Tuple</dt><dd><ul class="simple">
+<li><p class="sd-card-text">Connectivity index (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+<li><p class="sd-card-text">Connectivity       (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.vtx_coord_get">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">vtx_coord_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.vtx_coord_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get coordinates of extended vertices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Vertex coordinates (<cite>np.ndarray[np.double_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.ln_to_gn_get">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">ln_to_gn_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.ln_to_gn_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get global ids of extended entities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_mesh_entities_t</em>) – Entity type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Global ids (<cite>np.ndarray[npy_pdm_gnum_t]</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartExtension.group_get">
+<span class="sig-prename descclassname"><span class="pre">PartExtension.</span></span><span class="sig-name descname"><span class="pre">group_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_domain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartExtension.group_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get groups for extended entities with given type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>i_domain</strong> (<em>int</em>) – Domain identifier</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_type</strong> (<em>PDM_mesh_entities_t</em>) – Entity type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>Tuple</dt><dd><ul class="simple">
+<li><p class="sd-card-text">Index for group-&gt;entity connectivity                   (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+<li><p class="sd-card-text">Group-&gt;entity connectivity (1-based local ids)         (<cite>np.ndarray[np.int32_t]</cite>)</p></li>
+<li><p class="sd-card-text">Group-&gt;entity connectivity (group-specific global ids) (<cite>np.ndarray[npy_pdm_gnum_t]</cite>)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-12">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv423PDM_part_extension_freeP20PDM_part_extension_t">
+<span id="_CPPv323PDM_part_extension_freeP20PDM_part_extension_t"></span><span id="_CPPv223PDM_part_extension_freeP20PDM_part_extension_t"></span><span id="PDM_part_extension_free__PDM_part_extension_tP"></span><span class="target" id="pdm__part__extension_8h_1a8afbd7fdab43128e6afb8d5c7530232c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_extension_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_extension_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_ext</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423PDM_part_extension_freeP20PDM_part_extension_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free a part extension structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>part_ext</strong> – <strong>[in]</strong> <code class="docutils literal notranslate"><span class="pre">PDM_part_extension_t</span></code> structure instance </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-13" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-13">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_extension_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_extension_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">part_ext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_extension_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free a Part Extension instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>part_ext</strong><em> [</em><em>c_ptr</em><em>,</em><em>inout</em><em>]</em> :: Part Extension instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-14" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-14">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -687,8 +1140,42 @@ unknown option: “sync-group”.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Part extension</a><ul>
-<li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#description">Description</a><ul>
+<li><a class="reference internal" href="#_CPPv417PDM_extend_type_t"><code class="docutils literal notranslate"><span class="pre">PDM_extend_type_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N17PDM_extend_type_t20PDM_EXTEND_FROM_FACEE"><code class="docutils literal notranslate"><span class="pre">PDM_extend_type_t::PDM_EXTEND_FROM_FACE</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N17PDM_extend_type_t20PDM_EXTEND_FROM_EDGEE"><code class="docutils literal notranslate"><span class="pre">PDM_extend_type_t::PDM_EXTEND_FROM_EDGE</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N17PDM_extend_type_t19PDM_EXTEND_FROM_VTXE"><code class="docutils literal notranslate"><span class="pre">PDM_extend_type_t::PDM_EXTEND_FROM_VTX</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv425PDM_part_extension_createKiPKi17PDM_extend_type_tiK12PDM_MPI_CommK15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_create()</span></code></a></li>
+<li><a class="reference internal" href="#PartExtension"><code class="docutils literal notranslate"><span class="pre">PartExtension</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.__init__"><code class="docutils literal notranslate"><span class="pre">PartExtension.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv435PDM_part_extension_connectivity_setP20PDM_part_extension_tii23PDM_connectivity_type_tPiPi"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_connectivity_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_part_extension_vtx_coord_setP20PDM_part_extension_tiiPd"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_vtx_coord_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_part_extension_ln_to_gn_setP20PDM_part_extension_tii19PDM_mesh_entities_tiP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_ln_to_gn_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv439PDM_part_extension_part_bound_graph_setP20PDM_part_extension_tii19PDM_mesh_entities_tPiPiPi"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_part_bound_graph_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv428PDM_part_extension_group_setP20PDM_part_extension_tii19PDM_mesh_entities_tiPiPiP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_group_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.connectivity_set"><code class="docutils literal notranslate"><span class="pre">PartExtension.connectivity_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.vtx_coord_set"><code class="docutils literal notranslate"><span class="pre">PartExtension.vtx_coord_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.ln_to_gn_set"><code class="docutils literal notranslate"><span class="pre">PartExtension.ln_to_gn_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.part_bound_graph_set"><code class="docutils literal notranslate"><span class="pre">PartExtension.part_bound_graph_set()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.group_set"><code class="docutils literal notranslate"><span class="pre">PartExtension.group_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv426PDM_part_extension_computeP20PDM_part_extension_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_compute()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.compute"><code class="docutils literal notranslate"><span class="pre">PartExtension.compute()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv435PDM_part_extension_connectivity_getP20PDM_part_extension_tii23PDM_connectivity_type_tPPiPPi"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_connectivity_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_part_extension_vtx_coord_getP20PDM_part_extension_tiiPPd"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_vtx_coord_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_part_extension_ln_to_gn_getP20PDM_part_extension_tii19PDM_mesh_entities_tPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_ln_to_gn_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv428PDM_part_extension_group_getP20PDM_part_extension_tii19PDM_mesh_entities_tPPiPPiPP11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_group_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.connectivity_get"><code class="docutils literal notranslate"><span class="pre">PartExtension.connectivity_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.vtx_coord_get"><code class="docutils literal notranslate"><span class="pre">PartExtension.vtx_coord_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.ln_to_gn_get"><code class="docutils literal notranslate"><span class="pre">PartExtension.ln_to_gn_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartExtension.group_get"><code class="docutils literal notranslate"><span class="pre">PartExtension.group_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv423PDM_part_extension_freeP20PDM_part_extension_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_extension_free()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -700,13 +1187,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

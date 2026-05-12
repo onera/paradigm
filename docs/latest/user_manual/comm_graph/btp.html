@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Part to Block" href="ptb.html" /><link rel="prev" title="Part to Part" href="ptp.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Block to Part - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,142 +332,299 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="block-to-part">
-<span id="id1"></span><h1>Block to Part<a class="headerlink" href="#block-to-part" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Block to Part<a class="headerlink" href="#block-to-part" title="Link to this heading">¶</a></h1>
 <section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
 <p><strong>Block to Part</strong> is a service for managing MPI data transfers from block-distributed to partitioned sets of entities.</p>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h2>
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Initialization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/comm_graph/btp.rst</span>, line 16)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">tab</span><span class="o">-</span><span class="nb">set</span><span class="p">::</span>
-  <span class="p">:</span><span class="n">sync</span><span class="o">-</span><span class="n">group</span><span class="p">:</span> <span class="n">language</span>
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424PDM_block_to_part_createPK11PDM_g_num_tPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm">
+<span id="_CPPv324PDM_block_to_part_createPK11PDM_g_num_tPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm"></span><span id="_CPPv224PDM_block_to_part_createPK11PDM_g_num_tPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm"></span><span id="PDM_block_to_part_create__PDM_g_num_tCP.PDM_g_num_tCPP.iCP.iC.PDM_MPI_CommC"></span><span class="target" id="pdm__block__to__part_8h_1ad96539ad71f0e83179d83809fe6b5959"></span><span class="n"><span class="pre">PDM_block_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_block_to_part_create</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">block_distrib_idx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_elt</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_elt</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_block_to_part_createPK11PDM_g_num_tPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a block-to-part redistribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>block_distrib_idx</strong> – <strong>[in]</strong> Block distribution (size : <em>n_rank</em> + 1) </p></li>
+<li><p class="sd-card-text"><strong>gnum_elt</strong> – <strong>[in]</strong> Element global numbers (size : <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_elt</strong> – <strong>[in]</strong> Local number of elements (size : <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of partitions </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Initialized PDM_block_to_part instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-  <span class="o">..</span> <span class="n">tab</span><span class="o">-</span><span class="n">item</span><span class="p">::</span> <span class="n">C</span>
-    <span class="p">:</span><span class="n">sync</span><span class="p">:</span> <span class="n">C</span>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv442PDM_block_to_part_create_from_sparse_blockPK11PDM_g_num_tKiPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm">
+<span id="_CPPv342PDM_block_to_part_create_from_sparse_blockPK11PDM_g_num_tKiPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm"></span><span id="_CPPv242PDM_block_to_part_create_from_sparse_blockPK11PDM_g_num_tKiPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm"></span><span id="PDM_block_to_part_create_from_sparse_block__PDM_g_num_tCP.iC.PDM_g_num_tCPP.iCP.iC.PDM_MPI_CommC"></span><span class="target" id="pdm__block__to__part_8h_1a9b1ac2b79efbd965bbdd26ea9d8b1585"></span><span class="n"><span class="pre">PDM_block_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_block_to_part_create_from_sparse_block</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">delt_gnum</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dn_elt</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">gnum_elt</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_elt</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv442PDM_block_to_part_create_from_sparse_blockPK11PDM_g_num_tKiPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a block-to-part with sparse representation. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>delt_gnum</strong> – <strong>[in]</strong> Sorted list of gnum that represent the partial block, should be between [1, N] </p></li>
+<li><p class="sd-card-text"><strong>dn_elt</strong> – <strong>[in]</strong> Number of element in the partial block </p></li>
+<li><p class="sd-card-text"><strong>gnum_elt</strong> – <strong>[in]</strong> Element global numbers (size : <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_elt</strong> – <strong>[in]</strong> Local number of elements (size : <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of partitions </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Initialized PDM_block_to_part instance </p>
+</dd>
+</dl>
+</dd></dl>
 
-    <span class="o">..</span> <span class="n">doxygenfunction</span><span class="p">::</span> <span class="n">PDM_block_to_part_create</span>
-    <span class="o">..</span> <span class="n">doxygenfunction</span><span class="p">::</span> <span class="n">PDM_block_to_part_create_from_sparse_block</span>
-
-
-  <span class="o">..</span> <span class="n">tab</span><span class="o">-</span><span class="n">item</span><span class="p">::</span> <span class="n">Fortran</span>
-    <span class="p">:</span><span class="n">sync</span><span class="p">:</span> <span class="n">Fortran</span>
-
-    <span class="o">..</span> <span class="n">f</span><span class="p">:</span><span class="n">autosubroutine</span><span class="p">::</span> <span class="n">PDM_block_to_part_create</span>
-
-
-  <span class="o">..</span> <span class="n">tab</span><span class="o">-</span><span class="n">item</span><span class="p">::</span> <span class="n">Python</span>
-    <span class="p">:</span><span class="n">sync</span><span class="p">:</span> <span class="n">Python</span>
-
-      <span class="o">..</span> <span class="n">py</span><span class="p">:</span><span class="n">class</span><span class="p">::</span> <span class="n">BlockToPart</span>
-
-        <span class="o">..</span> <span class="n">automethod</span><span class="p">::</span> <span class="n">Pypdm</span><span class="o">.</span><span class="n">Pypdm</span><span class="o">.</span><span class="n">BlockToPart</span><span class="o">.</span><span class="fm">__init__</span>
-</pre></div>
 </div>
-</aside>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_block_to_part_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_block_to_part_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">btp</span></em>, <em class="sig-param"><span class="pre">block_distrib_idx</span></em>, <em class="sig-param"><span class="pre">gnum_elt</span></em>, <em class="sig-param"><span class="pre">n_elt</span></em>, <em class="sig-param"><span class="pre">n_part</span></em>, <em class="sig-param"><span class="pre">comm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_block_to_part_create" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>btp</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: PDM_block_to_part instance</p></li>
+<li><p class="sd-card-text"><strong>block_distrib_idx</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Block distribution (size = n_rank + 1)</p></li>
+<li><p class="sd-card-text"><strong>gnum_elt</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Global IDs</p></li>
+<li><p class="sd-card-text"><strong>n_elt</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Local number of elements</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of partitions</p></li>
+<li><p class="sd-card-text"><strong>comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-2">
+Python</label><div class="sd-tab-content docutils">
+<blockquote>
+<div><dl class="py class">
+<dt class="sig sig-object py" id="BlockToPart">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BlockToPart</span></span><a class="headerlink" href="#BlockToPart" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.BlockToPart.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Distrib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pLNToGN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.BlockToPart.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a Block-to-Part instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>Distrib</strong> (<cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Block distribution index (Size = <code class="docutils literal notranslate"><span class="pre">comm.size+1</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>comm</strong> (<em>MPI.Comm</em>) – MPI Communicator</p></li>
+<li><p class="sd-card-text"><strong>pLNToGN</strong> (<cite>list</cite> of <cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Part list containaing numpy on LNToGN for each partition (len = <code class="docutils literal notranslate"><span class="pre">partN</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>partN</strong> (<em>int</em>) – Number of partitions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">New <a class="reference internal" href="#BlockToPart" title="BlockToPart"><code class="xref py py-class docutils literal notranslate"><span class="pre">BlockToPart</span></code></a> instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Exchange<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/comm_graph/btp.rst</span>, line 45)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.. tab-set::
-  :sync-group: language
+<span class="sd-summary-text">Exchange</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_block_to_part_exchP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPPiPPPv">
+<span id="_CPPv322PDM_block_to_part_exchP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPPiPPPv"></span><span id="_CPPv222PDM_block_to_part_exchP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPPiPPPv"></span><span id="PDM_block_to_part_exch__PDM_block_to_part_tP.s.PDM_stride_t.iP.voidP.iPPP.voidPPP"></span><span class="target" id="pdm__block__to__part_8h_1a981b297a71857d05b80130312cba031b"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_block_to_part_exch</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_block_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">btp</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s_data</span></span>, <span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_stride</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">block_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">block_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_block_to_part_exchP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPPiPPPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Exchange data from <em>block-distributed</em> frame to <em>partitioned</em> frame. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>btp</strong> – <strong>[in]</strong> Block-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>s_data</strong> – <strong>[in]</strong> Data size </p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong> – <strong>[in]</strong> Stride type </p></li>
+<li><p class="sd-card-text"><strong>block_stride</strong> – <strong>[in]</strong> Stride for each block element for PDM_STRIDE_VAR, constant stride for PDM_STRIDE_VAR </p></li>
+<li><p class="sd-card-text"><strong>block_data</strong> – <strong>[in]</strong> Block data </p></li>
+<li><p class="sd-card-text"><strong>part_stride</strong> – <strong>[out]</strong> Partition stride </p></li>
+<li><p class="sd-card-text"><strong>part_data</strong> – <strong>[out]</strong> Partition data </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-  .. tab-item:: C
-    :sync: C
-
-    .. doxygenfunction:: PDM_block_to_part_exch
-    .. doxygenfunction:: PDM_block_to_part_exch_in_place
-
-
-  .. tab-item:: Fortran
-    :sync: Fortran
-
-    .. f:subroutine:: pdm_block_to_part_exch(btp, t_stride, block_stride, block_data, part_stride, part_data)
-
-      Exchange data from blocks to partitions. Output arrays are allocated by **ParaDiGM**.
-
-      :p c_ptr btp [in]: Block-to-Part instance
-      :p integer t_stride [in]: Stride type
-      :p pointer(integer(pdm_l_num_s)) block_stride [in]: Stride for ``block_data``
-      :p pointer block_data [in]: Block-distributed data
-      :p pdm_pointer_array_t part_stride [out]: Stride for ``part_data``
-      :p pdm_pointer_array_t part_data [out]: Partitioned data
-
-
-    .. f:subroutine:: pdm_block_to_part_exch_in_place(btp, t_stride, block_stride, block_data, part_stride, part_data)
-
-      Exchange data from blocks to partitions. Output arrays are allocated by the user *before* the call to this subroutine.
-
-      :p c_ptr btp [in]: Block-to-Part instance
-      :p integer t_stride [in]: Stride type
-      :p pointer(integer(pdm_l_num_s)) block_stride [in]: Stride for ``block_data``
-      :p pointer block_data [in]: Block-distributed data
-      :p pdm_pointer_array_t part_stride [inout]: Stride for ``part_data``
-      :p pdm_pointer_array_t part_data [inout]: Partitioned data
-
-
-
-  .. tab-item:: Python
-    :sync: Python
-
-      .. automethod:: Pypdm.Pypdm.BlockToPart.exchange_field
-      .. automethod:: Pypdm.Pypdm.BlockToPart.exchange_field_inplace
-</pre></div>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_block_to_part_exch_in_placeP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPiPPv">
+<span id="_CPPv331PDM_block_to_part_exch_in_placeP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPiPPv"></span><span id="_CPPv231PDM_block_to_part_exch_in_placeP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPiPPv"></span><span id="PDM_block_to_part_exch_in_place__PDM_block_to_part_tP.s.PDM_stride_t.iP.voidP.iPP.voidPP"></span><span class="target" id="pdm__block__to__part_8h_1ac6ad42324dc286e058c8e108559d12d5"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_block_to_part_exch_in_place</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_block_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">btp</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s_data</span></span>, <span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_stride</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">block_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">block_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">part_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_block_to_part_exch_in_placeP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPiPPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Exchange data from <em>block-distributed</em> frame to <em>partitioned</em> frame. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">part_stride</span></code> and <code class="docutils literal notranslate"><span class="pre">part_data</span></code> are assumed to be allocated at the correct size before hand by the user.</p>
 </div>
-</aside>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>btp</strong> – <strong>[in]</strong> Block-to-Part structure </p></li>
+<li><p class="sd-card-text"><strong>s_data</strong> – <strong>[in]</strong> Data size </p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong> – <strong>[in]</strong> Stride type </p></li>
+<li><p class="sd-card-text"><strong>block_stride</strong> – <strong>[in]</strong> Stride for each block element for PDM_STRIDE_VAR, constant stride for PDM_STRIDE_VAR </p></li>
+<li><p class="sd-card-text"><strong>block_data</strong> – <strong>[in]</strong> Block data </p></li>
+<li><p class="sd-card-text"><strong>part_stride</strong> – <strong>[out]</strong> Partition stride </p></li>
+<li><p class="sd-card-text"><strong>part_data</strong> – <strong>[out]</strong> Partition data </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-4">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_block_to_part_exch">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_block_to_part_exch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">btp</span></em>, <em class="sig-param"><span class="pre">t_stride</span></em>, <em class="sig-param"><span class="pre">block_stride</span></em>, <em class="sig-param"><span class="pre">block_data</span></em>, <em class="sig-param"><span class="pre">part_stride</span></em>, <em class="sig-param"><span class="pre">part_data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_block_to_part_exch" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Exchange data from blocks to partitions. Output arrays are allocated by <strong>ParaDiGM</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>btp</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Block-to-Part instance</p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Stride type</p></li>
+<li><p class="sd-card-text"><strong>block_stride</strong><em> [</em><em>pointer(integer(pdm_l_num_s))</em><em>,</em><em>in</em><em>]</em> :: Stride for <code class="docutils literal notranslate"><span class="pre">block_data</span></code></p></li>
+<li><p class="sd-card-text"><strong>block_data</strong><em> [</em><em>pointer</em><em>,</em><em>in</em><em>]</em> :: Block-distributed data</p></li>
+<li><p class="sd-card-text"><strong>part_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out</em><em>]</em> :: Stride for <code class="docutils literal notranslate"><span class="pre">part_data</span></code></p></li>
+<li><p class="sd-card-text"><strong>part_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>out</em><em>]</em> :: Partitioned data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_block_to_part_exch_in_place">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_block_to_part_exch_in_place</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">btp</span></em>, <em class="sig-param"><span class="pre">t_stride</span></em>, <em class="sig-param"><span class="pre">block_stride</span></em>, <em class="sig-param"><span class="pre">block_data</span></em>, <em class="sig-param"><span class="pre">part_stride</span></em>, <em class="sig-param"><span class="pre">part_data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_block_to_part_exch_in_place" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Exchange data from blocks to partitions. Output arrays are allocated by the user <em>before</em> the call to this subroutine.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>btp</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Block-to-Part instance</p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Stride type</p></li>
+<li><p class="sd-card-text"><strong>block_stride</strong><em> [</em><em>pointer(integer(pdm_l_num_s))</em><em>,</em><em>in</em><em>]</em> :: Stride for <code class="docutils literal notranslate"><span class="pre">block_data</span></code></p></li>
+<li><p class="sd-card-text"><strong>block_data</strong><em> [</em><em>pointer</em><em>,</em><em>in</em><em>]</em> :: Block-distributed data</p></li>
+<li><p class="sd-card-text"><strong>part_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>inout</em><em>]</em> :: Stride for <code class="docutils literal notranslate"><span class="pre">part_data</span></code></p></li>
+<li><p class="sd-card-text"><strong>part_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>inout</em><em>]</em> :: Partitioned data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-5">
+Python</label><div class="sd-tab-content docutils">
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.BlockToPart.exchange_field">
+<span class="sig-prename descclassname"><span class="pre">BlockToPart.</span></span><span class="sig-name descname"><span class="pre">exchange_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">block_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interlaced_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.BlockToPart.exchange_field" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Transfer a block-distributed data field to the partitions, allocate and return the partitioned array list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>block_data</strong> (<em>np.ndarray</em>) – Block-distributed data array, 1-dimensional and with same datatype for each rank</p></li>
+<li><p class="sd-card-text"><strong>block_stride</strong> (<cite>int</cite> or <cite>np.ndarray[np.int32]</cite>) – Stride for <code class="docutils literal notranslate"><span class="pre">block_data</span></code>. Can be either an array of size dn_elt (variable stride will be used) or an integer (constant stride will be used)</p></li>
+<li><p class="sd-card-text"><strong>interlaced_str</strong> (<em>bool</em>) – Indicate if data are interlaced (True) or interleaved</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><ul class="simple">
+<li><p class="sd-card-text">Stride for partitioned data (<cite>int</cite> or <cite>list</cite> of <cite>np.ndarray[np.int32]</cite>)</p></li>
+<li><p class="sd-card-text">Partitioned data arrays (<cite>list</cite> of <cite>np.ndarray</cite>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.BlockToPart.exchange_field_inplace">
+<span class="sig-prename descclassname"><span class="pre">BlockToPart.</span></span><span class="sig-name descname"><span class="pre">exchange_field_inplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">block_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interlaced_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.BlockToPart.exchange_field_inplace" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Transfer a distributed data field to the partitions. Fill the pre-allocated partitioned arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>block_data</strong> (<em>np.ndarray</em>) – Block-distributed data array, 1-dimensional and with same datatype for each rank</p></li>
+<li><p class="sd-card-text"><strong>part_data</strong> (<cite>list</cite> of <cite>np.ndarray</cite>) – List of the partN pre allocated partitionned data array, each one being 1-dimensional and with same datatype as <code class="docutils literal notranslate"><span class="pre">block_data</span></code></p></li>
+<li><p class="sd-card-text"><strong>block_stride</strong> (<cite>int</cite> or <cite>np.ndarray[np.int32]</cite>) – Stride for <code class="docutils literal notranslate"><span class="pre">block_data</span></code>. Can be either an array of size dn_elt (variable stride will be used) or an integer (constant stride will be used)</p></li>
+<li><p class="sd-card-text"><strong>part_stride</strong> (<cite>list</cite> of <cite>np.ndarray[np.int32]</cite>) – List of the partN pre allocated parititioned data strides</p></li>
+<li><p class="sd-card-text"><strong>interlaced_str</strong> (<em>bool</em>) – Indicate if data are interlaced (True) or interleaved</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
-Finalization<div class="sd-summary-down docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="sd-summary-up docutils">
-<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="sd-summary-content sd-card-body docutils">
-<aside class="system-message">
-<p class="system-message-title">System Message: ERROR/3 (<span class="docutils literal">/home/bandrieu/workspace/pdm2/paradigm/doc/sphinx/source/user_manual/comm_graph/btp.rst</span>, line 94)</p>
-<p class="sd-card-text">Error in “tab-set” directive:
-unknown option: “sync-group”.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">tab</span><span class="o">-</span><span class="nb">set</span><span class="p">::</span>
-  <span class="p">:</span><span class="n">sync</span><span class="o">-</span><span class="n">group</span><span class="p">:</span> <span class="n">language</span>
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<blockquote>
+<div><dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_block_to_part_freeP19PDM_block_to_part_t">
+<span id="_CPPv322PDM_block_to_part_freeP19PDM_block_to_part_t"></span><span id="_CPPv222PDM_block_to_part_freeP19PDM_block_to_part_t"></span><span id="PDM_block_to_part_free__PDM_block_to_part_tP"></span><span class="target" id="pdm__block__to__part_8h_1aae8a775f8bacbe7539b56c481b1c62f0"></span><span class="n"><span class="pre">PDM_block_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_block_to_part_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_block_to_part_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">btp</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_block_to_part_freeP19PDM_block_to_part_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free a Block-to-Part structure. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>btp</strong> – <strong>[inout]</strong> Block-to-Part structure</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Null pointer </p>
+</dd>
+</dl>
+</dd></dl>
 
-  <span class="o">..</span> <span class="n">tab</span><span class="o">-</span><span class="n">item</span><span class="p">::</span> <span class="n">C</span>
-    <span class="p">:</span><span class="n">sync</span><span class="p">:</span> <span class="n">C</span>
-
-      <span class="o">..</span> <span class="n">doxygenfunction</span><span class="p">::</span> <span class="n">PDM_block_to_part_free</span>
-
-
-  <span class="o">..</span> <span class="n">tab</span><span class="o">-</span><span class="n">item</span><span class="p">::</span> <span class="n">Fortran</span>
-    <span class="p">:</span><span class="n">sync</span><span class="p">:</span> <span class="n">Fortran</span>
-
-      <span class="o">..</span> <span class="n">f</span><span class="p">:</span><span class="n">autosubroutine</span><span class="p">::</span> <span class="n">PDM_block_to_part_free</span>
-
-
-
-  <span class="o">..</span> <span class="n">tab</span><span class="o">-</span><span class="n">item</span><span class="p">::</span> <span class="n">Python</span>
-    <span class="p">:</span><span class="n">sync</span><span class="p">:</span> <span class="n">Python</span>
-
-    <span class="o">|</span><span class="n">python_gc</span><span class="o">|</span>
-</pre></div>
+</div></blockquote>
 </div>
-</aside>
+<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<blockquote>
+<div><dl>
+<dt class="sig sig-object f" id="f/_/pdm_block_to_part_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_block_to_part_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">btp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_block_to_part_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free a Block-to-Part instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>btp</strong><em> [</em><em>c_ptr</em><em>,</em><em>inout</em><em>]</em> :: PDM_block_to_part_t instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-8">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
 </div>
 </details></section>
 </section>
@@ -529,7 +686,18 @@ unknown option: “sync-group”.</p>
             <ul>
 <li><a class="reference internal" href="#">Block to Part</a><ul>
 <li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv424PDM_block_to_part_createPK11PDM_g_num_tPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_block_to_part_create()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv442PDM_block_to_part_create_from_sparse_blockPK11PDM_g_num_tKiPPK11PDM_g_num_tPKiKiK12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_block_to_part_create_from_sparse_block()</span></code></a></li>
+<li><a class="reference internal" href="#BlockToPart"><code class="docutils literal notranslate"><span class="pre">BlockToPart</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.BlockToPart.__init__"><code class="docutils literal notranslate"><span class="pre">BlockToPart.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_block_to_part_exchP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPPiPPPv"><code class="docutils literal notranslate"><span class="pre">PDM_block_to_part_exch()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_block_to_part_exch_in_placeP19PDM_block_to_part_t6size_t12PDM_stride_tPiPvPPiPPv"><code class="docutils literal notranslate"><span class="pre">PDM_block_to_part_exch_in_place()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.BlockToPart.exchange_field"><code class="docutils literal notranslate"><span class="pre">BlockToPart.exchange_field()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.BlockToPart.exchange_field_inplace"><code class="docutils literal notranslate"><span class="pre">BlockToPart.exchange_field_inplace()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_block_to_part_freeP19PDM_block_to_part_t"><code class="docutils literal notranslate"><span class="pre">PDM_block_to_part_free()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -541,13 +709,13 @@ unknown option: “sync-group”.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../../_static/documentation_options.js?v=7b940564"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>

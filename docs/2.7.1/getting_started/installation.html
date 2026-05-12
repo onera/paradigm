@@ -1,17 +1,18 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="General presentation" href="general.html" /><link rel="prev" title="ParaDiGM documentation" href="../index.html" />
+        <link rel="prefetch" href="../_static/logo.svg" as="image" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
         <title>Installation - ParaDiGM 2.7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=d356628d" />
     
     
@@ -19,8 +20,8 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
   --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
   --color-foreground-primary: #23373b;
@@ -217,7 +218,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo.svg" alt="Logo"/>
   </div>
@@ -332,9 +332,9 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="installation">
-<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
 <section id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading">¶</a></h2>
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">¶</a></h2>
 <p>General dependencies for building <strong>ParaDiGM</strong> are:</p>
 <blockquote>
 <div><ul class="simple">
@@ -345,7 +345,7 @@
 </div></blockquote>
 </section>
 <section id="basic-installation">
-<h2>Basic Installation<a class="headerlink" href="#basic-installation" title="Permalink to this heading">¶</a></h2>
+<h2>Basic Installation<a class="headerlink" href="#basic-installation" title="Link to this heading">¶</a></h2>
 <p>Follow these steps to build <strong>ParaDiGM</strong> from the sources:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>build
 <span class="nb">cd</span><span class="w"> </span>build
@@ -357,7 +357,7 @@ make<span class="w"> </span>install
 <p>If installation fails, use the following CMake options.</p>
 </section>
 <section id="cmake-general-options">
-<h2>CMake general options<a class="headerlink" href="#cmake-general-options" title="Permalink to this heading">¶</a></h2>
+<h2>CMake general options<a class="headerlink" href="#cmake-general-options" title="Link to this heading">¶</a></h2>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-D&lt;option1_name&gt;<span class="o">=</span>&lt;option1_value&gt;<span class="w"> </span>...<span class="w"> </span>-D&lt;option2_name&gt;<span class="o">=</span>&lt;option2_value&gt;
 </pre></div>
 </div>
@@ -442,7 +442,7 @@ make<span class="w"> </span>install
 <p>Once built, the documentation can be found in <code class="docutils literal notranslate"><span class="pre">build/doc/sphinx/html</span></code> and launch <code class="docutils literal notranslate"><span class="pre">index.html</span></code> file</p>
 </section>
 <section id="compiler-choice">
-<h2>Compiler choice<a class="headerlink" href="#compiler-choice" title="Permalink to this heading">¶</a></h2>
+<h2>Compiler choice<a class="headerlink" href="#compiler-choice" title="Link to this heading">¶</a></h2>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">CC</span><span class="o">=</span>&lt;C<span class="w"> </span>compiler&gt;<span class="w"> </span><span class="nv">CXX</span><span class="o">=</span>&lt;CXX<span class="w"> </span>compiler&gt;<span class="w"> </span><span class="nv">FC</span><span class="o">=</span>&lt;Fortran<span class="w"> </span>compiler&gt;<span class="w"> </span>cmake<span class="w"> </span>...
 </pre></div>
 </div>
@@ -454,7 +454,7 @@ make<span class="w"> </span>install
 </div>
 </section>
 <section id="cmake-mpi-options">
-<h2>CMake MPI options<a class="headerlink" href="#cmake-mpi-options" title="Permalink to this heading">¶</a></h2>
+<h2>CMake MPI options<a class="headerlink" href="#cmake-mpi-options" title="Link to this heading">¶</a></h2>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">MPI_C_COMPILER</span><span class="o">=</span>&lt;C<span class="w"> </span>MPI<span class="w"> </span>wrapper&gt;
 <span class="nv">MPI_CXX_COMPILER</span><span class="o">=</span>&lt;CXX<span class="w"> </span>MPI<span class="w"> </span>wrapper&gt;
 <span class="nv">MPI_Fortran_COMPILER</span><span class="o">=</span>&lt;Fortran<span class="w"> </span>MPI<span class="w"> </span>wrapper&gt;
@@ -541,13 +541,13 @@ MPI_&lt;language&gt;_INCLUDE_PATH
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=59eed32c"></script>
+</div><script src="../_static/documentation_options.js?v=7b940564"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script src="../_static/js/custom.js?v=3597c2b8"></script>
     </body>
 </html>
