@@ -384,9 +384,10 @@ PDM_part_mesh_nodal_part_comm_graph_set
 {
   CHECK_PMN(pmn)
 
-  pmn->pcg[geom_kind] = pcg;
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
+  pmn->pcg[dim] = pcg;
   if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
-    pmn->pcg_ownership[geom_kind] = ownership;
+    pmn->pcg_ownership[dim] = ownership;
   }
 }
 
@@ -401,9 +402,10 @@ PDM_part_mesh_nodal_part_comm_graph_get
 )
 {
   CHECK_PMN(pmn)
-  *pcg = pmn->pcg[geom_kind];
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
+  *pcg = pmn->pcg[dim];
   if (ownership!=PDM_OWNERSHIP_BAD_VALUE) {
-    pmn->pcg_ownership[geom_kind] = ownership;
+    pmn->pcg_ownership[dim] = ownership;
   }
 }
 
@@ -416,6 +418,7 @@ PDM_part_mesh_nodal_part_comm_graph_free
 )
 {
   CHECK_PMN(pmn)
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
   if (geom_kind==PDM_GEOMETRY_KIND_MAX) {
     for (int i_geom_kind=PDM_GEOMETRY_KIND_VOLUMIC;
              i_geom_kind<PDM_GEOMETRY_KIND_MAX; i_geom_kind++) {
@@ -427,11 +430,11 @@ PDM_part_mesh_nodal_part_comm_graph_free
     }
   }
   else {
-    if (pmn->pcg_ownership[geom_kind] == PDM_OWNERSHIP_KEEP) {
-      PDM_part_comm_graph_free(pmn->pcg[geom_kind]);
+    if (pmn->pcg_ownership[dim] == PDM_OWNERSHIP_KEEP) {
+      PDM_part_comm_graph_free(pmn->pcg[dim]);
     }
-    pmn->pcg          [geom_kind] = NULL;
-    pmn->pcg_ownership[geom_kind] = PDM_OWNERSHIP_BAD_VALUE;
+    pmn->pcg          [dim] = NULL;
+    pmn->pcg_ownership[dim] = PDM_OWNERSHIP_BAD_VALUE;
   }
 }
 

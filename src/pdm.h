@@ -434,6 +434,17 @@ PDM_geometry_kind_to_entity_type
  PDM_geometry_kind_t   geom_kind
 );
 
+
+/**
+ * \brief Helper to get dimension type according to a geometry kind
+ *
+ */
+int
+PDM_geometry_kind_to_dimension
+(
+ PDM_geometry_kind_t   geom_kind
+);
+
 /**
  * \brief Helper to get geometry kind according to an entity type
  *
