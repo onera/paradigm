@@ -1120,7 +1120,7 @@ PDM_part_comm_graph_filter
                                                      pcg->nuplet_size,
                                                      sub_nuplet,
                                                      PDM_OWNERSHIP_KEEP,
-                                                     pcg->is_signed,
+                                        (PDM_bool_t) pcg->is_signed,
                                                      pcg->comm);
   }
 
@@ -1246,7 +1246,7 @@ PDM_part_comm_graph_concatenate
                                                  concat_nuplet_size,
                                                  concat_pentity_nuplet,
                                                  PDM_OWNERSHIP_KEEP,
-                                                 concat_is_signed,
+                                    (PDM_bool_t) concat_is_signed,
                                                  comm);
   }
   else {
@@ -1352,7 +1352,7 @@ PDM_part_comm_graph_split
                                                                  nuplet_size,
                                                                  split_entity_nuplt[color],
                                                                  PDM_OWNERSHIP_KEEP,
-                                                                 is_signed,
+                                                    (PDM_bool_t) is_signed,
                                                                  comm);
     }
     else {
