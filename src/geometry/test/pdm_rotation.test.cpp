@@ -29,7 +29,6 @@
 
 static const double EPS = 8*__DBL_EPSILON__;
 static const double DEG2RAD = M_PI/180.;
-static const double RAD2DEG = 180./M_PI;
 
 static void multiply_matrices(double A[16],double B[16],double C[16]){
     for (int i = 0; i < 4; i++) {
