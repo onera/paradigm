@@ -530,6 +530,16 @@ PDM_MPI_Comm PDM_MPI_Comm_f2c(PDM_MPI_Fint comm);
 PDM_MPI_Fint PDM_MPI_Comm_c2f(PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Type_f2c (wrapping de la fonction MPI_Type_f2c)
+ *----------------------------------------------------------------------------*/
+PDM_MPI_Datatype PDM_MPI_Type_f2c(PDM_MPI_Fint f_datatype);
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Op_f2c (wrapping de la fonction MPI_Op_f2c)
+ *----------------------------------------------------------------------------*/
+PDM_MPI_Op PDM_MPI_Op_f2c(PDM_MPI_Fint f_op);
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Scatter (wrapping de la fonction MPI_Scatter)
  *----------------------------------------------------------------------------*/
 int

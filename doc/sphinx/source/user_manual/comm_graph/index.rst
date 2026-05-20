@@ -27,6 +27,13 @@ Communication graphs
     Partitioned frame to block-distributed frame
 
 
+  .. card:: Part Comm Graph
+    :link: part_comm_graph
+    :link-type: ref
+
+    Inter-partition communication graph
+
+
   .. .. container:: card
 
   ..   :ref:`Reduce <reduce>`
@@ -48,6 +55,7 @@ Communication graphs
   ptp
   btp
   ptb
+  pcg
 
 ..  reduce
 ..  gnum_location

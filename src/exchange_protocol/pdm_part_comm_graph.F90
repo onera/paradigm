@@ -1,0 +1,974 @@
+#include "pdm_configf.h"
+
+module pdm_part_comm_graph
+
+  use iso_c_binding
+  use pdm
+  use pdm_pointer_array
+
+
+  interface
+
+    ! --- Accessors ---
+    subroutine pdm_part_comm_graph_entity_graph_get_cf(pcg,          &
+                                                       i_part,       &
+                                                       entity_graph, &
+                                                       ownership)    &
+    bind(c, name="PDM_part_comm_graph_entity_graph_get")
+      use iso_c_binding
+      implicit none
+      type(c_ptr),    value :: pcg
+      integer(c_int), value :: i_part
+      type(c_ptr)           :: entity_graph
+      integer(c_int), value :: ownership
+    end subroutine pdm_part_comm_graph_entity_graph_get_cf
+
+
+    function pdm_part_comm_graph_nuplet_size_cf(pcg) &
+    result(size) &
+    bind(c, name="PDM_part_comm_graph_nuplet_size")
+      use iso_c_binding
+      implicit none
+      type(c_ptr),   value :: pcg
+      integer(c_int)       :: size
+    end function pdm_part_comm_graph_nuplet_size_cf
+
+
+    function pdm_part_comm_graph_n_entity_get_cf(pcg,    &
+                                                 i_part) &
+    result(n_entity) &
+    bind(c, name="PDM_part_comm_graph_n_entity_get")
+      use iso_c_binding
+      implicit none
+      type(c_ptr),    value :: pcg
+      integer(c_int), value :: i_part
+      integer(c_int)        :: n_entity
+    end function pdm_part_comm_graph_n_entity_get_cf
+
+
+    function pdm_part_comm_graph_n_part_get_cf(pcg) &
+    result(n_part) &
+    bind(c, name="PDM_part_comm_graph_n_part_get")
+      use iso_c_binding
+      type(c_ptr), value :: pcg
+      integer(c_int)     :: n_part
+    end function pdm_part_comm_graph_n_part_get_cf
+
+
+  end interface
+
+
+  private :: setup_recv_pa
+
+  contains
+
+
+  subroutine PDM_part_comm_graph_create(pcg,              &
+                                        n_part,           &
+                                        pn_entity_graph,  &
+                                        pentity_graph,    &
+                                        ownership_graph,  &
+                                        comm,             &
+                                        nuplet_size,      &
+                                        pentity_nuplet,   &
+                                        ownership_nuplet, &
+                                        is_signed)
+    ! Build a Part Comm Graph instance.
+    !
+    ! Additional (optional) information represented as a n-uplet can be provided.
+    ! If so, the arguments ``nuplet_size``, ``pentity_nuplet``, ``ownership_nuplet`` and ``is_signed`` must be given.
+    implicit none
+
+    type(c_ptr),                        intent(out)          :: pcg                ! Part Comm Graph instance
+    integer,                            intent(in)           :: n_part             ! Number of parts on current process
+    integer(pdm_l_num_s),      pointer, intent(in)           :: pn_entity_graph(:) ! Number of graph entities (size = ``n_part``)
+    type(pdm_pointer_array_t), pointer, intent(in)           :: pentity_graph      ! Inter-partition communication graph description (size = ``4*pn_entity_graph``)
+    integer,                            intent(in)           :: ownership_graph    ! Ownership for ``pentity_graph``
+    integer,                            intent(in)           :: comm               ! MPI communicator
+    integer,                            intent(in), optional :: nuplet_size        ! N-uplet size (*optional*)
+    type(pdm_pointer_array_t), pointer, intent(in), optional :: pentity_nuplet     ! Additional nuplets (*optional*, size = ``nuplet_size * pn_entity_graph``)
+    integer,                            intent(in), optional :: ownership_nuplet   ! Ownership for ``pentity_nuplet`` (*optional*)
+    logical,                            intent(in), optional :: is_signed          ! Use signed nuplets? (*optional*)
+
+    integer                                                  :: c_is_signed
+    type(c_ptr)                                              :: c_comm
+
+    interface
+      function pdm_part_comm_graph_create_cf(n_part,          &
+                                             pn_entity_graph, &
+                                             pentity_graph,   &
+                                             ownership,       &
+                                             comm)            &
+      result (pcg) &
+      bind(c, name="PDM_part_comm_graph_create")
+        use iso_c_binding
+        implicit none
+        integer(c_int), value :: n_part
+        type(c_ptr),    value :: pn_entity_graph
+        type(c_ptr),    value :: pentity_graph
+        integer(c_int), value :: ownership
+        type(c_ptr),    value :: comm
+        type(c_ptr)           :: pcg
+      end function pdm_part_comm_graph_create_cf
+
+      function pdm_part_comm_graph_with_nuplet_create_cf(n_part,           &
+                                                         pn_entity_graph,  &
+                                                         pentity_graph,    &
+                                                         ownership_graph,  &
+                                                         nuplet_size,      &
+                                                         pentity_nuplet,   &
+                                                         ownership_nuplet, &
+                                                         is_signed,        &
+                                                         comm)             &
+      result (pcg) &
+      bind(c, name="PDM_part_comm_graph_with_nuplet_create")
+        use iso_c_binding
+        implicit none
+        integer(c_int), value :: n_part
+        type(c_ptr),    value :: pn_entity_graph
+        type(c_ptr),    value :: pentity_graph
+        integer(c_int), value :: ownership_graph
+        integer(c_int), value :: nuplet_size
+        type(c_ptr),    value :: pentity_nuplet
+        integer(c_int), value :: ownership_nuplet
+        integer(c_int), value :: is_signed
+        type(c_ptr),    value :: comm
+        type(c_ptr)           :: pcg
+      end function pdm_part_comm_graph_with_nuplet_create_cf
+    end interface
+
+    c_comm = PDM_MPI_Comm_f2c(comm)
+
+    if (present(nuplet_size)) then
+      if (nuplet_size <= 0) then
+        print *, "PDM_part_comm_graph_create: 'nuplet_size' must be > 0 (got", nuplet_size, ")"
+        stop
+      endif
+      if (.not. present(pentity_nuplet)) then
+        print *, "PDM_part_comm_graph_create: 'pentity_nuplet' argument is mandatory in 'nuplet' mode"
+        stop
+      endif
+      if (.not. present(ownership_nuplet)) then
+        print *, "PDM_part_comm_graph_create: 'ownership_nuplet' argument is mandatory in 'nuplet' mode"
+        stop
+      endif
+      if (.not. present(is_signed)) then
+        print *, "PDM_part_comm_graph_create: 'is_signed' argument is mandatory in 'nuplet' mode"
+        stop
+      endif
+
+      if (is_signed) then
+        c_is_signed = 1
+      else
+        c_is_signed = 0
+      endif
+
+      ! Create with nuplet
+      pcg = pdm_part_comm_graph_with_nuplet_create_cf(n_part,                     &
+                                                      c_loc(pn_entity_graph),     &
+                                                      c_loc(pentity_graph%cptr),  &
+                                                      ownership_graph,            &
+                                                      nuplet_size,                &
+                                                      c_loc(pentity_nuplet%cptr), &
+                                                      ownership_nuplet,           &
+                                                      c_is_signed,                &
+                                                      c_comm)
+    else
+      ! Create without nuplet
+      pcg = pdm_part_comm_graph_create_cf(n_part,                    &
+                                          c_loc(pn_entity_graph),    &
+                                          c_loc(pentity_graph%cptr), &
+                                          ownership_graph,           &
+                                          c_comm)
+    endif
+
+  end subroutine PDM_part_comm_graph_create
+
+
+
+  function PDM_part_comm_graph_is_signed(pcg) result(is_signed)
+    ! Return .true. if nuplet description is signed, else .false.
+    implicit none
+
+    type(c_ptr), intent(in) :: pcg       ! Part Comm Graph instance
+    logical                 :: is_signed ! Is the nuplet signed?
+
+    integer                 :: c_is_signed
+
+    interface
+      function pdm_part_comm_graph_is_signed_cf(pcg) result(is_signed) &
+      bind(c, name="PDM_part_comm_graph_is_signed")
+        use iso_c_binding
+        implicit none
+        type(c_ptr), value :: pcg
+        integer(c_int)     :: is_signed
+      end function pdm_part_comm_graph_is_signed_cf
+    end interface
+
+    c_is_signed = pdm_part_comm_graph_is_signed_cf(pcg)
+
+    if (c_is_signed == 1) then
+      is_signed = .true.
+    else
+      is_signed = .false.
+    endif
+
+  end function PDM_part_comm_graph_is_signed
+
+
+
+  function PDM_part_comm_graph_nuplet_size(pcg) result(size)
+    ! Get nuplet size
+    implicit none
+
+    type(c_ptr), intent(in) :: pcg  ! Part Comm Graph instance
+    integer                 :: size ! Size of nuplet
+
+    size = pdm_part_comm_graph_nuplet_size_cf(pcg)
+
+  end function PDM_part_comm_graph_nuplet_size
+
+
+
+  function PDM_part_comm_graph_n_entity_get(pcg,    &
+                                            i_part) &
+  result(n_entity)
+    ! Get number of graph entities
+    implicit none
+
+    type(c_ptr), intent(in) :: pcg      ! Part Comm Graph instance
+    integer,     intent(in) :: i_part   ! Partition identifier
+    integer                 :: n_entity ! Number of graph entities
+
+    n_entity = pdm_part_comm_graph_n_entity_get_cf(pcg, i_part)
+
+  end function PDM_part_comm_graph_n_entity_get
+
+
+
+  subroutine PDM_part_comm_graph_entity_nuplet_get(pcg,           &
+                                                   i_part,        &
+                                                   entity_nuplet, &
+                                                   ownership)
+    ! Get entity nuplets
+    implicit none
+
+    type(c_ptr),                   intent(in)  :: pcg              ! Part Comm Graph instance
+    integer,                       intent(in)  :: i_part           ! Partition identifier
+    integer(pdm_l_num_s), pointer, intent(out) :: entity_nuplet(:) ! Entity nuplets (size = nuplet_size * n_entity_graph)
+    integer,                       intent(in)  :: ownership        ! Ownership
+
+    integer(c_int)                             :: n_entity
+    integer(c_int)                             :: nuplet_size
+    type(c_ptr)                                :: c_entity_nuplet
+
+    interface
+      subroutine pdm_part_comm_graph_entity_nuplet_get_cf(pcg,           &
+                                                          i_part,        &
+                                                          entity_nuplet, &
+                                                          ownership)     &
+      bind(c, name="PDM_part_comm_graph_entity_nuplet_get")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: i_part
+        type(c_ptr)           :: entity_nuplet
+        integer(c_int), value :: ownership
+      end subroutine pdm_part_comm_graph_entity_nuplet_get_cf
+    end interface
+
+    nuplet_size = pdm_part_comm_graph_nuplet_size_cf(pcg)
+    n_entity    = pdm_part_comm_graph_n_entity_get_cf(pcg, i_part)
+
+    call pdm_part_comm_graph_entity_nuplet_get_cf(pcg,             &
+                                                  i_part,          &
+                                                  c_entity_nuplet, &
+                                                  ownership)
+
+    call c_f_pointer(c_entity_nuplet,          &
+                     entity_nuplet,            &
+                     [nuplet_size * n_entity])
+
+  end subroutine PDM_part_comm_graph_entity_nuplet_get
+
+
+
+  subroutine PDM_part_comm_graph_entity_graph_get(pcg,          &
+                                                  i_part,       &
+                                                  entity_graph, &
+                                                  ownership)
+    ! Get the communication graph description for a local partition
+    implicit none
+
+    type(c_ptr),                   intent(in)  :: pcg             ! Part Comm Graph instance
+    integer,                       intent(in)  :: i_part          ! Partition identifier
+    integer(pdm_l_num_s), pointer, intent(out) :: entity_graph(:) ! Entity graph (size = ``4 * n_entity_graph``)
+    integer,                       intent(in)  :: ownership       ! Ownership
+
+    integer(c_int)                             :: n_entity
+    type(c_ptr)                                :: c_entity_graph
+
+    interface
+      subroutine pdm_part_comm_graph_entity_graph_get_cf(pcg,          &
+                                                         i_part,       &
+                                                         entity_graph, &
+                                                         ownership)    &
+      bind(c, name="PDM_part_comm_graph_entity_graph_get")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: i_part
+        type(c_ptr)           :: entity_graph
+        integer(c_int), value :: ownership
+      end subroutine pdm_part_comm_graph_entity_graph_get_cf
+    end interface
+
+    n_entity = pdm_part_comm_graph_n_entity_get_cf(pcg, i_part)
+
+    call pdm_part_comm_graph_entity_graph_get_cf(pcg,            &
+                                                 i_part,         &
+                                                 c_entity_graph, &
+                                                 ownership)
+
+    call c_f_pointer(c_entity_graph,  &
+                     entity_graph,    &
+                     [4 *  n_entity])
+
+  end subroutine PDM_part_comm_graph_entity_graph_get
+
+
+
+  subroutine PDM_part_comm_graph_owner_get(pcg,      &
+                                           i_part,   &
+                                           is_owner)
+    ! Get the owner status of local graph entities (read-only)
+    implicit none
+    type(c_ptr),                   intent(in)  :: pcg         ! Part Comm Graph instance
+    integer,                       intent(in)  :: i_part      ! Partition identifier
+    integer(pdm_l_num_s), pointer, intent(out) :: is_owner(:) ! Owner status  (1 if owner, 0 if not owner, size = ``n_entity_graph``)
+
+    integer(c_int)                             :: n_entity
+    type(c_ptr)                                :: c_is_owner
+
+    interface
+      function pdm_part_comm_graph_owner_get_cf(pcg, i_part) result(res) &
+      bind(c, name="PDM_part_comm_graph_owner_get")
+        use iso_c_binding
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: i_part
+        type(c_ptr)           :: res
+      end function
+    end interface
+
+    n_entity = pdm_part_comm_graph_n_entity_get_cf(pcg, i_part)
+
+    c_is_owner = pdm_part_comm_graph_owner_get_cf(pcg, i_part)
+
+    call c_f_pointer(c_is_owner, is_owner, [n_entity])
+
+  end subroutine PDM_part_comm_graph_owner_get
+
+
+
+  subroutine PDM_part_comm_graph_allreduce(pcg,               &
+                                           stride,            &
+                                           op,                &
+                                           data_def_graph, &
+                                           data)
+    ! Perform a reduction operation on constant-stride data.
+    ! The data can be defined either for only the entities connected in the graph, or the whole partition.
+    ! The reduction is performed in place.
+    !
+    ! .. warning:: Only ``real(8)`` and ``integer(4)`` data types are supported.
+    !              Only ``MPI_SUM``, ``MPI_MIN`` and ``MPI_MAX`` operations are supported.
+#ifdef PDM_HAVE_FORTRAN_MPI_MODULE
+    use mpi
+#endif
+    implicit none
+#ifndef PDM_HAVE_FORTRAN_MPI_MODULE
+    include "mpif.h"
+#endif
+    type(c_ptr),               intent(in) :: pcg            ! Part Comm Graph instance
+    integer,                   intent(in) :: stride         ! Constant stride value
+    integer,                   intent(in) :: op             ! Reduction operation (``MPI_SUM``/``MPI_MIN``/``MPI_MAX``)
+    logical,                   intent(in) :: data_def_graph ! Is the data defined only for the graph entities?
+    type(pdm_pointer_array_t), pointer    :: data           ! Data to reduce
+
+    type(c_ptr)                           :: c_datatype
+    type(c_ptr)                           :: c_op
+    integer(c_int)                        :: c_data_def_graph
+
+    interface
+      subroutine pdm_part_comm_graph_allreduce_cf(pcg,            &
+                                                  datatype,       &
+                                                  stride,         &
+                                                  op,             &
+                                                  data_def_graph, &
+                                                  data)           &
+      bind(c, name="PDM_part_comm_graph_allreduce")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pcg
+        type(c_ptr),    value :: datatype
+        integer(c_int), value :: stride
+        type(c_ptr),    value :: op
+        integer(c_int), value :: data_def_graph
+        type(c_ptr),    value :: data
+      end subroutine
+    end interface
+
+    if (data%type == PDM_TYPE_INT) then
+      c_datatype = PDM_MPI_Type_f2c(MPI_INT)
+    else if (data%type == PDM_TYPE_DOUBLE) then
+      c_datatype = PDM_MPI_Type_f2c(MPI_DOUBLE)
+    else
+      print *, "PDM_part_comm_graph_allreduce: data type ", data%type, " is not supported"
+      stop
+    end if
+
+    c_op = PDM_MPI_Op_f2c(op)
+
+    if (data_def_graph) then
+      c_data_def_graph = 1
+    else
+      c_data_def_graph = 0
+    endif
+
+    call pdm_part_comm_graph_allreduce_cf(pcg,              &
+                                          c_datatype,       &
+                                          stride,           &
+                                          c_op,             &
+                                          c_data_def_graph, &
+                                          c_loc(data%cptr))
+
+  end subroutine PDM_part_comm_graph_allreduce
+
+
+
+  subroutine PDM_part_comm_graph_exch(pcg,         &
+                                      t_stride,    &
+                                      cst_stride,  &
+                                      send_stride, &
+                                      send_data,   &
+                                      recv_stride, &
+                                      recv_data)
+    ! Exchange data using two-way blocking communications.
+    ! Each graph entity sends *and* receives data.
+    !
+    ! .. warning:: Interleaved data (``PDM_STRIDE_CST_INTERLEAVED``) is not supported yet
+    implicit none
+
+    type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
+    integer,                   intent(in)  :: t_stride    ! Type of stride
+    integer,                   intent(in)  :: cst_stride  ! Constant stride value
+    type(pdm_pointer_array_t), pointer     :: send_stride ! Stride of send data
+    type(pdm_pointer_array_t), pointer     :: send_data   ! Send data
+    type(pdm_pointer_array_t), pointer     :: recv_stride ! Stride of recv data
+    type(pdm_pointer_array_t), pointer     :: recv_data   ! Recv data
+
+    integer(c_size_t)                      :: c_s_data
+    type(c_ptr)                            :: c_send_stride
+    type(c_ptr)                            :: c_recv_stride
+    type(c_ptr)                            :: c_recv_data
+
+    interface
+      subroutine pdm_part_comm_graph_exch_cf(pcg,         &
+                                             s_data,      &
+                                             t_stride,    &
+                                             cst_stride,  &
+                                             send_stride, &
+                                             send_data,   &
+                                             recv_stride, &
+                                             recv_data)   &
+      bind(c, name="PDM_part_comm_graph_exch")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),       value :: pcg
+        integer(c_size_t), value :: s_data
+        integer(c_int),    value :: t_stride
+        integer(c_int),    value :: cst_stride
+        type(c_ptr),       value :: send_stride
+        type(c_ptr),       value :: send_data
+        type(c_ptr)              :: recv_stride
+        type(c_ptr)              :: recv_data
+      end subroutine pdm_part_comm_graph_exch_cf
+    end interface
+
+    c_s_data = send_data%s_data
+
+    c_send_stride = C_NULL_PTR
+    if (associated(send_stride)) then
+      c_send_stride = c_loc(send_stride%cptr)
+    endif
+
+    c_recv_stride = C_NULL_PTR
+    c_recv_data   = C_NULL_PTR
+
+    call pdm_part_comm_graph_exch_cf(pcg,                   &
+                                     c_s_data,              &
+                                     t_stride,              &
+                                     cst_stride,            &
+                                     c_send_stride,         &
+                                     c_loc(send_data%cptr), &
+                                     c_recv_stride,         &
+                                     c_recv_data)
+
+    call setup_recv_pa(pcg,              &
+                       t_stride,         &
+                       cst_stride,       &
+                       send_data%type,   &
+                       send_data%s_data, &
+                       c_recv_stride,    &
+                       c_recv_data,      &
+                       recv_stride,      &
+                       recv_data)
+
+  end subroutine PDM_part_comm_graph_exch
+
+
+
+  subroutine PDM_part_comm_graph_iexch(pcg,         &
+                                       k_comm,      &
+                                       t_stride,    &
+                                       cst_stride,  &
+                                       send_stride, &
+                                       send_data,   &
+                                       recv_stride, &
+                                       recv_data,   &
+                                       request)
+    ! Initiate a two-way non-blocking exchange.
+    ! Each graph entity sends *and* receives data.
+    !
+    ! .. note:: The exchange must then be finalized using :ref:`PDM_part_comm_graph_exch_wait <PDM_part_comm_graph_exch_wait_f>`.
+    !
+    ! .. warning:: Interleaved data (``PDM_STRIDE_CST_INTERLEAVED``) is not supported yet.
+    implicit none
+
+    type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
+    integer,                   intent(in)  :: k_comm      ! Kind of MPI communication
+    integer,                   intent(in)  :: t_stride    ! Type of stride
+    integer,                   intent(in)  :: cst_stride  ! Constant stride value
+    type(pdm_pointer_array_t), pointer     :: send_stride ! Stride of send data
+    type(pdm_pointer_array_t), pointer     :: send_data   ! Send data
+    type(pdm_pointer_array_t), pointer     :: recv_stride ! Stride of recv data
+    type(pdm_pointer_array_t), pointer     :: recv_data   ! Recv data
+    integer,                   intent(out) :: request     ! Request ID
+
+    integer(c_size_t)                      :: c_s_data
+    type(c_ptr)                            :: c_send_stride
+    type(c_ptr)                            :: c_recv_stride
+    type(c_ptr)                            :: c_recv_data
+
+    interface
+      function pdm_part_comm_graph_iexch_cf(pcg,         &
+                                            k_comm,      &
+                                            s_data,      &
+                                            t_stride,    &
+                                            cst_stride,  &
+                                            send_stride, &
+                                            send_data,   &
+                                            recv_stride, &
+                                            recv_data)   &
+      result (request)                                   &
+      bind(c, name="PDM_part_comm_graph_iexch")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),       value :: pcg
+        integer(c_int),    value :: k_comm
+        integer(c_size_t), value :: s_data
+        integer(c_int),    value :: t_stride
+        integer(c_int),    value :: cst_stride
+        type(c_ptr),       value :: send_stride
+        type(c_ptr),       value :: send_data
+        type(c_ptr)              :: recv_stride
+        type(c_ptr)              :: recv_data
+        integer(c_int)           :: request
+      end function pdm_part_comm_graph_iexch_cf
+    end interface
+
+    c_s_data = send_data%s_data
+
+    c_send_stride = C_NULL_PTR
+    if (associated(send_stride)) then
+      c_send_stride = c_loc(send_stride%cptr)
+    endif
+
+    c_recv_stride = C_NULL_PTR
+    c_recv_data   = C_NULL_PTR
+
+    request = pdm_part_comm_graph_iexch_cf(pcg,                   &
+                                           k_comm,                &
+                                           c_s_data,              &
+                                           t_stride,              &
+                                           cst_stride,            &
+                                           c_send_stride,         &
+                                           c_loc(send_data%cptr), &
+                                           c_recv_stride,         &
+                                           c_recv_data)
+
+    call setup_recv_pa(pcg,              &
+                       t_stride,         &
+                       cst_stride,       &
+                       send_data%type,   &
+                       send_data%s_data, &
+                       c_recv_stride,    &
+                       c_recv_data,      &
+                       recv_stride,      &
+                       recv_data)
+
+  end subroutine PDM_part_comm_graph_iexch
+
+
+
+  subroutine PDM_part_comm_graph_exch_init(pcg,         &
+                                           k_comm,      &
+                                           t_stride,    &
+                                           cst_stride,  &
+                                           send_stride, &
+                                           send_data,   &
+                                           recv_stride, &
+                                           recv_data,   &
+                                           request)
+    ! Open a persistent exchange request
+    !
+    ! .. warning:: Only constant-stride, interlaced data (``PDM_STRIDE_CST_INTERLACED``) is currently supported
+    implicit none
+
+    type(c_ptr),               intent(in)  :: pcg         ! Part Comm Graph instance
+    integer,                   intent(in)  :: k_comm      ! Kind of MPI communication
+    integer,                   intent(in)  :: t_stride    ! Type of stride
+    integer,                   intent(in)  :: cst_stride  ! Constant stride value
+    type(pdm_pointer_array_t), pointer     :: send_stride ! Stride of send data
+    type(pdm_pointer_array_t), pointer     :: send_data   ! Send data
+    type(pdm_pointer_array_t), pointer     :: recv_stride ! Stride of recv data
+    type(pdm_pointer_array_t), pointer     :: recv_data   ! Recv data
+    integer,                   intent(out) :: request     ! Request ID
+
+    integer(c_size_t)                      :: c_s_data
+    type(c_ptr)                            :: c_send_stride
+    type(c_ptr)                            :: c_recv_stride
+    type(c_ptr)                            :: c_recv_data
+
+    interface
+      function pdm_part_comm_graph_exch_init_cf(pcg,         &
+                                                k_comm,      &
+                                                s_data,      &
+                                                t_stride,    &
+                                                cst_stride,  &
+                                                send_stride, &
+                                                send_data,   &
+                                                recv_stride, &
+                                                recv_data)   &
+      result (request)                                       &
+      bind(c, name="PDM_part_comm_graph_exch_init")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),       value :: pcg
+        integer(c_int),    value :: k_comm
+        integer(c_size_t), value :: s_data
+        integer(c_int),    value :: t_stride
+        integer(c_int),    value :: cst_stride
+        type(c_ptr),       value :: send_stride
+        type(c_ptr),       value :: send_data
+        type(c_ptr)              :: recv_stride
+        type(c_ptr)              :: recv_data
+        integer(c_int)           :: request
+      end function pdm_part_comm_graph_exch_init_cf
+    end interface
+
+    c_s_data = send_data%s_data
+
+    c_send_stride = C_NULL_PTR
+    if (associated(send_stride)) then
+      c_send_stride = c_loc(send_stride%cptr)
+    endif
+
+    c_recv_stride = C_NULL_PTR
+    c_recv_data   = C_NULL_PTR
+
+    request = pdm_part_comm_graph_exch_init_cf(pcg,                   &
+                                               k_comm,                &
+                                               c_s_data,              &
+                                               t_stride,              &
+                                               cst_stride,            &
+                                               c_send_stride,         &
+                                               c_loc(send_data%cptr), &
+                                               c_recv_stride,         &
+                                               c_recv_data)
+
+    call setup_recv_pa(pcg,              &
+                       t_stride,         &
+                       cst_stride,       &
+                       send_data%type,   &
+                       send_data%s_data, &
+                       c_recv_stride,    &
+                       c_recv_data,      &
+                       recv_stride,      &
+                       recv_data)
+
+  end subroutine PDM_part_comm_graph_exch_init
+
+
+
+  subroutine PDM_part_comm_graph_exch_start(pcg,     &
+                                            request)
+    ! Start a non-blocking persistent exchange
+    !
+    ! .. note:: The exchange must then be finalized using :ref:`PDM_part_comm_graph_exch_wait <PDM_part_comm_graph_exch_wait_f>`.
+    implicit none
+
+    type(c_ptr), intent(in) :: pcg     ! Part Comm Graph instance
+    integer,     intent(in) :: request ! Request ID
+
+    interface
+      subroutine pdm_part_comm_graph_exch_start_cf(pcg,     &
+                                                   request) &
+      bind(c, name="PDM_part_comm_graph_exch_start")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: request
+      end subroutine pdm_part_comm_graph_exch_start_cf
+    end interface
+
+    call pdm_part_comm_graph_exch_start_cf(pcg, request)
+
+  end subroutine PDM_part_comm_graph_exch_start
+
+
+
+  subroutine PDM_part_comm_graph_exch_wait(pcg,     &
+                                           request)
+    ! Wait for a non-blocking (possibly persistent) exchange to finish
+    implicit none
+
+    type(c_ptr), intent(in) :: pcg     ! Part Comm Graph instance
+    integer,     intent(in) :: request ! Request ID
+
+    interface
+      subroutine pdm_part_comm_graph_exch_wait_cf(pcg,     &
+                                                  request) &
+      bind(c, name="PDM_part_comm_graph_exch_wait")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: request
+      end subroutine pdm_part_comm_graph_exch_wait_cf
+    end interface
+
+    call pdm_part_comm_graph_exch_wait_cf(pcg, request)
+
+  end subroutine PDM_part_comm_graph_exch_wait
+
+
+
+  subroutine PDM_part_comm_graph_exch_free(pcg,     &
+                                           request)
+    ! Free a persistent request
+    implicit none
+
+    type(c_ptr), intent(in) :: pcg     ! Part Comm Graph instance
+    integer,     intent(in) :: request ! Request ID
+
+    interface
+      subroutine pdm_part_comm_graph_exch_free_cf(pcg,     &
+                                                  request) &
+      bind(c, name="PDM_part_comm_graph_exch_free")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: request
+      end subroutine pdm_part_comm_graph_exch_free_cf
+    end interface
+
+    call pdm_part_comm_graph_exch_free_cf(pcg, request)
+
+  end subroutine PDM_part_comm_graph_exch_free
+
+
+
+  subroutine PDM_part_comm_graph_reorder(pcg,        &
+                                         old_to_new)
+    ! Reorder the graph entities
+    implicit none
+
+    type(c_ptr),               intent(in) :: pcg        ! Part Comm Graph instance
+    type(pdm_pointer_array_t), pointer    :: old_to_new ! Permutation table (0-based)
+
+    interface
+      subroutine pdm_part_comm_graph_reorder_cf(pcg,        &
+                                                old_to_new) &
+      bind(c, name="PDM_part_comm_graph_reorder")
+        use iso_c_binding
+        implicit none
+        type(c_ptr), value :: pcg
+        type(c_ptr), value :: old_to_new
+      end subroutine pdm_part_comm_graph_reorder_cf
+    end interface
+
+    call pdm_part_comm_graph_reorder_cf(pcg,                    &
+                                        c_loc(old_to_new%cptr))
+
+  end subroutine PDM_part_comm_graph_reorder
+
+
+
+  subroutine PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pcg_entity1,         &
+                                                                    pn_entity1,          &
+                                                                    pn_entity2,          &
+                                                                    entity2_entity1_idx, &
+                                                                    entity2_entity1,     &
+                                                                    pcg_entity2)
+    ! Create Part Comm Graph for entity2 from entity2->entity1 link and Part Comm Graph for entity1
+    implicit none
+
+    type(c_ptr),                        intent(in)  :: pcg_entity1
+    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity1(:)
+    integer(pdm_l_num_s),      pointer, intent(in)  :: pn_entity2(:)
+    type(pdm_pointer_array_t), pointer, intent(in)  :: entity2_entity1_idx
+    type(pdm_pointer_array_t), pointer, intent(in)  :: entity2_entity1
+    type(c_ptr),                        intent(out) :: pcg_entity2
+
+    interface
+      subroutine pdm_part_comm_graph_entity1_to_part_comm_graph_entity2_cf(pcg_entity1,         &
+                                                                           pn_entity1,          &
+                                                                           pn_entity2,          &
+                                                                           entity2_entity1_idx, &
+                                                                           entity2_entity1,     &
+                                                                           pcg_entity2)         &
+      bind(c, name="PDM_part_comm_graph_entity1_to_part_comm_graph_entity2")
+        use iso_c_binding
+        implicit none
+        type(c_ptr), value :: pcg_entity1
+        type(c_ptr), value :: pn_entity1
+        type(c_ptr), value :: pn_entity2
+        type(c_ptr), value :: entity2_entity1_idx
+        type(c_ptr), value :: entity2_entity1
+        type(c_ptr)        :: pcg_entity2
+      end subroutine pdm_part_comm_graph_entity1_to_part_comm_graph_entity2_cf
+    end interface
+
+    call pdm_part_comm_graph_entity1_to_part_comm_graph_entity2_cf(pcg_entity1,                     &
+                                                                   c_loc(pn_entity1),               &
+                                                                   c_loc(pn_entity2),               &
+                                                                   c_loc(entity2_entity1_idx%cptr), &
+                                                                   c_loc(entity2_entity1%cptr),     &
+                                                                   pcg_entity2)
+
+  end subroutine PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
+
+
+
+  subroutine PDM_part_comm_graph_free(pcg)
+    ! Free a Part Comm Graph instance
+    implicit none
+
+    type(c_ptr), intent(inout) :: pcg ! Part Comm Graph instance
+
+    interface
+      subroutine pdm_part_comm_graph_free_cf(pcg) &
+      bind(c, name="PDM_part_comm_graph_free")
+        use iso_c_binding
+        implicit none
+        type(c_ptr), value :: pcg
+      end subroutine pdm_part_comm_graph_free_cf
+    end interface
+
+    call pdm_part_comm_graph_free_cf(pcg)
+
+  end subroutine PDM_part_comm_graph_free
+
+
+
+  ! --- Auxiliary procedures ---
+
+  subroutine setup_recv_pa(pcg,           &
+                           t_stride,      &
+                           cst_stride,    &
+                           data_type,     &
+                           s_data,        &
+                           c_recv_stride, &
+                           c_recv_data,   &
+                           recv_stride,   &
+                           recv_data)
+    ! Setup the recv* pointer_arrays for (i)exch routines
+    implicit none
+
+    type(c_ptr),               intent(in) :: pcg
+    integer,                   intent(in) :: t_stride
+    integer,                   intent(in) :: cst_stride
+    integer,                   intent(in) :: data_type
+    integer,                   intent(in) :: s_data
+    type(c_ptr),               intent(in) :: c_recv_stride
+    type(c_ptr),               intent(in) :: c_recv_data
+    type(pdm_pointer_array_t), pointer    :: recv_stride
+    type(pdm_pointer_array_t), pointer    :: recv_data
+
+    integer(c_int)                        :: n_part, i_part, i_entity
+    integer(pdm_l_num_s),      pointer    :: length_stride(:)
+    integer(pdm_l_num_s),      pointer    :: length_data(:)
+    integer(pdm_l_num_s),      pointer    :: stride(:)
+
+    n_part = pdm_part_comm_graph_n_part_get_cf(pcg)
+
+    allocate(length_data(n_part))
+
+    if (t_stride == PDM_STRIDE_VAR_INTERLACED) then
+      ! Variable stride
+      allocate(length_stride(n_part))
+      do i_part = 1, n_part
+        length_stride(i_part) = pdm_part_comm_graph_n_entity_get_cf(pcg, i_part-1)
+      enddo
+
+      call pdm_pointer_array_create(recv_stride,        &
+                                    n_part,             &
+                                    PDM_TYPE_INT,       &
+                                    c_recv_stride,      &
+                                    length_stride,      &
+                                    PDM_OWNERSHIP_KEEP)
+
+      do i_part = 1, n_part
+        call PDM_pointer_array_part_get(recv_stride, &
+                                        i_part-1,    &
+                                        stride)
+        length_data(i_part) = 0
+        do i_entity = 1, length_stride(i_part)
+          length_data(i_part) = length_data(i_part) + stride(i_entity)
+        enddo
+      enddo
+
+    else
+      ! Constant stride value
+      do i_part = 1, n_part
+        length_data(i_part) = cst_stride * pdm_part_comm_graph_n_entity_get_cf(pcg, i_part-1)
+      enddo
+
+    endif
+
+
+    if (data_type == PDM_TYPE_CPTR) then
+      call pdm_pointer_array_create(recv_data,          &
+                                    n_part,             &
+                                    data_type,          &
+                                    c_recv_data,        &
+                                    length_data,        &
+                                    PDM_OWNERSHIP_KEEP)
+    else
+      call pdm_pointer_array_create(recv_data,          &
+                                    n_part,             &
+                                    data_type,          &
+                                    c_recv_data,        &
+                                    length_data,        &
+                                    PDM_OWNERSHIP_KEEP, &
+                                    s_data)
+    endif
+
+    if (t_stride == PDM_STRIDE_VAR_INTERLACED) then
+      deallocate(length_stride)
+    endif
+    deallocate(length_data)
+
+  end subroutine setup_recv_pa
+
+
+end module pdm_part_comm_graph

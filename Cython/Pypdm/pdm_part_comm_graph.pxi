@@ -43,6 +43,14 @@ cdef extern from "pdm_part_comm_graph.h":
                                       PDM_MPI_Op               op,
                                       unsigned char          **pdata)
 
+
+  void PDM_part_comm_graph_allreduce(PDM_part_comm_graph_t  *pcg,
+                                     PDM_MPI_Datatype        datatype,
+                                     int                     stride,
+                                     PDM_MPI_Op              op,
+                                     PDM_bool_t              data_def_graph,
+                                     unsigned char         **data)
+
   int PDM_part_comm_graph_entity_nuplet_get(PDM_part_comm_graph_t  *pcg,
                                             int                     i_part,
                                             int                   **entity_nuplet,
@@ -75,29 +83,24 @@ cdef class PartCommGraph:
     """
     __init__(comm, pentity_graph, pentity_nuplet=None, is_signed=True)
 
-    Create a new :py:class`PartCommGraph` instance
+    Create a new :py:class:`PartCommGraph` instance
 
     Parameters:
-      comm            (MPI.Comm) : MPI communicator
-      pentity_graph   (int**)    : Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
-        For each entity :
-          - entity local number (1-based)
-          - Connected process   (0-based)
-          - Connected partition on the connected process (1-based)
-          - Connected entity local number in the connected partition (1-based)
-      pentity_nuplet (list of np.ndarray[in]) : Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
-      is_signed      (int**)                  : Use signed nuplets
+      comm           (`MPI.Comm`)                                 : MPI communicator
+      pentity_graph  (`list` of `np.ndarray[np.int32]`)           : Inter-partition communication graph description (size = ``4 * pn_entity_graph[i_part]``)
+      pentity_nuplet (`list` of `np.ndarray[np.int32]`, optional) : Additional nuplets (size = ``nuplet_size * pn_entity_graph[i_part]``)
+      is_signed      (`bool`, optional)                           : Use signed nuplets
     """
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    cdef PDM_MPI_Comm PDMC   = py_comm_to_pdm_comm(comm)
+    cdef PDM_MPI_Comm PDMC = py_comm_to_pdm_comm(comm)
     self.keep_alive = []
 
     cdef int **_pentity_graph  = NULL
     cdef int **_pentity_nuplet = NULL
 
-    _n_part          = len(pentity_graph)
+    _n_part = len(pentity_graph)
     cdef int* _pn_entity_graph = list_to_int_pointer([g.size // 4 for g in pentity_graph])
-    _pentity_graph        = np_list_to_int_pointers(pentity_graph)
+    _pentity_graph = np_list_to_int_pointers(pentity_graph)
     self.keep_alive.append(pentity_graph)
 
     _nuplet_size = 0
@@ -131,7 +134,7 @@ cdef class PartCommGraph:
   @staticmethod
   cdef from_ptr(PDM_part_comm_graph_t* ptr):
     cdef PartCommGraph obj = PartCommGraph.__new__(PartCommGraph)
-    obj.pcg      = ptr
+    obj.pcg = ptr
     return obj
 
   def exch(self,
@@ -141,15 +144,18 @@ cdef class PartCommGraph:
     """
       exch(send_entity_data, send_entity_stride=1, interlaced_str=True)
 
-      Exchange data between graph comm with synchronous blocking exchange
+      Exchange data using two-way blocking communications.
+      Each graph entity sends *and* receives data.
+
+      .. warning:: Interleaved data is not supported yet
 
       Parameters:
-        send_entity_data   (list)                      : Graph data for each part
-        send_entity_stride (`int` or `list, optional`) : Stride of Part1 data
-        interlaced_str    (bool, optional)             : Is the data interlaced? (default = **True**)
+        send_entity_data   (`list` of `np.ndarray`)                              : Data to send
+        send_entity_stride (`int` or `list` of `np.ndarray[np.int32]`, optional) : Stride of send data (default = 1)
+        interlaced_str     (`bool`, optional)                                    : Is the data interlaced? (default = **True**)
 
       Returns :
-        - Recv stride (same dtype as ``send_entity_stride`` )
+        - Recv stride (same dtype as ``send_entity_stride``)
         - Recv data   (`list` of same dtype as ``send_entity_data``)
     """
 
@@ -193,9 +199,9 @@ cdef class PartCommGraph:
     cdef int *dummy = NULL
     for i_part in range(PDM_part_comm_graph_n_part_get(self.pcg)):
       pn_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
-                                                        i_part,
-                                                        &dummy,
-                                                        PDM_OWNERSHIP_BAD_VALUE)
+                                                       i_part,
+                                                       &dummy,
+                                                       PDM_OWNERSHIP_BAD_VALUE)
       if _stride_t == PDM_STRIDE_VAR_INTERLACED:
 
         strid_size = pn_entity
@@ -227,13 +233,13 @@ cdef class PartCommGraph:
     """
     owner_get(i_part)
 
-    Get the owner array computed inside the structure, useful to manage reduction of array for example
+    Get the owner status of local graph entities (read-only)
 
     Parameters:
       i_part (int) : Partition identifier
 
     Returns:
-      Owner array, 0 is not owner, 1 is owner  (`np.array[np.int]`)
+      Owner status (1 if owner, 0 if not owner) (`np.array[np.int32]` of size `n_entity_graph`)
     """
     cdef int *dummy = NULL
     cdef pn_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
@@ -241,7 +247,7 @@ cdef class PartCommGraph:
                                                           &dummy,
                                                           PDM_OWNERSHIP_BAD_VALUE)
 
-    cdef int* owner = PDM_part_comm_graph_owner_get(self.pcg,i_part) #returns an int*
+    cdef int* owner = PDM_part_comm_graph_owner_get(self.pcg,i_part)
 
     np_owner = create_numpy_i(owner, pn_entity, flag_owndata=False)
     return NPY.copy(np_owner)
@@ -250,60 +256,86 @@ cdef class PartCommGraph:
     """
     entity_graph_get(i_part)
 
-    Get entity graph
+    Get the communication graph description for a local partition
 
     Parameters:
       i_part (int) : Partition identifier
 
     Returns:
-      Graph comm identifier (`np.array[np.int]`):
+      Inter-partition communication graph description (`np.array[np.int32]` of size ``4 * n_entity_graph``):
         For each entity :
-          - entity local number (1-based)
-          - Connected process   (0-based)
+          - Entity local ID (1-based)
+          - Rank of the connected process (0-based)
           - Connected partition on the connected process (1-based)
-          - Connected entity local number in the connected partition (1-based)
+          - Connected entity's local ID in the connected partition (1-based)
 
     """
     cdef int *entity_graph = NULL
 
     cdef n_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
-                                                        i_part,
-                                                        &entity_graph,
-                                                        PDM_OWNERSHIP_USER)
+                                                         i_part,
+                                                         &entity_graph,
+                                                         PDM_OWNERSHIP_USER)
 
     return create_numpy_i(entity_graph, 4 * n_entity)
 
   def all_reduce(self,
-                 int             stride,
-                 MPI.Op          op,
-                 list            pdata):
+                 int    stride,
+                 MPI.Op op,
+                 list   pdata):
     """
     all_reduce(stride, op, pdata)
 
-      Parameters:
-        stride   (int)                              : Constant data stride
-        op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
-        pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
+    .. warning :: This function is **deprecated**, use :py:func:`allreduce` instead.
 
+    Parameters:
+      stride   (`int`)                  : Constant data stride
+      op       (`MPI.Op`)               : Reduction operation kind (``MPI.SUM`` / ``MPI.MIN`` / ``MPI.MAX``)
+      pdata    (`list` of `np.ndarray`) : Data buffer, value is modified inplace
     """
-    cdef void **_pdata = np_list_to_void_pointers(pdata)
-    cdef PDM_MPI_Op       c_op       = <MPI_Op      > op.ob_mpi
+    self.allreduce(stride, op, False, pdata)
+
+  def allreduce(self,
+                int    stride,
+                MPI.Op op,
+                bint   data_def_graph,
+                list   data):
+    """
+    allreduce(stride, op, data_def_graph, data)
+
+    Perform a reduction operation on constant-stride data.
+    The data can be defined either for only the entities connected in the graph, or the whole partition.
+    The reduction is performed in place.
+
+    .. warning:: Only ``np.double`` and ``np.int32`` data types are supported.
+                 Only ``MPI.SUM``, ``MPI.MIN`` and ``MPI.MAX`` operations are supported.
+
+    Parameters:
+      stride         (`int`)                  : Constant stride value
+      op             (`MPI.Op`)               : Reduction operation (``MPI.SUM`` / ``MPI.MIN`` / ``MPI.MAX``)
+      data_def_graph (`bool`)                 : Is the data defined only for the graph entities?
+      data           (`list` of `np.ndarray`) : Data to reduce
+    """
+    cdef void **_data = np_list_to_void_pointers(data)
+    cdef PDM_MPI_Op c_op = <MPI_Op> op.ob_mpi
     cdef MPI.Datatype mpi_dtype
     cdef PDM_MPI_Comm pdm_comm = PDM_part_comm_graph_comm_get(self.pcg)
     py_comm = pdm_comm_to_py_comm(pdm_comm)
-    ref_dtype = recover_dtype(pdata, py_comm)
+    ref_dtype = recover_dtype(data, py_comm)
     mpi_dtype = MPI._typedict.get(ref_dtype.char)
     # > This one not working, it seems it give a special type
     # from mpi4py.util.dtlib import from_numpy_dtype
     # mpi_dtype = from_numpy_dtype(ref_dtype)
     cdef PDM_MPI_Datatype c_datatype = <MPI_Datatype> mpi_dtype.ob_mpi
 
-    PDM_part_comm_graph_all_reduce(self.pcg,
+    PDM_part_comm_graph_allreduce(self.pcg,
                                   c_datatype,
                                   stride,
                                   c_op,
-                <unsigned char **> _pdata)
-    free(_pdata)
+                     <PDM_bool_t> data_def_graph,
+               <unsigned char **> _data)
+    free(_data)
+
 
   def entity_nuplet_get(self, i_part):
     """
@@ -334,6 +366,52 @@ cdef class PartCommGraph:
 
     return np_entity_nuplet
 
+
+  def entity1_to_entity2(self,
+                         list pn_entity1,
+                         list pentity2_entity1_idx,
+                         list pentity2_entity1):
+    """
+    entity1_to_entity2(pn_entity1, pentity2_entity1_idx, pentity2_entity1)
+
+    Create :py:class:`PartCommGraph` for entity2 from entity2->entity1 link and :py:class:`PartCommGraph` for entity1
+
+    Parameters:
+      pn_entity1           (`list` of `int`)                  : Number of entity1 (size = ``n_part``)
+      pentity2_entity1_idx (`list` of `np.ndarray[np.int32]`) : Connectivity index (size = ``n_entity2 + 1``)
+      pentity2_entity1     (`list` of `np.ndarray[np.int32]`) : Connectivity array (1-based, size = ``entity2_entity1_idx[n_entity2]``)
+
+    Returns:
+      Part Comm Graph for entity2 (:py:class:`PartCommGraph`)
+    """
+
+    cdef int  *_pn_entity1 = NULL
+    cdef int  *_pn_entity2 = NULL
+    cdef int **_pentity2_entity1_idx = NULL
+    cdef int **_pentity2_entity1     = NULL
+
+    pn_entity2 = [idx.size - 1 for idx in pentity2_entity1_idx]
+
+    _pn_entity1 = list_to_int_pointer(pn_entity1)
+    _pn_entity2 = list_to_int_pointer(pn_entity2)
+    _pentity2_entity1_idx = np_list_to_int_pointers(pentity2_entity1_idx)
+    _pentity2_entity1     = np_list_to_int_pointers(pentity2_entity1)
+
+    cdef PDM_part_comm_graph_t *_out_pcg_entity2 = NULL
+    PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(self.pcg,
+                                                           _pn_entity1,
+                                                           _pn_entity2,
+                                                           _pentity2_entity1_idx,
+                                                           _pentity2_entity1,
+                                                           &_out_pcg_entity2)
+
+    free(_pn_entity1)
+    free(_pn_entity2)
+    free(_pentity2_entity1_idx)
+    free(_pentity2_entity1)
+
+    return PartCommGraph.from_ptr(_out_pcg_entity2)
+
   def __dealloc__(self):
     """
     """
@@ -341,46 +419,24 @@ cdef class PartCommGraph:
 
 # ------------------------------------------------------------------------
 
-
-
-# ------------------------------------------------------------------------
 def pcg_entity1_to_entity2(PartCommGraph pypcg_entity1,
                            list          pn_entity1,
                            list          entity2_entity1_idx,
                            list          entity2_entity1):
   """
-  Returns a \ref PDM_part_comm_graph_t python object
+  pcg_entity1_to_entity2(pypcg_entity1, pn_entity1, entity2_entity1_idx, entity2_entity1)
+
+  Create :py:class:`PartCommGraph` for entity2 from entity2->entity1 link and :py:class:`PartCommGraph` for entity1
+
+  .. warning:: This function is **deprecated**, use :py:method:`entity1_to_entity2` instead.
 
   Parameters:
-    pypcg_entity1       (PartCommGraph) : \ref PDM_part_comm_graph_t structure for entity1
-    pn_entity1          (list         ) : Number of entity1 (size = n_part)
-    entity2_entity1_idx (list         ) : Connectivity index (size = \p pn_entity2 + 1)
-    entity2_entity1     (list         ) : Connectivity array (size = \p entity2_entity1_idx[\p pn_entity2] )
+    pypcg_entity1       (:py:class:`PartCommGraph`)        : Part Comm Graph for entity1
+    pn_entity1          (`list` of `int`)                  : Number of entity1 (size = ``n_part``)
+    entity2_entity1_idx (`list` of `np.ndarray[np.int32]`) : Connectivity index (size = ``n_entity2 + 1``)
+    entity2_entity1     (`list` of `np.ndarray[np.int32]`) : Connectivity array (1-based, size = ``entity2_entity1_idx[n_entity2]``)
+
+  Returns:
+    Part Comm Graph for entity2 (:py:class:`PartCommGraph`)
   """
-
-  cdef int  *_pn_entity1 = NULL
-  cdef int  *_pn_entity2 = NULL
-  cdef int **_entity2_entity1_idx = NULL
-  cdef int **_entity2_entity1     = NULL
-
-  pn_entity2 = [part_entity2_entity1_idx.size -1 for part_entity2_entity1_idx in entity2_entity1_idx]
-
-  _pn_entity1 = list_to_int_pointer(pn_entity1)
-  _pn_entity2 = list_to_int_pointer(pn_entity2)
-  _entity2_entity1_idx = np_list_to_int_pointers(entity2_entity1_idx)
-  _entity2_entity1     = np_list_to_int_pointers(entity2_entity1)
-
-  cdef PDM_part_comm_graph_t *_out_ptpgc_entity2 = NULL
-  PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pypcg_entity1.pcg,
-                                                         _pn_entity1,
-                                                         _pn_entity2,
-                                                         _entity2_entity1_idx,
-                                                         _entity2_entity1,
-                                                         &_out_ptpgc_entity2)
-
-  free(_pn_entity1)
-  free(_pn_entity2)
-  free(_entity2_entity1_idx)
-  free(_entity2_entity1)
-
-  return PartCommGraph.from_ptr(_out_ptpgc_entity2)
+  return pypcg_entity1.entity1_to_entity2(pn_entity1, entity2_entity1_idx, entity2_entity1)

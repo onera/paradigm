@@ -47,23 +47,23 @@ extern "C" {
  *
  * \brief Compute link between entity2 from entity1 link. Useful in order to deduce graph of faces with graph of vertices, for example. High level API
  *
- * \param [in]  ptpgc_entity1        \ref PDM_part_comm_graph_t structure for entity1
+ * \param [in]  pcg_entity1          \ref PDM_part_comm_graph_t structure for entity1
  * \param [in]  pn_entity1           Number of entity1 (size = n_part)
  * \param [in]  pn_entity2           Number of entity1 (size = n_part)
  * \param [in]  entity2_entity1_idx  Connectivity index (size = \p pn_entity2 + 1)
  * \param [in]  entity2_entity1      Connectivity array (size = \p entity2_entity1_idx[\p pn_entity2] )
- * \param [out] ptpgc_entity1        \ref PDM_part_comm_graph_t structure for entity2
+ * \param [out] pcg_entity1          \ref PDM_part_comm_graph_t structure for entity2
  *
  */
 void
 PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
 (
-  PDM_part_comm_graph_t   *ptpgc_entity1,
+  PDM_part_comm_graph_t   *pcg_entity1,
   int                     *pn_entity1,
   int                     *pn_entity2,
   int                    **entity2_entity1_idx,
   int                    **entity2_entity1,
-  PDM_part_comm_graph_t  **ptpgc_entity2
+  PDM_part_comm_graph_t  **pcg_entity2
 );
 
 

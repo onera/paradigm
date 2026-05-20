@@ -8,6 +8,7 @@
 #include "pdm_mem_tool.h"
 #include "pdm_part_comm_graph.h"
 #include "pdm_part_comm_graph_algorithm.h"
+#include "pdm_priv.h"
 #include "pdm_sort.h"
 #include "pdm_vtk.h"
 #include <functional>
@@ -32,10 +33,9 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
 
   /* Part */
   std::vector<int> vn_elt = {9, 12};
-  // int n_elt1 = vn_elt[i_rank];
   int n_part = 1;
 
-  /* Graphe comm */
+  /* Communication graph */
   std::vector<int> vn_entity_bound = {3, 3};
   std::vector<std::vector<int>> ventity_bound = {{3, 1, 1, 1,
                                                   6, 1, 1, 5,
@@ -335,7 +335,6 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - Persistent exchange", 2) {
 
   /* Part */
   std::vector<int> vn_elt = {9, 12};
-  // int n_elt1 = vn_elt[i_rank];
   int n_part = 1;
 
   /* Communication graph */
@@ -462,10 +461,9 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - iexch", 2) {
 
   /* Part */
   std::vector<int> vn_elt = {9, 12};
-  // int n_elt1 = vn_elt[i_rank];
   int n_part = 1;
 
-  /* Graphe comm */
+  /* Communication graph */
   std::vector<int> vn_entity_bound = {3, 3};
   std::vector<std::vector<int>> ventity_bound = {{3, 1, 1, 1,
                                                   6, 1, 1, 5,
@@ -539,7 +537,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - iexch", 2) {
 }
 
 
-MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
+MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce", 2) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
   int i_rank;
@@ -558,10 +556,9 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 
   /* Part */
   std::vector<int> vn_elt = {9, 12};
-  // int n_elt1 = vn_elt[i_rank];
   int n_part = 1;
 
-  /* Graphe comm */
+  /* Communication graph */
   std::vector<int> vn_entity_bound = {3, 3};
   std::vector<std::vector<int>> ventity_bound = {{3, 1, 1, 1,
                                                   6, 1, 1, 5,
@@ -671,6 +668,303 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 }
 
 
+MPI_TEST_CASE("[PDM_part_comm_graph] - 2 part - 2p - allreduce", 2) {
+  /*
+   *               -------- Rank 0 -------     ----- Rank 1 ----
+   *
+   *        {            1 ————— 2 ————— 3 · · 1 ————— 2 ————— 3
+   *        {            |   1   |   2   |     |   1   |   2   |
+   *        {            |3     4|      5|     |3     4|      5|
+   * part 1 {            |   6   |   7   |     |   6   |   7   |
+   *        {            4 ————— 5 ————— 6 · · 4 ————— 5 ————— 6
+   *        {          ·       · |       |     |       |       |
+   *        {        ·       ·   |8     9|     |8      |9    10|
+   *               1 ————— 2     |  10   |     |  11   |  12   |
+   *               |   1   |     7 ————— 8 · · 7 ————— 8 ————— 9
+   *        {      |2     3|   · |       | ·   ·       ·       ·
+   *        {      |   4   | ·   |11   12|   · ·       ·       ·
+   *        {      3 ————— 4     |  13   |     1 ————— 2 ————— 3
+   *        {      |       |     9 ————— 10    |   1   |   2   |
+   *        {      |5     6|   ·       ·   ·   |3     4|      5|
+   * part 2 {      |   7   | ·       ·       · |   6   |   7   |
+   *        {      5 ————— 6 ————— 7 · · · · · 4 ————— 5 ————— 6
+   *        {      |       |   8   |           |       |       |
+   *        {      |9      |10   11|           |8      |9    10|
+   *        {      |  12   |  13   |           |  11   |  12   |
+   *        {      8 ————— 9 ————— 10· · · · · 7 ————— 8 ————— 9
+   *
+   */
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  const int n_part = 2;
+
+  int all_n_entity[2][n_part] = {
+    { // Rank 0
+      10, 10
+    },
+    { // Rank 1
+      9, 9
+    },
+  };
+
+  std::vector<int> all_entity_bound[2][n_part] = {
+    { // Rank 0
+      { // Part 1
+        3, 1, 1, 1,
+        4, 0, 2, 1,
+        5, 0, 2, 2,
+        6, 1, 1, 4,
+        7, 0, 2, 4,
+        8, 1, 1, 7,
+        8, 1, 2, 1,
+        9, 0, 2, 6,
+        10, 0, 2, 7,
+        10, 1, 2, 4
+      },
+      { // Part 2
+        1, 0, 1, 4,
+        2, 0, 1, 5,
+        4, 0, 1, 7,
+        6, 0, 1, 9,
+        7, 0, 1, 10,
+        7, 1, 2, 4,
+        10, 1, 2, 7
+      }
+    },
+    { // Rank 1
+      { // Part 1
+        1, 0, 1, 3,
+        4, 0, 1, 6,
+        7, 0, 1, 8,
+        7, 1, 2, 1,
+        8, 1, 2, 2,
+        9, 1, 2, 3
+      },
+      { // Part 2
+        1, 0, 1, 8,
+        1, 1, 1, 7,
+        2, 1, 1, 8,
+        3, 1, 1, 9,
+        4, 0, 2, 7,
+        4, 0, 1, 10,
+        7, 0, 2, 10
+      }
+    }
+  };
+
+
+  int  n_entity      [n_part];
+  int  n_entity_bound[n_part];
+  int *entity_bound  [n_part];
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    n_entity      [i_part] = all_n_entity    [i_rank][i_part];
+    n_entity_bound[i_part] = all_entity_bound[i_rank][i_part].size() / 4;
+    entity_bound  [i_part] = all_entity_bound[i_rank][i_part].data();
+  }
+
+
+
+  PDM_part_comm_graph_t* pcg = PDM_part_comm_graph_create(n_part,
+                                                          n_entity_bound,
+                                                          entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
+
+  PDM_bool_t data_def_graph = PDM_FALSE;
+
+  SUBCASE("Data defined for whole partition") {
+    data_def_graph = PDM_FALSE;
+  }
+  SUBCASE("Data defined only for graph entities") {
+    data_def_graph = PDM_TRUE;
+  }
+
+  /* Set initial data */
+  int *n_data = NULL;
+  if (data_def_graph) {
+    n_data = n_entity_bound;
+  }
+  else {
+    n_data = n_entity;
+  }
+
+  double **init_data = NULL;
+  double **data      = NULL;
+  PDM_malloc(init_data, n_part, double *);
+  PDM_malloc(data,      n_part, double *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_malloc(init_data[i_part], n_data[i_part], double);
+    PDM_malloc(data     [i_part], n_data[i_part], double);
+
+    for (int i = 0; i < n_data[i_part]; i++) {
+      int i_entity = data_def_graph ? entity_bound[i_part][4*i]-1 : i;
+      init_data[i_part][i] = 0.1*(i_entity+1);
+    }
+  }
+
+
+  /* Min */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i = 0; i < n_data[i_part]; i++) {
+      data[i_part][i] = init_data[i_part][i];
+    }
+  }
+
+  PDM_part_comm_graph_allreduce(pcg,
+                                PDM_MPI_DOUBLE,
+                                1,
+                                PDM_MPI_MIN,
+                                data_def_graph,
+             (unsigned char **) data);
+
+  std::vector<double> all_expected_data_min[2][2][n_part] = {
+    { // data_def_graph = False
+      { // Rank 0
+        {0.1, 0.2, 0.1, 0.1, 0.2, 0.4, 0.4, 0.1, 0.6, 0.4}, // Part 1
+        {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.4, 0.8, 0.9, 0.7}, // Part 2
+      },
+      { // Rank 1
+        {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.1, 0.2, 0.3}, // Part 1
+        {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9}, // Part 2
+      }
+    },
+    { // data_def_graph = True
+      { // Rank 0
+        {0.1, 0.1, 0.2, 0.4, 0.4, 0.1, 0.1, 0.6, 0.4, 0.4}, // Part 1
+        {0.1, 0.2, 0.4, 0.6, 0.4, 0.4, 0.7},                // Part 2
+      },
+      { // Rank 1
+        {0.1, 0.4, 0.1, 0.1, 0.2, 0.3},      // Part 1
+        {0.1, 0.1, 0.2, 0.3, 0.4, 0.4, 0.7}, // Part 2
+      }
+    }
+  };
+
+  // Check
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    double *exp = all_expected_data_min[data_def_graph][i_rank][i_part].data();
+    CHECK_EQ_C_ARRAY_FLOAT(data[i_part],
+                           exp,
+                           n_data[i_part],
+                           1e-15);
+  }
+
+
+
+  /* Max */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i = 0; i < n_data[i_part]; i++) {
+      data[i_part][i] = init_data[i_part][i];
+    }
+  }
+
+  PDM_part_comm_graph_allreduce(pcg,
+                                PDM_MPI_DOUBLE,
+                                1,
+                                PDM_MPI_MAX,
+                                data_def_graph,
+             (unsigned char **) data);
+
+  std::vector<double> all_expected_data_max[2][2][n_part] = {
+    { // data_def_graph = False
+      { // Rank 0
+        {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}, // Part 1
+        {0.4, 0.5, 0.3, 0.7, 0.5, 0.9, 1.0, 0.8, 0.9, 1.0}, // Part 2
+      },
+      { // Rank 1
+        {0.3, 0.2, 0.3, 0.6, 0.5, 0.6, 0.8, 0.8, 0.9}, // Part 1
+        {0.8, 0.8, 0.9, 1.0, 0.5, 0.6, 1.0, 0.8, 0.9}, // Part 2
+      }
+    },
+    { // data_def_graph = True
+      { // Rank 0
+        {0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8, 0.9, 1.0, 1.0}, // Part 1
+        {0.4, 0.5, 0.7, 0.9, 1.0, 1.0, 1.0},                // Part 2
+      },
+      { // Rank 1
+        {0.3, 0.6, 0.8, 0.8, 0.8, 0.9},      // Part 1
+        {0.8, 0.8, 0.8, 0.9, 1.0, 1.0, 1.0}, // Part 2
+      }
+    }
+  };
+
+  // Check
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    double *exp = all_expected_data_max[data_def_graph][i_rank][i_part].data();
+
+    CHECK_EQ_C_ARRAY_FLOAT(data[i_part],
+                           exp,
+                           n_data[i_part],
+                           1e-15);
+  }
+
+
+
+  /* Sum */
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i = 0; i < n_data[i_part]; i++) {
+      data[i_part][i] = init_data[i_part][i];
+    }
+  }
+
+  PDM_part_comm_graph_allreduce(pcg,
+                                PDM_MPI_DOUBLE,
+                                1,
+                                PDM_MPI_SUM,
+                                data_def_graph,
+             (unsigned char **) data);
+
+  std::vector<double> all_expected_data_sum[2][2][n_part] = {
+    { // data_def_graph = False
+      { // Rank 0
+        {0.1, 0.2, 0.4, 0.5, 0.7, 1.0, 1.1, 1.6, 1.5, 2.1}, // Part 1
+        {0.5, 0.7, 0.3, 1.1, 0.5, 1.5, 2.1, 0.8, 0.9, 1.7}, // Part 2
+      },
+      { // Rank 1
+        {0.4, 0.2, 0.3, 1.0, 0.5, 0.6, 1.6, 1.0, 1.2}, // Part 1
+        {1.6, 1.0, 1.2, 2.1, 0.5, 0.6, 1.7, 0.8, 0.9}, // Part 2
+      }
+    },
+    { // data_def_graph = True
+      { // Rank 0
+        {0.4, 0.5, 0.7, 1.0, 1.1, 1.6, 1.6, 1.5, 2.1, 2.1}, // Part 1
+        {0.5, 0.7, 1.1, 1.5, 2.1, 2.1, 1.7},                // Part 2
+      },
+      { // Rank 1
+        {0.4, 1.0, 1.6, 1.6, 1.0, 1.2},      // Part 1
+        {1.6, 1.6, 1.0, 1.2, 2.1, 2.1, 1.7}, // Part 2
+      }
+    }
+  };
+
+  // Check
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    double *exp = all_expected_data_sum[data_def_graph][i_rank][i_part].data();
+
+    CHECK_EQ_C_ARRAY_FLOAT(data[i_part],
+                           exp,
+                           n_data[i_part],
+                           1e-15);
+  }
+
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_free(init_data[i_part]);
+    PDM_free(data     [i_part]);
+  }
+  PDM_free(init_data);
+  PDM_free(data     );
+
+  PDM_part_comm_graph_free(pcg);
+}
+
+
 MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
@@ -703,7 +997,6 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
 
   /* Part */
   // std::vector<int> vn_elt = {9, 12, 18};
-  // int n_elt1 = vn_elt[i_rank];
   int n_part = 1;
 
   std::vector<int> vn_entity_bound = {6, 7, 7};
@@ -774,10 +1067,9 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
 
   /* Part */
   std::vector<int> vn_elt = {9, 12};
-  // int n_elt1 = vn_elt[i_rank];
   int n_part = 1;
 
-  /* Graphe comm */
+  /* Communication graph */
   std::vector<int> vn_entity_bound = {3, 3};
   std::vector<std::vector<int>> ventity_bound = {{3, 1, 1, 1,
                                                   6, 1, 1, 5,
@@ -1920,7 +2212,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - gather strided data", 2) {
   std::vector<int> vn_elt = {9, 12};
   int n_part = 1;
 
-  /* Graphe comm */
+  /* Communication graph */
   std::vector<int> vn_entity_bound = {3, 3};
   std::vector<std::vector<int>> ventity_bound = {{3, 1, 1, 1,
                                                   6, 1, 1, 5,

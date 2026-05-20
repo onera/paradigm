@@ -836,7 +836,7 @@ PDM_MPI_Comm PDM_MPI_Comm_f2c(PDM_MPI_Fint comm)
 }
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_Comm_c2f (wrapping de la fonction MPI_comm_c2f
+ * PDM_MPI_Comm_c2f (wrapping de la fonction MPI_comm_c2f)
  *----------------------------------------------------------------------------*/
 PDM_MPI_Fint PDM_MPI_Comm_c2f(PDM_MPI_Comm comm)
 {
@@ -844,6 +844,26 @@ PDM_MPI_Fint PDM_MPI_Comm_c2f(PDM_MPI_Comm comm)
   MPI_Comm _mpi_comm = comm;
   PDM_MPI_Fint f_comm = (PDM_MPI_Fint) MPI_Comm_c2f(_mpi_comm);
   return f_comm;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Type_f2c (wrapping de la fonction MPI_Type_f2c)
+ *----------------------------------------------------------------------------*/
+PDM_MPI_Datatype PDM_MPI_Type_f2c(PDM_MPI_Fint f_datatype)
+{
+  /* Conversion Fortran vers C */
+  PDM_MPI_Datatype datatype = (PDM_MPI_Datatype) MPI_Type_f2c(f_datatype);
+  return datatype;
+}
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Op_f2c (wrapping de la fonction MPI_Op_f2c)
+ *----------------------------------------------------------------------------*/
+PDM_MPI_Op PDM_MPI_Op_f2c(PDM_MPI_Fint f_op)
+{
+  /* Conversion Fortran vers C */
+  PDM_MPI_Op op = (PDM_MPI_Op) MPI_Op_f2c(f_op);
+  return op;
 }
 
 /*----------------------------------------------------------------------------

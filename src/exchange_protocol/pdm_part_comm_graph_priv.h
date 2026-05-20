@@ -34,13 +34,6 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-/**
- * \struct _PDM_ol_t
- * \brief  Overlay type
- *
- * _PDM_ol_t defines a overlaying structure
- *
- */
 struct _pdm_part_comm_graph_t {
 
   PDM_MPI_Comm      comm;
