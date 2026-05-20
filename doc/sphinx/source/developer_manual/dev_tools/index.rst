@@ -7,7 +7,7 @@ Developer tools
 .. container:: toc-cards
 
   .. card:: Exchange Helper
-    :link: exch_helper
+    :link: exchange_helper
     :link-type: ref
 
     Facilities to implement exchange protocols
@@ -22,7 +22,7 @@ Developer tools
   :maxdepth: 1
   :hidden:
 
-  exch_helper
+  exchange_helper
 
 
 

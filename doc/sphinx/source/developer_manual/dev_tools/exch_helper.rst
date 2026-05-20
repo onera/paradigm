@@ -1,4 +1,4 @@
-.. _exch_helper:
+.. _exchange_helper:
 
 Exchange helper
 ===============
