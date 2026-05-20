@@ -7,6 +7,7 @@
   - Add accessors
   - Expand Python API
 - PDM_laplacian_smoothing: New service for Laplacian smoothing
+- PDM_mpi: Add unit tests
 - PDM_multipart: Build PDM_part_comm_graph automatically for output PDM_part_mesh_nodal
 - PDM_part_comm_graph:
   - Add documentation
@@ -65,7 +66,6 @@
 - PDM_convex: New file for convex geometry computations (eg. point-in-convex-hull query)
 - PDM_extract_part: Add support for volume groups
 - PDM_isosurface: Add Fortran API
-- PDM_mpi: Add unit tests
 - PDM_multipart: Enable use of user-defined target partitions
 - PDM_part_comm_graph: Add "with nuplet" mode
 - PDM_part_mesh: Embedded PDM_part_comm_graph
