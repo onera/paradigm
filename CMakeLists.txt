@@ -421,7 +421,11 @@ foreach(_target IN ITEMS ${_targets})
   add_library(pdm::${_target} ALIAS ${_target})
 endforeach()
 
-file(GLOB_RECURSE all_headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/extensions/paradigma/src/*.h" )
+if(PDM_ENABLE_EXTENSION_PDMA)
+  file(GLOB_RECURSE all_headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/extensions/paradigma/src/*.h" )
+else()
+  file(GLOB_RECURSE all_headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+endif()
 set(install_headers ${all_headers})
 list(FILTER install_headers EXCLUDE REGEX ".*\\_priv\\.h$")
 
