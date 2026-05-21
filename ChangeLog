@@ -6,6 +6,12 @@
   - Internal structure organized into arrays indexed by dimension to facilitate better factorization in the future
 - PDM_rotation :
   - improve precision of quaternions and add unit tests
+- PDM_timer :
+  - Add tree timer
+  - Json export
+  - Inclusive/Exclusive time and basic information for timer (min/max)
+  - Synchronize timer on option
+  - Pretty print in stdout / log / string
 ### Deprecated
 ### Removed
 - Remove fake brace for emacs editor & clean all licensing (outdated)
