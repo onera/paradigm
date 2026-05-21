@@ -44,14 +44,6 @@ typedef struct PDM_mesh_intersection_surf_surf_polygon_t {
  * Public function definitions
  *============================================================================*/
 
-
-double PDM_mesh_intersection_surf_surf_atomic_compute
-(
- double triaA_coord[9],
- double edgeB_coord[6],
- double edgeB_normal[6]
- );
-
 /**
  * \brief Compute the area and center of mass of the intersection between two polygons.
  *
@@ -60,7 +52,7 @@ double PDM_mesh_intersection_surf_surf_atomic_compute
  * \param [out] area_ab   Surface area of intersection (signed)
  * \param [out] center_ab Center of mass of intersection (size = 3)
  */
-void PDM_mesh_intersection_surf_surf_atomic_compute2 // temporary name
+void PDM_mesh_intersection_surf_surf_atomic_compute
 (
   PDM_mesh_intersection_surf_surf_polygon_t *poly_a,
   PDM_mesh_intersection_surf_surf_polygon_t *poly_b,

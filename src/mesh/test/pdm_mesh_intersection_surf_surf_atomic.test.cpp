@@ -603,10 +603,10 @@ TEST_CASE("Mesh intersection surf-surf atomic") {
         // Compute intersection
         double area_ab;
         double center_ab[3];
-        PDM_mesh_intersection_surf_surf_atomic_compute2(&poly[0],
-                                                        &poly[1],
-                                                        &area_ab,
-                                                        center_ab);
+        PDM_mesh_intersection_surf_surf_atomic_compute(&poly[0],
+                                                       &poly[1],
+                                                       &area_ab,
+                                                       center_ab);
 
         double error_area = abs(area_ab - exp_area_ab);
         max_error_area = std::max(max_error_area, error_area);

@@ -200,8 +200,7 @@ test_c_create (pdm_t_projection_point_cloud_surf 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_intersect_tetrahedra     1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_triangles_intersect      1 PDM_LIST_TEST PDM_LIST_NRANK)
 
-test_c_create (pdm_t_unit_tetra_intersect_triangle      1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_mesh_intersection_surf_surf_atomic 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_unit_tetra_intersect_triangle 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 
 test_c_create (pdm_t_isosurface_2d_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
