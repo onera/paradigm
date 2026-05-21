@@ -34,10 +34,6 @@ typedef struct PDM_mesh_intersection_surf_surf_polygon_t {
   int    *face_edge;
   int    *edge_vtx;
 
-  double  area;      // not used currently
-  double  normal[3]; // not used currently
-  double  char_size; // TODO: use to rescale polygons for better numerical conditioning?
-
 } PDM_mesh_intersection_surf_surf_polygon_t;
 
 /*============================================================================
