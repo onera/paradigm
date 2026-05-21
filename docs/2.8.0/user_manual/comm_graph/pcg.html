@@ -1,0 +1,1424 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Global numbering" href="../gnum/index.html" /><link rel="prev" title="Part to Block" href="ptb.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
+        <title>Part Comm Graph - ParaDiGM 2.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
+  --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+  --color-foreground-primary: #23373b;
+  --color-brand-primary: #1c64ff;
+  --color-pdmkw: #6d80a1;
+  --color-link: #366ce4;
+  --color-highlight-on-target: #fff4d1;
+  --color-foreground-tertiary: #d9d9da;
+  --color-background-tertiary: #f1f2f7;
+  --color-api-name: #d63736;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #263238;
+  --color-code-foreground: #EEFFFF;
+  --color-brand-primary: #3d94ff;
+  --color-pdmkw: #879aad;
+  --color-link: #5ca5ff;
+  --color-highlight-on-target: #2e0c14;
+  --color-foreground-tertiary: #3f4144;
+  --color-background-secondary: #2a2c34;
+  --color-background-tertiary: #1d1f22;
+  --color-api-name: #ff6d6c;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #263238;
+  --color-code-foreground: #EEFFFF;
+  --color-brand-primary: #3d94ff;
+  --color-pdmkw: #879aad;
+  --color-link: #5ca5ff;
+  --color-highlight-on-target: #2e0c14;
+  --color-foreground-tertiary: #3f4144;
+  --color-background-secondary: #2a2c34;
+  --color-background-tertiary: #1d1f22;
+  --color-api-name: #ff6d6c;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ParaDiGM 2.8.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ParaDiGM 2.8.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/general.html">General presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/faq.html">FAQ</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../simple_mesh_gen/index.html">Simple mesh generation</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Simple mesh generation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../simple_mesh_gen/dcube_nodal.html">Distributed Nodal Square/Cube Mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple_mesh_gen/generate_mesh.html">Generation of simple partitioned meshes</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../partitioning/index.html">Partitioning</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Partitioning</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../partitioning/multipart.html">Multipart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../partitioning/extract_part.html">Extract part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../partitioning/part_extension.html">Part extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../partitioning/renumbering.html">Renumbering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Communication graphs</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Communication graphs</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ptp.html">Part to Part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="btp.html">Block to Part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ptb.html">Part to Block</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Part Comm Graph</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../gnum/index.html">Global numbering</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../prepro_algo/index.html">Pre-/co-/post-processing</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Pre-/co-/post-processing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../prepro_algo/mesh_location.html">Mesh location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../prepro_algo/closest_points.html">Closest points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../prepro_algo/isosurface.html">Iso-surfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../mesh_transform/index.html">Mesh Transformations</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Mesh Transformations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mesh_transform/mesh_deform.html">Mesh Deform</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../io/index.html">Parallel I/O</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Parallel I/O</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../io/io.html">IO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/writer.html">Writer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../struct/index.html">Mesh Structures</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Mesh Structures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../struct/pmn.html">Partitioned Nodal Mesh</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../util/index.html">Utils</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../util/rot.html">Rotations in 3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util/connec_transform.html">Connectivity transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util/mesh_eval.html">Mesh Evaluation Utils</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_manual/coding_rules.html">Coding rules &amp; guidelines</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer_manual/dev_tools/index.html">Developer tools</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Release notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/user_manual/comm_graph/pcg.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="part-comm-graph">
+<span id="id1"></span><h1>Part Comm Graph<a class="headerlink" href="#part-comm-graph" title="Link to this heading">¶</a></h1>
+<p><strong>Part Comm Graph</strong> is a service for managing inter-partition communications between arbitrary entities.</p>
+<p>This service does not rely on global IDs, and instead uses addresses based on local indexing.</p>
+<section id="concepts">
+<h2>Concepts<a class="headerlink" href="#concepts" title="Link to this heading">¶</a></h2>
+<section id="communication-graph">
+<span id="pcg-comm-graph-desc"></span><h3>Communication graph<a class="headerlink" href="#communication-graph" title="Link to this heading">¶</a></h3>
+<p>The communication graph can be described by a list of pairs of connected entities (one local and one remote).
+Each pair is described by the addresses of the connected entities in the form of a <em>quadruplet</em>, each composed of</p>
+<ul class="simple">
+<li><p>the (1-based) local ID of the local entity,</p></li>
+<li><p>the (0-based) rank of the connected process,</p></li>
+<li><p>the (1-based) connected partition in the connected process,</p></li>
+<li><p>the connected remote entity’s (1-based) local ID in the connected part of the connected process (can be signed to encode relative orientation).</p></li>
+</ul>
+<p>A visual example of such a graph is shown below, where the entities of interest are the vertices of a mesh partitioned over two processes (with MPI ranks 0 and 1), each decomposed into 2 partitions.
+Note that <strong>Part Comm Graph</strong> can be used with any type of entity, including (but not limited to) mesh entities.</p>
+<figure class="align-default" id="pcg-example-visu">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_arrays.svg"><img alt="Part Comm Graph" src="../../_images/schema_pcg_arrays.svg" width="95%" /></a>
+</figure>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Entities connected to more than one entities appear multiple times in their local part of the graph (e.g., vertex 8 in rank 0, part 1).
+Also, the communication graph is <em>undirected</em> and must therefore be symmetric (otherwise, an error is returned when creating the <strong>Part Comm Graph</strong> instance).</p>
+</div>
+<p>From this description of the communication graph, <strong>Part Comm Graph</strong> builds internal data structures to ease communications between entities connected in the graph.
+Multiple modes of communication are available (see the <a class="reference internal" href="#pcg-exch"><span class="std std-ref">Exchange data</span></a> dropdown in the <a class="reference internal" href="#pcg-api"><span class="std std-ref">API</span></a> section below).</p>
+</section>
+<section id="owner-status">
+<h3>Owner status<a class="headerlink" href="#owner-status" title="Link to this heading">¶</a></h3>
+<p>For each connected component of the graph, a single entity is flagged as <em>owner</em> (not to be confused with memory ownership!).
+This status is determined automatically at the creation of the <strong>Part Comm Graph</strong> instance, and can be used in algorithms that require inter-partition synchronizations for example.
+In the <a class="reference internal" href="#pcg-example-visu"><span class="std std-ref">example above</span></a>, the owner vertices are represented by solid dots, and the “ghost” vertices by circles.</p>
+</section>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
+<p class="rubric">Reduction</p>
+<p>Basic reduction operations (min, max, sum) can be performed easily with the <code class="docutils literal notranslate"><span class="pre">allreduce</span></code> function, enabling data synchronization between partitions.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Reduction of data defined for the whole partition</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Let’s consider a scalar field defined for <em>all</em> vertices, as illustrated below.
+Switch tabs to visualize the result of the various reduction operations.</p>
+<p class="sd-card-text">(Note that <code class="docutils literal notranslate"><span class="pre">allreduce</span></code> is not limited to scalar fields and also supports constant-stride fields with interlaced components.)</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="allreduce" data-sync-id="Before" for="sd-tab-item-0">
+Before reduction</label><div class="sd-tab-content docutils">
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_allreduce_before.svg"><img alt="Before reduction" src="../../_images/schema_pcg_allreduce_before.svg" width="95%" /></a>
+</figure>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="allreduce" data-sync-id="Min" for="sd-tab-item-1">
+Min</label><div class="sd-tab-content docutils">
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_allreduce_min.svg"><img alt="After reduction (min)" src="../../_images/schema_pcg_allreduce_min.svg" width="95%" /></a>
+</figure>
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="allreduce" data-sync-id="Max" for="sd-tab-item-2">
+Max</label><div class="sd-tab-content docutils">
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_allreduce_max.svg"><img alt="After reduction (max)" src="../../_images/schema_pcg_allreduce_max.svg" width="95%" /></a>
+</figure>
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="allreduce" data-sync-id="Sum" for="sd-tab-item-3">
+Sum</label><div class="sd-tab-content docutils">
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_allreduce_sum.svg"><img alt="After reduction (sum)" src="../../_images/schema_pcg_allreduce_sum.svg" width="95%" /></a>
+</figure>
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Reduction of data defined only for the graph entities</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Let’s consider a scalar field defined <em>only for the vertices in the graph</em>, as illustrated below.
+Switch tabs to visualize the result of the various reduction operations.</p>
+<p class="sd-card-text">(Note that <code class="docutils literal notranslate"><span class="pre">allreduce</span></code> is not limited to scalar fields and also supports constant-stride fields with interlaced components.)</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="allreduce" data-sync-id="Before" for="sd-tab-item-4">
+Before reduction</label><div class="sd-tab-content docutils">
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_allreduce_data_def_graph_before.svg"><img alt="Before reduction" src="../../_images/schema_pcg_allreduce_data_def_graph_before.svg" width="95%" /></a>
+</figure>
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="allreduce" data-sync-id="Min" for="sd-tab-item-5">
+Min</label><div class="sd-tab-content docutils">
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_allreduce_data_def_graph_min.svg"><img alt="After reduction (min)" src="../../_images/schema_pcg_allreduce_data_def_graph_min.svg" width="95%" /></a>
+</figure>
+</div>
+<input id="sd-tab-item-6" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="allreduce" data-sync-id="Max" for="sd-tab-item-6">
+Max</label><div class="sd-tab-content docutils">
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_allreduce_data_def_graph_max.svg"><img alt="After reduction (max)" src="../../_images/schema_pcg_allreduce_data_def_graph_max.svg" width="95%" /></a>
+</figure>
+</div>
+<input id="sd-tab-item-7" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="allreduce" data-sync-id="Sum" for="sd-tab-item-7">
+Sum</label><div class="sd-tab-content docutils">
+<figure class="align-default">
+<a class="reference internal image-reference" href="../../_images/schema_pcg_allreduce_data_def_graph_sum.svg"><img alt="After reduction (sum)" src="../../_images/schema_pcg_allreduce_data_def_graph_sum.svg" width="95%" /></a>
+</figure>
+</div>
+</div>
+</div>
+</details><p class="rubric">General data exchange</p>
+<p>Data exchanges can also be performed in multiple ways for more involved computations.
+Since the communication graph is symmetric, data can naturally be exchanged in both directions within a single exchange, meaning that each graph entity sends and receives data simultaneously.
+Exchange of data with constant or variable stride is supported, using either blocking, non-blocking or persistent communications.</p>
+<p>Under the hood, <strong>Part Comm Graph</strong> relies on the <a class="reference internal" href="../../developer_manual/dev_tools/exch_helper.html#exchange-helper"><span class="std std-ref">Exchange Helper</span></a> structure to manage these exchanges.</p>
+<p class="rubric">Advanced usage</p>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>More advanced features will be documented in a future release:</p>
+<ul class="simple">
+<li><p>Advanced exchanges (raw, one-way)</p></li>
+<li><p>Local reordering of graph entities</p></li>
+<li><p>Concatenation, splitting and filtering</p></li>
+<li><p>Creation from pcg_entity1 + entity1_to_entity2 connectivity</p></li>
+</ul>
+</div>
+</section>
+<section id="integration-with-other-paradigm-features">
+<h2>Integration with other ParaDiGM features<a class="headerlink" href="#integration-with-other-paradigm-features" title="Link to this heading">¶</a></h2>
+<p>The <a class="reference internal" href="../struct/pmn.html#part-mesh-nodal"><span class="std std-ref">Part Mesh Nodal</span></a> data structure can hold <strong>Part Comm Graph</strong> instances for 0, 1, 2 and 3D mesh elements, as well as for vertices.
+A mesh partitioned using <a class="reference internal" href="../partitioning/multipart.html#multipart"><span class="std std-ref">Multipart</span></a> and <a class="reference internal" href="../partitioning/multipart.html#multipart-outputs"><span class="std std-ref">retrieved in the form of a Part Mesh Nodal</span></a> comes with ready-to-use <strong>Part Comm Graph</strong> instances.</p>
+</section>
+<section id="api">
+<span id="pcg-api"></span><h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">A <strong>Part Comm Graph</strong> is created by providing the array describing the communication graph, as described <a class="reference internal" href="#pcg-comm-graph-desc"><span class="std std-ref">above</span></a>.</p>
+<p class="sd-card-text">Additional information can be provided by means of a n-uplet of integers for each graph entity.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-8">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_part_comm_graph_createiPiPPi15PDM_ownership_t12PDM_MPI_Comm">
+<span id="_CPPv326PDM_part_comm_graph_createiPiPPi15PDM_ownership_t12PDM_MPI_Comm"></span><span id="_CPPv226PDM_part_comm_graph_createiPiPPi15PDM_ownership_t12PDM_MPI_Comm"></span><span id="PDM_part_comm_graph_create__i.iP.iPP.PDM_ownership_t.PDM_MPI_Comm"></span><span class="target" id="pdm__part__comm__graph_8h_1a265732a30177cbc06a6b3108a6d35157"></span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_create</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_entity_graph</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pentity_graph</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span>, <span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_part_comm_graph_createiPiPPi15PDM_ownership_t12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Build a PDM_part_comm_graph_t instance. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of partitions on current process </p></li>
+<li><p class="sd-card-text"><strong>pn_entity_graph</strong> – <strong>[in]</strong> Number of graph entities (size = <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pentity_graph</strong> – <strong>[in]</strong> Inter-partition communication graph description (size = 4 * <code class="docutils literal notranslate"><span class="pre">pn_entity_graph</span></code>[i_part]) : For each entity :<ul>
+<li><p class="sd-card-text">Entity local ID (1-based)</p></li>
+<li><p class="sd-card-text">Rank of the connected process (0-based)</p></li>
+<li><p class="sd-card-text">Connected partition on the connected process (1-based)</p></li>
+<li><p class="sd-card-text">Connected entity’s local ID in the connected partition (1-based) </p></li>
+</ul>
+</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">pentity_graph</span></code></p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Initialized PDM_part_comm_graph_t instance </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv438PDM_part_comm_graph_with_nuplet_createiPiPPi15PDM_ownership_tiPPi15PDM_ownership_t10PDM_bool_t12PDM_MPI_Comm">
+<span id="_CPPv338PDM_part_comm_graph_with_nuplet_createiPiPPi15PDM_ownership_tiPPi15PDM_ownership_t10PDM_bool_t12PDM_MPI_Comm"></span><span id="_CPPv238PDM_part_comm_graph_with_nuplet_createiPiPPi15PDM_ownership_tiPPi15PDM_ownership_t10PDM_bool_t12PDM_MPI_Comm"></span><span id="PDM_part_comm_graph_with_nuplet_create__i.iP.iPP.PDM_ownership_t.i.iPP.PDM_ownership_t.PDM_bool_t.PDM_MPI_Comm"></span><span class="target" id="pdm__part__comm__graph_8h_1a0f9b1334d0397b02ea697069446b88a9"></span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_with_nuplet_create</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pn_entity_graph</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pentity_graph</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership_graph</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">nuplet_size</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pentity_nuplet</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership_nuplet</span></span>, <span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">is_signed</span></span>, <span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv438PDM_part_comm_graph_with_nuplet_createiPiPPi15PDM_ownership_tiPPi15PDM_ownership_t10PDM_bool_t12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Build a PDM_part_comm_graph_t instance using additional information represented as a n-uplet. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>n_part</strong> – <strong>[in]</strong> Number of partitions on current process </p></li>
+<li><p class="sd-card-text"><strong>pn_entity_graph</strong> – <strong>[in]</strong> Number of graph entities (size = <code class="docutils literal notranslate"><span class="pre">n_part</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>pentity_graph</strong> – <strong>[in]</strong> Inter-partition communication graph description (size = 4 * <code class="docutils literal notranslate"><span class="pre">pn_entity_graph</span></code>[i_part]) : For each entity :<ul>
+<li><p class="sd-card-text">Entity local ID (1-based)</p></li>
+<li><p class="sd-card-text">Rank of the connected process (0-based)</p></li>
+<li><p class="sd-card-text">Connected partition on the connected process (1-based)</p></li>
+<li><p class="sd-card-text">Connected entity’s local ID in the connected partition (1-based) </p></li>
+</ul>
+</p></li>
+<li><p class="sd-card-text"><strong>ownership_graph</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">pentity_graph</span></code></p></li>
+<li><p class="sd-card-text"><strong>nuplet_size</strong> – <strong>[in]</strong> N-uplet size </p></li>
+<li><p class="sd-card-text"><strong>pentity_nuplet</strong> – <strong>[in]</strong> Additional nuplets (size = <code class="docutils literal notranslate"><span class="pre">nuplet_size</span></code> * <code class="docutils literal notranslate"><span class="pre">pn_entity_graph</span></code>[i_part]) </p></li>
+<li><p class="sd-card-text"><strong>ownership_nuplet</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">pentity_nuplet</span></code></p></li>
+<li><p class="sd-card-text"><strong>is_signed</strong> – <strong>[in]</strong> Use signed nuplets? </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Initialized PDM_part_comm_graph_t instance </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-9" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-9">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_create">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">n_part</span></em>, <em class="sig-param"><span class="pre">pn_entity_graph</span></em>, <em class="sig-param"><span class="pre">pentity_graph</span></em>, <em class="sig-param"><span class="pre">ownership_graph</span></em>, <em class="sig-param"><span class="pre">comm</span></em><span class="optional">[</span>, <em class="sig-param"><span class="pre">nuplet_size</span></em><span class="optional">[</span>, <em class="sig-param"><span class="pre">pentity_nuplet</span></em><span class="optional">[</span>, <em class="sig-param"><span class="pre">ownership_nuplet</span></em><span class="optional">[</span>, <em class="sig-param"><span class="pre">is_signed</span></em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_create" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Build a Part Comm Graph instance.</p>
+<p class="sd-card-text">Additional (optional) information represented as a n-uplet can be provided.
+If so, the arguments <code class="docutils literal notranslate"><span class="pre">nuplet_size</span></code>, <code class="docutils literal notranslate"><span class="pre">pentity_nuplet</span></code>, <code class="docutils literal notranslate"><span class="pre">ownership_nuplet</span></code> and <code class="docutils literal notranslate"><span class="pre">is_signed</span></code> must be given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>n_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of parts on current process</p></li>
+<li><p class="sd-card-text"><strong>pn_entity_graph</strong> (*)<em> [</em><em>integer</em><em>,</em><em>in,pointer</em><em>]</em> :: Number of graph entities (size = <code class="docutils literal notranslate"><span class="pre">n_part</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>pentity_graph</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>in,pointer</em><em>]</em> :: Inter-partition communication graph description (size = <code class="docutils literal notranslate"><span class="pre">4*pn_entity_graph</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>ownership_graph</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Ownership for <code class="docutils literal notranslate"><span class="pre">pentity_graph</span></code></p></li>
+<li><p class="sd-card-text"><strong>comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>nuplet_size</strong><em> [</em><em>integer</em><em>,</em><em>in,</em><em>]</em> :: N-uplet size (<em>optional</em>)</p></li>
+<li><p class="sd-card-text"><strong>pentity_nuplet</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>in,pointer</em><em>]</em> :: Additional nuplets (<em>optional</em>, size = <code class="docutils literal notranslate"><span class="pre">nuplet_size</span> <span class="pre">*</span> <span class="pre">pn_entity_graph</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>ownership_nuplet</strong><em> [</em><em>integer</em><em>,</em><em>in,</em><em>]</em> :: Ownership for <code class="docutils literal notranslate"><span class="pre">pentity_nuplet</span></code> (<em>optional</em>)</p></li>
+<li><p class="sd-card-text"><strong>is_signed</strong><em> [</em><em>logical</em><em>,</em><em>in,</em><em>]</em> :: Use signed nuplets? (<em>optional</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-10" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-10">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py class">
+<dt class="sig sig-object py" id="PartCommGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PartCommGraph</span></span><a class="headerlink" href="#PartCommGraph" title="Link to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartCommGraph.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pentity_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pentity_nuplet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartCommGraph.__init__" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a new <a class="reference internal" href="#PartCommGraph" title="PartCommGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartCommGraph</span></code></a> instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>comm</strong> (<cite>MPI.Comm</cite>) – MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>pentity_graph</strong> (<cite>list</cite> of <cite>np.ndarray[np.int32]</cite>) – Inter-partition communication graph description (size = <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">pn_entity_graph[i_part]</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>pentity_nuplet</strong> (<cite>list</cite> of <cite>np.ndarray[np.int32]</cite>, optional) – Additional nuplets (size = <code class="docutils literal notranslate"><span class="pre">nuplet_size</span> <span class="pre">*</span> <span class="pre">pn_entity_graph[i_part]</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>is_signed</strong> (<cite>bool</cite>, optional) – Use signed nuplets</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" id="pcg-api-getters">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Access to internal structure</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-11">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv432PDM_part_comm_graph_n_entity_getP21PDM_part_comm_graph_ti">
+<span id="_CPPv332PDM_part_comm_graph_n_entity_getP21PDM_part_comm_graph_ti"></span><span id="_CPPv232PDM_part_comm_graph_n_entity_getP21PDM_part_comm_graph_ti"></span><span id="PDM_part_comm_graph_n_entity_get__PDM_part_comm_graph_tP.i"></span><span class="target" id="pdm__part__comm__graph_8h_1ae6ed43ebdc58c55a3e62d7b7842a56f5"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_n_entity_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv432PDM_part_comm_graph_n_entity_getP21PDM_part_comm_graph_ti" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get number of graph entities. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> Pointer to PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of graph entities </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv436PDM_part_comm_graph_entity_graph_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t">
+<span id="_CPPv336PDM_part_comm_graph_entity_graph_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t"></span><span id="_CPPv236PDM_part_comm_graph_entity_graph_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t"></span><span id="PDM_part_comm_graph_entity_graph_get__PDM_part_comm_graph_tP.i.iPP.PDM_ownership_t"></span><span class="target" id="pdm__part__comm__graph_8h_1ab96fa1774cd52e583150a7d55e5c5960"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_entity_graph_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity_graph</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv436PDM_part_comm_graph_entity_graph_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the communication graph description for a local partition. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> Pointer to PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>entity_graph</strong> – <strong>[out]</strong> Entity graph (size = 4 * n_entity_graph) </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">entity_graph</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Number of entities in graph in current partition </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv429PDM_part_comm_graph_owner_getP21PDM_part_comm_graph_ti">
+<span id="_CPPv329PDM_part_comm_graph_owner_getP21PDM_part_comm_graph_ti"></span><span id="_CPPv229PDM_part_comm_graph_owner_getP21PDM_part_comm_graph_ti"></span><span id="PDM_part_comm_graph_owner_get__PDM_part_comm_graph_tP.i"></span><span class="target" id="pdm__part__comm__graph_8h_1afb4cfbce460331f826ab0953337d8ed7"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_owner_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429PDM_part_comm_graph_owner_getP21PDM_part_comm_graph_ti" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get the owner status of local graph entities (read-only) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Id of current partition</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Owner status (1 if owner, 0 if not owner, size = <code class="docutils literal notranslate"><span class="pre">n_entity_graph</span></code>) </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv431PDM_part_comm_graph_nuplet_sizeP21PDM_part_comm_graph_t">
+<span id="_CPPv331PDM_part_comm_graph_nuplet_sizeP21PDM_part_comm_graph_t"></span><span id="_CPPv231PDM_part_comm_graph_nuplet_sizeP21PDM_part_comm_graph_t"></span><span id="PDM_part_comm_graph_nuplet_size__PDM_part_comm_graph_tP"></span><span class="target" id="pdm__part__comm__graph_8h_1a79ff78177c49d1a959e5c24268a8c999"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_nuplet_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv431PDM_part_comm_graph_nuplet_sizeP21PDM_part_comm_graph_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get nuplet size. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> Pointer to PDM_part_comm_graph_t instance</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Size of nuplet </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv437PDM_part_comm_graph_entity_nuplet_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t">
+<span id="_CPPv337PDM_part_comm_graph_entity_nuplet_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t"></span><span id="_CPPv237PDM_part_comm_graph_entity_nuplet_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t"></span><span id="PDM_part_comm_graph_entity_nuplet_get__PDM_part_comm_graph_tP.i.iPP.PDM_ownership_t"></span><span class="target" id="pdm__part__comm__graph_8h_1a4c0f23ec3fac6abad4c1ea806004a981"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_entity_nuplet_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">i_part</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">entity_nuplet</span></span>, <span class="n"><span class="pre">PDM_ownership_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ownership</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv437PDM_part_comm_graph_entity_nuplet_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Get entity nuplets. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> Pointer to PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>i_part</strong> – <strong>[in]</strong> Partition identifier </p></li>
+<li><p class="sd-card-text"><strong>entity_nuplet</strong> – <strong>[out]</strong> Entity nuplets (size = nuplet_size * n_entity_graph) </p></li>
+<li><p class="sd-card-text"><strong>ownership</strong> – <strong>[in]</strong> Ownership for <code class="docutils literal notranslate"><span class="pre">entity_nuplet</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Size of nuplet </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-12" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-12">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_n_entity_get">
+<em class="property"><span class="pre">function</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_n_entity_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">i_part</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_n_entity_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get number of graph entities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><strong>n_entity</strong><em> [</em><em>integer</em><em>]</em> :: Number of graph entities</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_entity_graph_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_entity_graph_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">entity_graph</span></em>, <em class="sig-param"><span class="pre">ownership</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_entity_graph_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the communication graph description for a local partition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_graph</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Entity graph (size = <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">n_entity_graph</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Ownership</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_owner_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_owner_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">is_owner</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_owner_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the owner status of local graph entities (read-only)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>is_owner</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Owner status  (1 if owner, 0 if not owner, size = <code class="docutils literal notranslate"><span class="pre">n_entity_graph</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_nuplet_size">
+<em class="property"><span class="pre">function</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_nuplet_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_nuplet_size" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get nuplet size</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><strong>size</strong> :: Size of nuplet</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_entity_nuplet_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_entity_nuplet_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">i_part</span></em>, <em class="sig-param"><span class="pre">entity_nuplet</span></em>, <em class="sig-param"><span class="pre">ownership</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_entity_nuplet_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get entity nuplets</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>i_part</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Partition identifier</p></li>
+<li><p class="sd-card-text"><strong>entity_nuplet</strong> (*)<em> [</em><em>integer</em><em>,</em><em>out,pointer</em><em>]</em> :: Entity nuplets (size = nuplet_size * n_entity_graph)</p></li>
+<li><p class="sd-card-text"><strong>ownership</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Ownership</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-13" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-13">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartCommGraph.entity_graph_get">
+<span class="sig-prename descclassname"><span class="pre">PartCommGraph.</span></span><span class="sig-name descname"><span class="pre">entity_graph_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartCommGraph.entity_graph_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the communication graph description for a local partition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><dl class="simple">
+<dt>For each entity :</dt><dd><ul class="simple">
+<li><p class="sd-card-text">Entity local ID (1-based)</p></li>
+<li><p class="sd-card-text">Rank of the connected process (0-based)</p></li>
+<li><p class="sd-card-text">Connected partition on the connected process (1-based)</p></li>
+<li><p class="sd-card-text">Connected entity’s local ID in the connected partition (1-based)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text">Inter-partition communication graph description (<cite>np.array[np.int32]</cite> of size <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">n_entity_graph</span></code>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartCommGraph.owner_get">
+<span class="sig-prename descclassname"><span class="pre">PartCommGraph.</span></span><span class="sig-name descname"><span class="pre">owner_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i_part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartCommGraph.owner_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Get the owner status of local graph entities (read-only)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>i_part</strong> (<em>int</em>) – Partition identifier</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Owner status (1 if owner, 0 if not owner) (<cite>np.array[np.int32]</cite> of size <cite>n_entity_graph</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Reduction operations</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-14">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv429PDM_part_comm_graph_allreduceP21PDM_part_comm_graph_t16PDM_MPI_Datatypei10PDM_MPI_Op10PDM_bool_tPPh">
+<span id="_CPPv329PDM_part_comm_graph_allreduceP21PDM_part_comm_graph_t16PDM_MPI_Datatypei10PDM_MPI_Op10PDM_bool_tPPh"></span><span id="_CPPv229PDM_part_comm_graph_allreduceP21PDM_part_comm_graph_t16PDM_MPI_Datatypei10PDM_MPI_Op10PDM_bool_tPPh"></span><span id="PDM_part_comm_graph_allreduce__PDM_part_comm_graph_tP.PDM_MPI_Datatype.i.PDM_MPI_Op.PDM_bool_t.unsigned-cPP"></span><span class="target" id="pdm__part__comm__graph_8h_1acdd1db8781061a63d0a4bd682b40cdc8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_allreduce</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="n"><span class="pre">PDM_MPI_Datatype</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">datatype</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">stride</span></span>, <span class="n"><span class="pre">PDM_MPI_Op</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span>, <span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">data_def_graph</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429PDM_part_comm_graph_allreduceP21PDM_part_comm_graph_t16PDM_MPI_Datatypei10PDM_MPI_Op10PDM_bool_tPPh" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Perform a reduction operation on constant-stride data. The data can be defined either for only the entities connected in the graph, or the whole partition. The reduction is performed in place. </p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Only <code class="docutils literal notranslate"><span class="pre">PDM_MPI_DOUBLE</span></code> and <code class="docutils literal notranslate"><span class="pre">PDM_MPI_INT</span></code> data types are supported. Only <code class="docutils literal notranslate"><span class="pre">PDM_MPI_SUM</span></code>, <code class="docutils literal notranslate"><span class="pre">PDM_MPI_MIN</span></code> and <code class="docutils literal notranslate"><span class="pre">PDM_MPI_MAX</span></code> operations are supported.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> Pointer to PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>datatype</strong> – <strong>[in]</strong> Data type ( <code class="docutils literal notranslate"><span class="pre">PDM_MPI_DOUBLE</span></code> / <code class="docutils literal notranslate"><span class="pre">PDM_MPI_INT</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>stride</strong> – <strong>[in]</strong> Constant stride value </p></li>
+<li><p class="sd-card-text"><strong>op</strong> – <strong>[in]</strong> Reduction operation ( <code class="docutils literal notranslate"><span class="pre">PDM_MPI_SUM</span></code> / <code class="docutils literal notranslate"><span class="pre">PDM_MPI_MIN</span></code> / <code class="docutils literal notranslate"><span class="pre">PDM_MPI_MAX</span></code>) </p></li>
+<li><p class="sd-card-text"><strong>data_def_graph</strong> – <strong>[in]</strong> Is the data defined only for the graph entities? </p></li>
+<li><p class="sd-card-text"><strong>data</strong> – <strong>[inout]</strong> Data to reduce </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-15" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-15">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_allreduce">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_allreduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">stride</span></em>, <em class="sig-param"><span class="pre">op</span></em>, <em class="sig-param"><span class="pre">data_def_graph</span></em>, <em class="sig-param"><span class="pre">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_allreduce" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Perform a reduction operation on constant-stride data.
+The data can be defined either for only the entities connected in the graph, or the whole partition.
+The reduction is performed in place.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Only <code class="docutils literal notranslate"><span class="pre">real(8)</span></code> and <code class="docutils literal notranslate"><span class="pre">integer(4)</span></code> data types are supported.
+Only <code class="docutils literal notranslate"><span class="pre">MPI_SUM</span></code>, <code class="docutils literal notranslate"><span class="pre">MPI_MIN</span></code> and <code class="docutils literal notranslate"><span class="pre">MPI_MAX</span></code> operations are supported.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Constant stride value</p></li>
+<li><p class="sd-card-text"><strong>op</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Reduction operation (<code class="docutils literal notranslate"><span class="pre">MPI_SUM</span></code>/<code class="docutils literal notranslate"><span class="pre">MPI_MIN</span></code>/<code class="docutils literal notranslate"><span class="pre">MPI_MAX</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>data_def_graph</strong><em> [</em><em>logical</em><em>,</em><em>in</em><em>]</em> :: Is the data defined only for the graph entities?</p></li>
+<li><p class="sd-card-text"><strong>data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Data to reduce</p></li>
+</ul>
+</dd>
+<dt class="field-even">Use <span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text"><code class="xref f f-mod docutils literal notranslate"><span class="pre">mpi</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-16" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-16">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartCommGraph.allreduce">
+<span class="sig-prename descclassname"><span class="pre">PartCommGraph.</span></span><span class="sig-name descname"><span class="pre">allreduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_def_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartCommGraph.allreduce" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Perform a reduction operation on constant-stride data.
+The data can be defined either for only the entities connected in the graph, or the whole partition.
+The reduction is performed in place.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Only <code class="docutils literal notranslate"><span class="pre">np.double</span></code> and <code class="docutils literal notranslate"><span class="pre">np.int32</span></code> data types are supported.
+Only <code class="docutils literal notranslate"><span class="pre">MPI.SUM</span></code>, <code class="docutils literal notranslate"><span class="pre">MPI.MIN</span></code> and <code class="docutils literal notranslate"><span class="pre">MPI.MAX</span></code> operations are supported.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>stride</strong> (<cite>int</cite>) – Constant stride value</p></li>
+<li><p class="sd-card-text"><strong>op</strong> (<cite>MPI.Op</cite>) – Reduction operation (<code class="docutils literal notranslate"><span class="pre">MPI.SUM</span></code> / <code class="docutils literal notranslate"><span class="pre">MPI.MIN</span></code> / <code class="docutils literal notranslate"><span class="pre">MPI.MAX</span></code>)</p></li>
+<li><p class="sd-card-text"><strong>data_def_graph</strong> (<cite>bool</cite>) – Is the data defined only for the graph entities?</p></li>
+<li><p class="sd-card-text"><strong>data</strong> (<cite>list</cite> of <cite>np.ndarray</cite>) – Data to reduce</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" id="pcg-exch">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Exchange data</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Blocking communications</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-17" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-17">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424PDM_part_comm_graph_exchP21PDM_part_comm_graph_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv">
+<span id="_CPPv324PDM_part_comm_graph_exchP21PDM_part_comm_graph_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"></span><span id="_CPPv224PDM_part_comm_graph_exchP21PDM_part_comm_graph_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"></span><span id="PDM_part_comm_graph_exch__PDM_part_comm_graph_tP.s.PDM_stride_t.i.iPP.voidPP.iPPP.voidPPP"></span><span class="target" id="pdm__part__comm__graph_8h_1a3aa6fcb7b9e70da1b5ad7abb23dfd4c1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_exch</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s_data</span></span>, <span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_stride</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">cst_stride</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">send_entity_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">send_entity_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">recv_entity_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">recv_entity_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_part_comm_graph_exchP21PDM_part_comm_graph_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Exchange data using two-way blocking communications. Each graph entity sends <em>and</em> receives data. </p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Interleaved data ( PDM_STRIDE_CST_INTERLEAVED) is not supported yet</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>s_data</strong> – <strong>[in]</strong> Data size </p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong> – <strong>[in]</strong> Kind of stride (see PDM_stride_t) </p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong> – <strong>[in]</strong> Constant stride value </p></li>
+<li><p class="sd-card-text"><strong>send_entity_stride</strong> – <strong>[in]</strong> Stride of send data </p></li>
+<li><p class="sd-card-text"><strong>send_entity_data</strong> – <strong>[in]</strong> Send data </p></li>
+<li><p class="sd-card-text"><strong>recv_entity_stride</strong> – <strong>[out]</strong> Stride of recv data </p></li>
+<li><p class="sd-card-text"><strong>recv_entity_data</strong> – <strong>[out]</strong> Recv data </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-18" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-18">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_exch">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_exch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">t_stride</span></em>, <em class="sig-param"><span class="pre">cst_stride</span></em>, <em class="sig-param"><span class="pre">send_stride</span></em>, <em class="sig-param"><span class="pre">send_data</span></em>, <em class="sig-param"><span class="pre">recv_stride</span></em>, <em class="sig-param"><span class="pre">recv_data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_exch" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Exchange data using two-way blocking communications.
+Each graph entity sends <em>and</em> receives data.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Interleaved data (<code class="docutils literal notranslate"><span class="pre">PDM_STRIDE_CST_INTERLEAVED</span></code>) is not supported yet</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of stride</p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Constant stride value</p></li>
+<li><p class="sd-card-text"><strong>send_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of send data</p></li>
+<li><p class="sd-card-text"><strong>send_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Send data</p></li>
+<li><p class="sd-card-text"><strong>recv_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of recv data</p></li>
+<li><p class="sd-card-text"><strong>recv_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Recv data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-19" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-19">
+Python</label><div class="sd-tab-content docutils">
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartCommGraph.exch">
+<span class="sig-prename descclassname"><span class="pre">PartCommGraph.</span></span><span class="sig-name descname"><span class="pre">exch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">send_entity_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">send_entity_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interlaced_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartCommGraph.exch" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Exchange data using two-way blocking communications.
+Each graph entity sends <em>and</em> receives data.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Interleaved data is not supported yet</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>send_entity_data</strong> (<cite>list</cite> of <cite>np.ndarray</cite>) – Data to send</p></li>
+<li><p class="sd-card-text"><strong>send_entity_stride</strong> (<cite>int</cite> or <cite>list</cite> of <cite>np.ndarray[np.int32]</cite>, optional) – Stride of send data (default = 1)</p></li>
+<li><p class="sd-card-text"><strong>interlaced_str</strong> (<cite>bool</cite>, optional) – Is the data interlaced? (default = <strong>True</strong>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns :</dt><dd><ul class="simple">
+<li><p class="sd-card-text">Recv stride (same dtype as <code class="docutils literal notranslate"><span class="pre">send_entity_stride</span></code>)</p></li>
+<li><p class="sd-card-text">Recv data   (<cite>list</cite> of same dtype as <code class="docutils literal notranslate"><span class="pre">send_entity_data</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Non-blocking communications</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Non-blocking communications with <strong>Part Comm Graph</strong> follow the same semantics as the <a class="reference external" href="https://www.mpi-forum.org/docs/mpi-1.1/mpi-11-html/node44.html">MPI standard</a>:</p>
+<ul class="simple">
+<li><p class="sd-card-text">first, the exchange is initiated (<code class="docutils literal notranslate"><span class="pre">iexch</span></code>), which opens a request;</p></li>
+<li><p class="sd-card-text">the communication can then be covered by local computations;</p></li>
+<li><p class="sd-card-text">when the received data is required, we wait for the exchange to finish (<code class="docutils literal notranslate"><span class="pre">wait</span></code>), which closes the request.</p></li>
+</ul>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-20" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-20">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425PDM_part_comm_graph_iexchP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv">
+<span id="_CPPv325PDM_part_comm_graph_iexchP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"></span><span id="_CPPv225PDM_part_comm_graph_iexchP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"></span><span id="PDM_part_comm_graph_iexch__PDM_part_comm_graph_tP.PDM_mpi_comm_kind_t.s.PDM_stride_t.i.iPP.voidPP.iPPP.voidPPP"></span><span class="target" id="pdm__part__comm__graph_8h_1a3d19de74d8c2e0917d04da494f940eca"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_iexch</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <a class="reference internal" href="../../developer_manual/dev_tools/exch_helper.html#_CPPv419PDM_mpi_comm_kind_t" title="PDM_mpi_comm_kind_t"><span class="n"><span class="pre">PDM_mpi_comm_kind_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">kcomm</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s_data</span></span>, <span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_stride</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">cst_stride</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">send_entity_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">send_entity_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">recv_entity_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">recv_entity_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425PDM_part_comm_graph_iexchP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Initiate a two-way non-blocking exchange. Each graph entity sends <em>and</em> receives data. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">The exchange must then be finalized using<span> <a class="reference internal" href="#pdm-part-comm-graph-exch-wait-c"><span class="std std-ref">PDM_part_comm_graph_exch_wait</span></a> </span>.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Interleaved data ( <code class="docutils literal notranslate"><span class="pre">PDM_STRIDE_CST_INTERLEAVED</span></code>) is not supported yet</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>kcomm</strong> – <strong>[in]</strong> Kind of MPI communication </p></li>
+<li><p class="sd-card-text"><strong>s_data</strong> – <strong>[in]</strong> Data size </p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong> – <strong>[in]</strong> Kind of stride (see PDM_stride_t) </p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong> – <strong>[in]</strong> Constant stride value </p></li>
+<li><p class="sd-card-text"><strong>send_entity_stride</strong> – <strong>[in]</strong> Stride of send data </p></li>
+<li><p class="sd-card-text"><strong>send_entity_data</strong> – <strong>[in]</strong> Send data </p></li>
+<li><p class="sd-card-text"><strong>recv_entity_stride</strong> – <strong>[out]</strong> Stride of recv data </p></li>
+<li><p class="sd-card-text"><strong>recv_entity_data</strong> – <strong>[out]</strong> Recv data</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Request id </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function" id="pdm-part-comm-graph-exch-wait-c">
+<dt class="sig sig-object cpp" id="_CPPv429PDM_part_comm_graph_exch_waitP21PDM_part_comm_graph_ti">
+<span id="_CPPv329PDM_part_comm_graph_exch_waitP21PDM_part_comm_graph_ti"></span><span id="_CPPv229PDM_part_comm_graph_exch_waitP21PDM_part_comm_graph_ti"></span><span id="PDM_part_comm_graph_exch_wait__PDM_part_comm_graph_tP.i"></span><span class="target" id="pdm__part__comm__graph_8h_1a75302a031f43f1a1e3e3c726802f16f7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_exch_wait</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">request_id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429PDM_part_comm_graph_exch_waitP21PDM_part_comm_graph_ti" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Wait for a non-blocking exchange to finish. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>request_id</strong> – <strong>[in]</strong> Request id </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-21" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-21">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_iexch">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_iexch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">k_comm</span></em>, <em class="sig-param"><span class="pre">t_stride</span></em>, <em class="sig-param"><span class="pre">cst_stride</span></em>, <em class="sig-param"><span class="pre">send_stride</span></em>, <em class="sig-param"><span class="pre">send_data</span></em>, <em class="sig-param"><span class="pre">recv_stride</span></em>, <em class="sig-param"><span class="pre">recv_data</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_iexch" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Initiate a two-way non-blocking exchange.
+Each graph entity sends <em>and</em> receives data.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">The exchange must then be finalized using <a class="reference internal" href="#pdm-part-comm-graph-exch-wait-f"><span class="std std-ref">PDM_part_comm_graph_exch_wait</span></a>.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Interleaved data (<code class="docutils literal notranslate"><span class="pre">PDM_STRIDE_CST_INTERLEAVED</span></code>) is not supported yet.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>k_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of MPI communication</p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of stride</p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Constant stride value</p></li>
+<li><p class="sd-card-text"><strong>send_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of send data</p></li>
+<li><p class="sd-card-text"><strong>send_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Send data</p></li>
+<li><p class="sd-card-text"><strong>recv_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of recv data</p></li>
+<li><p class="sd-card-text"><strong>recv_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Recv data</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Request ID</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl id="pdm-part-comm-graph-exch-wait-f">
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_exch_wait">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_exch_wait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_exch_wait" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Wait for a non-blocking (possibly persistent) exchange to finish</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Request ID</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Persistent communications</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Persistent communications with <strong>Part Comm Graph</strong> follow the same semantics as the <a class="reference external" href="https://www.mpi-forum.org/docs/mpi-1.1/mpi-11-html/node51.html">MPI standard</a>:</p>
+<ul class="simple">
+<li><p class="sd-card-text">first, a persistent request is created (<code class="docutils literal notranslate"><span class="pre">init</span></code>);</p></li>
+<li><p class="sd-card-text">then the request can be used (as many times as necessary) to exchange data using the same send and recv buffers (<code class="docutils literal notranslate"><span class="pre">start</span></code> / <code class="docutils literal notranslate"><span class="pre">wait</span></code>);</p></li>
+<li><p class="sd-card-text">finally, the persistent request must be freed (<code class="docutils literal notranslate"><span class="pre">free</span></code>).</p></li>
+</ul>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-22" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-22">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv429PDM_part_comm_graph_exch_initP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv">
+<span id="_CPPv329PDM_part_comm_graph_exch_initP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"></span><span id="_CPPv229PDM_part_comm_graph_exch_initP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"></span><span id="PDM_part_comm_graph_exch_init__PDM_part_comm_graph_tP.PDM_mpi_comm_kind_t.s.PDM_stride_t.i.iPP.voidPP.iPPP.voidPPP"></span><span class="target" id="pdm__part__comm__graph_8h_1a2d91ffe4f831a8eeb671a08571e8d3d2"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_exch_init</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <a class="reference internal" href="../../developer_manual/dev_tools/exch_helper.html#_CPPv419PDM_mpi_comm_kind_t" title="PDM_mpi_comm_kind_t"><span class="n"><span class="pre">PDM_mpi_comm_kind_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">kcomm</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s_data</span></span>, <span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_stride</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">cst_stride</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">send_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">send_data</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">recv_stride</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">recv_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429PDM_part_comm_graph_exch_initP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Open a persistent exchange request. </p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Only constant-stride, interlaced data ( <code class="docutils literal notranslate"><span class="pre">PDM_STRIDE_CST_INTERLACED</span></code>) is currently supported</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>kcomm</strong> – <strong>[in]</strong> Kind of MPI communication </p></li>
+<li><p class="sd-card-text"><strong>s_data</strong> – <strong>[in]</strong> Data size </p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong> – <strong>[in]</strong> Kind of stride (see PDM_stride_t) </p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong> – <strong>[in]</strong> Constant stride value </p></li>
+<li><p class="sd-card-text"><strong>send_stride</strong> – <strong>[in]</strong> Stride of send data </p></li>
+<li><p class="sd-card-text"><strong>send_data</strong> – <strong>[in]</strong> Send data </p></li>
+<li><p class="sd-card-text"><strong>recv_stride</strong> – <strong>[out]</strong> Stride of recv data </p></li>
+<li><p class="sd-card-text"><strong>recv_data</strong> – <strong>[out]</strong> Recv data</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Request id </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-23" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-23">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_exch_init">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_exch_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">k_comm</span></em>, <em class="sig-param"><span class="pre">t_stride</span></em>, <em class="sig-param"><span class="pre">cst_stride</span></em>, <em class="sig-param"><span class="pre">send_stride</span></em>, <em class="sig-param"><span class="pre">send_data</span></em>, <em class="sig-param"><span class="pre">recv_stride</span></em>, <em class="sig-param"><span class="pre">recv_data</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_exch_init" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Open a persistent exchange request</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p class="sd-card-text">Only constant-stride, interlaced data (<code class="docutils literal notranslate"><span class="pre">PDM_STRIDE_CST_INTERLACED</span></code>) is currently supported</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>k_comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Kind of MPI communication</p></li>
+<li><p class="sd-card-text"><strong>t_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of stride</p></li>
+<li><p class="sd-card-text"><strong>cst_stride</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Constant stride value</p></li>
+<li><p class="sd-card-text"><strong>send_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of send data</p></li>
+<li><p class="sd-card-text"><strong>send_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Send data</p></li>
+<li><p class="sd-card-text"><strong>recv_stride</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Stride of recv data</p></li>
+<li><p class="sd-card-text"><strong>recv_data</strong><em> [</em><em>pdm_pointer_array_t</em><em>,</em><em>pointer</em><em>]</em> :: Recv data</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Request ID</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-24" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-24">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv430PDM_part_comm_graph_exch_startP21PDM_part_comm_graph_ti">
+<span id="_CPPv330PDM_part_comm_graph_exch_startP21PDM_part_comm_graph_ti"></span><span id="_CPPv230PDM_part_comm_graph_exch_startP21PDM_part_comm_graph_ti"></span><span id="PDM_part_comm_graph_exch_start__PDM_part_comm_graph_tP.i"></span><span class="target" id="pdm__part__comm__graph_8h_1ac6ba35b0859d8eb4edb4b2fc57157eb3"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_exch_start</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">request_id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv430PDM_part_comm_graph_exch_startP21PDM_part_comm_graph_ti" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Start a two-way non-blocking, persistent exchange. Each graph entity sends <em>and</em> receives data. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">The exchange must then be finalized using<span> <a class="reference internal" href="#pdm-part-comm-graph-exch-wait-c"><span class="std std-ref">PDM_part_comm_graph_exch_wait</span></a> </span>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>request_id</strong> – <strong>[in]</strong> Request id </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-25" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-25">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_exch_start">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_exch_start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_exch_start" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Start a non-blocking persistent exchange</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">The exchange must then be finalized using <a class="reference internal" href="#pdm-part-comm-graph-exch-wait-f"><span class="std std-ref">PDM_part_comm_graph_exch_wait</span></a>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Request ID</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-26" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-26">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv429PDM_part_comm_graph_exch_freeP21PDM_part_comm_graph_ti">
+<span id="_CPPv329PDM_part_comm_graph_exch_freeP21PDM_part_comm_graph_ti"></span><span id="_CPPv229PDM_part_comm_graph_exch_freeP21PDM_part_comm_graph_ti"></span><span id="PDM_part_comm_graph_exch_free__PDM_part_comm_graph_tP.i"></span><span class="target" id="pdm__part__comm__graph_8h_1a77514eb19e5c41937a82d1e075894b8e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_exch_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">request_id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv429PDM_part_comm_graph_exch_freeP21PDM_part_comm_graph_ti" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free a persistent request. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong> – <strong>[in]</strong> PDM_part_comm_graph_t instance </p></li>
+<li><p class="sd-card-text"><strong>request_id</strong> – <strong>[in]</strong> Request id </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-27" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-27">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_exch_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_exch_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em>, <em class="sig-param"><span class="pre">request</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_exch_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free a persistent request</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Part Comm Graph instance</p></li>
+<li><p class="sd-card-text"><strong>request</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Request ID</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details></div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-28" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-28">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424PDM_part_comm_graph_freeP21PDM_part_comm_graph_t">
+<span id="_CPPv324PDM_part_comm_graph_freeP21PDM_part_comm_graph_t"></span><span id="_CPPv224PDM_part_comm_graph_freeP21PDM_part_comm_graph_t"></span><span id="PDM_part_comm_graph_free__PDM_part_comm_graph_tP"></span><span class="target" id="pdm__part__comm__graph_8h_1a0106d220c444d513af997c7ec8d1e1c1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_part_comm_graph_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_part_comm_graph_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pcg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_part_comm_graph_freeP21PDM_part_comm_graph_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free a PDM_part_comm_graph_t instance. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>pcg</strong> – <strong>[inout]</strong> PDM_part_comm_graph_t instance </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-29" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-29">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_part_comm_graph_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_part_comm_graph_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pcg</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_part_comm_graph_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free a Part Comm Graph instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>pcg</strong><em> [</em><em>c_ptr</em><em>,</em><em>inout</em><em>]</em> :: Part Comm Graph instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-30" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Python" for="sd-tab-item-30">
+Python</label><div class="sd-tab-content docutils">
+<p class="sd-card-text">The instance is automatically freed by Python’s garbage collector when it is no longer referenced</p>
+</div>
+</div>
+</div>
+</details></section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../gnum/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Global numbering</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ptb.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Part to Block</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, ONERA The French Aerospace Lab
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Part Comm Graph</a><ul>
+<li><a class="reference internal" href="#concepts">Concepts</a><ul>
+<li><a class="reference internal" href="#communication-graph">Communication graph</a></li>
+<li><a class="reference internal" href="#owner-status">Owner status</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#integration-with-other-paradigm-features">Integration with other ParaDiGM features</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv426PDM_part_comm_graph_createiPiPPi15PDM_ownership_t12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_create()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv438PDM_part_comm_graph_with_nuplet_createiPiPPi15PDM_ownership_tiPPi15PDM_ownership_t10PDM_bool_t12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_with_nuplet_create()</span></code></a></li>
+<li><a class="reference internal" href="#PartCommGraph"><code class="docutils literal notranslate"><span class="pre">PartCommGraph</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartCommGraph.__init__"><code class="docutils literal notranslate"><span class="pre">PartCommGraph.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv432PDM_part_comm_graph_n_entity_getP21PDM_part_comm_graph_ti"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_n_entity_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv436PDM_part_comm_graph_entity_graph_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_entity_graph_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv429PDM_part_comm_graph_owner_getP21PDM_part_comm_graph_ti"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_owner_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv431PDM_part_comm_graph_nuplet_sizeP21PDM_part_comm_graph_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_nuplet_size()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv437PDM_part_comm_graph_entity_nuplet_getP21PDM_part_comm_graph_tiPPi15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_entity_nuplet_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartCommGraph.entity_graph_get"><code class="docutils literal notranslate"><span class="pre">PartCommGraph.entity_graph_get()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartCommGraph.owner_get"><code class="docutils literal notranslate"><span class="pre">PartCommGraph.owner_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv429PDM_part_comm_graph_allreduceP21PDM_part_comm_graph_t16PDM_MPI_Datatypei10PDM_MPI_Op10PDM_bool_tPPh"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_allreduce()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartCommGraph.allreduce"><code class="docutils literal notranslate"><span class="pre">PartCommGraph.allreduce()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv424PDM_part_comm_graph_exchP21PDM_part_comm_graph_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_exch()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartCommGraph.exch"><code class="docutils literal notranslate"><span class="pre">PartCommGraph.exch()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv425PDM_part_comm_graph_iexchP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_iexch()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv429PDM_part_comm_graph_exch_waitP21PDM_part_comm_graph_ti"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_exch_wait()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv429PDM_part_comm_graph_exch_initP21PDM_part_comm_graph_t19PDM_mpi_comm_kind_t6size_t12PDM_stride_tiPPiPPvPPPiPPPv"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_exch_init()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv430PDM_part_comm_graph_exch_startP21PDM_part_comm_graph_ti"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_exch_start()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv429PDM_part_comm_graph_exch_freeP21PDM_part_comm_graph_ti"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_exch_free()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv424PDM_part_comm_graph_freeP21PDM_part_comm_graph_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_comm_graph_free()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../../_static/js/custom.js?v=3597c2b8"></script>
+    </body>
+</html>
