@@ -547,6 +547,12 @@ _evaluate_distribution(int       n_ranges,
   int  i;
   double  d_low = 0, d_up = 0, fit = 0;
 
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+  if (optim == 0.) {
+    return 0.;
+  }
+PDM_GCC_SUPPRESS_WARNING_POP
+
   /*
      d_low is the max gap between the distribution count and the optimum when
      distribution is lower than optimum.
@@ -651,10 +657,13 @@ _define_rank_distrib(int                       dim,
 
   /* Define the cumulative frequency related to g_distribution */
   cfreq[0] = 0.;
+  double inv_gsum_weight = 0.;
+  if (gsum_weight > 0) {
+    inv_gsum_weight = 1./gsum_weight;
+  }
   for (int id = 0; id < n_samples; id++) {
-    double _g_distrib  = (double)g_distrib[id];
-    double _gsum_weight = (double)gsum_weight;
-    cfreq[id+1] = cfreq[id] + _g_distrib/_gsum_weight;
+    double _g_distrib = (double) g_distrib[id];
+    cfreq[id+1] = cfreq[id] + _g_distrib * inv_gsum_weight;
   }
   cfreq[n_samples] = 1.0;
 

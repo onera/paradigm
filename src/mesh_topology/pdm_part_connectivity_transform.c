@@ -712,6 +712,63 @@ PDM_graph_compress
 }
 
 
+ /* Filter a connectivity array: remove whole block if entity1_flag is False,
+   and remove elements for which entity2_flag is False within each block */
+int
+PDM_connectivity_filter
+(
+  int   n_entity1,
+  int  *entity1_to_entity2_idx,
+  int  *entity1_to_entity2,
+  int  *entity1_flag,
+  int  *entity2_flag,
+  int **sub_entity1_to_entity2_idx,
+  int **sub_entity1_to_entity2
+)
+{
+  // Count number of selected entity1
+  int sub_n_entity1 = 0;
+  for (int i = 0; i < n_entity1; ++i) {
+    sub_n_entity1 += (entity1_flag[i] == 1);
+  }
+
+  int* _sub_entity1_to_entity2_idx = NULL;
+  int* _sub_entity1_to_entity2 = NULL;
+
+  // Idx array
+  PDM_malloc(_sub_entity1_to_entity2_idx, sub_n_entity1+1, int);
+  _sub_entity1_to_entity2_idx[0] = 0;
+  int idx_write = 0;
+  for(int i = 0; i < n_entity1; ++i) {
+    if(entity1_flag[i] == 1) {
+      int len = 0;
+      for (int j = entity1_to_entity2_idx[i]; j < entity1_to_entity2_idx[i+1]; ++j) {
+        int entity2 = PDM_ABS(entity1_to_entity2[j]) - 1;
+        len += (entity2_flag[entity2] == 1);
+      }
+      _sub_entity1_to_entity2_idx[idx_write+1] = _sub_entity1_to_entity2_idx[idx_write] + len;
+      idx_write++;
+    }
+  }
+  PDM_malloc(_sub_entity1_to_entity2, _sub_entity1_to_entity2_idx[sub_n_entity1], int);
+  idx_write = 0;
+  for(int i = 0; i < n_entity1; ++i) {
+    if(entity1_flag[i] == 1) {
+      for (int j = entity1_to_entity2_idx[i]; j < entity1_to_entity2_idx[i+1]; ++j) {
+        int entity2 = PDM_ABS (entity1_to_entity2[j]) - 1;
+        if (entity2_flag[entity2] == 1) {
+          _sub_entity1_to_entity2[idx_write++] = entity1_to_entity2[j];
+        }
+      }
+    }
+  }
+  *sub_entity1_to_entity2_idx = _sub_entity1_to_entity2_idx;
+  *sub_entity1_to_entity2 = _sub_entity1_to_entity2;
+
+  return sub_n_entity1;
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

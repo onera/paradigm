@@ -50,7 +50,7 @@ extern "C" {
     (isos)->entry_is_part=0; \
   } \
   else if ((isos)->entry_is_part==1) { \
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as partitioned.\n"); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t already set as partitioned.\n", __func__); \
   }
 
 /*=============================================================================
@@ -377,12 +377,32 @@ PDM_isosurface_dfield_set
   _iso->dfield = dfield;
 }
 
+int
+PDM_isosurface_dn_entity_get
+(
+  PDM_isosurface_t    *isos,
+  int                  id_isosurface,
+  PDM_mesh_entities_t  entity_type
+)
+{
+  CHECK_IS_NOT_PART(isos);
+
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+
+  PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
+
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
+
+  return _iso->iso_dn_entity[entity_type];
+}
+
 
 int
 PDM_isosurface_dconnectivity_get
 (
   PDM_isosurface_t         *isos,
-  int                       id_iso,
+  int                       id_isosurface,
   PDM_connectivity_type_t   connectivity_type,
   int                     **dconnect_idx,
   PDM_g_num_t             **dconnect,
@@ -391,10 +411,10 @@ PDM_isosurface_dconnectivity_get
 {
   CHECK_IS_NOT_PART(isos);
 
-  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
-  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
-  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
   int n_entity = 0;
 
@@ -502,31 +522,6 @@ PDM_isosurface_dvtx_coord_get
   *dvtx_coord = _iso->iso_dvtx_coord;
 
   return _iso->iso_dn_entity[PDM_MESH_ENTITY_VTX];
-}
-
-
-int
-PDM_isosurface_distrib_get
-(
-  PDM_isosurface_t     *isos,
-  int                   id_iso,
-  PDM_mesh_entities_t   entity_type,
-  PDM_g_num_t         **distribution
-)
-{
-  CHECK_IS_NOT_PART(isos);
-
-  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
-  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
-
-  PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
-
-  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
-  *distribution = PDM_compute_entity_distribution(isos->comm, _iso->iso_dn_entity[entity_type]);
-
-  int i_rank;
-  PDM_MPI_Comm_rank(isos->comm, &i_rank);
-  return distribution[i_rank+1]-distribution[i_rank];
 }
 
 

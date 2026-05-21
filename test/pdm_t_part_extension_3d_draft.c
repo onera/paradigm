@@ -859,7 +859,6 @@ int main
   /**
    * Get some result
    */
-  int l_part = 0;
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++){
       if (0) {
@@ -1235,9 +1234,6 @@ int main
         PDM_log_trace_array_int (face_group     , n_face_in_group, "\t face_group      ::");
         PDM_log_trace_array_long(face_group_gnum, n_face_in_group, "\t face_group_gnum ::");
       }
-
-
-      l_part++;
     }
   }
 

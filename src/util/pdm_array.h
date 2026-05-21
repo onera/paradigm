@@ -53,6 +53,11 @@ int*         PDM_array_new_idx_from_const_stride_int(const int stride, const int
 // Create a size array from an index array
 int* PDM_array_new_size_from_idx_int(const int *idx_array, const int size);
 
+
+// Extract subarray when mask is True
+int PDM_array_copy_if_int (const int size_in, const int*         array_in, const int* mask, int**         array_out);
+int PDM_array_copy_if_gnum(const int size_in, const PDM_g_num_t* array_in, const int* mask, PDM_g_num_t** array_out);
+
 /* Utils functions for reducing arrays */
 int         PDM_array_max_int (const int         *array, const int size);
 int         PDM_array_min_int (const int         *array, const int size);

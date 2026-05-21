@@ -63,21 +63,32 @@ void
 PDM_write_meshb
 (
   const char         *filename,
-  const int          *n_elt_table,
+  const PDM_g_num_t  *n_elt_table,
         int         **tag_table,
         PDM_g_num_t **vtx_connect_table,
   const double       *vtx_coords
 );
 
 
+/**
+ * \brief Write scalar fields in Gamma Mesh Format
+ *
+ * \param [in] filename  Solution file name
+ * \param [in] dim       Spatial dimension (2 or 3)
+ * \param [in] n_vtx     Number of points
+ * \param [in] n_field   Number of fields
+ * \param [in] fields    Scalar field values (size = \p n_field, for each field size = \p n_vtx)
+ */
 void
 PDM_write_gamma_sol
 (
   const char   *filename,
+  const int     dim,
   const int     n_vtx,
   const int     n_field,
   const double *fields
 );
+
 
 void
 PDM_read_gamma_sol
@@ -89,10 +100,19 @@ PDM_read_gamma_sol
 );
 
 
+/**
+ * \brief Write symmetric tensors in Gamma Mesh Format
+ *
+ * \param [in] filename  Solution file name
+ * \param [in] dim       Spatial dimension (2 or 3)
+ * \param [in] n_vtx     Number of points
+ * \param [in] fields    Tensors (size = \p n_vtx * \p dim * \p (dim + 1) / 2)
+ */
 void
 PDM_write_gamma_matsym
 (
   const char   *filename,
+  const int     dim,
   const int     n_vtx,
   const double *fields
 );

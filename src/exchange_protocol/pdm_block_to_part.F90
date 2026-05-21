@@ -167,7 +167,7 @@ subroutine PDM_block_to_part_create(btp,               &
   integer,                   intent(in)  :: n_part               ! Number of partitions
   integer,                   intent(in)  :: comm                 ! MPI communicator
 
-  integer(c_int)                         :: c_comm
+  type(c_ptr)                            :: c_comm
 
   interface
     function PDM_block_to_part_create_c (block_distrib_idx, &
@@ -185,7 +185,7 @@ subroutine PDM_block_to_part_create(btp,               &
       type(c_ptr),    value :: gnum_elt
       type(c_ptr),    value :: n_elt
       integer(c_int), value :: n_part
-      integer(c_int), value :: comm
+      type(c_ptr)   , value :: comm
 
     end function PDM_block_to_part_create_c
   end interface

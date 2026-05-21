@@ -57,7 +57,7 @@ module pdm_gnum
     integer(c_int), value :: n_part
     integer(c_int), value :: merge
     real(c_double), value :: tolerance
-    integer(c_int), value :: comm
+    type(c_ptr),    value :: comm
     integer(c_int), value :: owner
 
     type (c_ptr) :: gen_gnum
@@ -267,7 +267,7 @@ contains
   integer(c_int)               :: c_n_part
   integer(c_int)               :: c_merge
   real(c_double)               :: c_tolerance
-  integer(c_int)               :: c_comm
+  type(c_ptr)                  :: c_comm
   integer(c_int)               :: c_owner
 
 

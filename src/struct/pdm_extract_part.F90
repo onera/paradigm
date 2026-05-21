@@ -59,7 +59,7 @@ module pdm_extract_part
     integer, intent(in)               :: comm               ! MPI communicator
 
     integer(c_int)                    :: c_compute_child_gnum
-    integer(c_int)                    :: c_comm
+    type(c_ptr)                       :: c_comm
 
     interface
       function pdm_extract_part_create_c (dim,                &
@@ -83,7 +83,7 @@ module pdm_extract_part
         integer(c_int), value :: split_dual_method
         integer(c_int), value :: compute_child_gnum
         integer(c_int), value :: ownership
-        integer(c_int), value :: comm
+        type(c_ptr), value    :: comm
 
       end function pdm_extract_part_create_c
     end interface

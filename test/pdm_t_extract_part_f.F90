@@ -729,6 +729,7 @@ contains
     double precision,          pointer     :: face_center(:,:)
     integer                                :: i_cell, i_face, i_vtx
     integer                                :: idx_face, idx_vtx
+    integer                                :: n_connect
 
     call PDM_generate_mesh_ball_ngon(comm,                   &
                                      PDM_MESH_NODAL_TETRA4,  &
@@ -811,8 +812,8 @@ contains
           i_vtx = parts(i_part)%face_vtx(idx_vtx)
           face_center(1:3,i_face) = face_center(1:3,i_face) + parts(i_part)%vtx_coord(1:3,i_vtx)
         enddo
-
-        face_center(1:3,i_face) = face_center(1:3,i_face) / (parts(i_part)%face_vtx_idx(i_face+1) - ini_parts(i_part)%face_vtx_idx(i_face))
+        n_connect = (parts(i_part)%face_vtx_idx(i_face+1) - ini_parts(i_part)%face_vtx_idx(i_face))
+        face_center(1:3,i_face) = face_center(1:3,i_face) / dble(n_connect)
       enddo
 
 
@@ -823,8 +824,8 @@ contains
           i_face = abs(parts(i_part)%cell_face(idx_face))
           parts(i_part)%cell_center(1:3,i_cell) = parts(i_part)%cell_center(1:3,i_cell) + face_center(1:3,i_face)
         enddo
-
-        parts(i_part)%cell_center(1:3,i_cell) = parts(i_part)%cell_center(1:3,i_cell) / (parts(i_part)%cell_face_idx(i_cell+1) - parts(i_part)%cell_face_idx(i_cell))
+        n_connect = (parts(i_part)%cell_face_idx(i_cell+1) - parts(i_part)%cell_face_idx(i_cell))
+        parts(i_part)%cell_center(1:3,i_cell) = parts(i_part)%cell_center(1:3,i_cell) / dble(n_connect)
 
       enddo
       deallocate(face_center)

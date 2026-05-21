@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "dlclose.h"
-#include "pdm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -9,8 +8,9 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+#define DLCLOSE_UNUSED(x) (void)(x)
 int dlclose(void *handle) {
-	PDM_UNUSED(handle);
+	DLCLOSE_UNUSED(handle);
 	return 0;
 }
 

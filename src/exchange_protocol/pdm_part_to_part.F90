@@ -153,7 +153,7 @@ subroutine PDM_part_to_part_create (ptp,                &
   type(PDM_pointer_array_t), pointer:: part1_to_part2     ! Part1→Part2 mapping (global ids) (for each part, size : ``part1_to_part2_idx(n_elt1 + 1)``)
   integer, intent(in)               :: comm               ! MPI communicator
 
-  integer(c_int)                    :: c_comm
+  type(c_ptr)                       :: c_comm
 
   interface
     function pdm_part_to_part_create_c (gnum_elt1,          &
@@ -179,7 +179,7 @@ subroutine PDM_part_to_part_create (ptp,                &
       integer(c_int), value :: n_part2
       type(c_ptr),    value :: part1_to_part2_idx
       type(c_ptr),    value :: part1_to_part2
-      integer(c_int), value :: comm
+      type(c_ptr), value    :: comm
 
     end function pdm_part_to_part_create_c
   end interface

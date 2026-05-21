@@ -14,6 +14,7 @@
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal.h"
 #include "pdm_error.h"
+#include "pdm_io_utils.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_multipart.h"
@@ -416,28 +417,6 @@ _generate_mesh_parallelepiped
 }
 
 
-/**
- *
- * \brief  Get file extension from its name
- *
- */
-// https://stackoverflow.com/questions/5309471/getting-file-extension-in-c
-static const char *
-_get_file_extension
-(
-  const char *filename
-)
-{
-  const char *dot = strrchr(filename, '.');
-  if (!dot || dot == filename) {
-    return "";
-  }
-  else {
-    return dot + 1;
-  }
-}
-
-
 static int
 _read_mesh_file
 (
@@ -450,7 +429,7 @@ _read_mesh_file
 )
 {
   // Get file extension
-  const char *file_extension = _get_file_extension(filename);
+  const char *file_extension = PDM_io_utils_file_extension(filename);
 
   // Use appropriate reader
   if (strcmp(file_extension, "stl") == 0) {
@@ -781,7 +760,6 @@ PDM_generate_mesh_ball_simplified
   // free
   PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
-  PDM_part_mesh_nodal_free(pmn);
 }
 
 
@@ -1037,7 +1015,6 @@ PDM_generate_mesh_parallelepiped_simplified
   // free
   PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
-  PDM_part_mesh_nodal_free(pmn);
 }
 
 

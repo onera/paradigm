@@ -128,7 +128,7 @@ module pdm_part_mesh_nodal
     integer,     intent(in)  :: n_part         ! Number of partition on the current process
     integer,     intent(in)  :: f_comm         ! MPI communicator
 
-    integer(c_int)           :: c_comm
+    type(c_ptr)              :: c_comm
 
     interface
       function PDM_part_mesh_nodal_create_c (mesh_dimension, n_part, c_comm) result(mesh) &
@@ -137,7 +137,7 @@ module pdm_part_mesh_nodal
         implicit none
         integer(c_int), value :: mesh_dimension
         integer(c_int), value :: n_part
-        integer(c_int), value :: c_comm
+        type(c_ptr), value    :: c_comm
         type(c_ptr)           :: mesh
       end function PDM_part_mesh_nodal_create_c
     end interface
@@ -159,7 +159,7 @@ module pdm_part_mesh_nodal
     ! Define vertex coordinates
     implicit none
 
-    type(c_ptr), intent(in)   :: mesh        ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(in)   :: mesh        ! Part Mesh Nodal instance
     integer,     intent(in)   :: id_part     ! Partition identifier
     integer,     intent(in)   :: n_vtx       ! Number of vertices
     real(8), pointer          :: coords(:,:) ! Interlaced coordinates (shape = [3, n_vtx])
@@ -201,7 +201,7 @@ module pdm_part_mesh_nodal
     ! Define vertices globals IDs
     implicit none
 
-    type(c_ptr), intent(in)        :: mesh      ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(in)        :: mesh      ! Part Mesh Nodal instance
     integer,     intent(in)        :: id_part   ! Partition identifier
     integer (pdm_g_num_s), pointer :: numabs(:) ! Global IDs
     integer,     intent(in)        :: owner     ! Data ownership
@@ -238,7 +238,7 @@ module pdm_part_mesh_nodal
     ! Add a new section to the current mesh
     implicit none
 
-    type(c_ptr), intent(in) :: pmn        ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(in) :: pmn        ! Part Mesh Nodal instance
     integer,     intent(in) :: elt_type   ! Section type
     integer                 :: id_section ! Section identifier
 
@@ -270,7 +270,7 @@ module pdm_part_mesh_nodal
     ! Define a standard section
     implicit none
 
-    type (c_ptr), intent(in)      :: pmn                    ! Pointer to PDM_part_mesh_nodal_t instance
+    type (c_ptr), intent(in)      :: pmn                    ! Part Mesh Nodal instance
     integer,      intent(in)      :: i_section              ! Section identifier
     integer,      intent(in)      :: i_part                 ! Partition identifier
     integer,      intent(in)      :: n_elts                 ! Number of elements
@@ -353,7 +353,7 @@ module pdm_part_mesh_nodal
     ! Define standard 3D cells by cell-vertex connectivity
     implicit none
 
-    type(c_ptr), intent(in)         :: mesh            ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(in)         :: mesh            ! Part Mesh Nodal instance
     integer,     intent(in)         :: id_part         ! Partition identifier
     integer,     intent(in)         :: n_cell          ! Number of cells
     integer (pdm_l_num_s), pointer  :: cell_vtx_idx(:) ! Index of cell->vertex connectivity (size = n_cell + 1)
@@ -421,7 +421,7 @@ module pdm_part_mesh_nodal
     ! Define faces by face-vertex connectivity
     implicit none
 
-    type(c_ptr), intent(in)        :: mesh            ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(in)        :: mesh            ! Part Mesh Nodal instance
     integer,     intent(in)        :: id_part         ! Partition identifier
     integer,     intent(in)        :: n_face          ! Number of faces
     integer (pdm_l_num_s), pointer :: face_vtx_idx(:) ! Index of face->vertex connectivity
@@ -492,7 +492,7 @@ module pdm_part_mesh_nodal
     ! Define 2D faces by face-edge connectivity
     implicit none
 
-    type(c_ptr), intent(in)         :: mesh             ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(in)         :: mesh             ! Part Mesh Nodal instance
     integer,     intent(in)         :: id_part          ! Partition identifier
     integer,     intent(in)         :: n_elt            ! Number of faces
     integer,     intent(in)         :: n_edge           ! Number of edges
@@ -579,7 +579,7 @@ module pdm_part_mesh_nodal
     ! Define 3D cells by cell-face connectivity
     implicit none
 
-    type(c_ptr), intent(in)        :: mesh             ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(in)        :: mesh             ! Part Mesh Nodal instance
     integer,     intent(in)        :: id_part          ! Partition identifier
     integer,     intent(in)        :: n_elt            ! Number of cells
     integer,     intent(in)        :: n_face           ! Number of faces
@@ -678,7 +678,7 @@ module pdm_part_mesh_nodal
     ! Set number of group for a current geometry kind
     implicit none
 
-    type(c_ptr), intent(in) :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr), intent(in) :: pmn       ! Part Mesh Nodal instance
     integer,     intent(in) :: geom_kind ! Geometry kind (corner, ridge, surface or volume)
     integer,     intent(in) :: n_group   ! Number of group in geom_kind
 
@@ -713,7 +713,7 @@ module pdm_part_mesh_nodal
     ! Set partition group
     implicit none
 
-    type(c_ptr),       intent(in) :: pmn               ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr),       intent(in) :: pmn               ! Part Mesh Nodal instance
     integer,           intent(in) :: geom_kind         ! Geometry kind (corner, ridge, surface or volume)
     integer,           intent(in) :: i_part            ! Partition identifier
     integer,           intent(in) :: i_group           ! Group identifier
@@ -775,7 +775,7 @@ module pdm_part_mesh_nodal
     ! Return the geometry kind of highest dimension
     implicit none
 
-    type(c_ptr), intent(in) :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr), intent(in) :: pmn       ! Part Mesh Nodal instance
     integer                 :: geom_kind ! Geometry kind (corner, ridge, surface or volume)
 
     geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get_c(pmn)
@@ -790,7 +790,7 @@ module pdm_part_mesh_nodal
     ! Return number of sections in a specific geometry kind
     implicit none
 
-    type(c_ptr), intent(in) :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr), intent(in) :: pmn       ! Part Mesh Nodal instance
     integer,     intent(in) :: geom_kind ! Geometry kind (corner, ridge, surface or volume)
     integer                 :: n_section ! Number of sections
 
@@ -807,7 +807,7 @@ module pdm_part_mesh_nodal
     ! Return IDs of sections in a specific geometry kind
     implicit none
 
-    type(c_ptr), intent(in)       :: pmn            ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr), intent(in)       :: pmn            ! Part Mesh Nodal instance
     integer,     intent(in)       :: geom_kind      ! Geometry kind (corner, ridge, surface or volume)
     integer(pdm_l_num_s), pointer :: sections_id(:) ! IDs of sections
 
@@ -846,7 +846,7 @@ module pdm_part_mesh_nodal
     ! Return type of section in a specific geometry kind
     implicit none
 
-    type(c_ptr), intent(in) :: pmn        ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr), intent(in) :: pmn        ! Part Mesh Nodal instance
     integer,     intent(in) :: geom_kind  ! Geometry kind (corner, ridge, surface or volume)
     integer,     intent(in) :: id_section ! Section identifier
     integer                 :: elt_type   ! Element type
@@ -878,7 +878,7 @@ module pdm_part_mesh_nodal
     ! Get number of elements in section
     implicit none
 
-    type(c_ptr), intent(in)  :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr), intent(in)  :: pmn       ! Part Mesh Nodal instance
     integer,     intent(in)  :: i_section ! Section identifier
     integer,     intent(in)  :: i_part    ! Partition identifier
     integer,     intent(out) :: n_elt     ! Number of elements
@@ -897,7 +897,7 @@ module pdm_part_mesh_nodal
     ! Return type of section
     implicit none
 
-    type (c_ptr), intent(in)  :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    type (c_ptr), intent(in)  :: pmn       ! Part Mesh Nodal instance
     integer,      intent(in)  :: i_section ! Section identifier
     integer,      intent(out) :: elt_t     ! Type of section
 
@@ -919,7 +919,7 @@ module pdm_part_mesh_nodal
     ! Return standard section description
     implicit none
 
-    type (c_ptr), intent(in)       :: pmn                    ! Pointer to PDM_part_mesh_nodal_t instance
+    type (c_ptr), intent(in)       :: pmn                    ! Part Mesh Nodal instance
     integer,      intent(in)       :: i_section              ! Section identifier
     integer,      intent(in)       :: i_part                 ! Partition identifier
     integer(pdm_l_num_s), pointer  :: connec(:)              ! Connectivity
@@ -1015,7 +1015,7 @@ module pdm_part_mesh_nodal
     ! Return number of elements in a partition
     implicit none
 
-    type (c_ptr), intent(in)  :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    type (c_ptr), intent(in)  :: pmn       ! Part Mesh Nodal instance
     integer,      intent(in)  :: geom_kind ! Geometry kind (corner, ridge, surface or volume)
     integer,      intent(in)  :: i_part    ! Partition identifier
     integer,      intent(out) :: n_elmts   ! Number of elements
@@ -1036,7 +1036,7 @@ module pdm_part_mesh_nodal
     ! Get cell-vertex connectivity. (The output pointers are owned by the user.)
     implicit none
 
-    type(c_ptr), intent(in)        :: mesh            ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(in)        :: mesh            ! Part Mesh Nodal instance
     integer,     intent(in)        :: geom_kind       ! Geometry kind (corner, ridge, surface or volume)
     integer,     intent(in)        :: id_part         ! Partition identifier
     integer (pdm_l_num_s), pointer :: cell_vtx_idx(:) ! Index of cell->vertex connectivity
@@ -1088,7 +1088,7 @@ module pdm_part_mesh_nodal
     ! Return number of vertices
     implicit none
 
-    type (c_ptr), intent(in)  :: pmn    ! Pointer to PDM_part_mesh_nodal_t instance
+    type (c_ptr), intent(in)  :: pmn    ! Part Mesh Nodal instance
     integer,      intent(in)  :: i_part ! Partition identifier
     integer,      intent(out) :: n_vtx  ! Number of vertices
 
@@ -1106,7 +1106,7 @@ module pdm_part_mesh_nodal
     ! Return coordinates of vertices
     implicit none
 
-    type (c_ptr), intent(in)           :: pmn            ! Pointer to PDM_part_mesh_nodal_t instance
+    type (c_ptr), intent(in)           :: pmn            ! Part Mesh Nodal instance
     integer,      intent(in)           :: i_part         ! Partition identifier
     real(8), pointer                   :: vtx_coord(:,:) ! Vertex coordinates (shape = [3, n_vtx])
     integer,      intent(in), optional :: ownership      ! Ownership (optional, default value: PDM_OWNERSHIP_BAD_VALUE)
@@ -1155,7 +1155,7 @@ module pdm_part_mesh_nodal
     ! Return global IDs of vertices
     implicit none
 
-    type (c_ptr), intent(in)            :: pmn             ! Pointer to PDM_part_mesh_nodal_t instance
+    type (c_ptr), intent(in)            :: pmn             ! Part Mesh Nodal instance
     integer,      intent(in)            :: i_part          ! Partition identifier
     integer (pdm_g_num_s), pointer      :: vtx_ln_to_gn(:) ! Global IDs of vertices (size = n_vtx)
     integer,      intent(in), optional  :: ownership       ! Ownership (optional, default value: PDM_OWNERSHIP_BAD_VALUE)
@@ -1203,7 +1203,7 @@ module pdm_part_mesh_nodal
     ! Get number of group for a current geometry kind
     implicit none
 
-    type(c_ptr), intent(in)  :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr), intent(in)  :: pmn       ! Part Mesh Nodal instance
     integer,     intent(in)  :: geom_kind ! Geometry kind (corner, ridge, surface or volume)
     integer,     intent(out) :: n_group   ! Number of group in geom_kind
 
@@ -1238,7 +1238,7 @@ module pdm_part_mesh_nodal
     ! Get partition group
     implicit none
 
-    type(c_ptr),      intent(in)  :: pmn               ! Pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr),      intent(in)  :: pmn               ! Part Mesh Nodal instance
     integer,          intent(in)  :: geom_kind         ! Geometry kind (corner, ridge, surface or volume)
     integer,          intent(in)  :: i_part            ! Partition identifier
     integer,          intent(in)  :: i_group           ! Group identifier
@@ -1297,11 +1297,145 @@ module pdm_part_mesh_nodal
 
 
 
+  subroutine PDM_part_mesh_nodal_part_comm_graph_set(pmn,       &
+                                                     pcg,       &
+                                                     geom_kind, &
+                                                     ownership)
+    ! Set :ref:`Part Comm Graph <part_comm_graph>` for elements of a given dimension
+    implicit none
+
+    type(c_ptr), intent(in) :: pmn       ! Part Mesh Nodal instance
+    type(c_ptr), intent(in) :: pcg       ! Part Comm Graph instance
+    integer,     intent(in) :: geom_kind ! Geometry kind (volume, surface, ridge, corner)
+    integer,     intent(in) :: ownership ! Ownership
+
+    interface
+      subroutine PDM_part_mesh_nodal_part_comm_graph_set_c(pmn,       &
+                                                           pcg,       &
+                                                           geom_kind, &
+                                                           ownership) &
+      bind(c, name="PDM_part_mesh_nodal_part_comm_graph_set")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pmn
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: geom_kind
+        integer(c_int), value :: ownership
+      end subroutine PDM_part_mesh_nodal_part_comm_graph_set_c
+    end interface
+
+    call PDM_part_mesh_nodal_part_comm_graph_set_c(pmn,       &
+                                                   pcg,       &
+                                                   geom_kind, &
+                                                   ownership)
+
+  end subroutine PDM_part_mesh_nodal_part_comm_graph_set
+
+
+
+  subroutine PDM_part_mesh_nodal_part_comm_graph_vtx_set(pmn,       &
+                                                         pcg,       &
+                                                         ownership)
+    ! Set :ref:`Part Comm Graph <part_comm_graph>` for vertices
+    implicit none
+
+    type(c_ptr), intent(in) :: pmn       ! Part Mesh Nodal instance
+    type(c_ptr), intent(in) :: pcg       ! Part Comm Graph instance
+    integer,     intent(in) :: ownership ! Ownership
+
+    interface
+      subroutine PDM_part_mesh_nodal_part_comm_graph_vtx_set_c(pmn,       &
+                                                               pcg,       &
+                                                               ownership) &
+      bind(c, name="PDM_part_mesh_nodal_part_comm_graph_vtx_set")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pmn
+        type(c_ptr),    value :: pcg
+        integer(c_int), value :: ownership
+      end subroutine PDM_part_mesh_nodal_part_comm_graph_vtx_set_c
+    end interface
+
+    call PDM_part_mesh_nodal_part_comm_graph_vtx_set_c(pmn,       &
+                                                       pcg,       &
+                                                       ownership)
+
+  end subroutine PDM_part_mesh_nodal_part_comm_graph_vtx_set
+
+
+
+  subroutine PDM_part_mesh_nodal_part_comm_graph_get(pmn,       &
+                                                     geom_kind, &
+                                                     pcg,       &
+                                                     ownership)
+    ! Get :ref:`Part Comm Graph <part_comm_graph>` for elements of a given dimension
+    implicit none
+
+    type(c_ptr), intent(in)  :: pmn       ! Part Mesh Nodal instance
+    integer,     intent(in)  :: geom_kind ! Geometry kind (volume, surface, ridge, corner)
+    type(c_ptr), intent(out) :: pcg       ! Pointer to PDM_part_comm_graph_t instance
+    integer,     intent(in)  :: ownership ! Ownership
+
+    interface
+      subroutine PDM_part_mesh_nodal_part_comm_graph_get_c(pmn,       &
+                                                           geom_kind, &
+                                                           pcg,       &
+                                                           ownership) &
+      bind(c, name="PDM_part_mesh_nodal_part_comm_graph_get")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pmn
+        integer(c_int), value :: geom_kind
+        type(c_ptr)           :: pcg
+        integer(c_int), value :: ownership
+      end subroutine PDM_part_mesh_nodal_part_comm_graph_get_c
+    end interface
+
+    call PDM_part_mesh_nodal_part_comm_graph_get_c(pmn,       &
+                                                   geom_kind, &
+                                                   pcg,       &
+                                                   ownership)
+
+  end subroutine PDM_part_mesh_nodal_part_comm_graph_get
+
+
+
+  subroutine PDM_part_mesh_nodal_part_comm_graph_vtx_get(pmn,       &
+                                                         pcg,       &
+                                                         ownership)
+    ! Get :ref:`Part Comm Graph <part_comm_graph>` for vertices
+    implicit none
+
+    type(c_ptr), intent(in)  :: pmn       ! Part Mesh Nodal instance
+    type(c_ptr), intent(out) :: pcg       ! Pointer to PDM_part_comm_graph_t instance
+    integer,     intent(in)  :: ownership ! Ownership
+
+    interface
+      subroutine PDM_part_mesh_nodal_part_comm_graph_vtx_get_c(pmn,       &
+                                                               pcg,       &
+                                                               ownership) &
+      bind(c, name="PDM_part_mesh_nodal_part_comm_graph_vtx_get")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pmn
+        type(c_ptr)           :: pcg
+        integer(c_int), value :: ownership
+      end subroutine PDM_part_mesh_nodal_part_comm_graph_vtx_get_c
+    end interface
+
+    call PDM_part_mesh_nodal_part_comm_graph_vtx_get_c(pmn,       &
+                                                       pcg,       &
+                                                       ownership)
+
+  end subroutine PDM_part_mesh_nodal_part_comm_graph_vtx_get
+
+
+
   subroutine PDM_part_mesh_nodal_partial_free(mesh)
     ! Free partially a PDM_part_mesh_nodal structure
     implicit none
 
-    type(c_ptr), intent(inout) :: mesh ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(inout) :: mesh ! Part Mesh Nodal instance
 
     interface
       subroutine PDM_part_mesh_nodal_partial_free_c(mesh) &
@@ -1322,7 +1456,7 @@ module pdm_part_mesh_nodal
     ! Free a PDM_part_mesh_nodal instance
     implicit none
 
-    type(c_ptr), intent(inout) :: mesh ! Pointer to PDM_part_mesh_nodal instance
+    type(c_ptr), intent(inout) :: mesh ! Part Mesh Nodal instance
 
     interface
       subroutine PDM_part_mesh_nodal_free_c(mesh) &
@@ -1345,7 +1479,7 @@ module pdm_part_mesh_nodal
     ! Export the current nodal mesh in vtk format
     implicit none
 
-    type(c_ptr),      intent(in) :: pmn              ! C pointer to PDM_part_mesh_nodal_t instance
+    type(c_ptr),      intent(in) :: pmn              ! C Part Mesh Nodal instance
     integer,          intent(in) :: geom_kind        ! Geometry kind (corner, ridge, surface or volume)
     character(len=*), intent(in) :: filename_pattern ! Pattern for file naming (the function will append i_rank and i_part to this current pattern)
 

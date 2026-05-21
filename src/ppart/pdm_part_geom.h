@@ -15,6 +15,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_comm_graph.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -326,6 +327,49 @@ PDM_part_geom_cell_center
   int     **pedge_vtx,
   double  **pvtx_coord,
   double ***cell_center
+);
+
+/**
+ * \brief Compute unit vertex normals for selected vertices from selected element.
+ *
+ * \warning For edge elements, normal is computed in the XY plane or as the cross product
+ * between a plane normal defined at edge (through \ref elt_plane_normal argument)
+ * and the edge direction. \ref elt_plane_normal is ignored with dimension = 2.
+ *
+ * \param [in]   comm             MPI communicator
+ * \param [in]   n_part           Number of partitions
+ * \param [in]   dimension        Element dimension
+ * \param [in]   n_selected_elt   Number of selected elements (size = \p n_part)
+ * \param [in]   selected_elt     Local IDs of selected elements (optional, size = \p n_part or NULL)
+ * \param [in]   elt_vtx_idx      Index for Element->Vtx connectivity (size = \p n_part, for each part, size = \p n_selected_elt + 1)
+ * \param [in]   elt_vtx          Element->Vtx connectivity (size = \p n_part, for each part, size = \p elt_vtx_idx[\p n_selected_elt])
+ * \param [in]   elt_plane_normal Element plane normal (size = \p n_part, for each part, size = \p n_selected_elt)
+ * \param [in]   pcg_elt          Element \ref PDM_part_comm_graph object
+ * \param [in]   n_selected_vtx   Number of selected vertices (size = \p n_part)
+ * \param [in]   selected_vtx     Local IDs of selected vertices (optional, size = \p n_part or NULL)
+ * \param [in]   n_vtx            Number of vertices (size = \p n_part)
+ * \param [in]   vtx_coord        Vertex coordinates (size = \p n_part)
+ * \param [in]   pcg_vtx          Vertex \ref PDM_part_comm_graph object
+ * \param [out]  vtx_normal       Unit vertex normals (size = \p n_part, for each part, size = 3 * \p n_selected_vtx)
+ */
+void
+PDM_part_geom_vtx_normal_compute
+(
+  PDM_MPI_Comm             comm,
+  int                      n_part,
+  int                      dimension,
+  int                     *n_selected_elt,
+  int                    **selected_elt,
+  int                    **elt_vtx_idx,
+  int                    **elt_vtx,
+  double                 **elt_plane_normal,
+  PDM_part_comm_graph_t   *pcg_elt,
+  int                     *n_selected_vtx,
+  int                    **selected_vtx,
+  int                     *n_vtx,
+  double                 **vtx_coord,
+  PDM_part_comm_graph_t   *pcg_vtx,
+  double                ***out_selected_vtx_normal
 );
 
 #ifdef __cplusplus

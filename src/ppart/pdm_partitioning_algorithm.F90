@@ -23,7 +23,7 @@ interface
     type(c_ptr),    value :: entity_ln_to_gn
     integer(c_int)        :: n_owned_entity
     type(c_ptr)           :: lnum_owned_entity
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
 
   end subroutine PDM_compute_graph_comm_entity_ownership_single_part_cf
 
@@ -61,7 +61,7 @@ contains
     type(PDM_pointer_array_t), pointer :: lnum_owned_entity
     integer, intent(in)                :: f_comm
 
-    integer(c_int)                     :: c_comm
+    type(c_ptr)                        :: c_comm
     type(c_ptr)                        :: c_n_owned_entity
     type(c_ptr)                        :: c_lnum_owned_entity
 
@@ -83,7 +83,7 @@ contains
         type(c_ptr),    value :: entity_ln_to_gn
         type(c_ptr)           :: n_owned_entity
         type(c_ptr)           :: lnum_owned_entity
-        integer(c_int), value :: comm
+        type(c_ptr),    value :: comm
 
       end subroutine PDM_compute_graph_comm_entity_ownership_c
 
@@ -138,7 +138,7 @@ contains
     integer, pointer              :: lnum_owned_entity(:)
     integer, intent(in)           :: f_comm
 
-    integer(c_int)                :: c_comm
+    type(c_ptr)                   :: c_comm
     type(c_ptr)                   :: c_entity_ln_to_gn
     type(c_ptr)                   :: c_lnum_owned_entity
 

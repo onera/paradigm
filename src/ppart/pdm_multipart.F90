@@ -55,7 +55,7 @@ interface
     integer(c_int), value  :: split_method
     integer(c_int), value  :: part_size_method
     type(c_ptr),    value  :: part_fraction
-    integer(c_int), value  :: comm
+    type(c_ptr),    value  :: comm
     integer(c_int), value  :: owner
 
   end function PDM_multipart_create_c
@@ -508,7 +508,7 @@ contains
     integer(c_int),         intent(in)  :: owner            ! Data ownership
     type(c_ptr)                         :: c_n_part
     type(c_ptr)                         :: c_part_fraction
-    integer(c_int)                      :: c_comm
+    type(c_ptr)                         :: c_comm
 
     c_n_part = C_NULL_PTR
     if (associated(n_part)) then

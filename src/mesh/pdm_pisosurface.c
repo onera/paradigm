@@ -23,6 +23,7 @@
  *----------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -54,19 +55,19 @@ extern "C" {
     (isos)->entry_is_part=1; \
   } \
   else if ((isos)->entry_is_part==0) { \
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as distributed.\n"); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t already set as distributed.\n", __func__); \
   }
 
 #define CHECK_I_PART_SET(isos, i_part) \
   if (i_part >= (isos)->n_part) { \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d).\n", \
-              i_part, (isos)->n_part); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: Invalid i_part (%d / %d).\n", \
+      __func__, i_part, (isos)->n_part); \
   }
 
 #define CHECK_I_PART_GET(isos, i_part) \
   if (i_part >= (isos)->iso_n_part) { \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d).\n", \
-              i_part, (isos)->iso_n_part); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: Invalid i_part (%d / %d).\n", \
+              __func__, i_part, (isos)->iso_n_part); \
   }
 /*=============================================================================
  * Local structure definitions
@@ -489,8 +490,9 @@ PDM_isosurface_pfield_set
   }
  
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
-  if (_iso->field==NULL) {
+  if (_iso->field == NULL) {
     PDM_malloc(_iso->field, isos->n_part, double *);
+    memset(_iso->field, 0, sizeof(double *) * isos->n_part);
   }
   _iso->field[i_part] = field;
 }
@@ -564,6 +566,28 @@ PDM_isosurface_pparent_weight_get
 
   *parent_idx    = _iso->iso_entity_parent_idx [entity_type][i_part];
   *parent_weight = _iso->iso_entity_parent_wght[entity_type][i_part];
+
+  return _iso->iso_n_entity[entity_type][i_part];
+}
+
+
+int
+PDM_isosurface_pn_entity_get
+(
+  PDM_isosurface_t    *isos,
+  int                  id_isosurface,
+  int                  i_part,
+  PDM_mesh_entities_t  entity_type
+)
+{
+  CHECK_IS_NOT_DIST(isos);
+
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+
+  CHECK_I_PART_GET(isos, i_part);
+
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
   return _iso->iso_n_entity[entity_type][i_part];
 }
@@ -669,6 +693,10 @@ PDM_isosurface_ln_to_gn_get
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
+  if (isos->entry_mesh_dim == 2 && entity_type == PDM_MESH_ENTITY_FACE) {
+    PDM_error(__FILE__, __LINE__, 0, "%s: No iso-faces for 2D meshes\n", __func__);
+  }
+
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
     _iso->iso_owner_gnum[entity_type][i_part] = ownership;
   }
@@ -714,7 +742,7 @@ PDM_isosurface_pgroup_get
     *group_entity_gnum = _iso->iso_edge_group_gnum[i_part];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no bounds for entity %d.\n",entity_type);
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t: has no bounds for entity %d.\n", __func__, entity_type);
   }
 
   return n_group;

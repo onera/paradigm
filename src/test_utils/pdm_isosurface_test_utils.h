@@ -52,6 +52,24 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+typedef struct PDM_isosurface_test_utils_params_t {
+
+  char                 *mesh_name;
+  int                   n_part_in;
+  int                   n_part_out;
+  int                   n_isovalues;
+  double               *isovalues;
+  PDM_Mesh_nodal_elt_t  elt_type;
+  int                   randomize;
+  PDM_g_num_t           n_vtx_seg;
+  int                   use_part_mesh;
+  int                   generate_edges;
+  int                   local;
+  int                   use_groups;
+  int                   visu;
+
+} PDM_isosurface_test_utils_params_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -72,9 +90,9 @@ PDM_isosurface_test_utils_read_args
 (
   int                    argc,
   char                 **argv,
-  int                   *n_part,
+  int                   *n_part_in,
+  int                   *n_part_out,
   char                 **mesh_name,
-  char                 **sol_name,
   int                   *visu,
   int                   *n_isovalues,
   double               **isovalues,
@@ -83,7 +101,8 @@ PDM_isosurface_test_utils_read_args
   PDM_g_num_t           *n_vtx_seg,
   int                   *use_part_mesh,
   int                   *generate_edges,
-  int                   *local
+  int                   *local,
+  int                   *use_groups
 );
 
 
@@ -119,6 +138,7 @@ PDM_isosurface_test_utils_gen_mesh
   int                   randomize,
   PDM_Mesh_nodal_elt_t  elt_type,
   int                   generate_edges,
+  int                   use_groups,
   PDM_multipart_t     **mpart,
   PDM_part_mesh_t      *pmesh,
   PDM_dmesh_t         **out_dmesh
@@ -140,6 +160,7 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   PDM_g_num_t             n_vtx_seg,
   int                     randomize,
   PDM_Mesh_nodal_elt_t    elt_type,
+  int                     use_groups,
   PDM_part_mesh_nodal_t **out_pmn,
   PDM_dmesh_nodal_t     **out_dmn
 );
@@ -272,6 +293,19 @@ PDM_isosurface_test_utils_isosurface_size_get
   PDM_g_num_t        *gn_iso_face,
   PDM_MPI_Comm        comm
 );
+
+
+/**
+ * \brief Dump test parameters and equivalent command line
+ */
+void
+PDM_isosurface_test_utils_isosurface_params_dump
+(
+  PDM_MPI_Comm                        comm,
+  const char                         *test_name,
+  PDM_isosurface_test_utils_params_t  params
+);
+
 
 #ifdef  __cplusplus
 }

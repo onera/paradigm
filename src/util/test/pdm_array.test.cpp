@@ -97,6 +97,31 @@ MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_accumulate", 1) {
   CHECK_EQ_C_ARRAY(array, expected_array, 5);
 }
 
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_copy_if", 1) {
+  int array[] = {1,3,6,4,2,7,9,8,3};
+  int* out = NULL;
+
+  SUBCASE("Basic") {
+  int flag[] = {0,0,1,0,1,1,1,1,0};
+  int expt[] = {    6,  2,7,9,8  };
+  int s_out = PDM_array_copy_if_int(9, array, flag, &out);
+  CHECK(s_out == 5);
+  CHECK_EQ_C_ARRAY(out, expt, 5);
+  }
+  SUBCASE("Full") {
+  int flag[] = {0,0,0,0,0,0,0,0,0};
+  int s_out = PDM_array_copy_if_int(9, array, flag, &out);
+  CHECK(s_out == 0);
+  }
+  SUBCASE("Empty") {
+  int flag[] = {1,1,1,1,1,1,1,1,1};
+  int s_out = PDM_array_copy_if_int(9, array, flag, &out);
+  CHECK(s_out == 9);
+  CHECK_EQ_C_ARRAY(out, array, 9);
+  }
+  PDM_free(out);
+}
+
 MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_count_per_col", 1) {
   int color_array[] = {3,2,1,2,4,3,2,1,2,3,2,1,2,3,4};
   int n_per_col[5];

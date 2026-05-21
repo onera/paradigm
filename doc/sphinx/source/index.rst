@@ -163,6 +163,9 @@ Developer manual
     :link: coding_rules
     :link-type: ref
 
+  .. card:: Developer tools
+    :link: dev_tools
+    :link-type: ref
 
 .. toctree::
    :caption: Developer manual
@@ -170,6 +173,7 @@ Developer manual
    :hidden:
 
    developer_manual/coding_rules
+   developer_manual/dev_tools/index
 
 
 

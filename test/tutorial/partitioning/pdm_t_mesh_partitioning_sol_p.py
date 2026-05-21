@@ -44,7 +44,7 @@ def run_test():
 
   dmn = dcube.get_dmesh_nodal()
 
-  PDM.generate_distribution(dmn)
+  dmn.generate_distribution()
 
   # Create partitioning object
   n_domain = 1 # fixed

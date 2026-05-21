@@ -7,8 +7,3 @@ find_package(pdm
              REQUIRED COMPONENTS pdm pdmf
              HINTS $ENV{PDM_ROOT}
              )
-
-find_package(pdma
-             REQUIRED COMPONENTS pdma pdmaf
-             HINTS $ENV{PDM_ROOT}
-             )

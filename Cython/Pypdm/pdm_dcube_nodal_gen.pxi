@@ -221,15 +221,8 @@ cdef class DCubeNodalGenerator:
       Returns
         Distributed nodal mesh object (:py:class:`DistributedMeshNodalCaspule`)
       """
-      # ************************************************************************
-      # > Declaration
-      cdef PDM_dmesh_nodal_t* dmn
-      # ************************************************************************
-      dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube)
-
-      py_caps = PyCapsule_New(dmn, NULL, NULL);
-
-      return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
+      cdef PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube)
+      return DistributedMeshNodal.from_ptr(dmn) # The free is inside the class
 
     # ------------------------------------------------------------------
     def set_random_factor(self, double random_factor):
@@ -309,15 +302,8 @@ cdef class DCubeNodalGeneratorCartTopo:
     def get_dmesh_nodal(self, int i_domain):
       """
       """
-      # ************************************************************************
-      # > Declaration
-      cdef PDM_dmesh_nodal_t* dmn
-      # ************************************************************************
-      dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube[i_domain])
-
-      py_caps = PyCapsule_New(dmn, NULL, NULL);
-
-      return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
+      cdef PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube[i_domain])
+      return DistributedMeshNodal.from_ptr(dmn) # The free is inside the class
 
     # ------------------------------------------------------------------------
     def domain_interface_get(self):

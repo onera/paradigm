@@ -138,15 +138,10 @@ void
 PDM_part_mesh_nodal_dual_volume_compute
 (
   PDM_part_mesh_nodal_t   *pmn,
+  PDM_bool_t               synchronize,
   double                ***dual_vol
 )
 {
-  /**
-   *  Prevoir une syncrho en option ?
-   *  OU
-   *  Adpater la gradation pour utiliser habilement le pcg pour ne pas sommer 2 fois les contributions de complexité
-   */
-
   int all_simplices = _check_if_all_simplices(pmn);
 
   if (all_simplices) {
@@ -190,15 +185,18 @@ PDM_part_mesh_nodal_dual_volume_compute
     PDM_free(elt_vtx);
     PDM_free(vtx_coord);
 
-    if(pmn->pcg[PDM_MESH_ENTITY_VTX] == NULL) {
-      PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
-    }
+    if (synchronize) {
+      if(pmn->pcg_vtx == NULL) {
+        PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum(pmn);
+      }
 
-    // Synchro volume :
-    PDM_part_comm_graph_all_reduce(pmn->pcg[PDM_MESH_ENTITY_VTX],
-                                   PDM_MPI_DOUBLE,
-                                   PDM_MPI_SUM,
-             (unsigned char **)    *dual_vol);
+      // Synchro volume :
+      PDM_part_comm_graph_all_reduce(pmn->pcg_vtx,
+                                     PDM_MPI_DOUBLE,
+                                     1,
+                                     PDM_MPI_SUM,
+               (unsigned char **)    *dual_vol);
+    }
 
 
   } else {
@@ -224,7 +222,7 @@ PDM_part_mesh_nodal_dual_volume_compute
     PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm, &pmesh, PDM_OWNERSHIP_KEEP);
 
     // Compute dual volume via part_mesh
-    PDM_part_mesh_dual_volume_compute(pmesh, dual_vol);
+    PDM_part_mesh_dual_volume_compute(pmesh, synchronize, dual_vol);
 
     PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
   }

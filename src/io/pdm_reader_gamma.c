@@ -10,22 +10,23 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_reader_gamma.h"
-#include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_block_to_block.h"
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_distrib.h"
-#include "pdm_dmesh_nodal.h"
-#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_priv.h"
+#include "pdm_dmesh_nodal.h"
 #include "pdm_error.h"
 #include "pdm_logging.h"
+#include "pdm_io_utils.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_predicate.h"
 #include "pdm_priv.h"
+#include "pdm_reader_gamma.h"
+#include "pdm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,9 +78,9 @@ extern "C" {
 
 static void _shift_groups
 (
- const int  n_elt,
+  const int  n_elt,
        int *elt_group
- )
+)
 {
   int min_group = INT_MAX;
 
@@ -184,6 +185,10 @@ PDM_reader_gamma_dmesh_nodal
 
   int dim = 0;
 
+  PDM_bool_t have_read_key[PDM_MESH_NODAL_N_ELEMENT_TYPES + 1];
+  for (int key = 0; key <= (int) PDM_MESH_NODAL_N_ELEMENT_TYPES; key++) {
+    have_read_key[key] = PDM_FALSE;
+  }
 
   PDM_g_num_t gn_vtx   = 0;
   PDM_g_num_t gn_edge  = 0;
@@ -234,10 +239,12 @@ PDM_reader_gamma_dmesh_nodal
       if (strstr(line, IO_keys[PDM_INRIA_IO_KEY_DIM]) != NULL) {
         // Get dimension
         fscanf(f, "%d", &dim);
+        have_read_key[PDM_INRIA_IO_KEY_DIM] = PDM_FALSE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_POINT]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_POINT]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_POINT] == PDM_FALSE) {
         // Get vertices
         long _gn_vtx;
         fscanf(f, "%ld", &_gn_vtx);
@@ -254,10 +261,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gvtx_tag[i]);
         }
+        have_read_key[PDM_MESH_NODAL_POINT] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_BAR2]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_BAR2]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_BAR2] == PDM_FALSE) {
         // Get edges
         long _gn_edge;
         fscanf(f, "%ld", &_gn_edge);
@@ -271,10 +280,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gedge_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_BAR2] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TRIA3]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TRIA3]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_TRIA3] == PDM_FALSE) {
         // Get triangles
         long _gn_tria;
         fscanf(f, "%ld", &_gn_tria);
@@ -288,10 +299,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gtria_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_TRIA3] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TETRA4]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TETRA4]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_TETRA4] == PDM_FALSE) {
         // Get tetrahedra
         long _gn_tetra;
         fscanf(f, "%ld", &_gn_tetra);
@@ -305,10 +318,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gtetra_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_TETRA4] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PYRAMID5]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PYRAMID5]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_PYRAMID5] == PDM_FALSE) {
         // Get pyramids
         long _gn_pyra;
         fscanf(f, "%ld", &_gn_pyra);
@@ -322,10 +337,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gpyra_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_PYRAMID5] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PRISM6]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PRISM6]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_PRISM6] == PDM_FALSE) {
         // Get prisms
         long _gn_prism;
         fscanf(f, "%ld", &_gn_prism);
@@ -339,10 +356,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gprism_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_PRISM6] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_HEXA8]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_HEXA8]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_HEXA8] == PDM_FALSE) {
         // Get hexahedra
         long _gn_hexa;
         fscanf(f, "%ld", &_gn_hexa);
@@ -356,10 +375,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &ghexa_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_HEXA8] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_QUAD4]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_QUAD4]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_QUAD4] == PDM_FALSE) {
         // Get quads
         long _gn_quad;
         fscanf(f, "%ld", &_gn_quad);
@@ -374,6 +395,7 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gquad_group[i_quad]);
         }
+        have_read_key[PDM_MESH_NODAL_QUAD4] = PDM_TRUE;
       }
 
 
@@ -398,11 +420,40 @@ PDM_reader_gamma_dmesh_nodal
           gtria_vtx[3*i+1] = tmp;
         }
       }
-      // ---- Fix orientation for quads
-      // ---- TODO !
 
       if (0) {
         printf("flipped %d triangles / "PDM_FMT_G_NUM"\n", n_tria_flipped, gn_tria);
+      }
+
+      // ---- Fix orientation for quads
+      int n_quad_flipped = 0;
+
+      for (PDM_g_num_t i=0; i<gn_quad; i++) {
+        PDM_g_num_t *tv = gquad_vtx + 4*i;
+
+        double surf = PDM_predicate_orient2d_quad(gvtx_coord + 3*(tv[0] - 1),
+                                                  gvtx_coord + 3*(tv[1] - 1),
+                                                  gvtx_coord + 3*(tv[2] - 1),
+                                                  gvtx_coord + 3*(tv[3] - 1)
+        );
+
+        if (surf < 0) {
+          n_quad_flipped++;
+
+          PDM_g_num_t  tmp = tv[0];
+
+          gquad_vtx[4*i  ] = tv[3];
+          gquad_vtx[4*i+3] = tmp;
+
+          tmp              = tv[1];
+          gquad_vtx[4*i+1] = gquad_vtx[4*i+2];
+          gquad_vtx[4*i+2] = tmp;
+        }
+
+      }
+
+      if (0) {
+        printf("flipped %d quadrilaterals / "PDM_FMT_G_NUM"\n", n_quad_flipped, gn_quad);
       }
     }
 
@@ -1026,18 +1077,44 @@ void
 PDM_write_meshb
 (
   const char         *filename,
-  const int          *n_elt_table,
+  const PDM_g_num_t  *n_elt_table,
         int         **tag_table,
         PDM_g_num_t **vtx_connect_table,
   const double       *vtx_coords
 )
 {
+  /* Retrieve the spatial dimension */
+  int dimension = 2;
+
+  // Automatically 3D if there are elements of dimension > 2
+  for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_TETRA4; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
+    if (n_elt_table[t_elt] > 0) {
+      dimension = 3;
+      break;
+    }
+  }
+
+  if (dimension == 2) {
+    // The mesh has no elements of dimension > 2, check if it lies in the xy-plane.
+    // Otherwise, the spatial dimension is really 3.
+    double min_z =  HUGE_VAL;
+    double max_z = -HUGE_VAL;
+    for (int i_vtx = 0; i_vtx < n_elt_table[PDM_MESH_NODAL_POINT]; i_vtx++) {
+      min_z = PDM_MIN(min_z, vtx_coords[3*i_vtx+2]);
+      max_z = PDM_MAX(max_z, vtx_coords[3*i_vtx+2]);
+    }
+
+    if (max_z > min_z) {
+      dimension = 3;
+    }
+  }
+
+
   // Write file
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "# rank %d\n\n", 0);
-  fprintf(f, "%s\n3\n\n", IO_keys[PDM_INRIA_IO_KEY_DIM]);
+  fprintf(f, "%s\n%d\n\n", IO_keys[PDM_INRIA_IO_KEY_DIM], dimension);
 
   // ---- Write vertices
   int  n_vtx    = n_elt_table[PDM_MESH_NODAL_POINT];
@@ -1047,11 +1124,10 @@ PDM_write_meshb
     fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_POINT], n_vtx);
 
     for (int i = 0; i < n_vtx; i++) {
-      fprintf(f, "%20.16lf %20.16lf %20.16lf %i\n",
-      vtx_coords[3*i  ],
-      vtx_coords[3*i+1],
-      vtx_coords[3*i+2],
-      vtx_tags[i]);
+      for (int j = 0; j < dimension; j++) {
+        fprintf(f, "%20.16lf ", vtx_coords[3*i+j]);
+      }
+      fprintf(f, "%i\n", vtx_tags[i]);
     }
   }
 
@@ -1200,6 +1276,7 @@ void
 PDM_write_gamma_sol
 (
   const char   *filename,
+  const int     dim,
   const int     n_vtx,
   const int     n_field,
   const double *fields
@@ -1210,8 +1287,7 @@ PDM_write_gamma_sol
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "# rank %d\n\n", 0);
-  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "Dimension\n%d\n\n", dim);
   fprintf(f, "SolAtVertices\n%d\n", n_vtx);
 
   fprintf(f, "%i ", n_field);
@@ -1234,6 +1310,7 @@ void
 PDM_write_gamma_matsym
 (
   const char   *filename,
+  const int     dim,
   const int     n_vtx,
   const double *fields
 )
@@ -1242,24 +1319,32 @@ PDM_write_gamma_matsym
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "# rank %d\n\n", 0);
-  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "Dimension\n%d\n\n", dim);
   fprintf(f, "SolAtVertices\n%d\n", n_vtx);
 
   fprintf(f, "1 3 \n");
-  for (int i = 0; i < n_vtx; i++) {
-    // for(int i_field = 0; i_field < 6; ++i_field) {
-    //   fprintf(f, "%20.16lf ", fields[6*i+i_field]);
-    // }
-    // fprintf(f, " \n");
-    fprintf(f, "%20.16lf %20.16lf %20.16lf %20.16lf %20.16lf %20.16lf\n",
-            fields[6*i+0],
-            fields[6*i+1],
-            fields[6*i+3],
-            fields[6*i+2],
-            fields[6*i+4],
-            fields[6*i+5]);
+  if (dim == 2) {
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, "%20.16lf %20.16lf %20.16lf\n",
+              fields[3*i+0],
+              fields[3*i+1],
+              fields[3*i+2]);
+    }
+  }
+  else if (dim == 3) {
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, "%20.16lf %20.16lf %20.16lf %20.16lf %20.16lf %20.16lf\n",
+              fields[6*i+0],
+              fields[6*i+1],
+              fields[6*i+3],
+              fields[6*i+2],
+              fields[6*i+4],
+              fields[6*i+5]);
 
+    }
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d (expected 2 or 3)\n", dim);
   }
   fprintf(f, "End\n");
   fclose(f);

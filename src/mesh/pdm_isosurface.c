@@ -156,7 +156,7 @@ _iso_surface_kind_n_coeff
     case PDM_ISO_SURFACE_KIND_SPHERE:
       return 4;
     case PDM_ISO_SURFACE_KIND_ELLIPSE:
-      return 6;
+      return 7;
     case PDM_ISO_SURFACE_KIND_QUADRIC:
       return 10;
     default:
@@ -814,92 +814,6 @@ _compute_iso_field
   PDM_free(n_vtx    );
   PDM_free(vtx_coord);
 }
-
-
-extern inline int
-_isosurface_is_at_0_level(
-  const double v,
-  const double tol
-)
-{
-  return (PDM_ABS(v) <= tol);
-}
-
-
-extern inline int
-_isosurface_cross_0_level
-(
-  const double v0,
-  const double v1,
-  const double tol
-)
-{
-  return (PDM_ABS(v0) > tol) && (PDM_ABS(v1) > tol) && (v0*v1 < 0);
-}
-
-
-extern inline int
-_isosurface_cross_any_level
-(
-  const double v0,
-  const double v1,
-  const int    n_isovalues,
-  const double isovalues[],
-  const double tol
-)
-{
-  int n_crossings = 0;
-  for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _isosurface_cross_0_level(v0 - isovalues[i], v1 - isovalues[i], tol);
-  }
-
-  return n_crossings;
-}
-
-
-static inline int
-_sign
-(
-  const double v,
-  const double tol
-)
-{
-  return (v > tol);
-}
-
-
-extern inline int
-_isosurface_cross_0_level_ngon
-(
-  const double v0,
-  const double v1,
-  const double tol
-)
-{
-  return _sign(v0, tol) != _sign(v1, tol);
-}
-
-
-extern inline int
-_isosurface_cross_any_level_ngon
-(
-  const double v0,
-  const double v1,
-  const int    n_isovalues,
-  const double isovalues[],
-  const double tol
-)
-{
-  int n_crossings = 0;
-  for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _isosurface_cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i], tol);
-  }
-
-  return n_crossings;
-}
-
-
-
 
 /**
  * \brief Convert group info into tag
@@ -3883,6 +3797,15 @@ PDM_isosurface_part_to_part_get
   *ptp = _iso->iso_ptp[entity_type];
 }
 
+
+PDM_MPI_Comm
+PDM_isosurface_comm_get
+(
+  PDM_isosurface_t *isos
+)
+{
+  return isos->comm;
+}
 
 #ifdef  __cplusplus
 }

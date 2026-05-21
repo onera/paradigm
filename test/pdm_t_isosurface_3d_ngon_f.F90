@@ -79,6 +79,7 @@ program isosurface_3d_ngon
   integer(pdm_l_num_s), pointer :: n_cell(:)                 => null()
   integer(pdm_l_num_s), pointer :: n_surface(:)              => null()
   integer(pdm_l_num_s), pointer :: n_ridge(:)                => null()
+  integer(pdm_l_num_s), pointer :: connect_idx(:)            => null()
   integer(pdm_l_num_s), pointer :: ipart_cell_face_idx(:)    => null()
   integer(pdm_l_num_s), pointer :: ipart_cell_face(:)        => null()
   integer(pdm_g_num_s), pointer :: ipart_cell_ln_to_gn(:)    => null()
@@ -312,7 +313,7 @@ program isosurface_3d_ngon
                                            i_part-1,                       &
                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX, &
                                            n_edge(i_part),                 &
-                                           null(),                         &
+                                           connect_idx,                         &
                                            ipart_edge_vtx)
 
     ! VTX COORDS

@@ -161,7 +161,7 @@ subroutine PDM_part_extension_create (part_ext,    &
   integer, intent(in)           :: comm        ! MPI communicator
   integer, intent(in)           :: owner       ! Data ownership
 
-  integer(c_int)                :: c_comm
+  type(c_ptr)                   :: c_comm
 
   interface
     function PDM_part_extension_create_c (n_domain,    &
@@ -179,7 +179,7 @@ subroutine PDM_part_extension_create (part_ext,    &
       type(c_ptr),    value :: n_part
       integer(c_int), value :: extend_type
       integer(c_int), value :: depth
-      integer(c_int), value :: comm
+      type(c_ptr),    value :: comm
       integer(c_int), value :: owner
       type(c_ptr)           :: part_ext
 
@@ -1254,7 +1254,7 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
   integer, intent(in)                :: comm
 
   integer                           :: i
-  integer(c_int)                    :: c_comm
+  type(c_ptr)                       :: c_comm
   type(c_ptr)                       :: c_selected_cell_to_send_idx
   type(c_ptr)                       :: c_selected_cell_to_send
   type(c_ptr)                       :: c_selected_cell_to_send_ln_to_gn
@@ -1283,7 +1283,7 @@ subroutine PDM_part_to_part_create_from_extension (ptp,                         
       type(c_ptr),    value :: n_ext_cell
       type(c_ptr)           :: selected_cell_to_send
       type(c_ptr)           :: n_selected_cell_to_send
-      integer(c_int), value :: comm
+      type(c_ptr),    value :: comm
 
     end subroutine PDM_part_to_part_create_from_extension_c
   end interface

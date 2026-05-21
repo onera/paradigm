@@ -127,6 +127,7 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
 
   # Set mesh
   isos.n_part_set(n_part)
+  isos.n_group_set(PDM._PDM_MESH_ENTITY_FACE, 6)
 
   for i_part in range(n_part):
     # Connectivities

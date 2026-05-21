@@ -128,43 +128,30 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
 endfunction()
 
 function(test_c_create name n_proc LIST_TEST LIST_NRANK)
-   add_executable(${name} "${name}.c")
-   if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
-     set_target_properties(${name}
-                           PROPERTIES
-                           COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
-   endif()
-   target_include_directories(${name} PRIVATE ${CMAKE_SOURCE_DIR}
-                                      PRIVATE ${CMAKE_BINARY_DIR}
-                                      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-   target_include_directories(${name} PRIVATE ${TEST_INC})
-   target_link_libraries(${name} ${LINK_LIBRARIES})
-   if(mmg_FOUND)
-    target_link_libraries(${name} Mmg::libmmg2d_so)
-   endif()
-   if (LAPACK_FOUND)
-     target_link_libraries(${name} LAPACK::LAPACK)
-   endif()
-   if (NOT LAPACK_FOUND AND BLAS_FOUND)
-     target_link_libraries(${name} BLAS::BLAS)
-   endif()
-   #endif()
+  add_executable(${name} "${name}.c")
 
-   install(TARGETS ${name} RUNTIME DESTINATION bin)
+  if(PDM_ENABLE_STATIC AND NOT PDM_ENABLE_SHARED)
+    target_link_libraries(${name} PRIVATE pdm_static)
+  endif()
+  if(PDM_ENABLE_SHARED)
+    target_link_libraries(${name} PRIVATE pdm_shared)
+  endif()
+  target_link_libraries(${name} PRIVATE ${LINK_LIBRARIES}) # Only for cwipi that use test_c_create
 
-   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
-             ${MPIEXEC_PREFLAGS}
-             ${MPIEXEC_GENV_COMMAND}
-             ${MPIEXEC_GENV_PRELOAD}
-             ${MPIEXEC_GENV_PRELOAD_PATH}
-             ${CMAKE_CURRENT_BINARY_DIR}/${name}
-             ${MPIEXEC_POSTFLAGS})
+  install(TARGETS ${name} RUNTIME DESTINATION bin)
 
-    add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
+  add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
+            ${MPIEXEC_PREFLAGS}
+            ${MPIEXEC_GENV_COMMAND}
+            ${MPIEXEC_GENV_PRELOAD}
+            ${MPIEXEC_GENV_PRELOAD_PATH}
+            ${CMAKE_CURRENT_BINARY_DIR}/${name}
+            ${MPIEXEC_POSTFLAGS})
 
-    set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
-    set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
+  add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
 
+  set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+  set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
 
   set (LIST_TEST_ENV "")
 
@@ -195,25 +182,18 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
   else ()
     add_executable(${name} "${name}.F90")
   endif()
-  if ((NOT MPI_Fortran_COMPILER) AND MPI_C_COMPILE_FLAGS)
-    set_target_properties(${name}
-                          PROPERTIES
-                          COMPILE_FLAGS ${MPI_Fortran_COMPILE_FLAGS})
-   target_include_directories(${name} PRIVATE ${MPI_Fortran_INCLUDE_PATH})
-  endif()
-  target_include_directories(${name} PRIVATE ${CMAKE_SOURCE_DIR}
-                                     PRIVATE ${CMAKE_BINARY_DIR}
-                                     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-  target_include_directories(${name} PRIVATE ${TEST_INC})
-  target_link_libraries(${name} ${LINK_LIBRARIES})
-  set_target_properties(${name} PROPERTIES LINKER_LANGUAGE "Fortran")
 
-  if (LAPACK_FOUND)
-    target_link_libraries(${name} LAPACK::LAPACK)
+  if(PDM_ENABLE_STATIC AND NOT PDM_ENABLE_SHARED)
+    target_link_libraries(${name} PRIVATE pdmf_static)
+    get_target_property(MODDIR pdmf Fortran_MODULE_DIRECTORY)
   endif()
-  if (NOT LAPACK_FOUND AND BLAS_FOUND)
-    target_link_libraries(${name} BLAS::BLAS)
+  if(PDM_ENABLE_SHARED)
+    target_link_libraries(${name} PRIVATE pdmf_shared)
+    get_target_property(MODDIR pdmf Fortran_MODULE_DIRECTORY)
   endif()
+
+  target_include_directories(${name} PRIVATE ${MODDIR})
+  set_target_properties(${name} PROPERTIES LINKER_LANGUAGE "Fortran")
 
   install(TARGETS ${name} RUNTIME DESTINATION bin)
   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
@@ -309,33 +289,23 @@ function(test_cpp_unit_create name n_proc LIST_TEST LIST_NRANK)
 
   add_executable(${name} "${name}.cpp" ${ARGS_SOURCES})
 
-  find_package(MPI)
+  if(PDM_ENABLE_STATIC AND NOT PDM_ENABLE_SHARED)
+    target_link_libraries(${name} PRIVATE pdm_static)
+  endif()
+  if(PDM_ENABLE_SHARED)
+    target_link_libraries(${name} PRIVATE pdm_shared)
+  endif()
 
-  # foreach( test_file ${ARGS_SOURCES} )
-  #   message("test_file" ${test_file})
-  # endforeach()
+  target_link_libraries(${name} PRIVATE doctest::doctest)
+  install(TARGETS ${name} RUNTIME DESTINATION bin)
+  add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
+            ${MPIEXEC_PREFLAGS}
+            ${CMAKE_CURRENT_BINARY_DIR}/${name}
+            ${MPIEXEC_POSTFLAGS})
 
-   if ((NOT MPI_CXX_COMPILER) AND MPI_CXX_COMPILE_FLAGS)
-     set_target_properties(${name}
-                           PROPERTIES
-                           COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
-   endif()
-   target_include_directories(${name} PRIVATE ${CMAKE_SOURCE_DIR}
-                                      PRIVATE ${CMAKE_BINARY_DIR}
-                                      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-   target_include_directories(${name} PRIVATE ${TEST_INC})
-   target_link_libraries(${name} doctest::doctest)
-   target_link_libraries(${name} MPI::MPI_CXX)
-   target_link_libraries(${name} ${LINK_LIBRARIES})
-   install(TARGETS ${name} RUNTIME DESTINATION bin)
-   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
-             ${MPIEXEC_PREFLAGS}
-             ${CMAKE_CURRENT_BINARY_DIR}/${name}
-             ${MPIEXEC_POSTFLAGS})
-
-   add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
-   set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
-   set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
+  add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
+  set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
+  set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
 
 
   set (LIST_TEST_ENV "")

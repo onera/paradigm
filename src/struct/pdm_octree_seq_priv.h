@@ -9,15 +9,10 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm_dbbtree.h"
-#include "pdm_surf_mesh.h"
-#include "pdm_surf_part.h"
-#include "pdm_surf_part_priv.h"
-#include "pdm_timer.h"
-#include "pdm_overlay.h"
 #include "pdm_error.h"
+#include "pdm_mpi.h"
 #include "pdm_printf.h"
+#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,29 +33,6 @@ extern "C" {
 /*============================================================================
  * Type definitions
  *============================================================================*/
-
-
-/**
- * \struct _octant_t
- * \brief  Define an octant
- *
- */
-
-//typedef struct  {
-//
-//  int                     ancestor_id;          /*!< Ids of ancestor in octree array */
-//  int                     is_leaf;              /*!< IS a leaf >*/
-//  PDM_octree_seq_child_t  location_in_ancestor; /*!< Location in ancestor */
-//  int                     depth;                /*!< Depth in the tree */
-//  int                     children_id[8];       /*!< Ids of children in octree array */
-//  int                     range[2];             /*!< Ids of children in octree array */
-//  int                     idx[9];               /*!< Start index of point list for each octant */
-//  int                     n_points;             /*!< Number of points in octant*/
-//  double                  extents[6];           /*!< Extents of the node */
-//
-//} _octant_t;
-
-
 
 typedef struct {
 

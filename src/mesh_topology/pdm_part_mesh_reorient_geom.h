@@ -83,7 +83,7 @@ PDM_part_mesh_reorient_geom
        double               **vtx_coord,
  const int                  **face_group_idx,
  const int                  **face_group,
- const int                    comm
+ const PDM_MPI_Comm           comm
 );
 
 #ifdef	__cplusplus

@@ -26,6 +26,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_mpi.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_part_mesh_nodal.h"
@@ -55,25 +56,25 @@ extern "C" {
     (isos)->entry_mesh_type=(entry_type); \
   } \
   else if ((isos)->entry_mesh_type!=(entry_type)) { \
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t:entry_mesh_type already set to %d.\n", (isos)->entry_mesh_type); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t:entry_mesh_type already set to %d.\n", __func__, (isos)->entry_mesh_type); \
   }
 
-#define PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface)                                    \
-  if ((id_isosurface) >= (isos)->n_isosurface) {                                        \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid id_isosurface %d (n_isosurface = %d).\n", \
-              (id_isosurface), (isos)->n_isosurface);                                   \
+#define PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface) \
+  if ((id_isosurface) >= (isos)->n_isosurface) { \
+    PDM_error(__FILE__, __LINE__, 0, "%s: Invalid id_isosurface %d (n_isosurface = %d).\n", \
+              __func__, (id_isosurface), (isos)->n_isosurface); \
   }
 
-#define PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface)                                          \
-  if ((isos)->isosurfaces[(id_isosurface)].is_computed == PDM_FALSE) {                              \
-    PDM_error(__FILE__, __LINE__, 0, "Isosurface with id %d was not computed.\n", (id_isosurface)); \
+#define PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface) \
+  if ((isos)->isosurfaces[(id_isosurface)].is_computed == PDM_FALSE) { \
+    PDM_error(__FILE__, __LINE__, 0, "%s: Isosurface with id %d was not computed.\n", __func__, (id_isosurface)); \
   }
 
 #define PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type) \
   if ((entity_type) != PDM_MESH_ENTITY_VTX  && \
       (entity_type) != PDM_MESH_ENTITY_EDGE && \
       (entity_type) != PDM_MESH_ENTITY_FACE) { \
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", (entity_type)); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t: has no mesh entity of type %d.\n", __func__, (entity_type)); \
   }
 
 #define PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface)                      \
@@ -390,21 +391,39 @@ struct _pdm_isosurface_t {
  * Public function prototypes
  *============================================================================*/
 
-int
+static inline int
+_sign
+(
+  const double v,
+  const double tol
+)
+{
+  return (v > tol);
+}
+
+static inline int
 _isosurface_is_at_0_level(
   const double v,
   const double tol
-);
+)
+{
+  return (PDM_ABS(v) <= tol);
+}
 
-int
+static inline int
 _isosurface_cross_0_level_ngon
 (
   const double v0,
   const double v1,
   const double tol
-);
+)
+{
+  return _sign(v0, tol) != _sign(v1, tol);
+}
 
-int
+
+
+static inline int
 _isosurface_cross_any_level_ngon
 (
   const double v0,
@@ -412,17 +431,30 @@ _isosurface_cross_any_level_ngon
   const int    n_isovalues,
   const double isovalues[],
   const double tol
-);
+)
+{
+  int n_crossings = 0;
+  for (int i = 0; i < n_isovalues; i++) {
+    n_crossings += _isosurface_cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i], tol);
+  }
 
-int
+  return n_crossings;
+}
+
+
+static inline int
 _isosurface_cross_0_level
 (
   const double v0,
   const double v1,
   const double tol
-);
+)
+{
+  return (PDM_ABS(v0) > tol) && (PDM_ABS(v1) > tol) && (v0*v1 < 0);
+}
 
-int
+
+static inline int
 _isosurface_cross_any_level
 (
   const double v0,
@@ -430,7 +462,15 @@ _isosurface_cross_any_level
   const int    n_isovalues,
   const double isovalues[],
   const double tol
-);
+)
+{
+  int n_crossings = 0;
+  for (int i = 0; i < n_isovalues; i++) {
+    n_crossings += _isosurface_cross_0_level(v0 - isovalues[i], v1 - isovalues[i], tol);
+  }
+
+  return n_crossings;
+}
 
 void
 isosurface_timer_start

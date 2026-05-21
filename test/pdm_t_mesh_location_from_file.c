@@ -478,13 +478,16 @@ _eval_field
 
 // -----------------------------------------------------------------------------
 static
-void _get_vtx_connectivity(
+void
+_get_vtx_connectivity
+(
   PDM_dmesh_nodal_t   *dmn,
-  int                  n_elt_table[PDM_MESH_NODAL_N_ELEMENT_TYPES],
+  PDM_g_num_t          n_elt_table[PDM_MESH_NODAL_N_ELEMENT_TYPES],
   int                 *tag_table[PDM_MESH_NODAL_N_ELEMENT_TYPES],
   PDM_g_num_t         *vtx_connect_table[PDM_MESH_NODAL_N_ELEMENT_TYPES],
   double             **vtx_coords
-) {
+)
+{
   // ---- Get number of section
   int dn_section_vol  = PDM_DMesh_nodal_n_section_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC);
   int dn_section_surf = PDM_DMesh_nodal_n_section_get(dmn, PDM_GEOMETRY_KIND_SURFACIC);
@@ -579,7 +582,7 @@ void _dump_DMesh_nodal_to_mesh(
   const char              *filename
 )
 {
-  int           n_elt_table[PDM_MESH_NODAL_N_ELEMENT_TYPES]       = {0};
+  PDM_g_num_t   n_elt_table[PDM_MESH_NODAL_N_ELEMENT_TYPES]       = {0};
   int          *tag_table[PDM_MESH_NODAL_N_ELEMENT_TYPES]         = {NULL};
   PDM_g_num_t  *vtx_connect_table[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {NULL};
   double       *vtx_coords                                        = NULL;
@@ -592,7 +595,8 @@ void _dump_DMesh_nodal_to_mesh(
 
   PDM_write_meshb(
     filename,
-    n_elt_table, tag_table,
+    n_elt_table,
+    tag_table,
     vtx_connect_table,
     vtx_coords
   );

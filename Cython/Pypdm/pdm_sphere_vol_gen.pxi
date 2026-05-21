@@ -37,9 +37,7 @@ def sphere_vol_icosphere_gen_nodal(MPI.Comm        comm,
                                       radius,
                                       &dmn)
 
-  py_caps = PyCapsule_New(dmn, NULL, NULL)
-
-  return DistributedMeshNodalCapsule(py_caps)
+  return DistributedMeshNodal.from_ptr(dmn)
 
 
 # ------------------------------------------------------------------------
@@ -67,6 +65,4 @@ def sphere_vol_hollow_gen_nodal(MPI.Comm        comm,
                                       geometric_ratio,
                                       &dmn)
 
-  py_caps = PyCapsule_New(dmn, NULL, NULL)
-
-  return DistributedMeshNodalCapsule(py_caps)
+  return DistributedMeshNodal.from_ptr(dmn)

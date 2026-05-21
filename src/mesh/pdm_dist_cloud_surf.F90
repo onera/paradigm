@@ -87,7 +87,7 @@ module pdm_dist_cloud_surf
 
     integer(c_int) :: c_mesh_nature
     integer(c_int) :: c_n_point_cloud
-    integer(c_int) :: c_comm
+    type (c_ptr)   :: c_comm
     integer(c_int) :: c_owner
 
     interface
@@ -101,7 +101,7 @@ module pdm_dist_cloud_surf
         implicit none
         integer(c_int), value :: mesh_nature
         integer(c_int), value :: n_point_cloud
-        integer(c_int), value :: comm
+        type(c_ptr), value    :: comm
         integer(c_int), value :: owner
         type (c_ptr)          :: dcs
       end function pdm_dist_cloud_surf_create_cf

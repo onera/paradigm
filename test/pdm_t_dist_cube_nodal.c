@@ -215,7 +215,6 @@ int main(int argc, char *argv[])
   PDM_multipart_free(mpart_id);
 
   PDM_dcube_nodal_gen_free(dcube);
-  PDM_part_mesh_nodal_free(pmesh_nodal);
 
   if (i_rank == 0) {
     printf("-- End\n");

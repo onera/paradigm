@@ -26,15 +26,31 @@ API
     .. tab-item:: Fortran
       :sync: Fortran
 
-      .. f:autosubroutine:: PDM_block_to_part_create
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_block_to_part_create
+
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
 
 
     .. tab-item:: Python
       :sync: Python
 
+      .. ifconfig:: enable_python_doc == 'ON'
+
         .. py:class:: BlockToPart
 
           .. automethod:: Pypdm.Pypdm.BlockToPart.__init__
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 
@@ -55,36 +71,52 @@ API
     .. tab-item:: Fortran
       :sync: Fortran
 
-      .. f:subroutine:: pdm_block_to_part_exch(btp, t_stride, block_stride, block_data, part_stride, part_data)
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-        Exchange data from blocks to partitions. Output arrays are allocated by **ParaDiGM**.
+        .. f:subroutine:: pdm_block_to_part_exch(btp, t_stride, block_stride, block_data, part_stride, part_data)
 
-        :p c_ptr btp [in]: Block-to-Part instance
-        :p integer t_stride [in]: Stride type
-        :p pointer(integer(pdm_l_num_s)) block_stride [in]: Stride for ``block_data``
-        :p pointer block_data [in]: Block-distributed data
-        :p pdm_pointer_array_t part_stride [out]: Stride for ``part_data``
-        :p pdm_pointer_array_t part_data [out]: Partitioned data
+          Exchange data from blocks to partitions. Output arrays are allocated by **ParaDiGM**.
+
+          :p c_ptr btp [in]: Block-to-Part instance
+          :p integer t_stride [in]: Stride type
+          :p pointer(integer(pdm_l_num_s)) block_stride [in]: Stride for ``block_data``
+          :p pointer block_data [in]: Block-distributed data
+          :p pdm_pointer_array_t part_stride [out]: Stride for ``part_data``
+          :p pdm_pointer_array_t part_data [out]: Partitioned data
 
 
-      .. f:subroutine:: pdm_block_to_part_exch_in_place(btp, t_stride, block_stride, block_data, part_stride, part_data)
+        .. f:subroutine:: pdm_block_to_part_exch_in_place(btp, t_stride, block_stride, block_data, part_stride, part_data)
 
-        Exchange data from blocks to partitions. Output arrays are allocated by the user *before* the call to this subroutine.
+          Exchange data from blocks to partitions. Output arrays are allocated by the user *before* the call to this subroutine.
 
-        :p c_ptr btp [in]: Block-to-Part instance
-        :p integer t_stride [in]: Stride type
-        :p pointer(integer(pdm_l_num_s)) block_stride [in]: Stride for ``block_data``
-        :p pointer block_data [in]: Block-distributed data
-        :p pdm_pointer_array_t part_stride [inout]: Stride for ``part_data``
-        :p pdm_pointer_array_t part_data [inout]: Partitioned data
+          :p c_ptr btp [in]: Block-to-Part instance
+          :p integer t_stride [in]: Stride type
+          :p pointer(integer(pdm_l_num_s)) block_stride [in]: Stride for ``block_data``
+          :p pointer block_data [in]: Block-distributed data
+          :p pdm_pointer_array_t part_stride [inout]: Stride for ``part_data``
+          :p pdm_pointer_array_t part_data [inout]: Partitioned data
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
 
 
 
     .. tab-item:: Python
       :sync: Python
 
+      .. ifconfig:: enable_python_doc == 'ON'
+
         .. automethod:: Pypdm.Pypdm.BlockToPart.exchange_field
         .. automethod:: Pypdm.Pypdm.BlockToPart.exchange_field_inplace
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
 
 
 
@@ -103,8 +135,14 @@ API
     .. tab-item:: Fortran
       :sync: Fortran
 
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
         .. f:autosubroutine:: PDM_block_to_part_free
 
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
     .. tab-item:: Python

@@ -1,411 +1,339 @@
-#==============================================================================
-#
-#             Top level CMakeLists.txt file for ParaDiGM
-#
-#==============================================================================
+# ------------------------------------------------------------------------------
+# General CMake settings
+# ------------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_policy(SET CMP0074 NEW) # force find_package to take <PackageName>_ROOT variables into account
 
-cmake_minimum_required(VERSION 3.16)
-cmake_policy(VERSION 3.16)
-
+if (NOT DEFINED PROJECT_ROOT)
+  set(PROJECT_ROOT ${CMAKE_SOURCE_DIR} CACHE PATH "Root directory, where the submodules are populated")
+endif()
 
 #------------------------------------------------------------------------------
 # Internal CMake module (shared with ParaDiGMA or CWIPI)
 #------------------------------------------------------------------------------
-
 set(PDM_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(CMAKE_MODULE_PATH "${PDM_CMAKE_DIR}/modules")
 
+# ------------------------------------------------------------------------------
+# Project
+# ------------------------------------------------------------------------------
 include(${CMAKE_MODULE_PATH}/version.cmake)
-project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES C CXX)
+include(${CMAKE_MODULE_PATH}/find_subdir.cmake)
+project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES Fortran C CXX)
 
 set(PDM_VERSION "${PDM_VERSION_MAJOR}.${PDM_VERSION_MINOR}.${PDM_VERSION_PATCH}")
 
-set(CTEST_TEST_TIMEOUT 120)
-
-# ----------------------------------------------------------------------
-find_program( MEMORYCHECK_COMMAND valgrind )
-set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full" )
-# ----------------------------------------------------------------------
-
-include(CTest)
-enable_testing ()
-
-# ----------------------------------------------------------------------
-# RPATH protection
-
-
-#SET(CMAKE_SKIP_BUILD_RPATH  TRUE)
-#set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-#set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-
-
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-
-#------------------------------------------------------------------------------
-# Fake dlclose path
-#------------------------------------------------------------------------------
-
-set(PDM_BINARY_DLCLOSE_DIR ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose)
-set(PDM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-
-
-#------------------------------------------------------------------------------
-# User option Definition
-#------------------------------------------------------------------------------
-
-# Multipart in Part
-# -----------------
-set(PDM_USE_MULTIPART 0)
-
-# Extensions
-# ----------
-
-option(PDM_ENABLE_EXTENSION_PDMA "Enable advanced functionalities extension" OFF)
-
-# OpenMP
-# ------
-
-option(PDM_ENABLE_OPENMP "Enable OpenMP" OFF)
-
-# CUDA
-# ------
-
-option(PDM_ENABLE_CUDA "Enable CUDA" OFF)
-if (PDM_ENABLE_CUDA)
-  enable_language(CUDA)
-endif ()
-
-# ANISO_AGGLO (only if pdma)
-# ------
-if (PDM_ENABLE_EXTENSION_PDMA)
-  option(PDM_ENABLE_ANISO_AGGLO "Enable Anisotropic agglomeration for coarse mesh function" ON)
-
-  if (PDM_ENABLE_ANISO_AGGLO)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
-        message(FATAL_ERROR "Insufficient g++ version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
-      endif()
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15)
-        message(FATAL_ERROR "Insufficient icpc version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
-      endif()
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.2)
-        message(FATAL_ERROR "Insufficient clang version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
-      endif()
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
-      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.1.3)
-        message(FATAL_ERROR "Insufficient xlc++ version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
-      endif()
-    endif ()
-    set (PDM_HAVE_ANISO_AGGLO 1)
-  endif ()
-endif()
-
-
-# Enable long for absolute number
-# -------------------------------
-
-option(PDM_ENABLE_LONG_G_NUM "Enable long for global number" ON)
-
-# Pt-scotch
-# ---------
-
-option(PDM_ENABLE_PTSCOTCH "Compile with support for SCOTCH." ON)
-
-# ParMetis
-# --------
-
-option(PDM_ENABLE_PARMETIS "Compile with support for SCOTCH." ON)
-
-# Shared libraries
-# ----------------
-
-option(PDM_ENABLE_SHARED "Build Shared Libraries" OFF)
-
-# Static libraries
-# ----------------
-
-option(PDM_ENABLE_STATIC "Build Static Libraries" ON)
-
-# Check MPI Wrapper
-# -----------------
-
-option(PDM_ENABLE_MPI_CHECK "Check MPI Wrapper" ON)
-
-# Python Bindings
-# ---------------
-
-option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module" OFF)
-
-# BLAS/LAPACK
-# -----------
-
-option(PDM_ENABLE_BLASLAPACK "Build with BLAS/LAPACK" OFF)
-
-# Fortran interface
-# -----------------
-
-option(PDM_ENABLE_Fortran "Build Fortran Interface" ON)
-
-if (PDM_ENABLE_Fortran)
-  enable_language(Fortran)
-endif()
-
-if (PDM_ENABLE_STATIC AND PDM_ENABLE_Fortran)
-  set(PDM_ENABLE_STATIC_Fortran_INTERFACE ON)
-else ()
-  set(PDM_ENABLE_STATIC_Fortran_INTERFACE OFF)
-endif ()
-
-if (PDM_ENABLE_SHARED AND PDM_ENABLE_Fortran)
-  set(PDM_ENABLE_SHARED_Fortran_INTERFACE ON)
-else ()
-  set(PDM_ENABLE_SHARED_Fortran_INTERFACE OFF)
-endif ()
-
-option(PDM_ENABLE_Fortran_MPI_MODULE "Use Fortran MPI module" ON)
-
-# Unit test mpi with doctect
-# ------
-
-option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
-
-
-# Documentation
-# -------------
-
-option(PDM_ENABLE_DOC "Enable Sphinx documentation" OFF)
-
-
-# Training Notebooks
-# ------------------
-
-option(PDM_ENABLE_TRAINING "Enable training Jupyter Notebooks" OFF)
-
-#------------------------------------------------------------------------------
-# Default build : Release
-#------------------------------------------------------------------------------
-
-if ((PDM_ENABLE_PYTHON_BINDINGS OR PDM_ENABLE_SHARED_Fortran_INTERFACE) AND (NOT PDM_ENABLE_SHARED))
-  set (PDM_ENABLE_SHARED "ON" CACHE STRING "Build Shared Libraries" FORCE )
-endif()
-
-if ((NOT PDM_ENABLE_STATIC) AND (NOT PDM_ENABLE_SHARED))
-  message (FATAL_ERROR "No enabled library. Please, enable shared or static library")
-endif()
-
-if (NOT CMAKE_BUILD_TYPE)
- set(CMAKE_BUILD_TYPE "Release" CACHE STRING  "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
-endif()
-
-# Add "-DHAVE_GETRUSAGE" if function getrusage and gettimeofday exist
-#--------------------------------------------------------------------
-include(CheckFunctionExists)
-CHECK_FUNCTION_EXISTS(getrusage PDM_HAVE_GETRUSAGE)
-CHECK_FUNCTION_EXISTS(gettimeofday PDM_HAVE_GETTIMEOFDAY)
+## C++ standard
+set(SUPPORTED_CXX_STANDARDS 11 14 17 20)
 
 #------------------------------------------------------------------------------
 # Default compiler flags
 #------------------------------------------------------------------------------
-include(${CMAKE_MODULE_PATH}/default_flags.cmake)
+if (NOT CMAKE_BUILD_TYPE)
+ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
+endif()
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  include(${CMAKE_MODULE_PATH}/default_flags.cmake)
+endif()
 
-#------------------------------------------------------------------------------
-# Libraries to add to link
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Dependencies
+# ------------------------------------------------------------------------------
+if (NOT TARGET MPI::MPI_CXX)
+  find_package(MPI REQUIRED COMPONENTS CXX)
+endif()
+if (PDM_ENABLE_PYTHON_BINDINGS)
+  if (NOT TARGET Python::Python OR NOT TARGET Python::NumPy)
+    find_package(Python 3.8 REQUIRED COMPONENTS Development NumPy)
+  endif()
+  if (NOT TARGET Mpi4Py::Mpi4Py)
+    find_package(Mpi4Py REQUIRED)
+  endif()
+endif()
 
-set(COMMON_LIBRARIES)
+find_package(PTScotch)
+find_package(ParMETIS)
+find_package(Doxygen)
 
-#------------------------------------------------------------------------------
-# Check dependecies
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Features
+# ------------------------------------------------------------------------------
+option(PDM_ENABLE_EXTENSION_PDMA     "Enable advanced functionalities extension" OFF)
+option(PDM_ENABLE_LONG_G_NUM         "Enable long for global number"             ON )
+option(PDM_ENABLE_SHARED             "Build Shared Libraries"                    ON )
+option(PDM_ENABLE_STATIC             "Build Static Libraries"                    OFF)
+if (PDM_ENABLE_EXTENSION_PDMA)
+  option(PDM_ENABLE_ANISO_AGGLO      "Enable anisotropic agglomeration"          ON )
+endif()
 
+option(PDM_ENABLE_Fortran            "Build Fortran Interface"                   ON )
+option(PDM_ENABLE_Fortran_MPI_MODULE "Build with Fortran MPI module"             OFF)
+option(PDM_ENABLE_PYTHON_BINDINGS    "Build Python module"                       OFF)
+option(PDM_ENABLE_CUDA               "Build with CUDA"                           OFF)
+option(PDM_ENABLE_BLASLAPACK         "Build with BLAS/LAPACK"                    OFF)
 
-# Check MPI (TODO : check MPI wrapper function check )
-# -------------
+option(PDM_ENABLE_TESTS              "Make CTest run the tests"                  ON )
+option(PDM_ENABLE_UNIT_TEST          "Enable unit test "                         OFF)
+option(PDM_ENABLE_DOC                "Enable Sphinx documentation"               OFF)
+option(PDM_ENABLE_TRAINING           "Enable training Jupyter Notebooks"         OFF)
 
-if (PDM_ENABLE_Fortran)
-  find_package(MPI REQUIRED COMPONENTS C Fortran)
-else()
-  find_package(MPI REQUIRED COMPONENTS C)
+if (PDM_ENABLE_LONG_G_NUM)
+  set(PDM_LONG_G_NUM 1)
+endif()
+
+if (PDM_ENABLE_EXTENSION_PDMA AND PDM_ENABLE_ANISO_AGGLO)
+  set (PDM_HAVE_ANISO_AGGLO ON)
 endif()
 
 if (PDM_ENABLE_Fortran_MPI_MODULE)
   set(CMAKE_Fortran_PREPROCESS ON)
-  set (PDM_HAVE_FORTRAN_MPI_MODULE 1)
+  set(PDM_HAVE_FORTRAN_MPI_MODULE 1)
 endif()
-
-mark_as_advanced (MPI_EXTRA_LIBRARY MPI_LIBRARY)
-
-# ---------------------
-# Check MPI Wrapper
-# ---------------------
-
-if (PDM_ENABLE_MPI_CHECK)
-   include(${CMAKE_MODULE_PATH}/CheckMPI.cmake)
-endif()
-
-# Check SCOTCH an ParMETIS
-# -------------------------
-
-if (PDM_ENABLE_PARMETIS)
-   find_package(ParMETIS 4.0.3)
-   if (PARMETIS_FOUND)
-      set(PDM_HAVE_PARMETIS 1)
-   endif()
-endif()
-
-if (PDM_ENABLE_PTSCOTCH)
-   find_package(PTSCOTCH 6.0.0)
-   if (PTSCOTCH_FOUND)
-      set(PDM_HAVE_PTSCOTCH 1)
-   endif()
-endif()
-
-
-if (PDM_ENABLE_BLASLAPACK)
-
-  if (CMAKE_C_COMPILER_ID STREQUAL "Intel")
-    set (BLA_VENDOR "Intel10_64lp")
-    find_package(BLAS)
-    find_package(LAPACK)
-    if (BLAS_FOUND AND LAPACK_FOUND)
-      set(PDM_HAVE_MKL 1)
-    endif()
-    unset (BLA_VENDOR)
-  endif()
-
-  if (NOT BLAS_FOUND)
-    find_package(BLAS)
-  endif()
-
-  if (NOT LAPACK_FOUND)
-    find_package(LAPACK)
-  endif()
-
-  if (BLAS_FOUND)
-    set(PDM_HAVE_BLAS 1)
-  endif()
-
-  if (LAPACK_FOUND)
-    set(PDM_HAVE_LAPACK 1)
-  endif()
-
-endif()
-
-# Check OpenMP (TODO : check MPI wrapper function check )
-# -------------------------------------------------------
-if (PDM_ENABLE_OPENMP)
-  find_package(OpenMP)
-  if (OPENMP_FOUND)
-    set(PDM_HAVE_OPENMP 1)
-  endif()
-endif()
-
-# Python bindings
-# ---------------
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
-  # NB: cython module must use mpicxx to avoid "mpi.h" not found.
-  find_package(MPI REQUIRED COMPONENTS CXX)
-
+  if (NOT PDM_ENABLE_SHARED)
+    set (PDM_ENABLE_SHARED "ON" CACHE STRING "Build Shared Libraries" FORCE)
+  endif()
   find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
   find_package(Mpi4Py REQUIRED)
-
-  include(UseCython)
-
 endif()
 
-#------------------------------------------------------------------------------
-# Store variable in configure file
-#------------------------------------------------------------------------------
+if (PDM_ENABLE_CUDA)
+  enable_language(CUDA)
+endif()
 
-if (PDM_ENABLE_LONG_G_NUM)
-  set(PDM_LONG_G_NUM 1)
-endif ()
+if (PDM_ENABLE_BLASLAPACK)
+  find_package(BLAS)
+  find_package(LAPACK)
+endif()
 
+if (PTSCOTCH_FOUND)
+  set (PDM_HAVE_PTSCOTCH ON)
+endif()
+if (PARMETIS_FOUND)
+  set (PDM_HAVE_PARMETIS ON)
+endif()
+if (BLAS_FOUND)
+  set (PDM_HAVE_BLAS ON)
+endif()
+if (LAPACK_FOUND)
+  set (PDM_HAVE_LAPACK ON)
+endif()
+
+set (install_configs "")
 configure_file(pdm_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
-
-if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
-  if ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h" IS_NEWER_THAN  "${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h")
+list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h)
+if (PDM_ENABLE_Fortran)
+  if ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h" IS_NEWER_THAN "${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h")
     include (FortranizeFile)
     fortranize ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
-  endif ()
-endif ()
-
-#------------------------------------------------------------------------------
-# Doc
-#------------------------------------------------------------------------------
-find_package(Doxygen)
-
-#------------------------------------------------------------------------------
-# Print summary of found and not found optional packages
-#------------------------------------------------------------------------------
-include(FeatureSummary)
-FEATURE_SUMMARY(WHAT ALL)
-
-#------------------------------------------------------------------------------
-# Installation de PDM
-#------------------------------------------------------------------------------
-# Append the library version information to the library target properties
-if (PDM_WITH_LIBRARY_VERSION)
-  string(REPLACE "+" "" PDM_LIBRARY_VERSION ${PDM_VERSION})
-  # This setting of SOVERSION assumes that any API change
-  # will increment either the minor or major version number.
-  set(PDM_LIBRARY_PROPERTIES ${PDM_LIBRARY_PROPERTIES}
-    VERSION ${PDM_LIBRARY_VERSION}
-    SOVERSION ${PDM_VERSION_MAJOR}.${PDM_VERSION_MINOR}
-     )
+    list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h)
+  endif()
 endif()
 
-# Set PDM install sub-directories
-set(PDM_BIN_DIR "bin")
-set(PDM_LIB_DIR "lib")
-set(PDM_INCLUDE_DIR "include")
-set(PDM_PKGCONFIG_DIR "lib/pkgconfig")
-set(PDM_SHARE_DIR "share/cedre")
-set(PDM_MAN_DIR "share/man")
-set(PDM_DOC_DIR "${PDM_SHARE_DIR}/doc")
-set(PDM_ETC_DIR "etc")
-
 #------------------------------------------------------------------------------
-# Ajout des sources de tous les elements du projet
-# En fonction des top_targets a installer
+# Fake dlclose path
 #------------------------------------------------------------------------------
-
-set(PDM_LIST_TEST "")
-set(PDM_LIST_NRANK "")
-
+set(PDM_BINARY_DLCLOSE_DIR ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose)
 add_subdirectory(script)
 
-add_subdirectory(src)
+# ------------------------------------------------------------------------------
+# Compilation
+# ------------------------------------------------------------------------------
+set(src_dir ${PROJECT_SOURCE_DIR}/src)
+if (PDM_ENABLE_EXTENSION_PDMA)
+  set(pdma_dir     ${PROJECT_SOURCE_DIR}/extensions/paradigma)
+  set(pdma_src_dir ${pdma_dir}/src)
+endif()
 
-option(PDM_ENABLE_TESTS "Enable tests" ON)
+file(GLOB_RECURSE all_src_files
+  CONFIGURE_DEPENDS "${src_dir}/*.cxx" "${src_dir}/*.cpp" "${src_dir}/*.c"
+)
 
-add_subdirectory(extensions)
+file(GLOB_RECURSE all_src_fortran_files
+  CONFIGURE_DEPENDS "${src_dir}/*.F90"
+)
+
+get_all_subdirectories(PDM_SUBDIRS ${src_dir})
+
+if (PDM_ENABLE_EXTENSION_PDMA)
+  file(GLOB_RECURSE pdma_sources
+    CONFIGURE_DEPENDS "${pdma_src_dir}/*.cxx" "${pdma_src_dir}/*.cpp" "${pdma_src_dir}/*.c"
+  )
+  list(APPEND all_src_files "${pdma_sources}")
+
+  file(GLOB_RECURSE pdmaf_sources
+    CONFIGURE_DEPENDS "${pdma_src_dir}/*.F90"
+  )
+  list(APPEND all_src_fortran_files "${pdmaf_sources}")
+
+  get_all_subdirectories(PDMA_SUBDIRS ${pdma_src_dir})
+endif()
+
+set(src_files ${all_src_files})
+list(FILTER src_files EXCLUDE REGEX ".*\\.test\\.cpp$")
+
+set(LIB_TYPES "")
+if (PDM_ENABLE_STATIC)
+  list(APPEND LIB_TYPES STATIC)
+endif()
+if (PDM_ENABLE_SHARED)
+  list(APPEND LIB_TYPES SHARED)
+endif()
+
+# if (PDM_ENABLE_CUDA)
+#   add_library(pdm_gpu STATIC ${SOURCESGPU})
+#   set_target_properties(pdm_gpu PROPERTIES
+#                             CUDA_SEPARABLE_COMPILATION ON)
+#   target_compile_options(pdm_gpu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+#   -maxrregcount=32;--fmad=false;#-G;-g;
+#   -gencode=arch=compute_61,code=sm_61;
+#   >)
+# endif()
+
+add_library(pdm OBJECT ${src_files})
+
+target_include_directories(pdm PUBLIC
+  $<BUILD_INTERFACE:${src_dir}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  $<INSTALL_INTERFACE:include>
+)
+
+foreach(subdir IN LISTS PDM_SUBDIRS)
+  target_include_directories(pdm PUBLIC
+    $<BUILD_INTERFACE:${subdir}>
+  )
+endforeach()
+
+foreach(subdir IN LISTS PDMA_SUBDIRS)
+  target_include_directories(pdm PUBLIC
+    $<BUILD_INTERFACE:${subdir}>
+  )
+endforeach()
+
+find_library(MATH_LIBRARY m)
+if(MATH_LIBRARY)
+  target_link_libraries(pdm PRIVATE ${MATH_LIBRARY})
+endif()
+
+target_link_libraries(pdm
+PUBLIC
+  MPI::MPI_CXX
+)
+
+if (PTSCOTCH_FOUND)
+  target_link_libraries(pdm
+  PUBLIC
+    PTScotch::PTScotch
+    Scotch::Scotch
+    Scotch::ScotchErr
+  )
+endif()
+
+if (PARMETIS_FOUND)
+  target_link_libraries(pdm
+  PUBLIC
+    ParMETIS::ParMETIS
+  )
+endif()
+
+if (BLAS_FOUND)
+  target_link_libraries(pdm
+  PUBLIC
+    BLAS::BLAS
+  )
+endif()
+
+if (LAPACK_FOUND)
+  target_link_libraries(pdm
+  PUBLIC
+    LAPACK::LAPACK
+  )
+endif()
+
+get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
+get_target_property(PDM_LIB pdm LINK_LIBRARIES)
+
+if (PDM_ENABLE_Fortran)
+  if (NOT TARGET MPI::MPI_Fortran)
+    find_package(MPI REQUIRED COMPONENTS Fortran)
+  endif()
+  add_library(pdmf OBJECT ${all_src_fortran_files})
+  set_target_properties(pdmf PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules)
+  target_include_directories(pdmf PUBLIC ${PDM_INC})
+  target_include_directories(pdmf PUBLIC
+    $<INSTALL_INTERFACE:include/modules>
+  )
+  target_link_libraries(pdmf
+  PUBLIC
+    MPI::MPI_Fortran
+  )
+  get_target_property(PDMF_INC pdmf INCLUDE_DIRECTORIES)
+  get_target_property(PDMF_LIB pdmf LINK_LIBRARIES)
+endif()
+
+foreach(lib_type IN LISTS LIB_TYPES)
+
+  string(TOLOWER "${lib_type}" lib_type_lower)
+
+  add_library(pdm_${lib_type_lower} ${lib_type} $<TARGET_OBJECTS:pdm>)
+  add_dependencies(pdm_${lib_type_lower} pdm)
+  set_target_properties(pdm_${lib_type_lower} PROPERTIES OUTPUT_NAME "pdm")
+
+  target_include_directories(pdm_${lib_type_lower} PUBLIC ${PDM_INC})
+  target_link_libraries(pdm_${lib_type_lower}      PUBLIC ${PDM_LIB})
+
+  if (PDM_ENABLE_Fortran)
+    add_library(pdmf_${lib_type_lower} ${lib_type} $<TARGET_OBJECTS:pdmf>)
+    add_dependencies(pdmf_${lib_type_lower} pdmf)
+    set_target_properties(pdmf_${lib_type_lower} PROPERTIES OUTPUT_NAME "pdmf")
+
+    target_include_directories(pdmf_${lib_type_lower} PUBLIC ${PDMF_INC})
+    target_link_libraries(pdmf_${lib_type_lower}      PUBLIC ${PDMF_LIB})
+
+    add_dependencies(pdmf_${lib_type_lower} pdm_${lib_type_lower})
+    target_link_libraries(pdmf_${lib_type_lower}
+      PUBLIC
+        pdm_${lib_type_lower}
+    )
+  endif()
+
+endforeach()
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
   add_subdirectory(Cython)
 endif()
 
+# ----------------------------------------------------------------------
+# Unit test
+# ----------------------------------------------------------------------
+if (PDM_ENABLE_UNIT_TEST)
+  include(FetchContent)
+  FetchContent_Declare(
+    doctest
+    GIT_REPOSITORY https://github.com/doctest/doctest.git
+    GIT_TAG        v2.4.11
+  )
+  FetchContent_GetProperties(doctest)
+  if (NOT doctest_POPULATED)
+    FetchContent_Populate(doctest)
+    add_subdirectory(${doctest_SOURCE_DIR} ${doctest_BINARY_DIR})
+  endif()
+endif()
+
+# ----------------------------------------------------------------------
+# Testing
+# ----------------------------------------------------------------------
+include(CTest)
 if (PDM_ENABLE_TESTS)
   add_subdirectory(test)
+  if (PDM_ENABLE_EXTENSION_PDMA)
+    add_subdirectory(extensions/paradigma/test)
+  endif()
 endif()
 
-add_subdirectory(doc)
-
-if (PDM_ENABLE_TRAINING)
-  add_subdirectory(training)
-endif()
-
-#------------------------------------------------------------------------------
-# Create PDM_run file
-#------------------------------------------------------------------------------
-
-string(REPLACE ";" " " PDM_LIST_TEST "${PDM_LIST_TEST}")
-
+# Configure pdm_run
+string(REPLACE ";" " " PDM_LIST_TEST  "${PDM_LIST_TEST}")
 string(REPLACE ";" " " PDM_LIST_NRANK "${PDM_LIST_NRANK}")
 
 set (PDM_RUN_PRELOAD "")
@@ -422,10 +350,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
 
   if (PDM_ENABLE_DOC)
     message(FATAL_ERROR "Documention can not be built in Sanitize CMAKE_BUILD_TYPE")
-  endif ()
+  endif()
 endif()
 
-if(DEFINED ENV{PYTHONPATH})
+if (DEFINED ENV{PYTHONPATH})
   set (PDM_RUN_PYTHONPATH "PYTHONPATH=${PROJECT_BINARY_DIR}/Cython:$ENV{PYTHONPATH}")
 else()
   set (PDM_RUN_PYTHONPATH "PYTHONPATH=${PROJECT_BINARY_DIR}/Cython")
@@ -434,46 +362,79 @@ endif()
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/pdm_run"
                @ONLY)
 
- #
- # Voir comment mieux faire !
-
-configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/test/pdm_run"
-               @ONLY)
-
-if(PDM_ENABLE_EXTENSION_PDMA)
- configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/extensions/paradigma/test/pdm_run"
-               @ONLY)
-endif()
-
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch.in "${PROJECT_BINARY_DIR}/pdm_launch"
                @ONLY)
 
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINARY_DIR}/pdm_launch_python"
                @ONLY)
 
+if (PDM_ENABLE_TRAINING)
+  add_subdirectory(training)
+endif()
 
-#------------------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# Documentation
+# ----------------------------------------------------------------------
+add_subdirectory(doc)
 
-if(PDM_ENABLE_UNIT_TEST)
-  include(FetchContent)
-  FetchContent_Declare(
-    doctest
-    GIT_REPOSITORY https://github.com/doctest/doctest.git
-    GIT_TAG        v2.4.11
-  )
-  FetchContent_GetProperties(doctest)
-  if(NOT doctest_POPULATED)
-    FetchContent_Populate(doctest)
-    add_subdirectory(${doctest_SOURCE_DIR} ${doctest_BINARY_DIR})
+# ----------------------------------------------------------------------
+# Summary
+# ----------------------------------------------------------------------
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  include(FeatureSummary)
+  feature_summary(WHAT ALL)
+endif()
+
+# ----------------------------------------------------------------------
+# Install
+# ----------------------------------------------------------------------
+set (_targets "")
+if (PDM_ENABLE_Fortran)
+  if (PDM_ENABLE_STATIC)
+    list (APPEND _targets pdmf_static)
+  endif()
+  if (PDM_ENABLE_SHARED)
+    list (APPEND _targets pdmf_shared)
   endif()
 endif()
 
-#------------------------------------------------------------------------------
+if (PDM_ENABLE_STATIC)
+  list (APPEND _targets pdm_static)
+endif()
 
-#------------------------------------------------------------------------------
-# Création d'un package pdmConfig.cmake pour importer facilement paradigm
-# pour les clients utilisant CMake
-#------------------------------------------------------------------------------
+if (PDM_ENABLE_SHARED)
+  list (APPEND _targets pdm_shared)
+endif()
+
+foreach(_target IN ITEMS ${_targets})
+  install(TARGETS ${_target} EXPORT ${_target}Targets
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    PUBLIC_HEADER DESTINATION include
+    ARCHIVE DESTINATION lib
+  )
+  install(EXPORT ${_target}Targets
+    FILE ${_target}Targets.cmake
+    NAMESPACE pdm::
+    DESTINATION lib/cmake/${_target}
+  )
+  add_library(pdm::${_target} ALIAS ${_target})
+endforeach()
+
+if(PDM_ENABLE_EXTENSION_PDMA)
+  file(GLOB_RECURSE all_headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/extensions/paradigma/src/*.h" )
+else()
+  file(GLOB_RECURSE all_headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+endif()
+set(install_headers ${all_headers})
+list(FILTER install_headers EXCLUDE REGEX ".*\\_priv\\.h$")
+
+if (PDM_ENABLE_Fortran)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules DESTINATION include)
+endif()
+
+install(FILES ${install_headers} DESTINATION include)
+install(FILES ${install_configs} DESTINATION include)
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfig.cmake.in"
@@ -484,6 +445,13 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfig.cmake"
   DESTINATION lib/cmake/pdm
 )
 
+
+install(FILES
+  ${PROJECT_SOURCE_DIR}/cmake/modules/FindPTScotch.cmake
+  ${PROJECT_SOURCE_DIR}/cmake/modules/FindParMETIS.cmake
+  DESTINATION lib/cmake )
+
+
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfigVersion.cmake.in"
   pdmConfigVersion.cmake
@@ -493,13 +461,4 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfigVersion.cmake"
   DESTINATION lib/cmake/pdm
 )
 
-#------------------------------------------------------------------------------
-# Création d'un fichier pdm_Build.defs dans install/include qui récapitule
-# les options CMake utilisée pour la configuration de ParaDiGM
-#------------------------------------------------------------------------------
 include(pdm_generate_build_defs)
-
-#------------------------------------------------------------------------------
-# Affichage du message de fin d'installation
-#------------------------------------------------------------------------------
-add_subdirectory(${PDM_CMAKE_DIR}/post-install)
