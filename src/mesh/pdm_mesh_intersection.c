@@ -4514,10 +4514,10 @@ _mesh_intersection_surf_surf
         poly_b.face_edge = NULL;
       }
 
-      PDM_mesh_intersection_surf_surf_atomic_compute2(&poly_a,
-                                                      &poly_b,
-                                                      &a_to_b_area[idx_face_b],
-                                                      center_ab);
+      PDM_mesh_intersection_surf_surf_atomic_compute(&poly_a,
+                                                     &poly_b,
+                                                     &a_to_b_area[idx_face_b],
+                                                     center_ab);
 
     } // End loop on faces B
 
