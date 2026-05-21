@@ -1,15 +1,10 @@
 #include <vector>
-#include <cstring>
-#include <fstream>
-#include <ostream>
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
 #include "pdm_doctest.h"
 #include "pdm_logging.h"
 #include "pdm_mesh_intersection_surf_surf_atomic.h"
 #include "pdm_priv.h"
-
-
 
 
 TEST_CASE("Mesh intersection surf-surf atomic") {
@@ -625,6 +620,6 @@ TEST_CASE("Mesh intersection surf-surf atomic") {
   // Check result
   printf("  max error area   = %e\n",   max_error_area);
   printf("  max error center = %e\n\n", max_error_center);
-  CHECK(max_error_area < 1e-12);
+  CHECK(max_error_area   < 1e-12);
   CHECK(max_error_center < 1e-12);
 }

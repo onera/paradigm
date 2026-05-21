@@ -1,7 +1,3 @@
-#include <vector>
-#include <cstring>
-#include <fstream>
-#include <ostream>
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
 #include "pdm_doctest.h"
@@ -79,6 +75,7 @@ MPI_TEST_CASE("PDM_mesh_intersection - surface / surface", 2) {
   PDM_mesh_intersection_mesh_nodal_set(mi, 0, mesh_a);
 
   PDM_mesh_intersection_n_part_set(mi, 1, 1);
+
   SUBCASE("With edges") {
     PDM_mesh_intersection_part_set(mi,
                                    1,
@@ -126,8 +123,6 @@ MPI_TEST_CASE("PDM_mesh_intersection - surface / surface", 2) {
   PDM_mesh_intersection_compute(mi);
 
   /* Check result */
-  double a_area = (1./7) * (1./13);
-
   int         *a_b_idx;
   PDM_g_num_t *a_b;
   double      *a_b_area;
@@ -140,6 +135,9 @@ MPI_TEST_CASE("PDM_mesh_intersection - surface / surface", 2) {
   int n_elt_a = PDM_part_mesh_nodal_n_elmts_get(mesh_a,
                                                 PDM_GEOMETRY_KIND_SURFACIC,
                                                 0);
+
+  const double a_area = (1./7) * (1./13);
+
   for (int i_elt_a = 0; i_elt_a < n_elt_a; i_elt_a++) {
     double sum_area = 0;
     for (int i = a_b_idx[i_elt_a]; i < a_b_idx[i_elt_a+1]; i++) {
@@ -175,7 +173,8 @@ MPI_TEST_CASE("PDM_mesh_intersection - surface / surface", 2) {
 
   CHECK(n_ref_b == pn_face[0]);
 
-  double b_area = 0.5 * (1./10) * (1./10);
+  const double b_area = 0.5 * (1./10) * (1./10);
+
   for (int i_ref_b = 0; i_ref_b < n_ref_b; i_ref_b++) {
     double sum_area = 0;
     for (int i = b_a_idx[i_ref_b]; i < b_a_idx[i_ref_b+1]; i++) {
