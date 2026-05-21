@@ -78,16 +78,16 @@ elseif (CMAKE_Fortran_COMPILER_ID MATCHES "XL")
     link_directories(/opt/ibmcmp/xlsmp/3.1/lib64 /opt/ibmcmp/vacpp/12.1/lib64 /opt/ibmcmp/xlf/14.1/lib64)
   endif()
 
-elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
+elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "NVHPC")
 
-  # pgi
-  # ---
+  # NVHPC
+  # -----
 
   # Ajout des flags communs
 
-  set (CMAKE_Fortran_FLAGS "-Mpreprocess -noswitcherror")
+  set (CMAKE_Fortran_FLAGS                 "-i4 -r8 -fpic -acc=host -Mbackslash -Mfree -Minfo=accel")
 
-  set (CMAKE_Fortran_FLAGS_RELEASE         "-fast")
+  set (CMAKE_Fortran_FLAGS_RELEASE         "-fast -O3")
   set (CMAKE_Fortran_FLAGS_DEBUG           "-g -Mbounds")
   set (CMAKE_Fortran_FLAGS_PROFILING       "${CMAKE_Fortran_FLAGS_RELEASE} -Mprof=func,lines")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "${CMAKE_Fortran_FLAGS_RELEASE} -g")
@@ -96,7 +96,7 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
   set (CMAKE_Fortran_FLAGS_COVERAGE        "-g -Mbounds")
 
   set (FORTRAN_LIBRARIES                   )
-  set (FORTRAN_LIBRARIES_FLAG    -pgf90libs)
+  set (FORTRAN_LIBRARIES_FLAG              )
 
 elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Cray")
 
@@ -281,11 +281,11 @@ elseif (CMAKE_C_COMPILER_ID MATCHES "XL")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -qfullpath")
   set (CMAKE_C_FLAGS_COVERAGE        "-g -qfullpath")
 
-elseif (CMAKE_C_COMPILER_ID STREQUAL "PGI")
+elseif (CMAKE_C_COMPILER_ID STREQUAL "NVHPC")
 
-  set (CMAKE_C_FLAGS "-c99 -noswitcherror")
+  set (CMAKE_C_FLAGS "-fpic -acc=host -fortranlibs -Minfo=accel")
 
-  set (CMAKE_C_FLAGS_RELEASE         "-fast")
+  set (CMAKE_C_FLAGS_RELEASE         "-fast -O3")
   set (CMAKE_C_FLAGS_DEBUG           "-g -Mbounds")
   set (CMAKE_C_FLAGS_PROFILING       "${CMAKE_C_FLAGS_RELEASE} -Mprof=func,lines")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE} -g")
@@ -436,11 +436,11 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
     link_directories(/opt/ibm/xlC/13.1.0/lib64)
   endif()
 
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
 
-  set (CMAKE_CXX_FLAGS "-Xa -noswitcherror")
+  set (CMAKE_CXX_FLAGS "-fpic -std=c++11 -acc=host -fortranlibs -Minfo=accel")
 
-  set (CMAKE_CXX_FLAGS_RELEASE         "-fast")
+  set (CMAKE_CXX_FLAGS_RELEASE         "-fast -O3")
   set (CMAKE_CXX_FLAGS_DEBUG           "-g -Mbounds")
   set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -Mprof=func,lines")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE} -g")
