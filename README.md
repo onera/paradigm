@@ -2,11 +2,13 @@
     <img src="doc/_static/logo.svg" alt="Logo" width="25%"/>
 </p>
 
-**ParaDiGM** (*Parallel Distributed General Mesh*) is a parallel computational geometry library under LGPL, with interfaces in C, Fortran and Python.
+**ParaDiGM** (*Parallel Distributed General Mesh*) is a library for managing meshes in a massively parallel distributed environment, with interfaces in C, Python and Fortran.
 
 ## Documentation  ##
 
-User documentation is deployed on ONERA's internal GitLab pages server and can be found [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html).
+The user documentation is available [here](https://onera.github.io/paradigm/index.html).
+
+ONERA users can also access the documentation deployed on ONERA's [internal Gitlab pages server](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html).
 
 ## Build and install ##
 
@@ -21,15 +23,23 @@ General dependencies for building **ParaDiGM** are:
 
 Follow these steps to build **ParaDiGM** from the sources:
 
-1. `git clone git@gitlab.onera.net:numerics/mesh/paradigm.git` (for ONERA users only)
+First, clone the repository
+  - either from [GitHub](https://github.com/onera/paradigm): `git clone git@github.com:onera/paradigm.git`
+  - or from [GitLab](https://gitlab.onera.net/numerics/mesh/paradigm) (for ONERA users only): `git clone git@gitlab.onera.net:numerics/mesh/paradigm.git`
+
+Then, use the following commands:
 1. `cd paradigm`
-1. `git submodule update --init extensions/paradigma` (if you want to enable [**ParaDiGMA**](https://gitlab.onera.net/numerics/mesh/paradigma))
-1. `mkdir build`
-1. `cd build`
-1. `cmake ..`
-1. `make`
-1. `make install`
-1. `./pdm_run` (if you want to run the test cases)
+2. `git submodule update --init extensions/paradigma` (if you want to enable [**ParaDiGMA**](https://gitlab.onera.net/numerics/mesh/paradigma))
+3. `mkdir build`
+4. `cd build`
+5. `cmake ..`
+6. `make`
+7. `make install`
+8. `./pdm_run` (if you want to run the test cases)
+
+<details>
+
+<summary>Configuration with CMake</summary>
 
 ### CMake general options
     cmake -D<option1_name>=<option1_value> ... -D<option2_name>=<option2_value>
@@ -122,13 +132,20 @@ If a simple autodetection fails, you can use these options to find MPI :
 
 Refer to [FindMPI](https://cmake.org/cmake/help/latest/module/FindMPI.html) in the CMake documentation for more information.
 
+</details>
+
+## Quick start
+
+Examples of use can be found in the ``test`` and ``training`` directories and in the [documentation](#documentation).
+
+
 ## Issues ##
 
 Issues can be reported directly in the [Issues](https://gitlab.onera.net/numerics/mesh/paradigm/-/issues) section.
 
 ## License ##
 
-**ParaDiGM** is available under the LGPL3 license (https://www.gnu.org/licenses/lgpl-3.0.fr.html).
+**ParaDiGM** is available under the [LGPL3 license](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
 ## Copyright ##
 
