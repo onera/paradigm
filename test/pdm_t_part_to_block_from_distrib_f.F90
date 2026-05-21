@@ -62,6 +62,7 @@ program testf
   integer(pdm_l_num_s),      pointer    :: all_dn_elt(:)       => null()
   integer(pdm_g_num_s),      pointer    :: data_distrib_idx(:) => null()
 
+  type(PDM_pointer_array_t), pointer    :: part_stride => null()
   type(PDM_pointer_array_t), pointer    :: part_data => null()
   integer(pdm_l_num_s),      pointer    :: data(:)   => null()
 
@@ -191,7 +192,7 @@ program testf
   call PDM_part_to_block_exch(ptb,                       &
                               PDM_STRIDE_CST_INTERLACED, & ! t_stride
                               1,                         & ! cst_stride
-                              null(),                    &
+                              part_stride,               &
                               part_data,                 &
                               block_stride,              &
                               block_data)

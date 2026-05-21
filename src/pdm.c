@@ -212,7 +212,6 @@ PDM_dimension_to_entity_type
 )
 {
   switch (dim) {
-
     case 3: {
       return PDM_MESH_ENTITY_CELL;
     }
@@ -228,11 +227,40 @@ PDM_dimension_to_entity_type
     default: {
       PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
     }
-
   }
 
   return PDM_MESH_ENTITY_MAX;
 }
+
+
+
+PDM_geometry_kind_t
+PDM_dimension_to_geometry_kind
+(
+  const int dim
+)
+{
+  switch (dim) {
+    case 3: {
+      return PDM_GEOMETRY_KIND_VOLUMIC;
+    }
+    case 2: {
+      return PDM_GEOMETRY_KIND_SURFACIC;
+    }
+    case 1: {
+      return PDM_GEOMETRY_KIND_RIDGE;
+    }
+    case 0: {
+      return PDM_GEOMETRY_KIND_CORNER;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+    }
+  }
+
+  return PDM_GEOMETRY_KIND_MAX;
+}
+
 
 
 PDM_connectivity_type_t

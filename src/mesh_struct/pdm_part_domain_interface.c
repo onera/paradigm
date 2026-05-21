@@ -2748,8 +2748,6 @@ PDM_part_domain_interface_add
     n_part_loc_all_domain += n_part[i_dom];
   }
 
-  int n_interface = PDM_part_domain_interface_n_interface_get(dom_intrf);
-
   /*
    * Re-Create a domain interface
    */
@@ -2922,6 +2920,7 @@ PDM_part_domain_interface_add
    * Translate in distributed
    */
   // if(debug == 1) {
+  //   int n_interface = PDM_part_domain_interface_n_interface_get(dom_intrf);
   //   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
   //     log_trace("\n");
   //     log_trace("Entity1 distributed interface info::\n");

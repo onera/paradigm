@@ -463,7 +463,6 @@ int main(int argc, char *argv[])
    *  Free memory
    */
   PDM_dist_cloud_surf_free(dist);
-  PDM_part_mesh_nodal_free(pmn);
 
   PDM_multipart_free(mpart_surf);
   PDM_DMesh_nodal_free(dmn_surf);

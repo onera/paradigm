@@ -682,10 +682,10 @@ PDM_block_to_part_create
 
   PDM_malloc(btp->distributed_data, btp->distributed_data_idx[btp->n_rank], int);
 
-  PDM_MPI_Partofactiverank (btp->requested_data_n,
-                            btp->distributed_data_n,
-                            comm,
-                            &(btp->part_active_rank));
+  PDM_MPI_part_of_active_rank(btp->requested_data_n,
+                              btp->distributed_data_n,
+                              comm,
+                              &(btp->part_active_rank));
 
   if (btp->p2p_factor < btp->part_active_rank) {
 

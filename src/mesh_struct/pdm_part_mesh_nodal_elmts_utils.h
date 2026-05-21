@@ -255,6 +255,45 @@ PDM_part_mesh_nodal_std_decompose_local_edges
 );
 
 
+
+/**
+ * \brief Decompose locally a standard element section into vertices (single partition).
+ *
+ * \param [in]    t_elt                  Element type
+ * \param [in]    n_elt                  Number of elements
+ * \param [in]    order                  Element order
+ * \param [in]    parent_node            Permutation of principal nodes (for high-order elements)
+ * \param [in]    vtx_tag                Vertex tags (if not NULL, only vertices with both vertices tagged > 0 will be generated)
+ * \param [inout] n_elt_current          Current position in concatenated sections
+ * \param [inout] n_vtx_current          Current position in concatenated vertices
+ * \param [in]    connectivity_elmt_vtx  Element->Vertex connectivity (local IDs)
+ * \param [in]    parent_num             Element parent numbering (or NULL)
+ * \param [inout] elmt_vtx_vtx_idx       Index for ElementVtx->Vertex connectivity
+ * \param [inout] elmt_vtx_vtx           ElementVtx->Vertex connectivity (local IDs)
+ * \param [inout] elmt_cell_vtx_idx      Index for ElementVtx->vtx connectivity
+ * \param [inout] parent_elmt            Elementvtx->Cell connectivity (Parent Element) (local IDs)
+ * \param [inout] parent_elmt_position   Position in parent element for each vtx
+ *
+ */
+void
+PDM_part_mesh_nodal_std_decompose_local_vtx
+(
+       PDM_Mesh_nodal_elt_t  t_elt,
+       int                   n_elt,
+       int                   order,
+       int                  *parent_node,
+       int                  *vtx_tag,
+       int                  *n_elt_current,
+       int                  *n_vtx_current,
+ const int                  *connectivity_elmt_vtx,
+ const int                  *parent_num,
+       int                  *elmt_vtx_vtx_idx,
+       int                  *elmt_vtx_vtx,
+       int                  *elmt_cell_vtx_idx,
+       int                  *parent_elmt,
+       int                  *parent_elmt_position
+);
+
 /**
  * \brief Decompose locally a poly2d section into edges (single partition).
  *
@@ -291,7 +330,7 @@ PDM_part_mesh_nodal_poly2d_decompose_local_edges
 
 
 /**
- * \brief Decompose locally a PartMeshNodalElements into edges.
+ * \brief Decompose locally a \ref PDM_part_mesh_nodal_elmts_t into edges.
  *
  * \param [in]  pmne                       Pointer to \ref PDM_part_mesh_nodal_elmts_t instance
  * \param [in]  vtx_tag                    Vertex tags (if not NULL, only edges with both vertices tagged > 0 will be generated)
@@ -312,6 +351,33 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
   int                         ***out_elmt_edge_idx,
   int                         ***out_elmt_edge_vtx_idx,
   int                         ***out_elmt_edge_vtx,
+  int                         ***out_parent_elmt,
+  int                         ***out_parent_elmt_position
+);
+
+
+/**
+ * \brief Decompose locally a \ref PDM_part_mesh_nodal_elmts_t into vertices.
+ *
+ * \param [in]  pmne                       Pointer to \ref PDM_part_mesh_nodal_elmts_t instance
+ * \param [in]  vtx_tag                    Vertex tags (if not NULL, only vertices with both vertices tagged > 0 will be generated)
+ * \param [out] out_n_decompose_elmt_vtx   Number of vertices (size = n_part)
+ * \param [out] out_elmt_vtx_idx           Index for elmt->elmt_vtx connectivity (size = n_part)
+ * \param [out] out_elmt_vtx_vtx_idx       Index for ElementVtx->Vertex connectivity (size = n_part)
+ * \param [out] out_elmt_vtx_vtx           ElementVtx->Vertex connectivity (local IDs, size = n_part)
+ * \param [out] out_parent_elmt            ElementVtx->Cell connectivity (Parent Element) (local IDs, size = n_part)
+ * \param [out] out_parent_elmt_position   Position in parent element for each edge (size = n_part)
+ *
+ */
+void
+PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
+(
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                          **vtx_tag,
+  int                          **out_n_decompose_elmt_vtx,
+  int                         ***out_elmt_vtx_idx,
+  int                         ***out_elmt_vtx_vtx_idx,
+  int                         ***out_elmt_vtx_vtx,
   int                         ***out_parent_elmt,
   int                         ***out_parent_elmt_position
 );
@@ -388,9 +454,42 @@ PDM_part_mesh_nodal_poly2d_decompose_local_faces
        int *parent_elmt_position
 );
 
+/**
+ * \brief Decompose locally a poly3d section into faces (single partition).
+ *
+ * \param [in]    n_elt                     Number of elements
+ * \param [inout] n_elt_current             Current position in concatenated sections
+ * \param [inout] n_face_current            Current position in concatenated faces
+ * \param [in]    cell_face_idx             Index for Cell->Face connectivity
+ * \param [in]    cell_face                 Cell->Face connectivity (local IDs)
+ * \param [in]    face_vtx_idx              Index for Face->Vertex connectivity
+ * \param [in]    face_vtx                  Face->Vertex connectivity (local IDs)
+ * \param [inout] elmt_face_vtx_idx         Index for Elementface->Vertex connectivity
+ * \param [inout] elmt_face_vtx             ElementFace->Vertex connectivity (local IDs)
+ * \param [inout] elmt_cell_face_idx        Index for ElementFace->Face connectivity
+ * \param [inout] parent_elmt               ElementFace->Cell connectivity (Parent Element) (local IDs)
+ * \param [inout] parent_elmt_position      Position in parent element for each face
+ *
+ */
+void
+PDM_part_mesh_nodal_poly3d_decompose_local_faces
+(
+        int  n_elt,
+        int *n_elt_current,
+        int *n_face_current,
+  const int *cell_face_idx,
+  const int *cell_face,
+  const int *face_vtx_idx,
+  const int *face_vtx,
+        int *elmt_face_vtx_idx,
+        int *elmt_face_vtx,
+        int *elmt_cell_face_idx,
+        int *parent_elmt,
+        int *parent_elmt_position
+);
 
 /**
- * \brief Decompose locally a PartMeshNodalElements into faces.
+ * \brief Decompose locally a \ref PDM_part_mesh_nodal_elmts_t into faces.
  *
  * \param [in]  pmne                       Pointer to \ref PDM_part_mesh_nodal_elmts_t instance
  * \param [in]  vtx_tag                    Vertex tags (if not NULL, only faces with all vertices tagged > 0 will be generated)

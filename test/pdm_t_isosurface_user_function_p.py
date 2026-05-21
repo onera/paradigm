@@ -47,6 +47,7 @@ def run(visu):
 
   # Set mesh
   isos.n_part_set(1)
+  isos.n_group_set(PDM._PDM_MESH_ENTITY_FACE, 6)
 
   # Connectivities
   isos.pconnectivity_set(0,

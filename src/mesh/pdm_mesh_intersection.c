@@ -5215,6 +5215,7 @@ PDM_mesh_intersection_create
   mi->dim_mesh[0]    = dim_mesh_a;
   mi->dim_mesh[1]    = dim_mesh_b;
   mi->project_coef   = project_coeff;
+  mi->tetraisation_pt_type = 0;
 
   mi->bbox_tolerance = 1e-6;
 

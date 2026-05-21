@@ -118,7 +118,7 @@ module pdm_writer
     integer(c_int)                :: c_fmt_fic
     integer(c_int)                :: c_topologie
     integer(c_int)                :: c_st_reprise
-    integer(c_int)                :: c_comm
+    type(c_ptr)                   :: c_comm
     integer(c_int)                :: c_acces
     real(c_double)                :: c_prop_noeuds_actifs
 
@@ -145,7 +145,7 @@ module pdm_writer
         integer(c_int), value :: st_reprise
         character(c_char)     :: rep_sortie
         character(c_char)     :: nom_sortie
-        integer(c_int), value :: pdm_mpi_comm
+        type(c_ptr), value    :: pdm_mpi_comm
         integer(c_int), value :: acces
         real(c_double), value :: prop_noeuds_actifs
         character(c_char)     :: options

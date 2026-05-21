@@ -1,3 +1,65 @@
+## [2.8.0] - 2026-05-21
+### Added
+- PDM_isosurface:
+  - Add accessors
+  - Expand Python API
+  - Test more configurations in CI
+- PDM_laplacian_smoothing: New service for Laplacian smoothing
+- PDM_mpi: Add unit tests
+- PDM_multipart: Automatically register a PDM_part_comm_graph to output PDM_part_mesh_nodal structures
+- PDM_part_comm_graph:
+  - Add documentation
+  - Add accessors
+  - Add services for splitting, concatenation and filtering
+  - Add Python and Fortran APIs
+- PDM_part_geom: Add function to compute vertex normals
+- PDM_part_graph_dual: Add a function to assemble a generic dual graph from a partitioned graph
+- PDM_part_mesh_nodal:
+  - Add functions to convert groups to element tags, and vice versa
+  - Add accessors
+  - Expand Python API
+- PDM_writer: Add accessors
+- PDM_array: Add more array utilities
+- PDM_exchange_helper: New low-level service to factorize utilities for high-level protocol exchanges
+- PDM_mesh_repart (**ParaDiGMA**): Enable implicit ``part_id_idx``
+- PDM_part_migrate (**ParaDiGMA**):
+  - Add accessors
+  - Add function to translate PDM_part_comm_graph
+  - Add unit tests
+### Changed
+- Refactoring CMake files
+- PDM_mpi: Refactoring to streamline the MPI wrapper
+- PDM_part_mesh_nodal: Dissociate *vertices* and *corners* for embedded PDM_part_comm_graph
+- PDM_reader_gamma: Comply with the standard for 2D meshes and solutions
+- Cython: Replace capsules by constructors from raw C pointers
+### Deprecated
+- PDM_iso_surface (**ParaDiGMA**): Prototype replaced by the improved PDM_isosurface service
+### Removed
+- PDM_isosurface: Remove the PDM_isosurface_distribution_get function (was buggy)
+- Remove deprecated / unused prototypes:
+  - **ParaDiGM**: PDM_edge_intersect, PDM_graph_bound, PDM_mesh_adapt, PDM_overlay, PDM_part_bound, PDM_poly_clipp
+  - **ParaDiGMA**: PDM_delaunay, PDM_cavity_operator, PDM_mesh_adaptation, PDM_mesh_generation
+### Fixed
+- Fix compilation warnings
+- Fix memory leaks
+- Prevent divisions by zero (PDM_dcube_nodal_gen, PDM_hilbert)
+- PDM_box_tree: fix vectorization issue with icx (backported from version 2.7.1)
+- PDM_global_mean: Fix case with n_part = 0
+- PDM_isosurface:
+  - Fix cases with no surface groups
+  - Return ``iso_edge_vtx_idx`` as ``None`` in Python interface
+  - Fix ellipse equation
+  - Remove degenerate iso-edges
+- PDM_dist_cloud_surf: Fix case with empty mesh
+- PDM_mesh_intersection: Fix uninitialized ``tetraisation_pt_type`` parameter
+- PDM_multipart: Fix output PDM_part_mesh_nodal memory ownership
+- PDM_part_mesh_nodal:
+  - Fix construction of topological ridges
+  - Improve error messages
+  - Orientation consistency for 2D nodal meshes reconstructed from face->edge connectivity (backported from version 2.7.1)
+- PDM_part_to_part: Fix errors in Python interface (use after free, wrong size for stride arrays)
+- PDM_reader_gamma: Fix orientation of quads in 2D
+- Renumbering (**ParaDiGMA**): Various fixes
 ## [2.7.1] - 2025-12-17
 ### Added
 ### Changed

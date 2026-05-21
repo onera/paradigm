@@ -256,13 +256,12 @@ _eval_cos
 
 
 static PDM_g_num_t
-_gn_entity_compute
+_gn_entity_compute_part
 (
- PDM_isosurface_t    *isos,
- int                  id_iso,
- int                  n_part,
- PDM_mesh_entities_t  entity_type,
- PDM_MPI_Comm         comm
+  PDM_isosurface_t    *isos,
+  int                  id_iso,
+  int                  n_part,
+  PDM_mesh_entities_t  entity_type
 )
 {
   PDM_g_num_t lmax = 0;
@@ -279,10 +278,59 @@ _gn_entity_compute
     }
   }
 
+  PDM_MPI_Comm comm = PDM_isosurface_comm_get(isos);
   PDM_g_num_t gmax;
   PDM_MPI_Allreduce(&lmax, &gmax, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
 
   return gmax;
+}
+
+
+static PDM_g_num_t
+_gn_entity_compute_dist
+(
+  PDM_isosurface_t    *isos,
+  int                  id_iso,
+  PDM_mesh_entities_t  entity_type
+)
+{
+  PDM_g_num_t dn_entity = (PDM_g_num_t) PDM_isosurface_dn_entity_get(isos, id_iso, entity_type);
+
+  PDM_MPI_Comm comm = PDM_isosurface_comm_get(isos);
+  PDM_g_num_t gn_entity;
+  PDM_MPI_Allreduce(&dn_entity, &gn_entity, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+
+  return gn_entity;
+}
+
+
+/**
+ * \brief Strip a PDM_dmesh_nodal_t from its surface groups
+ */
+static void
+_remove_surf_groups_nodal
+(
+  PDM_dmesh_nodal_t *dmn
+)
+{
+  int          n_group;
+  int         *dgroup_elmt_idx;
+  PDM_g_num_t *dgroup_elmt;
+  PDM_DMesh_nodal_section_group_elmt_get(dmn,
+                                         PDM_GEOMETRY_KIND_SURFACIC,
+                                         &n_group,
+                                         &dgroup_elmt_idx,
+                                         &dgroup_elmt,
+                                         PDM_OWNERSHIP_USER);
+  PDM_free(dgroup_elmt_idx);
+  PDM_free(dgroup_elmt);
+
+  PDM_DMesh_nodal_section_group_elmt_set(dmn,
+                                         PDM_GEOMETRY_KIND_SURFACIC,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         PDM_OWNERSHIP_USER);
 }
 
 
@@ -296,9 +344,9 @@ _usage
   printf
     ("\n"
      "  -h                             This message.\n\n"
-     "  -n_part        <n>             Number of partitions (0 -> block-distributed).\n\n"
-     "  -in            <filename>      Mesh file name (Gamma Mesh Format).\n\n"
-     "  -sol           <filename>      Solution file name (Gamma Mesh Format).\n\n"
+     "  -n_part_in     <n>             Number of input partitions (0 -> block-distributed).\n\n"
+     "  -n_part_out    <n>             Number of output partitions.\n\n"
+     "  -in            <filename>      Mesh file name (INRIA ASCII Mesh Format).\n\n"
      "  -visu                          Enable exports for visualization.\n\n"
      "  -n_isovalues   <n>             Number of isovalues.\n\n"
      "  -isovalues     <v1 v2 ... vn>  Isovalues.\n\n"
@@ -308,7 +356,8 @@ _usage
      "  -use_part_mesh                 Use part_mesh structure (dmesh if n_part <= 0).\n\n"
      "  -edges                         Generate edges.\n\n"
      "  -local                         Build isosurface locally.\n\n"
-     );
+     "  -use_groups                    Take groups into account.\n\n"
+    );
 
   exit(exit_code);
 }
@@ -318,9 +367,9 @@ PDM_isosurface_test_utils_read_args
 (
   int                    argc,
   char                 **argv,
-  int                   *n_part,
+  int                   *n_part_in,
+  int                   *n_part_out,
   char                 **mesh_name,
-  char                 **sol_name,
   int                   *visu,
   int                   *n_isovalues,
   double               **isovalues,
@@ -329,7 +378,8 @@ PDM_isosurface_test_utils_read_args
   PDM_g_num_t           *n_vtx_seg,
   int                   *use_part_mesh,
   int                   *generate_edges,
-  int                   *local
+  int                   *local,
+  int                   *use_groups
 )
 {
   int i = 1;
@@ -341,13 +391,23 @@ PDM_isosurface_test_utils_read_args
     if (strcmp(argv[i], "-h") == 0)
       _usage(EXIT_SUCCESS);
 
-    else if (strcmp(argv[i], "-n_part") == 0) {
+    else if (strcmp(argv[i], "-n_part_in") == 0) {
       i++;
       if (i >= argc) {
         _usage(EXIT_FAILURE);
       }
       else {
-        *n_part = atoi(argv[i]);
+        *n_part_in = atoi(argv[i]);
+      }
+    }
+
+    else if (strcmp(argv[i], "-n_part_out") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *n_part_out = atoi(argv[i]);
       }
     }
 
@@ -358,15 +418,6 @@ PDM_isosurface_test_utils_read_args
       }
       else {
         *mesh_name = argv[i];
-      }
-    }
-
-    else if (strcmp(argv[i], "-sol") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else {
-        *sol_name = argv[i];
       }
     }
 
@@ -431,6 +482,10 @@ PDM_isosurface_test_utils_read_args
       *local = 1;
     }
 
+    else if (strcmp(argv[i], "-use_groups") == 0) {
+      *use_groups = 1;
+    }
+
     else {
       _usage(EXIT_FAILURE);
     }
@@ -463,6 +518,7 @@ PDM_isosurface_test_utils_gen_mesh
   int                   randomize,
   PDM_Mesh_nodal_elt_t  elt_type,
   int                   generate_edges,
+  int                   use_groups,
   PDM_multipart_t     **mpart,
   PDM_part_mesh_t      *pmesh,
   PDM_dmesh_t         **out_dmesh
@@ -487,6 +543,10 @@ PDM_isosurface_test_utils_gen_mesh
                                                           filename,
                                                           0,
                                                           0);
+
+    if (!use_groups) {
+      _remove_surf_groups_nodal(dmn);
+    }
 
     if (0) {
       if (dim==3) {
@@ -603,13 +663,14 @@ PDM_isosurface_test_utils_gen_mesh
                                PDM_OWNERSHIP_KEEP);
 
 
-
-    PDM_dmesh_bound_set(dmesh,
-                        PDM_BOUND_TYPE_FACE,
-                        n_face_group,
-                        dface_group,
-                        dface_group_idx,
-                        PDM_OWNERSHIP_KEEP);
+    if (use_groups) {
+      PDM_dmesh_bound_set(dmesh,
+                          PDM_BOUND_TYPE_FACE,
+                          n_face_group,
+                          dface_group,
+                          dface_group_idx,
+                          PDM_OWNERSHIP_KEEP);
+    }
 
     PDM_dmesh_compute_distributions(dmesh);
 
@@ -741,6 +802,10 @@ PDM_isosurface_test_utils_gen_mesh
     PDM_dcube_nodal_gen_build(dcube);
 
     PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+
+    if (!use_groups) {
+      _remove_surf_groups_nodal(dmn);
+    }
 
     PDM_dmesh_nodal_generate_distribution(dmn);
 
@@ -914,6 +979,7 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   PDM_g_num_t             n_vtx_seg,
   int                     randomize,
   PDM_Mesh_nodal_elt_t    elt_type,
+  int                     use_groups,
   PDM_part_mesh_nodal_t **out_pmn,
   PDM_dmesh_nodal_t     **out_dmn
 )
@@ -966,6 +1032,10 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   }
 
   assert(dmn != NULL);
+
+  if (!use_groups) {
+    _remove_surf_groups_nodal(dmn);
+  }
 
   // if (dim == 3) {
   //   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC, "dmn_vol");
@@ -1875,26 +1945,101 @@ PDM_isosurface_test_utils_isosurface_size_get
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_rank(comm, &n_rank);
 
+  *gn_iso_face = 0;
   if (n_part > 0) {
-    *gn_iso_vtx  = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_VTX,  comm);
-    *gn_iso_edge = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_EDGE, comm);
-    *gn_iso_face = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_FACE, comm);
-
+    *gn_iso_vtx  = _gn_entity_compute_part(isos, id_iso, n_part, PDM_MESH_ENTITY_VTX);
+    *gn_iso_edge = _gn_entity_compute_part(isos, id_iso, n_part, PDM_MESH_ENTITY_EDGE);
+    if (isos->entry_mesh_dim == 3) {
+      *gn_iso_face = _gn_entity_compute_part(isos, id_iso, n_part, PDM_MESH_ENTITY_FACE);
+    }
   }
   else {
-    PDM_g_num_t *distrib = NULL;
-
-    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_VTX, &distrib);
-    *gn_iso_vtx = distrib[n_rank];
-
-    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_EDGE, &distrib);
-    *gn_iso_edge = distrib[n_rank];
-
-    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_FACE, &distrib);
-    *gn_iso_face = distrib[n_rank];
+    *gn_iso_vtx  = _gn_entity_compute_dist(isos, id_iso, PDM_MESH_ENTITY_VTX);
+    *gn_iso_edge = _gn_entity_compute_dist(isos, id_iso, PDM_MESH_ENTITY_EDGE);
+    if (isos->entry_mesh_dim == 3) {
+      *gn_iso_face = _gn_entity_compute_dist(isos, id_iso, PDM_MESH_ENTITY_FACE);
+    }
   }
 
 }
+
+
+void
+PDM_isosurface_test_utils_isosurface_params_dump
+(
+  PDM_MPI_Comm                        comm,
+  const char                         *test_name,
+  PDM_isosurface_test_utils_params_t  params
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  if (i_rank == 0) {
+    printf("\n-------------------------------------------------------------------------------\n");
+    printf("Running with params:\n");
+    printf("  n_part_in      = %d\n", params.n_part_in);
+    printf("  n_part_out     = %d\n", params.n_part_out);
+    printf("  isovalues      = ");
+    for (int i = 0; i < params.n_isovalues; i++) {
+      printf("%f ", params.isovalues[i]);
+    }
+    printf("\n");
+    printf("  local          = %d\n", params.local);
+    printf("  use_groups     = %d\n", params.use_groups);
+    printf("  generate_edges = %d\n", params.generate_edges);
+    printf("  use_part_mesh  = %d\n", params.use_part_mesh);
+    if (params.mesh_name) {
+      printf("  mesh_name      = %s\n", params.mesh_name);
+    }
+    else {
+      printf("  n_vtx_seg      = "PDM_FMT_G_NUM"\n", params.n_vtx_seg);
+      printf("  randomize      = %d\n", params.randomize);
+      printf("  elt_type       = %d\n", params.elt_type);
+    }
+
+    // Dump equivalent command line
+    printf("\nTo replay: ");
+    printf("mpirun -n %d %s ", n_rank, test_name);
+    printf("-n_part_in %d ", params.n_part_in);
+    printf("-n_part_out %d ", params.n_part_out);
+    printf("-n_isovalues %d ", params.n_isovalues);
+    printf("-isovalues ");
+    for (int i = 0; i < params.n_isovalues; i++) {
+      printf("%g ", params.isovalues[i]);
+    }
+    if (params.local) {
+      printf("-local ");
+    }
+    if (params.generate_edges) {
+      printf("-edges ");
+    }
+    if (params.use_part_mesh) {
+      printf("-use_part_mesh ");
+    }
+    if (params.use_groups) {
+      printf("-use_groups ");
+    }
+    if (params.mesh_name) {
+      printf("-in %s \n", params.mesh_name);
+    }
+    else {
+      printf("-n "PDM_FMT_G_NUM" ", params.n_vtx_seg);
+      printf("-elt_type %d ", params.elt_type);
+      if (params.randomize) {
+        printf("-randomize ");
+      }
+    }
+    if (params.visu) {
+      printf("-visu ");
+    }
+    printf("\n\n");
+    fflush(stdout);
+  }
+}
+
 
 #ifdef  __cplusplus
 }

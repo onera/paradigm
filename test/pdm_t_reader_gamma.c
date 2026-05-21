@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pdm.h"
 #include "pdm_config.h"
 #include "pdm_dmesh_nodal.h"
 #include "pdm_io.h"
@@ -12,9 +11,10 @@
 #include "pdm_multipart.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_printf.h"
+#include "pdm_priv.h"
 #include "pdm_reader_gamma.h"
 #include "pdm_writer.h"
-#include "pdm_priv.h"
+#include "pdm.h"
 
 
 /*============================================================================
@@ -30,20 +30,15 @@
  * \brief  Usage
  *
  */
-
 static void
 _usage(int exit_code)
 {
   PDM_printf
     ("\n"
      "  Usage: \n\n"
-     "  -n      <level>  Number of vertices on the cube side.\n\n"
-     "  -l      <level>  Cube length.\n\n"
-     "  -n_part <level>  Number of partitions par process.\n\n"
-     "  -parmetis        Call ParMETIS.\n\n"
-     "  -pt-scocth       Call PT-Scotch.\n\n"
-     "  -h               This message.\n\n");
-
+     "  -f <filename> Input mesh file name.\n\n"
+     "  -visu         Enable export for visualization.\n\n"
+     "  -h            This message.\n\n");
   exit(exit_code);
 }
 
@@ -52,21 +47,20 @@ _usage(int exit_code)
  *
  * \brief  Read arguments from the command line
  *
- * \param [in]      argc     Number of arguments
- * \param [in]      argv     Arguments
- * \param [inout]   n_vtx_seg  Number of vertices on the cube side
- * \param [inout]   length   Cube length
- * \param [inout]   n_part   Number of partitions par process
- * \param [inout]   post     Ensight outputs status
- * \param [inout]   method   Partitioner (1 ParMETIS, 2 Pt-Scotch)
+ * \param [in]    argc      Number of arguments
+ * \param [in]    argv      Arguments
+ * \param [inout] filename  Input mesh file name
+ * \param [inout] visu      Enable visualization
  *
  */
-
 static void
-_read_args(int            argc,
-           char         **argv,
-           char         **filename,
-           int           *visu)
+_read_args
+(
+  int    argc,
+  char **argv,
+  char **filename,
+  int   *visu
+)
 {
   int i = 1;
 
@@ -116,8 +110,6 @@ int main(int argc, char *argv[])
 
   if (filename == NULL) {
     filename = (char *) PDM_MESH_DIR"box.mesh";
-    printf("No file specified -> exit \n");
-    return 0;
   }
 
   /*
@@ -153,10 +145,20 @@ int main(int argc, char *argv[])
 
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
-  PDM_DMesh_nodal_free(dmn);
 
   if (visu) {
 
+    /* Re-write in Inria format */
+    PDM_part_mesh_nodal_t *pmn = NULL;
+    PDM_multipart_get_part_mesh_nodal(mpart,
+                                      0,
+                                      &pmn,
+                                      PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_dump_gamma(pmn,
+                                   "reader_gamma_out.mesh");
+    PDM_part_mesh_nodal_free(pmn);
+
+    /* Write in Ensight Gold format */
     PDM_writer_t *id_cs = PDM_writer_create("Ensight",
                                             PDM_WRITER_FMT_BIN,
                                             PDM_WRITER_TOPO_CST,
@@ -180,20 +182,8 @@ int main(int argc, char *argv[])
 
     PDM_writer_step_beg(id_cs, 0.);
 
-    int **face_vtx_n  = NULL;
-    int **cell_face_n = NULL;
-    PDM_malloc(face_vtx_n , n_part, int *);
-    PDM_malloc(cell_face_n, n_part, int *);
-
-    int **pface_vtx_idx = NULL;
-    int **pface_vtx     = NULL;
-    PDM_malloc(pface_vtx_idx, n_part, int *);
-    PDM_malloc(pface_vtx    , n_part, int *);
-
     PDM_real_t **val_num_part = NULL;
     PDM_malloc(val_num_part, n_part, PDM_real_t *);
-
-    int use_edge = 0;
 
     for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -216,40 +206,6 @@ int main(int argc, char *argv[])
                                                        &face_vtx_idx,
                                                        &face_vtx,
                                                        PDM_OWNERSHIP_KEEP);
-
-      if (face_vtx == NULL) {
-        use_edge = 1;
-
-        int *face_edge     = NULL;
-        int *face_edge_idx = NULL;
-        PDM_multipart_part_connectivity_get(mpart,
-                                            0,
-                                            i_part,
-                                            PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                            &face_edge_idx,
-                                            &face_edge,
-                                            PDM_OWNERSHIP_KEEP);
-
-        int *edge_vtx     = NULL;
-        int *edge_vtx_idx = NULL;
-        PDM_multipart_part_connectivity_get(mpart,
-                                            0,
-                                            i_part,
-                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                            &edge_vtx_idx,
-                                            &edge_vtx,
-                                            PDM_OWNERSHIP_KEEP);
-
-        pface_vtx_idx[i_part] = face_edge_idx;
-        PDM_compute_face_vtx_from_face_and_edge(n_face,
-                                                face_edge_idx,
-                                                face_edge,
-                                                edge_vtx,
-                                                &pface_vtx[i_part]);
-      } else {
-        pface_vtx_idx[i_part] = face_vtx_idx;
-        pface_vtx    [i_part] = face_vtx;
-      }
 
       double *vtx_coord = NULL;
       int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
@@ -281,17 +237,6 @@ int main(int argc, char *argv[])
                                       &vtx_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 
-      PDM_malloc(face_vtx_n [i_part], n_face, int);
-      PDM_malloc(cell_face_n[i_part], n_cell, int);
-
-      for (int i = 0; i < n_cell; i++) {
-        cell_face_n[i_part][i] = cell_face_idx[i+1] - cell_face_idx[i];
-      }
-
-      for (int i = 0; i < n_face; i++) {
-        face_vtx_n[i_part][i] = pface_vtx_idx[i_part][i+1] - pface_vtx_idx[i_part][i];
-      }
-
       PDM_writer_geom_coord_set(id_cs,
                                 id_geom,
                                 i_part,
@@ -300,18 +245,18 @@ int main(int argc, char *argv[])
                                 vtx_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
 
-      PDM_writer_geom_cell3d_cellface_add (id_cs,
-                                           id_geom,
-                                           i_part,
-                                           n_cell,
-                                           n_face,
-                                           pface_vtx_idx[i_part],
-                                           face_vtx_n   [i_part],
-                                           pface_vtx    [i_part],
-                                           cell_face_idx,
-                                           cell_face_n  [i_part],
-                                           cell_face,
-                                           cell_ln_to_gn);
+      PDM_writer_geom_cell3d_cellface_add(id_cs,
+                                          id_geom,
+                                          i_part,
+                                          n_cell,
+                                          n_face,
+                                          face_vtx_idx,
+                                          NULL,
+                                          face_vtx,
+                                          cell_face_idx,
+                                          NULL,
+                                          cell_face,
+                                          cell_ln_to_gn);
 
       PDM_malloc(val_num_part[i_part], n_cell, PDM_real_t);
       for (int i = 0; i < n_cell; i++) {
@@ -337,22 +282,13 @@ int main(int argc, char *argv[])
     PDM_writer_step_end(id_cs);
 
     for (int i = 0; i < n_part; i++) {
-      PDM_free(face_vtx_n[i]);
-      PDM_free(cell_face_n[i]);
-      if (use_edge) {
-        PDM_free(pface_vtx[i]);
-      }
       PDM_free(val_num_part[i]);
     }
-    PDM_free(face_vtx_n);
-    PDM_free(cell_face_n);
-    PDM_free(pface_vtx_idx);
-    PDM_free(pface_vtx);
     PDM_free(val_num_part);
 
     PDM_writer_free(id_cs);
   }
-
+  PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
 
   if (i_rank == 0) {

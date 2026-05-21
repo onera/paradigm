@@ -114,7 +114,7 @@ cdef class DistributedMeshNodal:
     cdef int n_rank
     # ************************************************************************
     # ------------------------------------------------------------------------
-    def __cinit__(self, MPI.Comm    comm,
+    def __init__(self, MPI.Comm    comm,
                         PDM_g_num_t n_vtx,
                         PDM_g_num_t n_cell,
                         PDM_g_num_t n_face = -1,
@@ -146,6 +146,13 @@ cdef class DistributedMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.dmn = PDM_DMesh_nodal_create(PDMC, mesh_dimension, n_vtx, n_cell, n_face, n_edge)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @staticmethod
+    cdef from_ptr(PDM_dmesh_nodal_t* ptr):
+      # Take ownership on structure
+      cdef DistributedMeshNodal obj = DistributedMeshNodal.__new__(DistributedMeshNodal)
+      obj.dmn = ptr
+      return obj
 
     # ------------------------------------------------------------------------
     def set_coordinates(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord):
@@ -250,11 +257,142 @@ cdef class DistributedMeshNodal:
     def generate_distribution(self):
         """
         """
-        # ************************************************************************
-        # > Declaration
-        # ************************************************************************
         PDM_dmesh_nodal_generate_distribution(self.dmn)
 
+
+
+
+    # ------------------------------------------------------------------------
+    def dmesh_nodal_get_sections(self, PDM_geometry_kind_t geom_kind, MPI.Comm comm):
+      """
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int                   n_section
+      cdef int                   n_vtx_per_elmt
+      cdef PDM_g_num_t           dn_elmt
+      cdef int                  *section_id
+      cdef int                  *connect_idx
+      cdef PDM_g_num_t          *connect
+      cdef PDM_g_num_t          *section_distrib
+      cdef PDM_Mesh_nodal_elt_t  t_elmt
+      cdef NPY.npy_intp          dim
+      # ************************************************************************
+
+      n_section  = PDM_DMesh_nodal_n_section_get(self.dmn, geom_kind)
+      section_id = PDM_DMesh_nodal_sections_id_get(self.dmn, geom_kind)
+
+      # print("n_section : ", n_section)
+
+      sections = []
+      for i_section in range(n_section):
+        id_section = section_id[i_section]
+        t_elmt = PDM_DMesh_nodal_section_type_get(self.dmn, geom_kind, id_section)
+        # > For now only use this interfaces for standard element ... (to be refactor with HO and polyhedra elements)
+        assert(t_elmt != PDM_MESH_NODAL_POLY_2D)
+        assert(t_elmt != PDM_MESH_NODAL_POLY_3D)
+
+        section_distrib = PDM_DMesh_nodal_section_distri_std_get(self.dmn, geom_kind, id_section)
+        connect         = PDM_DMesh_nodal_section_std_get(self.dmn, geom_kind, id_section, PDM_OWNERSHIP_USER)
+
+        # > Build numpy capsule
+        np_distrib_tmp = create_numpy_g(section_distrib, comm.Get_size()+1, flag_owndata=False)
+        np_distrib = NPY.copy(np_distrib_tmp)
+
+        # > Build numpy capsule
+        dn_elmt = np_distrib[comm.Get_rank()+1] - np_distrib[comm.Get_rank()]
+        n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1)
+        np_connec = create_numpy_g(connect, n_vtx_per_elmt*dn_elmt)
+
+        sections.append({"pdm_type"   : t_elmt,
+                        "np_distrib" : np_distrib,
+                        "np_connec"  : np_connec})
+        # print("t_elmt : ", t_elmt )
+        # print("np_distrib : ", np_distrib )
+        # print("np_connec : ", np_connec )
+
+      # print("Return dmesh_nodal_get_sections")
+      return {"sections" : sections}
+
+    # ------------------------------------------------------------------------
+    def dmesh_nodal_get_vtx(self, MPI.Comm comm):
+      """
+      """
+      cdef double* vtx_coord
+      n_vtx = PDM_DMesh_nodal_n_vtx_get(self.dmn)
+      vtx_coord = PDM_DMesh_nodal_vtx_get(self.dmn, PDM_OWNERSHIP_USER)
+      return {"np_vtx" : create_numpy_d(vtx_coord, 3*n_vtx)}
+
+    # ------------------------------------------------------------------------
+    def dmesh_nodal_get_vtx_tag(self, MPI.Comm comm):
+      """
+      """
+      cdef int* vtx_tag
+      n_vtx = PDM_DMesh_nodal_n_vtx_get(self.dmn)
+      vtx_tag = PDM_DMesh_nodal_vtx_tag_get(self.dmn, PDM_OWNERSHIP_USER)
+      return {"np_vtx_tag" : create_numpy_i(vtx_tag, n_vtx)}
+
+    # ------------------------------------------------------------------------
+    def dmesh_nodal_get_group(self, PDM_geometry_kind_t geom_kind):
+      """
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int                   n_group
+      cdef int                  *dgroup_elmt_idx
+      cdef PDM_g_num_t          *dgroup_elmt
+      cdef NPY.npy_intp          dim
+      # ************************************************************************
+
+      PDM_DMesh_nodal_section_group_elmt_get(self.dmn,
+                                            geom_kind,
+                                            &n_group,
+                                            &dgroup_elmt_idx,
+                                            &dgroup_elmt,
+                                            PDM_OWNERSHIP_USER);
+
+      if n_group == 0:
+        return None
+
+      np_dgroup_elmt_idx = create_numpy_i(dgroup_elmt_idx, n_group+1)
+      np_dgroup_elmt = create_numpy_g(dgroup_elmt, np_dgroup_elmt_idx[n_group])
+
+      return {"dgroup_elmt_idx" : np_dgroup_elmt_idx,
+              "dgroup_elmt"     : np_dgroup_elmt}
+
+    # ------------------------------------------------------------------------
+    def dmesh_nodal_get_g_dims(self):
+      """
+      """
+      cdef PDM_g_num_t n_cell_abs, n_face_abs, n_edge_abs, n_vtx_abs
+      PDM_DMesh_nodal_section_g_dims_get(self.dmn, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs)
+
+      return {"n_cell_abs" : n_cell_abs,
+              "n_face_abs" : n_face_abs,
+              "n_edge_abs" : n_edge_abs,
+              "n_vtx_abs"  : n_vtx_abs}
+
+    # ------------------------------------------------------------------------
+    def dump_vtk(self,
+                PDM_geometry_kind_t  geom_kind,
+                char                *filename_pattern):
+      """
+      dump_vtk(geom_kind, filename_pattern)
+
+      Export in VTK format (ASCII)
+
+      .. note::
+        Each rank dumps a file for each nodal section
+
+      Parameters:
+        geom_kind        (PDM_geometry_kind_t) : Geometry kind to export
+        filename_pattern (str)                 : File name pattern
+      """
+      PDM_dmesh_nodal_dump_vtk(self.dmn,
+                              geom_kind,
+                              filename_pattern)
+
+    
     # ------------------------------------------------------------------------
     def __dealloc__(self):
       """
@@ -267,119 +405,10 @@ cdef class DistributedMeshNodal:
       PDM_DMesh_nodal_free(self.dmn)
 
 # ------------------------------------------------------------------
-cdef class DistributedMeshNodalCapsule:
-  """
-  """
-  # ************************************************************************
-  # > Class attributes
-  cdef PDM_dmesh_nodal_t* dmn
-  # ************************************************************************
-  # ------------------------------------------------------------------------
-  def __cinit__(self, object caps):
-    """
-    """
-    # print("DistributedMeshNodalCapsule", PyCapsule_GetName(caps))
-    cdef PDM_dmesh_nodal_t* caps_dmn = <PDM_dmesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
-    self.dmn = caps_dmn;
-
-  # ------------------------------------------------------------------------
-  def dmesh_nodal_get_sections(self, PDM_geometry_kind_t geom_kind, MPI.Comm comm):
-    """
-    """
-    return dmesh_nodal_get_sections(self, geom_kind, comm)
-
-  # ------------------------------------------------------------------------
-  def dmesh_nodal_get_vtx(self, MPI.Comm comm):
-    """
-    """
-    return dmesh_nodal_get_vtx(self, comm)
-
-  # ------------------------------------------------------------------------
-  def dmesh_nodal_get_vtx_tag(self, MPI.Comm comm):
-    """
-    """
-    return dmesh_nodal_get_vtx_tag(self, comm)
 
 
-  # ------------------------------------------------------------------------
-  def dmesh_nodal_get_group(self, PDM_geometry_kind_t geom_kind):
-    """
-    """
-    return dmesh_nodal_get_group(self, geom_kind)
 
-  # ------------------------------------------------------------------------
-  def dmesh_nodal_get_g_dims(self):
-    """
-    """
-    # print("Wrap dmesh_nodal_get_g_dims")
-    return dmesh_nodal_get_g_dims(self)
-
-  # ------------------------------------------------------------------------
-  def dump_vtk(self,
-               PDM_geometry_kind_t  geom_kind,
-               char                *filename_pattern):
-    """
-    dump_vtk(geom_kind, filename_pattern)
-
-    Export in VTK format (ASCII)
-
-    .. note::
-      Each rank dumps a file for each nodal section
-
-    Parameters:
-      geom_kind        (PDM_geometry_kind_t) : Geometry kind to export
-      filename_pattern (str)                 : File name pattern
-    """
-    PDM_dmesh_nodal_dump_vtk(self.dmn,
-                             geom_kind,
-                             filename_pattern)
-
-  # ------------------------------------------------------------------------
-  def __dealloc__(self):
-    """
-       Use the free method of PDM Lib
-    """
-    # print("DistributedMeshNodalCapsule::__dealloc__")
-    PDM_DMesh_nodal_free(self.dmn)
-    # print("DistributedMeshNodalCapsule::__dealloc__ end z")
-
-ctypedef fused DMeshNodal:
-  DistributedMeshNodal
-  DistributedMeshNodalCapsule
-
-def generate_distribution(DMeshNodal pydmn):
-  """
-  """
-  PDM_dmesh_nodal_generate_distribution(pydmn.dmn)
-
-def dmesh_nodal_get_g_dims(DMeshNodal pydmn):
-  """
-  """
-  # ************************************************************************
-  # > Declaration
-  cdef PDM_g_num_t n_cell_abs, n_face_abs, n_edge_abs, n_vtx_abs
-  # ************************************************************************
-
-  PDM_DMesh_nodal_section_g_dims_get(pydmn.dmn, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs)
-  return {"n_cell_abs" : n_cell_abs,
-          "n_face_abs" : n_face_abs,
-          "n_edge_abs" : n_edge_abs,
-          "n_vtx_abs"  : n_vtx_abs}
-
-def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
-  """
-  """
-  # ************************************************************************
-  # > Declaration
-  cdef double               *vtx_coord
-  # ************************************************************************
-
-  n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
-  vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn, PDM_OWNERSHIP_USER)
-
-  return {"np_vtx" : create_numpy_d(vtx_coord, 3*n_vtx)}
-
-def dmesh_nodal_get_distrib_vtx(DMeshNodal pydmn, MPI.Comm    comm):
+def dmesh_nodal_get_distrib_vtx(DistributedMeshNodal pydmn, MPI.Comm    comm):
   """
   """
   # ************************************************************************
@@ -391,97 +420,7 @@ def dmesh_nodal_get_distrib_vtx(DMeshNodal pydmn, MPI.Comm    comm):
 
   return {"np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1)}
 
-def dmesh_nodal_get_vtx_tag(DMeshNodal pydmn, MPI.Comm    comm):
-  """
-  """
-  # ************************************************************************
-  # > Declaration
-  cdef int                  *vtx_tag
-  # ************************************************************************
-  n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
-  vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn, PDM_OWNERSHIP_USER)
 
-  return {"np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx)}
-
-def dmesh_nodal_get_sections(DMeshNodal          pydmn,
-                             PDM_geometry_kind_t geom_kind,
-                             MPI.Comm            comm):
-  """
-  """
-  # ************************************************************************
-  # > Declaration
-  cdef int                   n_section
-  cdef int                   n_vtx_per_elmt
-  cdef PDM_g_num_t           dn_elmt
-  cdef int                  *section_id
-  cdef int                  *connect_idx
-  cdef PDM_g_num_t          *connect
-  cdef PDM_g_num_t          *section_distrib
-  cdef PDM_Mesh_nodal_elt_t  t_elmt
-  cdef NPY.npy_intp          dim
-  # ************************************************************************
-
-  n_section  = PDM_DMesh_nodal_n_section_get(pydmn.dmn, geom_kind)
-  section_id = PDM_DMesh_nodal_sections_id_get(pydmn.dmn, geom_kind)
-
-  # print("n_section : ", n_section)
-
-  sections = []
-  for i_section in range(n_section):
-    id_section = section_id[i_section]
-    t_elmt = PDM_DMesh_nodal_section_type_get(pydmn.dmn, geom_kind, id_section)
-    # > For now only use this interfaces for standard element ... (to be refactor with HO and polyhedra elements)
-    assert(t_elmt != PDM_MESH_NODAL_POLY_2D)
-    assert(t_elmt != PDM_MESH_NODAL_POLY_3D)
-
-    section_distrib = PDM_DMesh_nodal_section_distri_std_get(pydmn.dmn, geom_kind, id_section)
-    connect         = PDM_DMesh_nodal_section_std_get(pydmn.dmn, geom_kind, id_section, PDM_OWNERSHIP_USER)
-
-    # > Build numpy capsule
-    np_distrib_tmp = create_numpy_g(section_distrib, comm.Get_size()+1, flag_owndata=False)
-    np_distrib = NPY.copy(np_distrib_tmp)
-
-    # > Build numpy capsule
-    dn_elmt = np_distrib[comm.Get_rank()+1] - np_distrib[comm.Get_rank()]
-    n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1)
-    np_connec = create_numpy_g(connect, n_vtx_per_elmt*dn_elmt)
-
-    sections.append({"pdm_type"   : t_elmt,
-                     "np_distrib" : np_distrib,
-                     "np_connec"  : np_connec})
-    # print("t_elmt : ", t_elmt )
-    # print("np_distrib : ", np_distrib )
-    # print("np_connec : ", np_connec )
-
-  # print("Return dmesh_nodal_get_sections")
-  return {"sections" : sections}
-
-def dmesh_nodal_get_group(DMeshNodal pydmn, PDM_geometry_kind_t geom_kind):
-  """
-  """
-  # ************************************************************************
-  # > Declaration
-  cdef int                   n_group
-  cdef int                  *dgroup_elmt_idx
-  cdef PDM_g_num_t          *dgroup_elmt
-  cdef NPY.npy_intp          dim
-  # ************************************************************************
-
-  PDM_DMesh_nodal_section_group_elmt_get(pydmn.dmn,
-                                         geom_kind,
-                                         &n_group,
-                                         &dgroup_elmt_idx,
-                                         &dgroup_elmt,
-                                         PDM_OWNERSHIP_USER);
-
-  if n_group == 0:
-    return None
-
-  np_dgroup_elmt_idx = create_numpy_i(dgroup_elmt_idx, n_group+1)
-  np_dgroup_elmt = create_numpy_g(dgroup_elmt, np_dgroup_elmt_idx[n_group])
-
-  return {"dgroup_elmt_idx" : np_dgroup_elmt_idx,
-          "dgroup_elmt"     : np_dgroup_elmt}
 
 # ------------------------------------------------------------------------
 def ComputeDistributionFromDelmt(int         dnelt,
@@ -519,19 +458,19 @@ def get_n_vtx_from_element(PDM_Mesh_nodal_elt_t type,
 
 
 # ------------------------------------------------------------------------
-def find_topological_ridge(DMeshNodal pydmn):
+def find_topological_ridge(DistributedMeshNodal pydmn):
   """
   find_topological_ridge(pydmn)
 
   Retrieve ridges from surfaces in a Dmesh Nodal and build associated edges
 
   Parameters:
-    pydmn (:py:class:`DMeshNodal`) : Dmesh Nodal object
+    pydmn (:py:class:`DistributedMeshNodal`) : Dmesh Nodal object
   """
   PDM_dmesh_nodal_find_topological_ridge(pydmn.dmn)
 
 
-def revert_orientation(DMeshNodal          pydmn,
+def revert_orientation(DistributedMeshNodal pydmn,
                        PDM_geometry_kind_t geom_kind):
   """
   revert_orientation(pydmn, geom_kind)
@@ -539,7 +478,7 @@ def revert_orientation(DMeshNodal          pydmn,
   Reverse orientation of all sections of a given geometry kind in a Dmesh Nodal
 
   Parameters:
-    pydmn     (:py:class:`DMeshNodal`) : Dmesh Nodal object
+    pydmn     (:py:class:`DistributedMeshNodal`) : Dmesh Nodal object
     geom_kind (int)                    : Geometry kind (ridge, surface or volume)
   """
   PDM_dmesh_nodal_revert_orientation(pydmn.dmn, geom_kind)

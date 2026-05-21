@@ -99,13 +99,13 @@ cdef class DMeshExtract:
     PDM_dmesh_extract_compute(self._dme)
 
   # ------------------------------------------------------------------
-  def register_dmesh(self, DMesh dm):
+  def register_dmesh(self, DistributedMesh dm):
     """
     """
     PDM_dmesh_extract_dmesh_set(self._dme, dm._dm)
 
   # ------------------------------------------------------------------
-  def register_dmesh_nodal(self, DMeshNodal dmn):
+  def register_dmesh_nodal(self, DistributedMeshNodal dmn):
     PDM_dmesh_extract_dmesh_nodal_set(self._dme, dmn.dmn)
 
   # ------------------------------------------------------------------
@@ -140,17 +140,12 @@ cdef class DMeshExtract:
     cdef PDM_dmesh_t* dm
     # ************************************************************************
     PDM_dmesh_extract_dmesh_get(self._dme, &dm, PDM_OWNERSHIP_USER)
-
-    py_caps = PyCapsule_New(dm, NULL, NULL);
-
-    return DistributedMeshCapsule(py_caps) # The free is inside the class
+    return DistributedMesh.from_ptr(dm) # The free is inside the class
 
   def get_dmesh_nodal(self):
     cdef PDM_dmesh_nodal_t* dmn
     PDM_dmesh_extract_dmesh_nodal_get(self._dme, &dmn, PDM_OWNERSHIP_USER)
-    py_caps = PyCapsule_New(dmn, NULL, NULL);
-
-    return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
+    return DistributedMeshNodal.from_ptr(dmn) # The free is inside the class
 
   # ------------------------------------------------------------------
   def __dealloc__(self):

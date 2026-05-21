@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
                                         n_vtx_seg,
                                         n_vtx_seg,
                                         n_part,
-                                        PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+                                        PDM_SPLIT_DUAL_WITH_HILBERT,
                                        &pn_vtx,
                                        &pn_edge,
                                        &pn_face,

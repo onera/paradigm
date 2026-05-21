@@ -208,6 +208,7 @@ API
 
 
 
+.. _multipart_outputs:
 
 .. dropdown:: Get outputs
 

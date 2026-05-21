@@ -27,17 +27,31 @@ API
     .. tab-item:: Fortran
       :sync: Fortran
 
-      .. f:autosubroutine:: PDM_part_to_block_create
-      .. f:autosubroutine:: PDM_part_to_block_create_from_distrib
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_to_block_create
+        .. f:autosubroutine:: PDM_part_to_block_create_from_distrib
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
 
     .. tab-item:: Python
       :sync: Python
 
+      .. ifconfig:: enable_python_doc == 'ON'
+
         .. py:class:: PartToBlock
 
           .. automethod:: Pypdm.Pypdm.PartToBlock.__init__
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 
@@ -58,14 +72,29 @@ API
     .. tab-item:: Fortran
       :sync: Fortran
 
-      .. f:autofunction::   PDM_part_to_block_n_elt_block_get
-      .. f:autosubroutine:: PDM_part_to_block_block_gnum_get
-      .. f:autosubroutine:: PDM_part_to_block_distrib_index_get
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autofunction::   PDM_part_to_block_n_elt_block_get
+        .. f:autosubroutine:: PDM_part_to_block_block_gnum_get
+        .. f:autosubroutine:: PDM_part_to_block_distrib_index_get
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
 
     .. tab-item:: Python
       :sync: Python
 
-      .. automethod:: Pypdm.Pypdm.PartToBlock.getBlockGnumCopy
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. automethod:: Pypdm.Pypdm.PartToBlock.getBlockGnumCopy
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 
@@ -88,23 +117,37 @@ API
     .. tab-item:: Fortran
       :sync: Fortran
 
-      .. f:subroutine:: pdm_part_to_block_exch(ptb, t_stride, cst_stride, part_stride, part_data, block_stride, block_data)
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-        Exchange data from partitions to blocks. Output arrays are allocated by **ParaDiGM**.
+        .. f:subroutine:: pdm_part_to_block_exch(ptb, t_stride, cst_stride, part_stride, part_data, block_stride, block_data)
 
-        :p c_ptr ptb [in]: Part-to-Block instance
-        :p integer t_stride [in]: Stride type
-        :p integer cst_stride [in]: Constant stride value
-        :p pdm_pointer_array_t part_stride [in]: Stride for ``part_data``
-        :p pdm_pointer_array_t part_data [in]: Partitioned data
-        :p pointer(integer(pdm_l_num_s)) block_stride [out]: Stride for ``block_data``
-        :p pointer block_data [out]: Block-distributed data
+          Exchange data from partitions to blocks. Output arrays are allocated by **ParaDiGM**.
+
+          :p c_ptr ptb [in]: Part-to-Block instance
+          :p integer t_stride [in]: Stride type
+          :p integer cst_stride [in]: Constant stride value
+          :p pdm_pointer_array_t part_stride [in]: Stride for ``part_data``
+          :p pdm_pointer_array_t part_data [in]: Partitioned data
+          :p pointer(integer(pdm_l_num_s)) block_stride [out]: Stride for ``block_data``
+          :p pointer block_data [out]: Block-distributed data
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
     .. tab-item:: Python
       :sync: Python
 
+      .. ifconfig:: enable_python_doc == 'ON'
+
         .. automethod:: Pypdm.Pypdm.PartToBlock.exchange_field
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 
@@ -122,7 +165,14 @@ API
     .. tab-item:: Fortran
       :sync: Fortran
 
-      .. f:autosubroutine:: PDM_part_to_block_free
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_to_block_free
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
     .. tab-item:: Python

@@ -13,7 +13,7 @@ These sections can be addressed either globally or by spatial dimension (*geomet
 
 If a **Part Mesh Nodal** is constructed from a soup of mixed-type elements, the indirection from the sections to the original soup is stored in the data structure (*parent_num*).
 
-The structure can also store group information and the inter-partition communication graph (**Part Comm Graph**) for each geometry kind.
+The structure can also store group information and the inter-partition communication graph (:ref:`Part Comm Graph <part_comm_graph>`) for each geometry kind as well as for the vertices.
 
 
 API
@@ -133,15 +133,29 @@ API
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
-          .. f:autosubroutine:: PDM_part_mesh_nodal_cells_cellvtx_add
-          .. f:autosubroutine:: PDM_part_mesh_nodal_faces_facevtx_add
           .. f:autosubroutine:: PDM_part_mesh_nodal_cell3d_cellface_add
           .. f:autosubroutine:: PDM_part_mesh_nodal_face2d_faceedge_add
+          .. f:autosubroutine:: PDM_part_mesh_nodal_cells_cellvtx_add
+          .. f:autosubroutine:: PDM_part_mesh_nodal_faces_facevtx_add
 
         .. ifconfig:: enable_fortran_doc == 'OFF'
 
           .. warning::
             Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+      .. tab-item:: Python
+        :sync: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_sections_from_cell_face
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_sections_from_face_edge
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
 
 
   |
@@ -187,7 +201,9 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. automethod:: Pypdm.Pypdm.PartMeshNodal.add_section
-          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_section
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_std_section
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_poly2d_section
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_poly3d_section
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -255,7 +271,7 @@ API
 
 
 
-.. dropdown:: Set communication graph
+.. dropdown:: Set inter-partition communication graph
 
 
   .. tab-set::
@@ -265,6 +281,22 @@ API
       :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_set
+      .. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_vtx_set
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_mesh_nodal_part_comm_graph_set
+        .. f:autosubroutine:: PDM_part_mesh_nodal_part_comm_graph_vtx_set
+
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
 
@@ -322,8 +354,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.coord_get
-        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.vtx_g_num_get
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.coord_get
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.vtx_g_num_get
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -419,7 +451,7 @@ API
 
         .. ifconfig:: enable_python_doc == 'ON'
 
-          .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_sections
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.get_sections
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -456,8 +488,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_n_group
-        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_group
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.get_n_group
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.get_group
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -467,7 +499,7 @@ API
 
 
 
-.. dropdown:: Get communication graph
+.. dropdown:: Get inter-partition communication graph
 
 
   .. tab-set::
@@ -477,6 +509,22 @@ API
       :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_get
+      .. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_vtx_get
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_mesh_nodal_part_comm_graph_get
+        .. f:autosubroutine:: PDM_part_mesh_nodal_part_comm_graph_vtx_get
+
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
 

@@ -43,6 +43,39 @@ extern "C" {
  * Definition des macros locales
  *============================================================================*/
 
+#define CHECK_WRITER(wrt)                                                        \
+  if ((wrt) == NULL) {                                                           \
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid PDM_writer_t instance\n"); \
+  }
+
+#define CHECK_GEOM(geom)                                                              \
+  if ((geom) == NULL) {                                                               \
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid PDM_writer_geom_t instance\n"); \
+  }
+
+#define CHECK_VAR(var)                                                               \
+  if ((var) == NULL) {                                                               \
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid PDM_writer_var_t instance\n"); \
+  }
+
+#define CHECK_ID_GEOM(wrt, id_geom)                                         \
+  if ((id_geom) < 0 || (id_geom) >= (wrt)->geom_tab->n_geom) {              \
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid id_geom (%d / %d)\n", \
+                                     (id_geom), (wrt)->geom_tab->n_geom);   \
+  }
+
+#define CHECK_ID_VAR(wrt, id_var)                                          \
+  if ((id_var) < 0 || (id_var) >= (wrt)->var_tab->n_var) {                 \
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid id_var (%d / %d)\n", \
+                                     (id_var), (wrt)->var_tab->n_var);     \
+  }
+
+#define CHECK_I_OPTION(wrt, i_option)                                     \
+  if ((i_option) < 0 || (i_option) >= (wrt)->n_options) {                 \
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid option #%d / %d\n", \
+                                      (i_option), (wrt)->n_options);      \
+  }
+
 /*============================================================================
  * Definition des types locaux
  *============================================================================*/
@@ -544,7 +577,7 @@ const PDM_MPI_Comm  comm
   int mesh_dimension = 3; // ?
 
   geom->_mesh_nodal = PDM_part_mesh_nodal_create(mesh_dimension, n_part, comm);
-  geom->mesh_nodal = geom->_mesh_nodal; 
+  geom->mesh_nodal = geom->_mesh_nodal;
 
   geom->geom_fmt       = NULL;
   geom->_cs            = NULL;
@@ -810,12 +843,10 @@ PDM_writer_free
  PDM_writer_t *cs
 )
 {
-  if (cs == NULL) {
-    return;
-  }
+  CHECK_WRITER(cs)
 
   PDM_writer_step_end (cs);
-  
+
   /* Appel de la fonction complementaire propre au format */
 
   PDM_writer_fmt_t *fmt_ptr = fmt_tab[cs->fmt_id];
@@ -853,7 +884,7 @@ PDM_writer_free
         if (cs->cst_global_var_tab.var[i]->nom_var != NULL) {
           PDM_free(cs->cst_global_var_tab.var[i]->nom_var);
           cs->cst_global_var_tab.var[i]->nom_var = NULL;
-        } 
+        }
         PDM_free(cs->cst_global_var_tab.var[i]);
         cs->cst_global_var_tab.var[i] = NULL;
       }
@@ -926,10 +957,8 @@ PDM_writer_step_beg
  const double   physical_time
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
- 
+  CHECK_WRITER(cs)
+
   if (cs->is_there_open_step) {
     PDM_error (__FILE__, __LINE__, 0, "Error PDM_writer_step_beg : A step is already open\n");
   }
@@ -949,17 +978,15 @@ PDM_writer_step_beg
 }
 
 
-int 
+int
 PDM_writer_is_open_step
 (
  PDM_writer_t  *cs
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
-  return cs->is_there_open_step;  
+  return cs->is_there_open_step;
 }
 
 
@@ -970,9 +997,7 @@ PDM_writer_step_end
  PDM_writer_t  *cs
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   /* Appel de la fonction complementaire propre au format */
 
@@ -985,7 +1010,7 @@ PDM_writer_step_end
     }
 
   }
-  
+
   cs->is_there_open_step = 0;
 
 }
@@ -1005,9 +1030,7 @@ PDM_writer_geom_create
                     "                      Creer un sous-domaine avec 0 element\n");
   }
 
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   /* Mise a jour du tableau de stockage */
 
@@ -1054,9 +1077,7 @@ PDM_writer_geom_create_from_mesh_nodal
 {
   /* Erreur si le decoupage des polygones ou polyedres est choisi */
 
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   /* Mise a jour du tableau de stockage */
 
@@ -1141,26 +1162,16 @@ PDM_writer_geom_set_from_mesh_nodal
  PDM_part_mesh_nodal_t     *mesh
 )
 {
-  /* Erreur si le decoupage des polygones ou polyedres est choisi */
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
-
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
+  CHECK_GEOM(geom)
 
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   /* Initialisation de la structure PDM_writer_geom_t */
 
   //_geom_init(geom, n_part, cs->pdm_mpi_comm);
-  geom->mesh_nodal  = mesh;
+  geom->mesh_nodal = mesh;
 
   geom->s_section = 10;
   if (geom->section_owner != NULL) {
@@ -1216,20 +1227,11 @@ PDM_writer_geom_coord_set
  const PDM_ownership_t owner
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   PDM_part_mesh_nodal_coord_set(geom->_mesh_nodal,
                                 id_part,
@@ -1268,19 +1270,11 @@ PDM_writer_geom_coord_from_parent_set
  const PDM_ownership_t ownership
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-  }
+  CHECK_GEOM(geom)
 
   PDM_part_mesh_nodal_coord_from_parent_set(geom->_mesh_nodal,
                                             id_part,
@@ -1304,20 +1298,11 @@ PDM_writer_geom_bloc_add
  const PDM_ownership_t        owner
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   /* Check geom_kind coherence */
   PDM_geometry_kind_t geom_kind = PDM_Mesh_nodal_geom_kind_from_elt_type((PDM_Mesh_nodal_elt_t) t_elt);
@@ -1359,20 +1344,11 @@ PDM_writer_geom_bloc_std_set
  PDM_g_num_t   *numabs
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   PDM_part_mesh_nodal_section_std_set(geom->_mesh_nodal, id_bloc, id_part,
                                       n_elt, connec, numabs, NULL,
@@ -1394,20 +1370,11 @@ const PDM_l_num_t    n_elt,
       PDM_g_num_t   *numabs
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   PDM_part_mesh_nodal_section_poly2d_set(geom->_mesh_nodal, id_bloc, id_part,
                                          n_elt, connec_idx, connec, numabs, NULL,
@@ -1431,20 +1398,11 @@ const PDM_l_num_t    n_face,
       PDM_g_num_t   *numabs
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   PDM_part_mesh_nodal_section_poly3d_set(geom->_mesh_nodal,
                                          id_bloc,
@@ -1479,20 +1437,11 @@ PDM_writer_geom_cell3d_cellface_add
  PDM_g_num_t  *numabs
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   /* Check geom_kind coherence */
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
@@ -1585,20 +1534,11 @@ PDM_writer_geom_cell2d_cellface_add
  PDM_g_num_t  *numabs
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   /* Check geom_kind coherence */
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
@@ -1650,20 +1590,11 @@ PDM_writer_geom_faces_facesom_add
  PDM_g_num_t  *numabs
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   /* Check geom_kind coherence */
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
@@ -1703,20 +1634,11 @@ PDM_writer_geom_write
  const int     id_geom
  )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_GEOM(geom)
 
   //TODO  faire un retour si geometrie n'est pas dependante du temps
   //       et si on n'est pas au premier increment
@@ -1755,9 +1677,7 @@ PDM_writer_geom_free
   PDM_writer_geom_data_free(cs,
                             id_geom);
 
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   if (cs->geom_tab == NULL) {
     return;
@@ -1767,10 +1687,8 @@ PDM_writer_geom_free
     return;
   }
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_ID_GEOM(cs, id_geom)
+
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
 
   if (geom != NULL) {
@@ -1778,7 +1696,7 @@ PDM_writer_geom_free
     if (geom->_mesh_nodal != NULL) {
       PDM_part_mesh_nodal_free(geom->_mesh_nodal);
       geom->_mesh_nodal = NULL;
-      geom->mesh_nodal = NULL;      
+      geom->mesh_nodal = NULL;
     }
     if (geom->nom_geom != NULL) {
       PDM_free(geom->nom_geom);
@@ -1829,9 +1747,7 @@ PDM_writer_geom_data_free
  const int     id_geom
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   if (cs->geom_tab == NULL) {
     return;
@@ -1841,10 +1757,7 @@ PDM_writer_geom_data_free
     return;
   }
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_ID_GEOM(cs, id_geom)
 
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
 
@@ -1866,9 +1779,7 @@ PDM_writer_name_map_add
  const char   *private_name
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   /* Mise a jour du tableau de stockage */
 
@@ -1899,10 +1810,8 @@ PDM_writer_cst_global_var_create
  const double                val_var
 )
 {
- 
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+
+  CHECK_WRITER(cs)
 
   /* Mise a jour du tableau de stockage */
 
@@ -1925,7 +1834,7 @@ PDM_writer_cst_global_var_create
   PDM_malloc(var->nom_var, 1 + strlen (nom_var), char);
   strcpy (var->nom_var, nom_var);
 
-  var->_val = val_var;  
+  var->_val = val_var;
 
   if (cs->cst_global_var_tab.n_var >= cs->cst_global_var_tab.s_var) {
     cs->cst_global_var_tab.s_var = PDM_MAX(2*cs->cst_global_var_tab.s_var, cs->cst_global_var_tab.n_var+1);
@@ -1949,20 +1858,29 @@ PDM_writer_cst_global_var_create
 void
 PDM_writer_cst_global_var_set
 (
- PDM_writer_t               *cs,
- const int                   id_var,
- const double                val_var
+ PDM_writer_t *cs,
+ const int     id_var,
+ const double  val_var
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   assert (id_var < cs->cst_global_var_tab.s_var);
   assert (cs->cst_global_var_tab.var[id_var] != NULL);
 
   cs->cst_global_var_tab.var[id_var]->_val = val_var;
 
+}
+
+void
+PDM_writer_out_fmt_set
+(
+ PDM_writer_t *cs,
+ void         *out_fmt
+)
+{
+  CHECK_WRITER(cs)
+  cs->sortie_fmt = out_fmt ;
 }
 
 
@@ -1976,9 +1894,7 @@ PDM_writer_var_create
  const char                 *nom_var
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   /* Mise a jour du tableau de stockage */
 
@@ -2036,9 +1952,7 @@ PDM_writer_var_write
  const int     id_var
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   if (id_var >= cs->var_tab->n_var) {
     PDM_error(__FILE__, __LINE__, 0, "Bad var identifier\n");
@@ -2072,31 +1986,16 @@ PDM_writer_var_set
  const PDM_real_t *val
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
-  if (id_var >= cs->var_tab->n_var) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad var identifier\n");
-    abort();
-  }
-
+  CHECK_ID_VAR(cs, id_var)
   PDM_writer_var_t *var = cs->var_tab->var[id_var];
+  CHECK_VAR(var)
 
-  if (var == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad var identifier\n");
-  }
-
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  CHECK_ID_GEOM(cs, id_geom)
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
+  CHECK_GEOM(geom)
 
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
 
   const int n_ind = cs->geom_tab->n_geom;
 
@@ -2170,14 +2069,8 @@ PDM_writer_var_data_free
  const int     id_var
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
-
-  if (id_var >= cs->var_tab->n_var) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad var identifier\n");
-    abort();
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_VAR(cs, id_var)
 
   PDM_writer_var_t *var = cs->var_tab->var[id_var];
 
@@ -2191,7 +2084,7 @@ PDM_writer_var_data_free
         PDM_writer_geom_t *geom = cs->geom_tab->geom[i];
 
         if (geom == NULL) {
-          PDM_error(__FILE__, __LINE__, 0, 
+          PDM_error(__FILE__, __LINE__, 0,
             "PDM_writer_var_data_free - Bad geom identifier : An associated geom of var '%s' is free before the var\n", var->nom_var);
           abort();
         }
@@ -2216,10 +2109,7 @@ PDM_writer_var_free
  const int     id_var
  )
 {
-
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
 
   if (cs->var_tab != NULL) {
 
@@ -2352,14 +2242,9 @@ PDM_writer_geom_data_reset
  const int     id_geom
 )
 {
-  if (cs == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
-  }
+  CHECK_WRITER(cs)
+  CHECK_ID_GEOM(cs, id_geom)
 
-  if (id_geom >= cs->geom_tab->n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
   PDM_writer_geom_t *geom = cs->geom_tab->geom[id_geom];
 
   if (geom != NULL) {
@@ -2370,6 +2255,280 @@ PDM_writer_geom_data_reset
 
   }
 }
+
+
+PDM_writer_t *
+PDM_writer_geom_writer_get
+(
+  PDM_writer_geom_t *geom
+)
+{
+  CHECK_GEOM(geom)
+  return geom->_cs;
+}
+
+
+PDM_part_mesh_nodal_t *
+PDM_writer_geom_part_mesh_nodal_get
+(
+  PDM_writer_geom_t *geom
+)
+{
+  CHECK_GEOM(geom)
+  return geom->mesh_nodal;
+}
+
+
+void *
+PDM_writer_geom_fmt_get
+(
+  PDM_writer_geom_t *geom
+)
+{
+  CHECK_GEOM(geom)
+  return geom->geom_fmt;
+}
+
+void
+PDM_writer_geom_fmt_set
+(
+  PDM_writer_geom_t *geom,
+  void              *geom_fmt
+)
+{
+  CHECK_GEOM(geom)
+  geom->geom_fmt = geom_fmt;
+}
+
+
+char *
+PDM_writer_geom_name_get
+(
+  PDM_writer_geom_t *geom
+)
+{
+  CHECK_GEOM(geom)
+  return geom->nom_geom;
+}
+
+
+PDM_MPI_Comm
+PDM_writer_comm_get
+(
+  PDM_writer_t *wrt
+)
+{
+  CHECK_WRITER(wrt)
+  return wrt->pdm_mpi_comm;
+}
+
+
+PDM_writer_t *
+PDM_writer_var_writer_get
+(
+  PDM_writer_var_t *var
+)
+{
+  CHECK_VAR(var)
+  return var->_cs;
+}
+
+
+void *
+PDM_writer_var_fmt_get
+(
+  PDM_writer_var_t *var
+)
+{
+  CHECK_VAR(var)
+  return var->var_fmt;
+}
+
+void
+PDM_writer_var_fmt_set
+(
+  PDM_writer_var_t *var,
+  void             *var_fmt
+)
+{
+  CHECK_VAR(var)
+  var->var_fmt = var_fmt;
+}
+
+
+char *
+PDM_writer_var_name_get
+(
+  PDM_writer_var_t *var
+)
+{
+  CHECK_VAR(var)
+  return var->nom_var;
+}
+
+
+char *
+PDM_writer_var_private_name_get
+(
+  PDM_writer_var_t *var
+)
+{
+  CHECK_VAR(var)
+  return var->private_name;
+}
+
+
+PDM_writer_var_dim_t
+PDM_writer_var_dim_get
+(
+  PDM_writer_var_t *var
+)
+{
+  CHECK_VAR(var)
+  return var->dim;
+}
+
+
+PDM_writer_status_t
+PDM_writer_var_time_dep_status_get
+(
+  PDM_writer_var_t *var
+)
+{
+  CHECK_VAR(var)
+  return var->st_dep_tps;
+}
+
+
+PDM_writer_var_loc_t
+PDM_writer_var_loc_get
+(
+  PDM_writer_var_t *var
+)
+{
+  CHECK_VAR(var)
+  return var->loc;
+}
+
+
+double **
+PDM_writer_var_val_get
+(
+  PDM_writer_var_t *var,
+  int               i_geom
+)
+{
+  CHECK_VAR(var)
+  return var->_val[i_geom];
+}
+
+
+int
+PDM_writer_n_options_get
+(
+  PDM_writer_t *wrt
+)
+{
+  CHECK_WRITER(wrt)
+  return wrt->n_options;
+}
+
+
+char *
+PDM_writer_option_name_get
+(
+  PDM_writer_t *wrt,
+  int           i_option
+)
+{
+  CHECK_WRITER(wrt)
+  CHECK_I_OPTION(wrt, i_option)
+  return wrt->options[i_option].nom;
+}
+
+
+char *
+PDM_writer_option_value_get
+(
+  PDM_writer_t *wrt,
+  int           i_option
+)
+{
+  CHECK_WRITER(wrt)
+  CHECK_I_OPTION(wrt, i_option)
+  return wrt->options[i_option].val;
+}
+
+
+void *
+PDM_writer_out_fmt_get
+(
+  PDM_writer_t *wrt
+)
+{
+  CHECK_WRITER(wrt)
+  return wrt->sortie_fmt;
+}
+
+
+char *
+PDM_writer_out_dir_get
+(
+  PDM_writer_t *wrt
+)
+{
+  CHECK_WRITER(wrt)
+  return wrt->rep_sortie;
+}
+
+
+int
+PDM_writer_n_var_get
+(
+  PDM_writer_t *wrt
+)
+{
+  CHECK_WRITER(wrt)
+  return wrt->var_tab->n_var;
+}
+
+
+PDM_writer_var_t *
+PDM_writer_var_get
+(
+  PDM_writer_t *wrt,
+  int           i_var
+)
+{
+  CHECK_WRITER(wrt)
+  CHECK_ID_VAR(wrt, i_var)
+  return wrt->var_tab->var[i_var];
+}
+
+
+int
+PDM_writer_n_geom_get
+(
+  PDM_writer_t *wrt
+)
+{
+  CHECK_WRITER(wrt)
+  return wrt->geom_tab->n_geom;
+}
+
+
+PDM_writer_geom_t *
+PDM_writer_geom_get
+(
+  PDM_writer_t *wrt,
+  int           i_geom
+)
+{
+  CHECK_WRITER(wrt)
+  CHECK_ID_GEOM(wrt, i_geom)
+  return wrt->geom_tab->geom[i_geom];
+}
+
 
 #ifdef __cplusplus
 }

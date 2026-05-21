@@ -1,77 +1,10 @@
 # --------------------------
 # Construction des Tests
 # --------------------------
-
-if (MPI_C_COMPILER)
-    set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
-endif()
-
-if (MPI_CXX_COMPILER)
-  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
-endif()
-
-if (MPI_Fortran_COMPILER)
-    set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-endif()
-
-unset(LINK_LIBRARIES)
-
-if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
-  if (PDM_ENABLE_STATIC)
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      list(APPEND LINK_LIBRARIES
-         pdmaf_static)
-    endif()
-    list(APPEND LINK_LIBRARIES pdmf_static)
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      list(APPEND LINK_LIBRARIES
-         pdmaf_static)
-    endif()
-  else ()
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      list(APPEND LINK_LIBRARIES
-         pdmaf_shared)
-    endif()
-    list(APPEND LINK_LIBRARIES pdmf_shared)
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      list(APPEND LINK_LIBRARIES
-         pdmaf_shared)
-    endif()
-  endif()
-endif()
-
-if (PDM_ENABLE_STATIC)
- if (PDM_ENABLE_EXTENSION_PDMA)
-  list(APPEND LINK_LIBRARIES
-       pdma_static)
- endif()
- list(APPEND LINK_LIBRARIES
-      pdm_static
-      pdm_mpi_static
-      ${COMMON_LIBRARIES})
- if (PDM_ENABLE_EXTENSION_PDMA)
-  list(APPEND LINK_LIBRARIES
-       pdma_static)
- endif()
-else ()
- list(APPEND LINK_LIBRARIES
-      pdm_shared
-      pdm_mpi_shared ${COMMON_LIBRARIES})
- if (PDM_ENABLE_EXTENSION_PDMA)
-  list(APPEND LINK_LIBRARIES
-       pdma_shared)
- endif()
-endif()
-
-if (OPENMP_FOUND)
-  list(APPEND LINK_LIBRARIES ${OpenMP_C_FLAGS})
-endif()
-
-if (PDM_ENABLE_CUDA)
-  list(APPEND LINK_LIBRARIES pdm_gpu)
-endif()
-
-get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
+# > A gerer, attention a Robin
+# if (PDM_ENABLE_CUDA)
+#   list(APPEND LINK_LIBRARIES pdm_gpu)
+# endif()
 
 file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/meshes DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 if (PDM_ENABLE_EXTENSION_PDMA)
@@ -112,9 +45,9 @@ if(PDM_ENABLE_UNIT_TEST)
   test_cpp_unit_create(pdm_t_unit_test ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK SOURCES ${__test_files} )
 endif()
 
-if (PDM_HAVE_PARMETIS OR PDM_HAVE_PTSCOTCH)
+if (PARMETIS_FOUND OR PTSCOTCH_FOUND)
   test_c_create (pdm_t_plane_agglo 2  PDM_LIST_TEST PDM_LIST_NRANK)
-  if (PDM_HAVE_PARMETIS)
+  if (PARMETIS_FOUND)
     test_c_create (pdm_t_partitioning_dcube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
     test_c_create (pdm_t_part_dcube_agglo ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
   endif()
@@ -146,6 +79,7 @@ test_c_create (pdm_t_distant_neighbor2                          2 PDM_LIST_TEST 
 test_c_create (pdm_t_part_to_block_geom                         1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_to_part                               2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_comm_graph_periodic_2d                2 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_pcg_group_vtx                              3 PDM_LIST_TEST PDM_LIST_NRANK)
 
 # ppart
 test_c_create (pdm_t_part_dcube               ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
@@ -218,10 +152,12 @@ test_c_create (pdm_t_mesh_location_multisection   ${MPIEXEC_MAX_NUMPROCS} PDM_LI
 test_c_create (pdm_t_mesh_location_poly_surf      ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_from_file                            2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_ho                                   2 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_plane_meshes_intersect                             2 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_field_cell_to_vtx       1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_field_cell_to_vtx_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
+
+test_c_create (pdm_t_laplacian_smoothing_static  2 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_laplacian_smoothing_dynamic 2 PDM_LIST_TEST PDM_LIST_NRANK)
 
 # io
 test_c_create (pdm_t_writer_ensight_3d               ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
@@ -239,8 +175,6 @@ test_c_create (pdm_t_mesh_intersection_surf_line 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_edge_upwind_and_downwind    1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_edge_upwind_and_downwind_2d 1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_overlay_from_vol_mesh       1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_plane_intersect_unit        2 PDM_LIST_TEST PDM_LIST_NRANK)
 
 # geometrees
 test_c_create (pdm_t_par_octree                ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
@@ -254,7 +188,6 @@ test_c_create (pdm_t_par_octree_shared         ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_
 
 # algo
 test_c_create (pdm_t_closest_points                 ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_plane_meshes_intersect_unit                          1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_intersect_line_box                                   1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_closest_points_1_point 1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -279,8 +212,9 @@ test_c_create (pdm_t_isosurface_3d_ngon  1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_triangulate        1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_reorient_geom 3 PDM_LIST_TEST PDM_LIST_NRANK)
 
+test_c_create (pdm_t_split_graph_with_pcg 1 PDM_LIST_TEST PDM_LIST_NRANK)
+
 # misc
-test_c_create (pdm_t_mesh_adapt   1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_newton_ho    1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_svd          1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mixing_plane 1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -295,22 +229,25 @@ test_c_create (pdm_t_subdivision_bezier_curve    1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_ho_bezier_intersect         1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
-   test_python_create (pdm_t_part_to_part_p             2 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (test_demr                        2 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (pdm_t_mesh_gen_demo_p            2 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (pdm_t_gnum_p                     2 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (pdm_t_block_to_part_p            3 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (pdm_t_part_to_block_p            3 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (pdm_t_isosurface_pacman_p        2 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (pdm_t_isosurface_user_function_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (pdm_t_mesh_reorient_geom_p       3 PDM_LIST_TEST PDM_LIST_NRANK)
-   test_python_create (pdm_t_generate_graph_comm_p      3 PDM_LIST_TEST PDM_LIST_NRANK)
-   if (PDM_ENABLE_BLASLAPACK)
-     test_python_create (pdm_t_rotation_p 1 PDM_LIST_TEST PDM_LIST_NRANK)
-   endif()
+  test_python_create (pdm_t_part_to_part_p                2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (test_demr                           2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_mesh_gen_demo_p               2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_gnum_p                        2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_block_to_part_p               3 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_part_comm_graph_p             2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_part_to_block_p               3 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_isosurface_pacman_p           2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_isosurface_user_function_p    2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_mesh_reorient_geom_p          3 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_generate_graph_comm_p         3 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_laplacian_smoothing_static_p  2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_python_create (pdm_t_laplacian_smoothing_dynamic_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
+  if (PDM_ENABLE_BLASLAPACK)
+    test_python_create (pdm_t_rotation_p 1 PDM_LIST_TEST PDM_LIST_NRANK)
+  endif()
 endif()
 
-if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
+if(PDM_ENABLE_Fortran)
   test_fortran_create (pdm_t_closest_points_f             2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_mesh_location_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_to_block_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -318,7 +255,6 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_block_to_part_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_dcube_gen_f                  1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_dcube_nodal_gen_f            2 PDM_LIST_TEST PDM_LIST_NRANK)
-  test_fortran_create (pdm_t_plane_intersect_unit_f       1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_global_reduce_f              2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_dist_f                       2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_gnum_f                       2 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -326,6 +262,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_writer_f                     2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_mesh_check_f                 1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_to_part_f               2 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_fortran_create (pdm_t_part_comm_graph_f            2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_gnum_location_f              2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_extension_f             2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_extension_draft_f       2 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -342,7 +279,8 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_isosurface_nodal_f           1 PDM_LIST_TEST PDM_LIST_NRANK)
 endif()
 
+
 add_subdirectory(tutorial)
 
-set (PDM_LIST_TEST ${PDM_LIST_TEST} PARENT_SCOPE )
+set (PDM_LIST_TEST  ${PDM_LIST_TEST}  PARENT_SCOPE )
 set (PDM_LIST_NRANK ${PDM_LIST_NRANK} PARENT_SCOPE )

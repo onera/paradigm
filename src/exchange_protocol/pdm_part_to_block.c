@@ -523,10 +523,10 @@ _distrib_data
 
   PDM_malloc(ptb->sorted_recv_gnum, ptb->tn_recv_data, PDM_g_num_t);
 
-  PDM_MPI_Partofactiverank (ptb->n_send_data,
-                            ptb->n_recv_data,
-                            ptb->comm,
-                            &(ptb->part_active_rank));
+  PDM_MPI_part_of_active_rank(ptb->n_send_data,
+                              ptb->n_recv_data,
+                              ptb->comm,
+                              &(ptb->part_active_rank));
 
   if (ptb->p2p_factor < ptb->part_active_rank) {
 
@@ -843,10 +843,10 @@ _distrib_data_hilbert
   PDM_malloc(ptb->sorted_recv_gnum, ptb->tn_recv_data, PDM_g_num_t       );
   PDM_malloc(sorted_recv_codes    , ptb->tn_recv_data, PDM_hilbert_code_t);
 
-  PDM_MPI_Partofactiverank (ptb->n_send_data,
-                            ptb->n_recv_data,
-                            ptb->comm,
-                            &(ptb->part_active_rank));
+  PDM_MPI_part_of_active_rank(ptb->n_send_data,
+                              ptb->n_recv_data,
+                              ptb->comm,
+                              &(ptb->part_active_rank));
 
   if (ptb->p2p_factor < ptb->part_active_rank) {
     PDM_MPI_Alltoallv(send_gnum,
@@ -858,7 +858,7 @@ _distrib_data_hilbert
                       ptb->i_recv_data,
                       PDM__PDM_MPI_G_NUM,
                       ptb->comm);
-  
+
     PDM_MPI_Alltoallv(send_codes,
                       ptb->n_send_data,
                       ptb->i_send_data,
@@ -880,7 +880,7 @@ _distrib_data_hilbert
                           ptb->i_recv_data,
                           PDM__PDM_MPI_G_NUM,
                           ptb->comm);
-  
+
     PDM_MPI_Alltoallv_p2p(send_codes,
                           ptb->n_send_data,
                           ptb->i_send_data,
@@ -1144,10 +1144,10 @@ _distrib_data_morton
   PDM_malloc(ptb->sorted_recv_gnum, ptb->tn_recv_data, PDM_g_num_t      );
   PDM_malloc(sorted_recv_codes    , ptb->tn_recv_data, PDM_morton_code_t);
 
-  PDM_MPI_Partofactiverank (ptb->n_send_data,
-                            ptb->n_recv_data,
-                            ptb->comm,
-                            &(ptb->part_active_rank));
+  PDM_MPI_part_of_active_rank(ptb->n_send_data,
+                              ptb->n_recv_data,
+                              ptb->comm,
+                              &(ptb->part_active_rank));
 
   if (ptb->p2p_factor < ptb->part_active_rank) {
 
@@ -1160,7 +1160,7 @@ _distrib_data_morton
                       ptb->i_recv_data,
                       PDM__PDM_MPI_G_NUM,
                       ptb->comm);
-  
+
     PDM_MPI_Datatype mpi_morton_type;
     PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
     PDM_MPI_Type_commit(&mpi_morton_type);
@@ -1187,7 +1187,7 @@ _distrib_data_morton
                           ptb->i_recv_data,
                           PDM__PDM_MPI_G_NUM,
                           ptb->comm);
-  
+
     PDM_MPI_Datatype mpi_morton_type;
     PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
     PDM_MPI_Type_commit(&mpi_morton_type);
@@ -1203,7 +1203,7 @@ _distrib_data_morton
     PDM_MPI_Type_free(&mpi_morton_type);
   }
 
-  
+
   PDM_free(send_gnum);
   PDM_free(send_codes);
   PDM_free(part_idx);
@@ -1741,7 +1741,7 @@ _prepare_reverse_exchange
                          ptb->n_send_data,
                          ptb->i_send_data,
                          PDM_MPI_INT,
-                         ptb->comm); 
+                         ptb->comm);
     }
     else {
       PDM_MPI_Alltoallv_p2p (_send_stride,
@@ -1752,7 +1752,7 @@ _prepare_reverse_exchange
                              ptb->n_send_data,
                              ptb->i_send_data,
                              PDM_MPI_INT,
-                             ptb->comm);      
+                             ptb->comm);
     }
 
     if(0 == 1) {
@@ -3497,30 +3497,6 @@ PDM_part_to_block_iexch
                        mpi_type,
                        ptb->comm,
                        &ptb->request_mpi[request_id]);
-  } else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
   } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
     // double t1 = PDM_MPI_Wtime();
@@ -3539,9 +3515,10 @@ PDM_part_to_block_iexch
                            ptb->comm);
     // double dt = PDM_MPI_Wtime() - t1;
     // log_trace("PDM_MPI_Get_ialltoallv + fence dt = %12.5e \n", dt);
-
+  } else {
+    printf ("Error PDM_part_to_block_iexch : k_comm = %i is not implemented yet \n", k_comm);
+    abort();
   }
-
 
   ptb->wait_status[request_id] = 0;
 }
@@ -3691,7 +3668,7 @@ PDM_part_to_block_reverse_iexch
 
   if (k_comm == PDM_MPI_COMM_KIND_P2P) {
     printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
+            " PDM_MPI_COMM_KIND_P2P k_comm is not implemented yet\n");
     abort();
   } else if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
     PDM_MPI_Ialltoallv(send_buffer,
@@ -3704,30 +3681,6 @@ PDM_part_to_block_reverse_iexch
                        mpi_type,
                        ptb->comm,
                        &ptb->request_mpi[request_id]);
-  } else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
   } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
     // double t1 = PDM_MPI_Wtime();
@@ -3746,15 +3699,13 @@ PDM_part_to_block_reverse_iexch
                            ptb->comm);
     // double dt = PDM_MPI_Wtime() - t1;
     // log_trace("PDM_MPI_Get_ialltoallv + fence dt = %12.5e \n", dt);
-
+  } else {
+    printf ("Error PDM_part_to_block_iexch : k_comm = %i is not implemented yet \n", k_comm);
+    abort();
   }
-
 
   ptb->wait_status[request_id] = 0;
 }
-
-
-
 
 /**
  *

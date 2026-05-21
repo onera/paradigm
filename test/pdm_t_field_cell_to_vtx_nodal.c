@@ -530,7 +530,7 @@ int main
     PDM_multipart_get_part_mesh_nodal(mpart,
                                       i_domain,
                                       &pmn[i_domain],
-                                      PDM_OWNERSHIP_KEEP);
+                                      PDM_OWNERSHIP_USER);
     if (post) {
       PDM_part_mesh_nodal_dump_vtk(pmn[i_domain],
                                    PDM_GEOMETRY_KIND_SURFACIC,

@@ -766,7 +766,6 @@ INPUT                  = @PDM_SOURCE_DIR@/doc/mainpage.h \
                          @PDM_SOURCE_DIR@/test/tutorial/block_to_part/ex1/pdm_t_block_to_part_sol1.c \
                          @PDM_SOURCE_DIR@/test/tutorial/part_to_block/ex1/pdm_t_part_to_block_sol2.c \
                          @PDM_SOURCE_DIR@/src/pdm.h \
-                         @PDM_SOURCE_DIR@/src/adapt \
                          @PDM_SOURCE_DIR@/src/algorithm \
                          @PDM_SOURCE_DIR@/src/exchange_protocol \
                          @PDM_SOURCE_DIR@/src/ext_wrapper \
@@ -786,10 +785,6 @@ INPUT                  = @PDM_SOURCE_DIR@/doc/mainpage.h \
                          @COMMENT_NOT_PDMA@@PDM_SOURCE_DIR@/extensions/paradigma/src/adapt \
                          @COMMENT_NOT_PDMA@@PDM_SOURCE_DIR@/extensions/paradigma/Cython/ \
                          @PDM_SOURCE_DIR@/Cython/
-                         # @PDM_SOURCE_DIR@/extensions/paradigma/src/adapt \
-                         # @PDM_SOURCE_DIR@/extensions/paradigma/src/plugins/coarse_mesh \
-                         # @PDM_SOURCE_DIR@/extensions/paradigma/src/plugins/multicoloring \
-                         # @PDM_SOURCE_DIR@/extensions/paradigma/src/plugins/renum
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

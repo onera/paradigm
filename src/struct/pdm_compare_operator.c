@@ -56,6 +56,10 @@ PDM_compare_unsigned_ordered_nuplets_int
     return 0;
   }
 
+  if (size1 == 1) {
+    return nuplet2[0] == nuplet1[0];
+  }
+
   if (size1 == 2) {
     // Handle pairs separately
     if (nuplet2[0] == nuplet1[0] && nuplet2[1] == nuplet1[1]) {

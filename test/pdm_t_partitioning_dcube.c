@@ -603,9 +603,6 @@ int main(int argc, char *argv[])
   /*
    *  Init
    */
-
-  struct timeval t_elaps_debut;
-
   int i_rank;
   int n_rank;
 

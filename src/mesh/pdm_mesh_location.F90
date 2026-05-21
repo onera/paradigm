@@ -202,7 +202,7 @@ module pdm_mesh_location
   integer,     intent(in)  :: n_point_cloud ! Number of point clouds
   integer,     intent(in)  :: f_comm        ! Fortran MPI communicator
   integer,     intent(in)  :: owner         ! Ownership
-  integer(c_int)           :: c_comm
+  type(c_ptr)              :: c_comm
 
   interface
     function PDM_mesh_location_create_cf (n_point_cloud, &
@@ -213,7 +213,7 @@ module pdm_mesh_location
       use iso_c_binding
       implicit none
       integer(c_int), value :: n_point_cloud
-      integer(c_int), value :: comm
+      type(c_ptr), value    :: comm
       integer(c_int), value :: owner
       type(c_ptr)           :: mloc
     end function PDM_mesh_location_create_cf

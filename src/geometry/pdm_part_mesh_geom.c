@@ -248,6 +248,7 @@ void
 PDM_part_mesh_dual_volume_compute
 (
   PDM_part_mesh_t   *pm,
+  PDM_bool_t         synchronize,
   double          ***out_dual_vol
 )
 {
@@ -373,15 +374,18 @@ PDM_part_mesh_dual_volume_compute
   PDM_free(edge_vtx);
   PDM_free(vtx_coord);
 
-  if(pm->pcg[PDM_MESH_ENTITY_VTX] == NULL) {
-    PDM_part_mesh_part_comm_graph_compute_from_gnum(pm, PDM_MESH_ENTITY_VTX);
-  }
+  if (synchronize) {
+    if(pm->pcg[PDM_MESH_ENTITY_VTX] == NULL) {
+      PDM_part_mesh_part_comm_graph_compute_from_gnum(pm, PDM_MESH_ENTITY_VTX);
+    }
 
-  // Synchro volume :
-  PDM_part_comm_graph_all_reduce(pm->pcg[PDM_MESH_ENTITY_VTX],
-                                 PDM_MPI_DOUBLE,
-                                 PDM_MPI_SUM,
-          (unsigned char **)    *out_dual_vol);
+    // Synchro volume :
+    PDM_part_comm_graph_all_reduce(pm->pcg[PDM_MESH_ENTITY_VTX],
+                                   PDM_MPI_DOUBLE,
+                                   1,
+                                   PDM_MPI_SUM,
+            (unsigned char **)    *out_dual_vol);
+  }
 
 }
 

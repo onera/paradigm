@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
   PDM_multipart_compute(mpart_id);
 
   PDM_part_mesh_nodal_t *pmesh_nodal = NULL;
-  PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_KEEP);
+  PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_USER);
 
 
   PDM_MPI_Barrier(comm);

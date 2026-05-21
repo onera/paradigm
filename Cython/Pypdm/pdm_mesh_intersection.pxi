@@ -18,7 +18,7 @@ cdef extern from "pdm_mesh_intersection.h":
                                           const int                n_part);
 
     void PDM_mesh_intersection_part_set(PDM_mesh_intersection_t  *mi,
-                                        PDM_ol_mesh_t             i_mesh,
+                                        int                       i_mesh,
                                         int                       i_part,
                                         int                       n_cell,
                                         int                       n_face,
@@ -49,6 +49,10 @@ cdef extern from "pdm_mesh_intersection.h":
                                                  PDM_g_num_t             **elt_a_elt_b,
                                                  double                  **elt_a_elt_b_weight);
 
+    void PDM_mesh_intersection_tetraisation_pt_set(PDM_mesh_intersection_t* mi,
+                                                   int     tetraisation_pt_type,
+                                                   double *tetraisation_pt_coord);
+
     void PDM_mesh_intersection_mesh_nodal_set(PDM_mesh_intersection_t  *mi,
                                               int                       i_mesh,
                                               PDM_part_mesh_nodal_t    *mesh);
@@ -66,7 +70,6 @@ cdef class MeshIntersection:
     # ************************************************************************
     # > Class attributes
     cdef PDM_mesh_intersection_t* _mi
-    cdef MPI.Comm py_comm
     cdef dict     ptp_objects
     cdef list     keep_alive
     cdef int      _dim_mesh_a
@@ -91,8 +94,7 @@ cdef class MeshIntersection:
         self.keep_alive  = list()
 
         # Convert mpi4py -> PDM_MPI
-        self.py_comm = comm
-        cdef MPI.MPI_Comm c_comm   = self.py_comm.ob_mpi
+        cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
         cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
         self._mi = PDM_mesh_intersection_create(intersection_kind,
@@ -177,7 +179,7 @@ cdef class MeshIntersection:
       cdef int* face_vtx_idx_data  = np_to_int_pointer(face_vtx_idx )
       cdef int* face_vtx_data      = np_to_int_pointer(face_vtx     )
       PDM_mesh_intersection_part_set(self._mi,
-                    <PDM_ol_mesh_t>  i_mesh,
+                                     i_mesh,
                                      i_part,
                                      n_cell,
                                      n_face,
@@ -198,11 +200,20 @@ cdef class MeshIntersection:
 
     # ------------------------------------------------------------------
     def part_nodal_set(self,
-                       int        i_mesh,
-                       PMeshNodal pypmn):
+                       int           i_mesh,
+                       PartMeshNodal pypmn):
         """
         """
         PDM_mesh_intersection_mesh_nodal_set(self._mi, i_mesh, pypmn.pmn)
+
+    # ------------------------------------------------------------------
+    def tetraisation_pt_set(self,
+                            int                                         tetraisation_pt_type,
+                            NPY.ndarray[NPY.double_t, mode='c', ndim=1] np_tetraisation_pt_coord = None):
+        """
+        """
+        cdef double *tetraisation_pt_coord = np_to_double_pointer(np_tetraisation_pt_coord)
+        PDM_mesh_intersection_tetraisation_pt_set(self._mi, tetraisation_pt_type, <double *> tetraisation_pt_coord)
 
     # ------------------------------------------------------------------
     def compute(self):
@@ -218,9 +229,7 @@ cdef class MeshIntersection:
       PDM_mesh_intersection_part_to_part_get(self._mi,
                                              &ptpc,
                                              PDM_OWNERSHIP_USER)
-
-      py_caps = PyCapsule_New(ptpc, NULL, NULL)
-      return PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
+      return PartToPart.from_ptr(ptpc) # The free is inside the class
 
     # ------------------------------------------------------------------
     def a_to_b_get(self, int i_part):

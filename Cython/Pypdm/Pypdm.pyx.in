@@ -15,8 +15,9 @@ cimport cython
 cimport numpy as NPY
 
 from mpi4py cimport MPI
-# -----------------------------------------------------------------
+from mpi4py cimport libmpi
 
+# -----------------------------------------------------------------
 cdef extern from "pdm_config.h":
     # trick from: https://stackoverflow.com/questions/5697479/how-can-a-defined-c-value-be-exposed-to-python-in-a-cython-module
     cdef int _PDM_VERSION_MAKOR "PDM_VERSION_MAJOR"
@@ -104,6 +105,7 @@ cdef extern from "pdm.h":
         PDM_OWNERSHIP_KEEP                 = 0
         PDM_OWNERSHIP_USER                 = 1
         PDM_OWNERSHIP_UNGET_RESULT_IS_FREE = 2
+        PDM_OWNERSHIP_BAD_VALUE            = 3
 
     ctypedef enum PDM_extract_part_kind_t:
         PDM_EXTRACT_PART_KIND_LOCAL         = 0
@@ -170,11 +172,7 @@ cdef extern from "pdm.h":
     ctypedef enum PDM_mpi_comm_kind_t:
       PDM_MPI_COMM_KIND_P2P                                = 0
       PDM_MPI_COMM_KIND_COLLECTIVE                         = 1
-      PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE                = 2
-      PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P                 = 3
-      PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = 4
-      PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5
-      PDM_MPI_COMM_KIND_WIN_RMA                            = 6
+      PDM_MPI_COMM_KIND_WIN_RMA                            = 2
 
     ctypedef enum PDM_clustering_kind_t:
       PDM_CLUSTERING_KIND_OCTREE                = 0
@@ -221,16 +219,49 @@ cdef extern from "pdm_part_to_part.h":
        PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM = 3
 
 
-
-
 def Finalize ():
     PDM_Finalize
 
+
+cdef extern from "mpi.h":
+  ctypedef struct MPI_Request:
+    pass
+  ctypedef struct MPI_Win:
+    pass
+  ctypedef struct MPI_Comm:
+    pass
+  ctypedef struct MPI_Datatype:
+    pass
+  ctypedef struct MPI_File:
+    pass
+  ctypedef struct MPI_Group:
+    pass
+  ctypedef struct MPI_Op:
+    pass
+
+# ----------------------------------------------------------------------
+# Section: Définition de vos types PDM_ (Alias)
+# On utilise les types MPI déclarés ci-dessus pour créer les alias PDM_.
+cdef:
+  ctypedef MPI_Request  PDM_MPI_Request
+  ctypedef MPI_Win      PDM_MPI_Win
+  ctypedef MPI_Comm     PDM_MPI_Comm
+  ctypedef MPI_Datatype PDM_MPI_Datatype
+  ctypedef MPI_File     PDM_MPI_File
+  ctypedef MPI_Group    PDM_MPI_Group
+  ctypedef MPI_Op       PDM_MPI_Op
+
 cdef extern from "pdm_mpi.h":
-    ctypedef int PDM_MPI_Comm
     PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
+    MPI_Comm PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
     int PDM_MPI_Finalize()
+
 # -----------------------------------------------------------------
+
+_PDM_OWNERSHIP_KEEP                 = PDM_OWNERSHIP_KEEP
+_PDM_OWNERSHIP_USER                 = PDM_OWNERSHIP_USER
+_PDM_OWNERSHIP_UNGET_RESULT_IS_FREE = PDM_OWNERSHIP_UNGET_RESULT_IS_FREE
+_PDM_OWNERSHIP_BAD_VALUE            = PDM_OWNERSHIP_BAD_VALUE
 
 _PDM_MESH_ENTITY_CELL = PDM_MESH_ENTITY_CELL
 _PDM_MESH_ENTITY_FACE = PDM_MESH_ENTITY_FACE
@@ -394,10 +425,6 @@ _PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM = PDM_PART_TO_PART_DATA_DEF_ORD
 
 _PDM_MPI_COMM_KIND_P2P                                = PDM_MPI_COMM_KIND_P2P
 _PDM_MPI_COMM_KIND_COLLECTIVE                         = PDM_MPI_COMM_KIND_COLLECTIVE
-_PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE                = PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE
-_PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P                 = PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P
-_PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE
-_PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE
 _PDM_MPI_COMM_KIND_WIN_RMA                            = PDM_MPI_COMM_KIND_WIN_RMA
 
 @COMMENT_NOT_PDMA@_PDM_CLUSTERING_KIND_OCTREE                = PDM_CLUSTERING_KIND_OCTREE
@@ -429,9 +456,11 @@ PDM_predicate_exactinit()
 py_mem_domain = 42440
 # -----------------------------------------------------------------
 cdef assert_single_dim_np(NPY.ndarray tab, dtype, int size=-1):
-  assert isinstance(tab, NPY.ndarray) and (tab.ndim == 1 or (tab.ndim == 2 and (tab.shape[0] <= 1 or tab.shape[1] <= 1))) and tab.dtype == dtype
+  assert isinstance(tab, NPY.ndarray), "Provided object is not a ndarray"
+  assert (tab.ndim == 1 or (tab.ndim == 2 and (tab.shape[0] <= 1 or tab.shape[1] <= 1))), f"Wrong array dimension: expected 1"
+  assert tab.dtype == dtype, f"Wrong array dtype: expected {dtype}, got {tab.dtype}"
   if size >= 0:
-    assert tab.size == size
+    assert tab.size == size, f"Wrong array size : expected {size}, got {tab.size}"
 
 cdef recover_dtype(list np_array_list, MPI.Comm py_comm):
   """ Check that numpy dtype is consistent across all partitions and return it """
@@ -451,7 +480,7 @@ cdef int* list_to_int_pointer(list data):
   for i,d in enumerate(data):
     array[i] = <int> d
   return array
-  
+
 cdef double* list_to_double_pointer(list data):
   cdef double* array = <double *> malloc(len(data) * sizeof(double))
   for i,d in enumerate(data):
@@ -463,11 +492,13 @@ cdef PDM_g_num_t* np_to_gnum_pointer(NPY.ndarray[npy_pdm_gnum_t] array):
   if array is not None:
     ptr = <PDM_g_num_t*> array.data
   return ptr
+
 cdef int* np_to_int_pointer(NPY.ndarray[NPY.int32_t] array):
   cdef int* ptr = NULL
   if array is not None:
     ptr = <int*> array.data
   return ptr
+
 cdef double* np_to_double_pointer(NPY.ndarray[double] array):
   cdef double* ptr = NULL
   if array is not None:
@@ -542,6 +573,17 @@ cdef create_numpy_or_none_g(PDM_g_num_t* array, int size, bint flag_owndata=True
 cdef create_numpy_or_none_d(double* array, int size, bint flag_owndata=True):
     return create_numpy_or_none(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
 
+cdef PDM_MPI_Comm py_comm_to_pdm_comm(MPI.Comm py_comm):
+  cdef MPI.MPI_Comm c_comm   = py_comm.ob_mpi
+  cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+  return pdm_comm
+
+cdef pdm_comm_to_py_comm(PDM_MPI_Comm pdm_comm):
+  cdef MPI_Comm c_comm = PDM_MPI_2_mpi_comm(pdm_comm)
+  cdef int f_comm = libmpi.MPI_Comm_c2f(<MPI_Comm> c_comm)
+  return MPI.Comm.f2py(f_comm)
+
+
 def MPI_Finalize():
     return PDM_MPI_Finalize()
 
@@ -552,6 +594,10 @@ include "pdm_dmesh.pxi"
 # PDM_dmesh_nodal :
 # ----------------
 include "pdm_dmesh_nodal.pxi"
+
+# PDM_part_comm_graph :
+# ----------------
+include "pdm_part_comm_graph.pxi"
 
 # PDM_part_dmesh_nodal :
 # ----------------
@@ -606,14 +652,6 @@ include "pdm_geom.pxi"
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_dist_cellcenter_surf.pxi"
 
-# PDM_delaunay :
-# --------------------
-@COMMENT_NOT_PDMA@include "pdm_delaunay.pxi"
-
-# PDM_remesh :
-# --------------------
-@COMMENT_NOT_PDMA@include "pdm_remesh.pxi"
-
 # PDM_mesh_refine :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_mesh_refine.pxi"
@@ -630,10 +668,6 @@ include "pdm_isosurface.pxi"
 # PDM_inside_cloud_surf :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_inside_cloud_surf.pxi"
-
-# PDM_mesh_adaptation :
-# --------------------
-#@COMMENT_NOT_PDMA@include "pdm_mesh_adaptation.pxi"
 
 # PDM_mesh_deform :
 # --------------------
@@ -671,9 +705,9 @@ include "pdm_mesh_location.pxi"
 # --------------------
 include "pdm_closest_points.pxi"
 
-# PDM_overlay :
+# PDM_laplacian_smoothing :
 # --------------------
-include "pdm_overlay.pxi"
+include "pdm_laplacian_smoothing.pxi"
 
 # PDM_dcube_gen :
 # --------------------

@@ -1072,6 +1072,20 @@ PDM_part_to_part_n_ranks_get
  PDM_part_to_part_t    *ptp
 );
 
+/**
+ *
+ * \brief Get internal communicator
+ *
+ * \param [in]   ptp          Part to part structure
+ *
+ * \return MPICommunicator
+ */
+PDM_MPI_Comm
+PDM_part_to_part_comm_get
+(
+ PDM_part_to_part_t    *ptp
+);
+
 #ifdef	__cplusplus
 }
 #endif

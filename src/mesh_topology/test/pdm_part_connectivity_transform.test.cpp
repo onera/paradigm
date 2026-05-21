@@ -4,6 +4,7 @@
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm_doctest.h"
 #include "pdm_mem_tool.h"
+#include "pdm_logging.h"
 #include "pdm_part_connectivity_transform.h"
 
 /*
@@ -159,4 +160,54 @@ MPI_TEST_CASE("[PDM_graph_compress] ", 1) {
   MPI_CHECK_EQ_C_ARRAY(0, graph    , expected_graph    , 16);
 
 
+}
+
+MPI_TEST_CASE("[pdm_part_connectivity_transform] - 1p - PDM_connectivity_filter ",1) {
+
+  const int n_cell = 8;
+  const int n_face = 36;
+
+  int cell_face_idx[n_cell+1] = {0, 6, 12, 18, 24, 30, 36, 42, 48};
+  int cell_face    [48]       = { 1,  5,  13, 17, 25, 29,
+                                 -6, 10, -19, 23, 28, 32,
+                                 -7, 11,  16, 20,-30, 34,
+                                  4,  8, -18, 22,-31, 35,
+                                 -5,  9,  15, 19, 26, 30,
+                                  2,  6, -17, 21, 27, 31,
+                                  3,  7, 14, 18, -29, 33,
+                                 -8, 12,-20, 24, -32, 36};
+
+  int entity1_flag[n_cell] = {0, 1, 0, 0, 1, 1, 1, 1};
+  int entity2_flag[n_face] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+
+  int *sub_cell_face_idx = NULL;
+  int *sub_cell_face     = NULL;
+  int n_sub_cell = PDM_connectivity_filter(n_cell,
+                                           cell_face_idx,
+                                           cell_face,
+                                           entity1_flag,
+                                           entity2_flag,
+                                           &sub_cell_face_idx,
+                                           &sub_cell_face);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(sub_cell_face_idx, n_sub_cell, "sub_cell_face_idx ::");
+    PDM_log_trace_array_int(sub_cell_face, sub_cell_face_idx[n_sub_cell], "sub_cell_face ::");
+    PDM_log_trace_connectivity_int(sub_cell_face_idx, sub_cell_face, n_sub_cell, "sub_cell_face ::");
+  }
+
+  int expected_sub_cell_face_idx[6] = {0, 6, 12, 18, 24, 30};
+  int expected_sub_cell_face[30] = {-6, 10, -19, 23, 28, 32,
+                                    -5, 9, 15, 19, 26, 30,
+                                     2, 6, -17, 21, 27, 31,
+                                     3, 7, 14, 18, -29, 33,
+                                    -8, 12, -20, 24, -32, 36};
+
+  CHECK(n_sub_cell == 5);
+  MPI_CHECK_EQ_C_ARRAY(0, sub_cell_face_idx, expected_sub_cell_face_idx, n_sub_cell);
+  MPI_CHECK_EQ_C_ARRAY(0, sub_cell_face    , expected_sub_cell_face    , 30);
+
+  PDM_free(sub_cell_face_idx);
+  PDM_free(sub_cell_face);
 }

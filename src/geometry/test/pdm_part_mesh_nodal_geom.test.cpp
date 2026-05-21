@@ -30,7 +30,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - TRIA3 - simplices - 1p", 1) {
                                                            1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
 
   double **pdual_volume = NULL;
-  PDM_part_mesh_nodal_dual_volume_compute(pmn, &pdual_volume);
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, PDM_TRUE, &pdual_volume);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -72,7 +72,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - TRIA3 - simplices - 2p", 2) {
   // PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_SURFACIC, "surf_");
 
   double **pdual_volume = NULL;
-  PDM_part_mesh_nodal_dual_volume_compute(pmn, &pdual_volume);
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, PDM_TRUE, &pdual_volume);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -114,7 +114,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - QUAD4 ", 1) {
 
 
   double **pdual_volume = NULL;
-  PDM_part_mesh_nodal_dual_volume_compute(pmn, &pdual_volume);
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, PDM_TRUE, &pdual_volume);
 
   if(0 == 1) {
     PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_SURFACIC, "surf_");
@@ -158,7 +158,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - QUAD4 - 2p", 2) {
 
 
   double **pdual_volume = NULL;
-  PDM_part_mesh_nodal_dual_volume_compute(pmn, &pdual_volume);
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, PDM_TRUE, &pdual_volume);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -203,7 +203,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 3d - TETRA4 - simplices ", 2) {
 
 
   double **pdual_volume = NULL;
-  PDM_part_mesh_nodal_dual_volume_compute(pmn, &pdual_volume);
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, PDM_TRUE, &pdual_volume);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -247,7 +247,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 3d - HEXA8 - 2p", 2) {
                                                                 3, 3, 2, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   double **pdual_volume = NULL;
-  PDM_part_mesh_nodal_dual_volume_compute(pmn, &pdual_volume);
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, PDM_TRUE, &pdual_volume);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {

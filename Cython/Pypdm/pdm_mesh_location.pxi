@@ -181,7 +181,6 @@ cdef class MeshLocation:
   # ************************************************************************
   # > Class attributes
   cdef PDM_mesh_location_t* _ml
-  cdef MPI.Comm py_comm
   cdef int _n_point_cloud
   cdef int _n_src_part
   cdef list _n_tgt_part_per_cloud
@@ -212,7 +211,6 @@ cdef class MeshLocation:
     """
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self.py_comm = comm
     self._n_point_cloud = n_point_cloud
     self._n_tgt_part_per_cloud = [0 for i in range(n_point_cloud)]
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -735,9 +733,7 @@ cdef class MeshLocation:
                                        i_point_cloud,
                                        &ptpc,
                                        PDM_OWNERSHIP_USER)
-
-    py_caps = PyCapsule_New(ptpc, NULL, NULL)
-    return PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
+    return PartToPart.from_ptr(ptpc) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def dump_times(self):

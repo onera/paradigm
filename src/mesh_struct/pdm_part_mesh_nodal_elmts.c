@@ -53,9 +53,9 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)", (i_part), (pmne)->n_part); \
   }
 
-#define CHECK_BLOCK(block)                                                \
-  if ((block) == NULL) {                                                  \
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n"); \
+#define CHECK_SECTION(section)                           \
+  if ((section) == NULL) {                               \
+    PDM_error (__FILE__, __LINE__, 0, "NULL section\n"); \
   }
 
 #define CHECK_GROUP(pmne, i_group)                                                             \
@@ -1490,7 +1490,7 @@ PDM_part_mesh_nodal_elmts_std_set
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  CHECK_BLOCK (block)
+  CHECK_SECTION(block)
   CHECK_I_PART(block, id_part)
 
   /* Mapping */
@@ -1592,7 +1592,7 @@ PDM_part_mesh_nodal_elmts_section_std_get
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  CHECK_BLOCK (block)
+  CHECK_SECTION(block)
   CHECK_I_PART(block, id_part)
 
   *connec     = block->_connec[id_part];
@@ -1637,7 +1637,7 @@ PDM_part_mesh_nodal_elmts_section_std_ho_get
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  CHECK_BLOCK (block)
+  CHECK_SECTION(block)
   CHECK_I_PART(block, id_part)
 
   *connec = block->_connec[id_part];
@@ -1681,7 +1681,7 @@ PDM_part_mesh_nodal_elmts_section_poly2d_set
 
   PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-  CHECK_BLOCK (block)
+  CHECK_SECTION(block)
   CHECK_I_PART(block, id_part)
 
   /* Mapping */
@@ -1738,7 +1738,7 @@ PDM_part_mesh_nodal_elmts_section_poly3d_set
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  CHECK_BLOCK (block)
+  CHECK_SECTION(block)
   CHECK_I_PART(block, id_part)
 
   pmne->n_elmts[id_part] += -block->n_elt[id_part];
@@ -1809,7 +1809,7 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
 
   PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-  CHECK_BLOCK (block)
+  CHECK_SECTION(block)
   CHECK_I_PART(block, id_part)
 
   *connec_idx = block->_connec_idx[id_part];
@@ -1840,7 +1840,7 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  CHECK_BLOCK (block)
+  CHECK_SECTION(block)
   CHECK_I_PART(block, id_part)
 
   *cell_vtx_idx = block->_cellvtx_idx[id_part];
@@ -1878,7 +1878,7 @@ PDM_part_mesh_nodal_elmts_section_poly3d_get
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  CHECK_BLOCK (block)
+  CHECK_SECTION(block)
   CHECK_I_PART(block, id_part)
 
   *n_face              = block->n_face        [id_part];
@@ -1925,7 +1925,7 @@ PDM_part_mesh_nodal_elmts_section_type_get
     t_elt = PDM_MESH_NODAL_POLY_3D;
     const PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
 
-    CHECK_BLOCK(block)
+    CHECK_SECTION(block)
 
     t_elt = block->t_elt;
   }
@@ -1958,7 +1958,7 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK(block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     return block->n_elt[id_part];
@@ -1970,7 +1970,7 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK(block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     return block->n_elt[id_part];
@@ -1982,7 +1982,7 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK(block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     return block->n_elt[id_part];
@@ -2115,7 +2115,7 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner = ownership;
     }
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_parent_num != NULL) {
@@ -2134,7 +2134,7 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner = ownership;
     }
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_parent_num != NULL) {
@@ -2153,7 +2153,7 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner = ownership;
     }
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_parent_num != NULL) {
@@ -2191,7 +2191,7 @@ const int                          id_part,
       if (block->numabs_owner != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_numabs != NULL) {
@@ -2210,7 +2210,7 @@ const int                          id_part,
       if (block->numabs_owner != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_numabs != NULL) {
@@ -2229,7 +2229,7 @@ const int                          id_part,
       if (block->numabs_owner != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_numabs != NULL) {
@@ -2276,7 +2276,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     n_elt        = block->n_elt       [id_part];
@@ -2291,7 +2291,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     n_elt        = block->n_elt      [id_part];
@@ -2306,7 +2306,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK(block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     n_elt    = block->n_elt  [id_part];
@@ -2473,7 +2473,7 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     block->cell_centers_owner = ownership;
@@ -2531,7 +2531,7 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     block->cell_centers_owner = ownership;
@@ -2587,7 +2587,7 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     block->cell_centers_owner = ownership;
@@ -2775,7 +2775,7 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       if (block->cell_centers_owner            != PDM_OWNERSHIP_USER) block->cell_centers_owner = ownership;
     }
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->cell_centers != NULL) {
@@ -2794,7 +2794,7 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       if (block->cell_centers_owner            != PDM_OWNERSHIP_USER) block->cell_centers_owner = ownership;
     }
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->cell_centers != NULL) {
@@ -2837,7 +2837,7 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->cell_centers_to_compute == NULL) {
@@ -2857,7 +2857,7 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->cell_centers_to_compute == NULL) {
@@ -2878,7 +2878,7 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->cell_centers_to_compute == NULL) {
@@ -2960,129 +2960,58 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 {
   CHECK_PMNE(pmne)
 
-  PDM_gen_gnum_t *gnum_gen = PDM_gnum_create (3,
-                                              pmne->n_part,
-                                              PDM_FALSE,
-                                              1e-3,
-                                              pmne->comm,
-                                              PDM_OWNERSHIP_USER); /* The result is getted and you are owner */
-
-  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
-
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
-
-    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
-
-    CHECK_BLOCK(block)
-
-    block->numabs_int_owner = ownership;
-
-    if (block->numabs_int == NULL) {
-      PDM_malloc(block->numabs_int, block->n_part, PDM_g_num_t *);
-      for (int i = 0; i < block->n_part; i++) {
-        block->numabs_int[i] = NULL;
-      }
-    }
-    else {
-      PDM_gnum_free(gnum_gen);
-      return;
-    }
-
-    for (int i = 0; i < block->n_part; i++) {
-      PDM_gnum_set_from_parents(gnum_gen, i, block->n_elt[i], block->_numabs[i]);
-    }
-
-  }
-
-  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
-
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
-
-
-    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
-
-    CHECK_BLOCK(block)
-
-    block->numabs_int_owner = ownership;
-
-    if (block->numabs_int == NULL) {
-      PDM_malloc(block->numabs_int, block->n_part, PDM_g_num_t *);
-      for (int i = 0; i < block->n_part; i++) {
-        block->numabs_int[i] = NULL;
-      }
-    }
-    else {
-      PDM_gnum_free(gnum_gen);
-      return;
-    }
-
-    for (int i = 0; i < block->n_part; i++) {
-      PDM_gnum_set_from_parents(gnum_gen, i, block->n_elt[i], block->_numabs[i]);
-    }
-
-  }
-
-  else {
-
-    int _id_section = id_section;
-
-    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
-
-    CHECK_BLOCK(block)
-
-    block->numabs_int_owner = ownership;
-
-    if (block->numabs_int == NULL) {
-      PDM_malloc(block->numabs_int, block->n_part, PDM_g_num_t *);
-      for (int i = 0; i < block->n_part; i++) {
-        block->numabs_int[i] = NULL;
-      }
-    }
-    else {
-      PDM_gnum_free(gnum_gen);
-      return;
-    }
-
-    for (int i = 0; i < block->n_part; i++) {
-      PDM_gnum_set_from_parents(gnum_gen, i, block->n_elt[i], block->_numabs[i]);
-    }
-
-  }
-
-  PDM_gnum_compute (gnum_gen);
-
-  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
-
-    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
-
-    for (int i = 0; i < block->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get(gnum_gen, i);
-    }
-  }
-
-  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
-
-    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
-
-    for (int i = 0; i < block->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get(gnum_gen, i);
-    }
-  }
-
-  else {
-
-    int _id_section = id_section;
-
-    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
-
-    for (int i = 0; i < block->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get(gnum_gen, i);
-    }
-  }
-
+  // Define a macro to factorize the computation of global IDs for sections of different nature
+#define GENERATE_GNUM_IN_SECTION(section)                                           \
+  CHECK_SECTION(section)                                                              \
+  if (section->numabs_int != NULL) {                                                \
+    /* Already computed (ignore ownership) */                                       \
+    return;                                                                         \
+  }                                                                                 \
+  PDM_malloc(section->numabs_int, section->n_part, PDM_g_num_t *);                  \
+  for (int i = 0; i < section->n_part; i++) {                                       \
+    section->numabs_int[i] = NULL;                                                  \
+  }                                                                                 \
+  section->numabs_int_owner = ownership;                                            \
+                                                                                    \
+  PDM_gen_gnum_t *gnum_gen = PDM_gnum_create(3,                                     \
+                                             pmne->n_part,                          \
+                                             PDM_FALSE,                             \
+                                             1e-3,                                  \
+                                             pmne->comm,                            \
+                                             PDM_OWNERSHIP_USER);                   \
+  for (int i = 0; i < section->n_part; i++) {                                       \
+    PDM_gnum_set_from_parents(gnum_gen, i, section->n_elt[i], section->_numabs[i]); \
+  }                                                                                 \
+                                                                                    \
+  PDM_gnum_compute(gnum_gen);                                                       \
+                                                                                    \
+  for (int i = 0; i < section->n_part; i++) {                                       \
+    section->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get(gnum_gen, i);             \
+  }                                                                                 \
+                                                                                    \
   PDM_gnum_free(gnum_gen);
+
+
+  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+    // Polyhedral section
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+    PDM_Mesh_nodal_block_poly3d_t *section = pmne->sections_poly3d[_id_section];
+    GENERATE_GNUM_IN_SECTION(section)
+  }
+  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+    // Polygonal section
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+    PDM_Mesh_nodal_block_poly2d_t *section = pmne->sections_poly2d[_id_section];
+    GENERATE_GNUM_IN_SECTION(section)
+  }
+  else {
+    // Standard section
+    int _id_section = id_section;
+    PDM_Mesh_nodal_block_std_t *section = pmne->sections_std[_id_section];
+    GENERATE_GNUM_IN_SECTION(section)
+  }
+
+#undef GENERATE_GNUM_IN_SECTION
 }
 
 
@@ -3232,7 +3161,7 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     // ownership
@@ -3249,7 +3178,7 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     // ownership
@@ -3266,7 +3195,7 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     // ownership
@@ -3959,9 +3888,9 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
 
 
   // Add sections
-  int id_tria;
-  int id_quad;
-  int id_poly;
+  int id_tria = -1;
+  int id_quad = -1;
+  int id_poly = -1;
   if (we_have_elts[0] > 0) {
     id_tria = PDM_part_mesh_nodal_elmts_add(pmne, PDM_MESH_NODAL_TRIA3);
   }
@@ -5041,10 +4970,17 @@ PDM_part_mesh_nodal_elmts_n_group_set
 
   pmne->n_group = n_group;
   for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
-    PDM_malloc(pmne->n_group_elmt   [i_part], n_group, int              );
-    PDM_malloc(pmne->group_elmt     [i_part], n_group, int             *);
-    PDM_malloc(pmne->group_ln_to_gn [i_part], n_group, PDM_g_num_t     *);
-    PDM_malloc(pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
+    if(pmne->n_group_elmt[i_part] == NULL) {
+      PDM_malloc(pmne->n_group_elmt   [i_part], n_group, int              );
+      PDM_malloc(pmne->group_elmt     [i_part], n_group, int             *);
+      PDM_malloc(pmne->group_ln_to_gn [i_part], n_group, PDM_g_num_t     *);
+      PDM_malloc(pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
+    } else {
+      PDM_realloc(pmne->n_group_elmt   [i_part], pmne->n_group_elmt   [i_part], n_group, int              );
+      PDM_realloc(pmne->group_elmt     [i_part], pmne->group_elmt     [i_part], n_group, int             *);
+      PDM_realloc(pmne->group_ln_to_gn [i_part], pmne->group_ln_to_gn [i_part], n_group, PDM_g_num_t     *);
+      PDM_realloc(pmne->ownership_group[i_part], pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
+    }
 
     for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
       pmne->n_group_elmt   [i_part][i_group] = 0;
@@ -5365,7 +5301,7 @@ PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity == NULL) {
@@ -5380,7 +5316,7 @@ PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[id_section - PDM_BLOCK_ID_BLOCK_POLY2D];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity == NULL) {
@@ -5395,7 +5331,7 @@ PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[id_section - PDM_BLOCK_ID_BLOCK_POLY3D];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity == NULL) {
@@ -5426,7 +5362,7 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity != NULL) {
@@ -5442,7 +5378,7 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[id_section - PDM_BLOCK_ID_BLOCK_POLY2D];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity != NULL) {
@@ -5458,7 +5394,7 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[id_section - PDM_BLOCK_ID_BLOCK_POLY3D];
 
-    CHECK_BLOCK (block)
+    CHECK_SECTION(block)
     CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity != NULL) {
@@ -5471,4 +5407,236 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
   }
 
   return elt_to_entity;
+}
+
+void
+PDM_part_mesh_nodal_elmts_group_to_tag
+(
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  PDM_bool_t                     allow_multiple,
+  int                         ***out_tag_idx,
+  int                         ***out_tag
+)
+{
+  CHECK_PMNE(pmne)
+
+  int n_part = pmne->n_part;
+
+  int **tag     = NULL;
+  int **tag_idx = NULL;
+  PDM_malloc(tag    , n_part, int *);
+  PDM_malloc(tag_idx, n_part, int *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
+
+    int *tag_n = PDM_array_zeros_int(n_elmt);
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+
+      int          n_group_elmt   = 0;
+      int         *group_elmt     = 0;
+      PDM_g_num_t *group_ln_to_gn = 0;
+      PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                          i_part,
+                                          i_group,
+                                          &n_group_elmt,
+                                          &group_elmt,
+                                          &group_ln_to_gn,
+                                          PDM_OWNERSHIP_KEEP);
+
+      for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
+        int i_elt = group_elmt[idx_group]-1;
+        tag_n[i_elt]++;
+      }
+    }
+
+    if(allow_multiple == PDM_FALSE) {
+
+      int n_elmt_tag                  = 0;
+      int elt_group_is_multiple       = 0;
+      int n_elmt_with_different_group = 0;
+      for(int i = 0; i < n_elmt; ++i) {
+        if(tag_n[i] == 1) {
+          n_elmt_tag += 1;
+        } else if(tag_n[i] > 1) {
+          elt_group_is_multiple = 1;
+          n_elmt_with_different_group++;
+        }
+      }
+
+      if(n_elmt_tag != n_elmt) {
+        PDM_error(__FILE__, __LINE__, 0,
+                  "PDM_part_mesh_nodal_elmts_group_to_tag - All elements from PDM_part_mesh_nodal_elmts are not in groups for dimension %d (n_elmt_tag = %d, n_elmt = %d)\n",
+                  pmne->mesh_dimension, n_elmt_tag, n_elmt);
+      }
+
+      if(elt_group_is_multiple == 1) {
+        PDM_error(__FILE__, __LINE__, 0,
+                  "PDM_part_mesh_nodal_elmts_group_to_tag - Several elements are more than one group associated (n_elmt_with_different_group=%i, n_elmt = %d) \n",
+                  n_elmt_with_different_group, n_elmt);
+      }
+    }
+
+    PDM_malloc(tag_idx[i_part], n_elmt+1, int);
+    int *_tag_idx = tag_idx[i_part];
+
+    _tag_idx[0] = 0;
+    for(int i = 0; i < n_elmt; ++i) {
+      _tag_idx[i+1] = _tag_idx[i] + tag_n[i];
+      tag_n[i] = 0;
+    }
+
+    PDM_malloc(tag[i_part], _tag_idx[n_elmt], int);
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+
+      int          n_group_elmt   = 0;
+      int         *group_elmt     = 0;
+      PDM_g_num_t *group_ln_to_gn = 0;
+      PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                          i_part,
+                                          i_group,
+                                          &n_group_elmt,
+                                          &group_elmt,
+                                          &group_ln_to_gn,
+                                          PDM_OWNERSHIP_KEEP);
+
+      for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
+        int i_elt = group_elmt[idx_group]-1;
+        int idx_write = _tag_idx[i_elt] + tag_n[i_elt]++;
+        tag[i_part][idx_write] = i_group;
+      }
+    }
+
+    free(tag_n);
+
+  }
+
+  if(allow_multiple == PDM_TRUE) {
+    *out_tag_idx = tag_idx;
+  } else {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(tag_idx[i_part]);
+    }
+    PDM_free(tag_idx);
+  }
+  *out_tag = tag;
+}
+
+
+void
+PDM_part_mesh_nodal_elmts_tag_to_group
+(
+  PDM_part_mesh_nodal_elmts_t     *pmne,
+  int                              n_group,
+  int                            **tag_idx,
+  int                            **tag
+)
+{
+  CHECK_PMNE(pmne)
+
+  int n_part = pmne->n_part;
+
+  int allow_multiple = 0;
+  if(tag_idx != NULL) {
+    allow_multiple = 1;
+  }
+
+  /*
+   * Auto-detect the number of group
+   */
+  if(n_group < 0) {
+    int max_tag = -1;
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+
+      if(allow_multiple == 0) {
+        for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+          max_tag = PDM_MAX(max_tag, tag[i_part][i_elt]);
+        }
+      } else {
+        for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+          for(int idx = tag_idx[i_part][i_elt]; idx < tag_idx[i_part][i_elt+1]; ++idx) {
+            max_tag = PDM_MAX(max_tag, tag[i_part][idx]);
+          }
+        }
+      }
+    }
+    int gmax_tag = -1;
+    PDM_MPI_Allreduce(&max_tag, &gmax_tag, 1, PDM_MPI_INT, PDM_MPI_MAX, pmne->comm);
+
+    n_group = gmax_tag+1;
+  }
+
+  /*
+   * Set n_group in structure (not yet done normaly)
+   */
+  PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group);
+
+  /*
+   * Loop over part and fill structure
+   */
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    int* group_elt_n = PDM_array_zeros_int(n_group);
+
+    if(allow_multiple == 0) {
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        group_elt_n[tag[i_part][i_elt]]++;
+      }
+    } else {
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        for(int idx = tag_idx[i_part][i_elt]; idx < tag_idx[i_part][i_elt+1]; ++idx) {
+          group_elt_n[tag[i_part][idx]]++;
+        }
+      }
+    }
+
+    int **group_elmt = NULL;
+    PDM_malloc(group_elmt, n_group, int *);
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      PDM_malloc(group_elmt[i_group], group_elt_n[i_group], int);
+      group_elt_n[i_group] = 0;
+    }
+
+    if(allow_multiple == 0) {
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        int i_group = tag[i_part][i_elt];
+        group_elmt[i_group][group_elt_n[i_group]++] = i_elt+1;
+      }
+    } else {
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        for(int idx = tag_idx[i_part][i_elt]; idx < tag_idx[i_part][i_elt+1]; ++idx) {
+          int i_group = tag[i_part][idx];
+          group_elmt[i_group][group_elt_n[i_group]++] = i_elt+1;
+        }
+      }
+    }
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      PDM_part_mesh_nodal_elmts_group_set(pmne,
+                                          i_part,
+                                          i_group,
+                                          group_elt_n[i_group],
+                                          group_elmt [i_group],
+                                          NULL,
+                                          PDM_OWNERSHIP_KEEP);
+    }
+
+    PDM_free(group_elt_n);
+    PDM_free(group_elmt);
+  }
+}
+
+int
+PDM_part_mesh_nodal_elmts_n_part_get
+(
+  PDM_part_mesh_nodal_elmts_t     *pmne
+)
+{
+  CHECK_PMNE(pmne)
+  return pmne->n_part;
 }

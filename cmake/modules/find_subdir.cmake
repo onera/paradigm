@@ -1,0 +1,16 @@
+
+# Fonction pour lister récursivement tous les sous-dossiers (chemins absolus)
+function(get_all_subdirectories result dir)
+    file(GLOB children RELATIVE "${dir}" "${dir}/*")
+    set(dirs "")
+    foreach(child ${children})
+        set(child_path "${dir}/${child}")
+        if(IS_DIRECTORY "${child_path}")
+            list(APPEND dirs "${child_path}")
+            get_all_subdirectories(subdirs "${child_path}")
+            list(APPEND dirs ${subdirs})
+        endif()
+    endforeach()
+    set(${result} "${dirs}" PARENT_SCOPE)
+endfunction()
+

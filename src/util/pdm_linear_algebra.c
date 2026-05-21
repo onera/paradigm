@@ -30,6 +30,8 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <assert.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -71,6 +73,35 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
+
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+extern void dsyev_(const char* jobz, const char* uplo, int* n, double* a, int* lda,
+                   double* w, double* work, int* lwork, int* info );
+
+extern void dgeev_(const char*jobvl, const char*jobvr,
+                   int* n, double* a, int* lda,
+                   double* wr, double* wi,
+                   double* vl, int* ldvl,
+                   double* vr, int* ldvr,
+                   double* work, int* lwork, int* info);
+extern int dgetrf_(int *m, int *n, double *a, int *da, int *ipiv, int *info);
+extern int dgetri_(int *m, double *a, int *lda, int *ipiv, double *work, int *lwork, int *info);
+
+extern void dsygv_(int        *ITYPE,
+                   const char *JOBZ,
+                   const char *UPLO,
+                   int        *N,
+                   double     *A,
+                   int        *LDA,
+                   double     *B,
+                   int        *LDB,
+                   double     *W,
+                   double     *WORK,
+                   int        *LWORK,
+                   int        *INFO);
+// M,NL,locmco1,LDA,IPIV,INFO)
+#endif
+
 
 // calculates sqrt( a^2 + b^2 ) with decent precision
 static double pythag(double a, double b) {
@@ -169,6 +200,8 @@ static void svbksb
  *
  ************************************************/
 
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+#else
 /*
  * Robustly compute a right-handed orthonormal set {u, v, w}
  * The vector w is assumed to be unit-length.
@@ -176,8 +209,8 @@ static void svbksb
 static void _compute_orthogonal_complement
 (
  const double *w,
- double       *u,
- double       *v
+       double *u,
+       double *v
  )
 {
   if (PDM_ABS(w[0]) > PDM_ABS(w[1])) {
@@ -197,7 +230,6 @@ static void _compute_orthogonal_complement
 
   PDM_CROSS_PRODUCT (v, w, u);
 }
-
 
 /*
  * Compute a unit-length eigenvector for eigenvalue val0
@@ -331,7 +363,7 @@ static void _compute_eigvec1
   }
 
 }
-
+#endif
 
 /*=============================================================================
  * Public function definitions
@@ -750,17 +782,95 @@ PDM_linear_algebra_linsolve_gauss
 
 
 
-PDM_GCC_SUPPRESS_WARNING_POP
 
 
 void
-PDM_linear_algebra_eigv_3x3_sym
+PDM_linear_algebra_eig_sym2
 (
- double a[6],
- double val[3],
- double vec[9]
- )
+  double a  [3],
+  double val[2],
+  double vec[4]
+)
 {
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+  int info = 0;
+
+  double M[4] = {a[0], a[1],
+                 a[1], a[2]};
+  int n = 2;
+  int lwork = 3*n - 1;
+  double work[5];
+
+  dsyev_("V",
+         "U",
+         &n,
+         M,
+         &n,
+         val,
+         work,
+         &lwork,
+         &info);
+
+  if (info != 0) {
+    printf("!! a = [%f %f %f] info != 0\n", a[0], a[1], a[2]);
+  }
+  assert(info == 0);
+
+  if (vec != NULL) {
+    memcpy(vec, M, sizeof(double) * 4);
+  }
+#else
+  PDM_UNUSED(a);
+  PDM_UNUSED(val);
+  PDM_UNUSED(vec);
+  PDM_error(__FILE__, __LINE__, 0, "PDM_linear_algebra_eig_sym2 needs LAPACK\n");
+#endif
+}
+
+
+PDM_GCC_SUPPRESS_WARNING_POP
+
+void
+PDM_linear_algebra_eig_sym3
+(
+  double a  [6],
+  double val[3],
+  double vec[9]
+)
+{
+
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+  int info = 0;
+
+  double M[9] = {a[0], a[1], a[2],
+                 a[1], a[3], a[4],
+                 a[2], a[4], a[5]};
+  int n = 3;
+  int lwork = 3*n - 1;
+  double work[8];
+
+  // printf("!! a (Avant) = [%f %f %f %f %f %f] info != 0\n", a[0], a[1], a[2], m[3], m[4], m[5]);
+  dsyev_("V",
+         "U",
+         &n,
+         M,
+         &n,
+         val,
+         work,
+         &lwork,
+         &info);
+
+  if (info != 0) {
+    printf("!! a = [%f %f %f %f %f %f] info != 0\n", a[0], a[1], a[2], a[3], a[4], a[5]);
+  }
+  assert(info == 0);
+
+  if (vec != NULL) {
+    memcpy (vec, M, sizeof(double) * 9);
+  }
+
+#else
+
  /*
   * Precondition the matrix by factoring out the maximum absolute
   * value of the components. This guards against floating-point
@@ -889,8 +999,80 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
     }
   }
 PDM_GCC_SUPPRESS_WARNING_POP
+
+#endif // end if lapack
+
+  if (0) {
+    double b[6];
+    PDM_sym_tensor_from_eig3(val, vec, b);
+    printf("b: %f %f %f %f %f %f\n", b[0], b[1], b[2], b[3], b[4], b[5]);
+    printf("check: %f %f %f %f %f %f\n",
+          b[0] - a[0], b[1] - a[1], b[2] - a[2],
+          b[3] - a[3], b[4] - a[4], b[5] - a[5]);
+  }
 }
 
+
+extern inline void
+PDM_sym_tensor_from_eig2
+(
+  double *eig_val,
+  double *eig_vec,
+  double *a
+)
+{
+  a[0] =
+    eig_val[0]*eig_vec[0]*eig_vec[0] +
+    eig_val[1]*eig_vec[2]*eig_vec[2];
+
+  a[1] =
+    eig_val[0]*eig_vec[0]*eig_vec[1] +
+    eig_val[1]*eig_vec[2]*eig_vec[3];
+
+  a[2] =
+    eig_val[0]*eig_vec[1]*eig_vec[1] +
+    eig_val[1]*eig_vec[3]*eig_vec[3];
+}
+
+
+extern inline void
+PDM_sym_tensor_from_eig3
+(
+  double *eig_val,
+  double *eig_vec,
+  double *a
+)
+{
+  a[0] =
+    eig_val[0]*eig_vec[0]*eig_vec[0] +
+    eig_val[1]*eig_vec[3]*eig_vec[3] +
+    eig_val[2]*eig_vec[6]*eig_vec[6];
+
+  a[1] =
+    eig_val[0]*eig_vec[0]*eig_vec[1] +
+    eig_val[1]*eig_vec[3]*eig_vec[4] +
+    eig_val[2]*eig_vec[6]*eig_vec[7];
+
+  a[2] =
+    eig_val[0]*eig_vec[0]*eig_vec[2] +
+    eig_val[1]*eig_vec[3]*eig_vec[5] +
+    eig_val[2]*eig_vec[6]*eig_vec[8];
+
+  a[3] =
+    eig_val[0]*eig_vec[1]*eig_vec[1] +
+    eig_val[1]*eig_vec[4]*eig_vec[4] +
+    eig_val[2]*eig_vec[7]*eig_vec[7];
+
+  a[4] =
+    eig_val[0]*eig_vec[1]*eig_vec[2] +
+    eig_val[1]*eig_vec[4]*eig_vec[5] +
+    eig_val[2]*eig_vec[7]*eig_vec[8];
+
+  a[5] =
+    eig_val[0]*eig_vec[2]*eig_vec[2] +
+    eig_val[1]*eig_vec[5]*eig_vec[5] +
+    eig_val[2]*eig_vec[8]*eig_vec[8];
+}
 
 
 

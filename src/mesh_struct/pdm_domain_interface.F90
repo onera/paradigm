@@ -1,4 +1,4 @@
-﻿!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------
 ! This file is part of the ParaDiGM library.
 !
 ! Copyright (C) 2022  ONERA
@@ -69,7 +69,7 @@ interface
     integer(c_int), value :: n_domain
     integer(c_int), value :: mult_intrf
     integer(c_int), value :: owner
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     type(c_ptr)           :: dom_intrf
 
   end function PDM_domain_interface_create_c
@@ -177,7 +177,7 @@ contains
     integer(c_int)      :: c_n_dom     !< C-style number of domains
     integer(c_int)      :: c_mult_int  !< C-style type of interface
     integer(c_int)      :: c_owner     !< C-style ownership
-    integer(c_int)      :: c_comm      !< C-style MPI communicator
+    type(c_ptr)         :: c_comm      !< C-style MPI communicator
 
     c_n_intrf  = n_interface
     c_n_dom    = n_domain
