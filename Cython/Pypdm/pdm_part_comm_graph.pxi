@@ -108,7 +108,7 @@ cdef class PartCommGraph:
       self.pcg =  PDM_part_comm_graph_create(_n_part,
                                              _pn_entity_graph,
                                     <int **> _pentity_graph,
-                                             PDM_OWNERSHIP_USER,
+                                             PDM_OWNERSHIP_BAD_VALUE,
                                              PDMC)
     else:
       _pentity_nuplet = np_list_to_int_pointers(pentity_nuplet)
@@ -121,10 +121,10 @@ cdef class PartCommGraph:
       self.pcg = PDM_part_comm_graph_with_nuplet_create(_n_part,
                                                         _pn_entity_graph,
                                                         _pentity_graph,
-                                                        PDM_OWNERSHIP_USER,
+                                                        PDM_OWNERSHIP_BAD_VALUE,
                                                         _nuplet_size,
                                                         _pentity_nuplet,
-                                                        PDM_OWNERSHIP_USER,
+                                                        PDM_OWNERSHIP_BAD_VALUE,
                                            <PDM_bool_t> is_signed,
                                                         PDMC)
       free(_pentity_nuplet)
@@ -276,8 +276,9 @@ cdef class PartCommGraph:
                                                          i_part,
                                                          &entity_graph,
                                                          PDM_OWNERSHIP_USER)
-
-    return create_numpy_i(entity_graph, 4 * n_entity)
+    # np_view = create_numpy_i(entity_graph, 4 * n_entity, flag_owndata=False)
+    np_view = create_numpy_i(entity_graph, 4 * n_entity)
+    return np_view.copy() #create_numpy_i(entity_graph, 4 * n_entity)
 
   def all_reduce(self,
                  int    stride,
