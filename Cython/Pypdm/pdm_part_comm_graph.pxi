@@ -93,7 +93,7 @@ cdef class PartCommGraph:
     """
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
     cdef PDM_MPI_Comm PDMC = py_comm_to_pdm_comm(comm)
-    self.keep_alive = []
+    self.keep_alive = {}
 
     cdef int **_pentity_graph  = NULL
     cdef int **_pentity_nuplet = NULL
@@ -101,30 +101,31 @@ cdef class PartCommGraph:
     _n_part = len(pentity_graph)
     cdef int* _pn_entity_graph = list_to_int_pointer([g.size // 4 for g in pentity_graph])
     _pentity_graph = np_list_to_int_pointers(pentity_graph)
-    self.keep_alive.append(pentity_graph)
+    for i_part, graph in enumerate(pentity_graph):
+      self.keep_alive[f"graph_{i_part}"] = graph
 
     _nuplet_size = 0
     if pentity_nuplet is None:
       self.pcg =  PDM_part_comm_graph_create(_n_part,
                                              _pn_entity_graph,
                                     <int **> _pentity_graph,
-                                             PDM_OWNERSHIP_BAD_VALUE,
+                                             PDM_OWNERSHIP_USER,
                                              PDMC)
     else:
       _pentity_nuplet = np_list_to_int_pointers(pentity_nuplet)
-      self.keep_alive.append(pentity_nuplet)
+      for i_part, nuplet in enumerate(pentity_nuplet):
+        self.keep_alive[f"nuplet_{i_part}"] = nuplet
       for i_part in range(_n_part):
         if _pn_entity_graph[i_part]!=0:
           _nuplet_size = pentity_nuplet[i_part].size // _pn_entity_graph[i_part]
 
-
       self.pcg = PDM_part_comm_graph_with_nuplet_create(_n_part,
                                                         _pn_entity_graph,
                                                         _pentity_graph,
-                                                        PDM_OWNERSHIP_BAD_VALUE,
+                                                        PDM_OWNERSHIP_USER,
                                                         _nuplet_size,
                                                         _pentity_nuplet,
-                                                        PDM_OWNERSHIP_BAD_VALUE,
+                                                        PDM_OWNERSHIP_USER,
                                            <PDM_bool_t> is_signed,
                                                         PDMC)
       free(_pentity_nuplet)
@@ -134,6 +135,7 @@ cdef class PartCommGraph:
   @staticmethod
   cdef from_ptr(PDM_part_comm_graph_t* ptr):
     cdef PartCommGraph obj = PartCommGraph.__new__(PartCommGraph)
+    obj.keep_alive = {}
     obj.pcg = ptr
     return obj
 
@@ -270,15 +272,16 @@ cdef class PartCommGraph:
           - Connected entity's local ID in the connected partition (1-based)
 
     """
+    cdef n_entity = 0
     cdef int *entity_graph = NULL
+    if f"graph_{i_part}" not in self.keep_alive:
+      n_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
+                                                      i_part,
+                                                      &entity_graph,
+                                                      PDM_OWNERSHIP_USER)
+      self.keep_alive[f"graph_{i_part}"] = create_numpy_i(entity_graph, 4 * n_entity)
 
-    cdef n_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
-                                                         i_part,
-                                                         &entity_graph,
-                                                         PDM_OWNERSHIP_USER)
-    # np_view = create_numpy_i(entity_graph, 4 * n_entity, flag_owndata=False)
-    np_view = create_numpy_i(entity_graph, 4 * n_entity)
-    return np_view.copy() #create_numpy_i(entity_graph, 4 * n_entity)
+    return self.keep_alive[f"graph_{i_part}"]
 
   def all_reduce(self,
                  int    stride,
@@ -352,20 +355,21 @@ cdef class PartCommGraph:
     cdef int  n_entity
     cdef int  size_of_nuplet
 
-    n_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
-                                                    i_part,
-                                                    &entity_graph,
-                                                    PDM_OWNERSHIP_BAD_VALUE)
-    nuplet_size = PDM_part_comm_graph_entity_nuplet_get(self.pcg,
-                                                        i_part,
-                                                        &entity_nuplet,
-                                                        PDM_OWNERSHIP_USER)
+    if f"nuplet_{i_part}" not in self.keep_alive:
+      n_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
+                                                      i_part,
+                                                      &entity_graph,
+                                                      PDM_OWNERSHIP_BAD_VALUE)
+      nuplet_size = PDM_part_comm_graph_entity_nuplet_get(self.pcg,
+                                                          i_part,
+                                                          &entity_nuplet,
+                                                          PDM_OWNERSHIP_USER)
 
-    np_entity_nuplet = None
-    if (entity_nuplet != NULL):
-      np_entity_nuplet = create_numpy_i(entity_nuplet, n_entity * nuplet_size)
+      self.keep_alive[f"nuplet_{i_part}"] = None
+      if (entity_nuplet != NULL):
+        self.keep_alive[f"nuplet_{i_part}"] = create_numpy_i(entity_nuplet, n_entity * nuplet_size)
 
-    return np_entity_nuplet
+    return self.keep_alive[f"nuplet_{i_part}"]
 
 
   def entity1_to_entity2(self,
