@@ -149,4 +149,4 @@ Issues can be reported directly in the [Issues](https://gitlab.onera.net/numeric
 
 ## Copyright ##
 
-Copyright 2025, ONERA The French Aerospace Lab
+Copyright 2026, ONERA The French Aerospace Lab
