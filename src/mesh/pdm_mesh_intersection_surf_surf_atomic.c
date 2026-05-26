@@ -133,7 +133,7 @@ _clip_segment
 }
 
 
-#define ONE_THRID 0.3333333333333333
+#define ONE_THIRD 0.3333333333333333
 static inline void
 _geom_comp
 (
@@ -144,8 +144,8 @@ _geom_comp
 )
 {
   *area = uv0[0]*uv1[1] - uv0[1]*uv1[0];
-  center[0] = ONE_THRID*(uv0[0] + uv1[0]);
-  center[1] = ONE_THRID*(uv0[1] + uv1[1]);
+  center[0] = ONE_THIRD*(uv0[0] + uv1[0]);
+  center[1] = ONE_THIRD*(uv0[1] + uv1[1]);
 }
 #undef ONE_THIRD
 
