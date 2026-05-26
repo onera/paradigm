@@ -4968,11 +4968,11 @@ PDM_part_mesh_nodal_elmts_n_group_set
       PDM_malloc(pmne->ownership_group         [i_part], n_group, PDM_ownership_t  );
       PDM_malloc(pmne->ownership_group_ln_to_gn[i_part], n_group, PDM_ownership_t  );
     } else {
-      PDM_realloc(pmne->n_group_elmt            [i_part], pmne->n_group_elmt   [i_part], n_group, int              );
-      PDM_realloc(pmne->group_elmt              [i_part], pmne->group_elmt     [i_part], n_group, int             *);
-      PDM_realloc(pmne->group_ln_to_gn          [i_part], pmne->group_ln_to_gn [i_part], n_group, PDM_g_num_t     *);
-      PDM_realloc(pmne->ownership_group         [i_part], pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
-      PDM_realloc(pmne->ownership_group_ln_to_gn[i_part], pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
+      PDM_realloc(pmne->n_group_elmt            [i_part], pmne->n_group_elmt            [i_part], n_group, int              );
+      PDM_realloc(pmne->group_elmt              [i_part], pmne->group_elmt              [i_part], n_group, int             *);
+      PDM_realloc(pmne->group_ln_to_gn          [i_part], pmne->group_ln_to_gn          [i_part], n_group, PDM_g_num_t     *);
+      PDM_realloc(pmne->ownership_group         [i_part], pmne->ownership_group         [i_part], n_group, PDM_ownership_t  );
+      PDM_realloc(pmne->ownership_group_ln_to_gn[i_part], pmne->ownership_group_ln_to_gn[i_part], n_group, PDM_ownership_t  );
     }
 
     for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
