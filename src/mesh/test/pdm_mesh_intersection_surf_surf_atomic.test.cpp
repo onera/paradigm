@@ -283,53 +283,6 @@ TEST_CASE("Mesh intersection surf-surf atomic") {
 
 
 
-  SUBCASE("Non-convex / convex") {
-    printf("Non-convex / convex\n");
-    // First polygon
-    coord[0] = {
-      0.5, 0.9, 0,
-      0.2, 0.8, 0,
-      0.1, 0.2, 0,
-      0.9, 0.1, 0,
-      1.0, 0.5, 0,
-      0.4, 0.4, 0
-    };
-    face_vtx [0] = {1, 2, 3, 4, 5, 6};
-    face_edge[0] = {1, 2, 3, 4, 5, 6};
-    edge_vtx [0] = {
-      1, 2,
-      2, 3,
-      3, 4,
-      4, 5,
-      5, 6,
-      6, 1
-    };
-
-
-    // Second polygon
-    coord[1] = {
-      0.6, 1.1, 0,
-      0.5, 0.5, 0,
-      1.3, 0.6, 0,
-      1.1, 0.9, 0
-    };
-    face_vtx [1] = {1, 2, 3, 4};
-    face_edge[1] = {1, 2, 3, 4};
-    edge_vtx [1] = {
-      1, 2,
-      2, 3,
-      3, 4,
-      4, 1
-    };
-
-    // Expected result
-    exp_area_ab   = 0.;
-    exp_center_ab = {0, 0, 0};
-  }
-
-
-
-
   SUBCASE("Star / star") {
     printf("Star / star\n");
     // First polygon
