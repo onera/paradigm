@@ -636,7 +636,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
       int _id_section = id_section_in_geom_kind - PDM_BLOCK_ID_BLOCK_STD;
       PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
       block->_numabs[i_part] = PDM_gnum_get(gen_gnum, i_part);
-
+      block->numabs_owner = PDM_OWNERSHIP_KEEP;
       PDM_free(section_elmt_ln_to_gn[i_part]);
     }
     PDM_free(section_elmt_ln_to_gn);
@@ -667,7 +667,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
                                           &n_elmt_group,
                                           &group_elmt,
                                           &group_ln_to_gn[i_part],
-                                          PDM_OWNERSHIP_KEEP);
+                                          PDM_OWNERSHIP_BAD_VALUE);
       if(group_ln_to_gn[i_part] != NULL) {
         PDM_free(group_ln_to_gn[i_part]);
       }
@@ -687,7 +687,8 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
     PDM_gnum_compute(gen_gnum_group);
     for (int i_part=0; i_part<n_part; ++i_part) {
       PDM_free(group_ln_to_gn[i_part]);
-      pmne->group_ln_to_gn[i_part][i_group] = PDM_gnum_get(gen_gnum_group, i_part);
+      pmne->group_ln_to_gn          [i_part][i_group] = PDM_gnum_get(gen_gnum_group, i_part);
+      pmne->ownership_group_ln_to_gn[i_part][i_group] = PDM_OWNERSHIP_KEEP;
     } // end loop on partitions
     PDM_free(group_ln_to_gn);
 
