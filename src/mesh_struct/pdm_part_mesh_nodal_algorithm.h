@@ -69,10 +69,10 @@ PDM_part_mesh_nodal_gnum_vtx_compute_from_part_comm_graph
 
 /**
  *
- * \brief Compute internal part_comm_graph from part_mesh_nodal entity global ids.
+ * \brief Compute global ids for ``geom_kind`` entities from related part_comm_graph.
  *
- * \param [in]   pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]   geom_kind   Geometry kind (see \ref PDM_geometry_kind_t )
+ * \param [in] pmn       Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in] geom_kind Geometry kind (see \ref PDM_geometry_kind_t )
  *
  */
 void

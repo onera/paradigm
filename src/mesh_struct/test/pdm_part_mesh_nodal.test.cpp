@@ -112,7 +112,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts] Constructor",1) {
 
 
 MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner", 2) {
-  
+
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
@@ -135,12 +135,12 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
                                                           1, 1, 1, 1, 0, 1, 1, 0, 0, 0},
                                                          {0, 0, 1, 0, 1, 0, 1, 1, 1, 0,
                                                           1, 1, 0, 0, 1, 1, 0, 1, 1, 1}};
-  std::vector<std::vector<int>> expected_group_entity = {{  4,  6, -1, 2, -1,  8, -1, -1, 10,  1, 
+  std::vector<std::vector<int>> expected_group_entity = {{  4,  6, -1, 2, -1,  8, -1, -1, 10,  1,
                                                            16, 12,  7, 3, -1, 18,  9, -1, -1, -1},
                                                          {-1, -1, 13, -1, 15, -1, 11, 17,  1, -1,
                                                            7,  3, -1, -1, 10,  9, -1, 16, 12, 18}};
 
-  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL; 
+  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL;
   pmne_corner  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_CORNER);
   int n_corner = PDM_part_mesh_nodal_elmts_n_group_get(pmne_corner);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_corner);
@@ -170,7 +170,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
 
 
 MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge", 2) {
-  
+
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
@@ -194,7 +194,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
   std::vector<std::vector<int>> expected_group_entity = {{ 2,  4, -1,  1, -1,  5, -1, -1,  3, -1, -1,  6},
                                                          {-1, -1,  4, -1,  5, -1,  3,  6, -1,  2,  1, -1}};
 
-  PDM_part_mesh_nodal_elmts_t *pmne_ridge = NULL; 
+  PDM_part_mesh_nodal_elmts_t *pmne_ridge = NULL;
   pmne_ridge  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_RIDGE);
   int n_ridge = PDM_part_mesh_nodal_elmts_n_group_get(pmne_ridge);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_ridge);
@@ -224,7 +224,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
 }
 
 MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 2) {
-  
+
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
@@ -248,7 +248,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 
   std::vector<std::vector<int>> expected_group_entity = {{ 1,  3,  7,  9, -1, -1, -1, -1},
                                                          {-1, -1, -1, -1,  10, 12, 16, 18}};
 
-  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL; 
+  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL;
   pmne_corner   = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_CORNER);
   int n_corner  = PDM_part_mesh_nodal_elmts_n_group_get(pmne_corner);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_corner);
