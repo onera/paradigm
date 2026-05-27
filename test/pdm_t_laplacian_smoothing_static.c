@@ -316,7 +316,7 @@ main
   }
 
   const char    *vtx_field_name[] = {"field"};
-  const double **vtx_field     [] = {(const double **) pvtx_field};
+  const double **vtx_field     [] = {(const double **) (void *) pvtx_field};
 
   if (visu) {
     PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,

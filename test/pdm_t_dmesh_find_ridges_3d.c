@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
                                           vtx_distrib,
                                           dvtx_coord,
                                           &pn_extract_vtx,
-                   (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
+            (const PDM_g_num_t **)(void*) &pextract_vtx_ln_to_gn,
                                           &tmp_pextract_vtx_coord);
     double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
     PDM_free(tmp_pextract_vtx_coord);
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
                                     dgroup_edge,
                                     1,
                                     &dn_extract_edge,
-            (const PDM_g_num_t **)  &ridge_ln_to_gn,
+    (const PDM_g_num_t **)(void *)  &ridge_ln_to_gn,
                                     &tmp_pgroup_ridge_idx,
                                     &tmp_pgroup_ridge,
                                     &tmp_pgroup_ln_to_gn);

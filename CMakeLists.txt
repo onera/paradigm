@@ -71,6 +71,7 @@ option(PDM_ENABLE_Fortran_MPI_MODULE "Build with Fortran MPI module"            
 option(PDM_ENABLE_PYTHON_BINDINGS    "Build Python module"                       OFF)
 option(PDM_ENABLE_CUDA               "Build with CUDA"                           OFF)
 option(PDM_ENABLE_BLASLAPACK         "Build with BLAS/LAPACK"                    OFF)
+option(PDM_ENABLE_PEDANTIC           "Force pedantic compilation (for dev only)" OFF)
 
 option(PDM_ENABLE_TESTS              "Make CTest run the tests"                  ON )
 option(PDM_ENABLE_UNIT_TEST          "Enable unit test "                         OFF)
@@ -312,7 +313,7 @@ if (PDM_ENABLE_UNIT_TEST)
   FetchContent_Declare(
     doctest
     GIT_REPOSITORY https://github.com/doctest/doctest.git
-    GIT_TAG        v2.4.11
+    GIT_TAG        v2.5.2
   )
   FetchContent_GetProperties(doctest)
   if (NOT doctest_POPULATED)
