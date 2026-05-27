@@ -88,8 +88,6 @@ function rm_docutils_from_toctree() {
 
   Array(...lists).forEach((element) => {
 
-    // element.className = "titi"
-
     var items = Array(...element.childNodes);
 
     if (items[0].className == "reference internal") {
@@ -98,7 +96,6 @@ function rm_docutils_from_toctree() {
 
       if (children[0].className == "docutils literal notranslate") {
         element.remove()
-        // children[0].className = "tototototo"
       }
     }
 
@@ -115,9 +112,12 @@ function fix_sidebar_brand_text() {
   Array(...spans).forEach((element) => {
 
     if (element.className == "sidebar-brand-text") {
-      title   = element.textContent.split(" ") // ["ParaDiGM", version, "documentation"]
-      version = title[1]
-      element.textContent = "v" + version
+      title = element.textContent.split(" ") // ["ParaDiGM", version, "documentation"]
+      version = title.slice(1, -1).join(" ")
+      // if (title.length == 1) {
+      //   version = "v" + version
+      // }
+      element.textContent = version
     }
 
   });

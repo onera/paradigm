@@ -76,7 +76,7 @@ master_doc = 'index'
 
 # General information about the project.
 project   = 'ParaDiGM'
-copyright = '2025, ONERA The French Aerospace Lab'
+copyright = '2026, ONERA The French Aerospace Lab'
 author    = 'B. Andrieu, K. Hoogveld, B. Maugars, E. Quémerais'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -86,6 +86,10 @@ author    = 'B. Andrieu, K. Hoogveld, B. Maugars, E. Quémerais'
 # The short X.Y version.
 #version = '@PDM_VERSION_MAJOR@.@PDM_VERSION_MINOR@'
 version = '@PDM_DEF_VERSION@'
+
+if "dev" in version:
+    version = "Development version"
+
 # The full version, including alpha/beta/rc tags.
 release = '@PDM_DEF_VERSION@'
 
