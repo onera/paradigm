@@ -1,9 +1,11 @@
 ## [Development version]
 ### Added
+- PDM_mesh_intersection: Add unit tests for surface-surface intersection
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+- PDM_mesh_intersection: Fix numerical issues in surface-surface intersection
 ## [2.8.0] - 2026-05-21
 ### Added
 - PDM_isosurface:
