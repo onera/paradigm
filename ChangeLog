@@ -1,11 +1,13 @@
 ## [Development version]
 ### Added
+- PDM_mesh_intersection: Add unit tests for surface-surface intersection
 ### Changed
 - PDM_part_mesh_nodal :
   - Internal structure organized into arrays indexed by dimension to facilitate better factorization in the future
 ### Deprecated
 ### Removed
 ### Fixed
+- PDM_mesh_intersection: Fix numerical issues in surface-surface intersection
 ## [2.8.0] - 2026-05-21
 ### Added
 - PDM_isosurface:

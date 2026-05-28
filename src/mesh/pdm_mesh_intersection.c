@@ -3647,108 +3647,8 @@ const double b[3]
   ab[2] = b[2] - a[2];
 }
 
+
 static void
-_polygon_geom_properties
-(
- int     n_edge,
- int    *face_edge,
- int    *edge_vtx,
- double *vtx_coord,
- double *normal,
- double *barycenter
- )
-{
-  for (int i = 0; i < 3; i++) {
-    normal    [i] = 0;
-    barycenter[i] = 0;
-  }
-
-  for (int iedge = 0; iedge < n_edge; iedge++) {
-    int edge_id   = PDM_ABS (face_edge[iedge]) - 1;
-
-    int vtx_id0 = edge_vtx[2*edge_id  ] - 1;
-    int vtx_id1 = edge_vtx[2*edge_id+1] - 1;
-
-    for (int i = 0; i < 3; i++) {
-      barycenter[i] += vtx_coord[3*vtx_id0+i] + vtx_coord[3*vtx_id1+i];
-    }
-  }
-
-  double normalization = 1./(2. * n_edge);
-
-  for (int i = 0; i < 3; i++) {
-    barycenter[i] *= normalization;
-  }
-
-  for (int iedge = 0; iedge < n_edge; iedge++) {
-    int edge_id   = PDM_ABS (face_edge[iedge]) - 1;
-    int edge_sign = PDM_SIGN(face_edge[iedge]);
-
-    double vec[2][3];
-    for (int j = 0; j < 2; j++) {
-      int vtx_id = edge_vtx[2*edge_id+j] - 1;
-      _vector_ab(vec[j], barycenter, &vtx_coord[3*vtx_id]);
-    }
-
-    double cross[3];
-    PDM_CROSS_PRODUCT(cross, vec[0], vec[1]);
-    for (int i = 0; i < 3; i++) {
-      normal[i] += edge_sign * cross[i];
-    }
-  }
-}
-
-
-PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
-static inline void
-_clip1
-(
-       double *uc,
-       double *vc,
- const double  ud,
- const double  vd
- )
-{
-  if (*uc < 0) {
-    if (*uc == ud) {
-      *vc = 0;
-    }
-    else {
-      *vc -= (*uc)*(vd - (*vc))/(ud - (*uc));
-    }
-    *uc = 0;
-  }
-
-  if (*vc < 0) {
-    if (*vc == vd) {
-      *uc = 0;
-    }
-    else {
-      *uc -= (*vc)*(ud - (*uc))/(vd - (*vc));
-    }
-    *vc = 0;
-  }
-}
-
-static inline void
-_clip2
-(
- double *u,
- double *v
- )
-{
-  double w = (*u) + (*v);
-  if (w > 1) {
-    double iw = 1./w;
-    *u *= iw;
-    *v *= iw;
-  }
-}
-PDM_GCC_SUPPRESS_WARNING_POP
-
-
-
- static void
  _get_extracted_mesh_line
  (
   PDM_extract_part_t  *extrp,
@@ -4509,684 +4409,138 @@ static
 void
 _mesh_intersection_surf_surf
 (
- PDM_mesh_intersection_t *mi,
- int                     *a_to_b_idx,
- int                     *a_to_b
+  PDM_mesh_intersection_t *mi,
+  int                     *a_to_b_idx,
+  int                     *a_to_b
 )
 {
-  int i_rank;
-  PDM_MPI_Comm_rank(mi->comm, &i_rank);
+  double *vtx_coord   [2] = {NULL, NULL};
+  int     n_face      [2];
+  int    *face_vtx_idx[2] = {NULL, NULL};
+  int    *face_vtx    [2] = {NULL, NULL};
+  int    *face_edge   [2] = {NULL, NULL};
+  int    *edge_vtx    [2] = {NULL, NULL};
 
-  int dbg_enabled = 0;
-
-
-  int          n_vtx        [2];
-  double      *vtx_coord    [2] = {NULL, NULL};
-  int          n_face       [2];
-  int         *face_vtx_idx [2] = {NULL, NULL};
-  int         *face_vtx     [2] = {NULL, NULL};
-  int         *face_edge    [2] = {NULL, NULL};
-  int         *edge_vtx     [2] = {NULL, NULL};
-  PDM_g_num_t *face_ln_to_gn[2] = {NULL, NULL};
-
-  /* Get extract surface meshes */
-  for (int i = 0; i < 2; i++) {
-
-    n_vtx[i] = PDM_extract_part_n_entity_get(mi->extrp_mesh[i],
-                                             0,
-                                             PDM_MESH_ENTITY_VTX);
-
-    PDM_extract_part_vtx_coord_get(mi->extrp_mesh[i],
+  /* Get extracted surface meshes */
+  for (int i_mesh = 0; i_mesh < 2; i_mesh++) {
+    PDM_extract_part_vtx_coord_get(mi->extrp_mesh[i_mesh],
                                    0,
-                                   &vtx_coord[i],
-                                   PDM_OWNERSHIP_KEEP);
+                                   &vtx_coord[i_mesh],
+                                   PDM_OWNERSHIP_BAD_VALUE);
 
-    n_face[i] = mi->extrp_mesh[i]->n_target[0];
-    face_ln_to_gn[i] = mi->extrp_mesh[i]->target_gnum[0];
-
-    if (dbg_enabled) {
-      log_trace("mesh %d is nodal? %d\n", i, mi->mesh[i] == NULL);
-    }
-
-    if (mi->mesh[i] == NULL) {
+    if (mi->mesh[i_mesh] == NULL) {
+      /* Nodal mesh */
       PDM_part_mesh_nodal_t *extract_pmn = NULL;
-      PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[i],
+      PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[i_mesh],
                                            &extract_pmn,
-                                           PDM_OWNERSHIP_KEEP);
-      PDM_part_mesh_nodal_elmts_t *extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
-                                                                                                PDM_GEOMETRY_KIND_SURFACIC);
+                                           PDM_OWNERSHIP_BAD_VALUE);
 
-      int n_section = PDM_part_mesh_nodal_elmts_n_section_get(extract_pmne);
-      int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extract_pmne);
-
-      // n_face[i] = 0;
-      // for (int isection = 0; isection < n_section; isection++) {
-      //   n_face[i] += PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
-      //                                                          sections_id[isection],
-      //                                                          0);
-      // }
-
-      PDM_malloc(face_vtx_idx[i], n_face[i] + 1, int);
-      face_vtx_idx[i][0] = 0;
-
-      for (int isection = 0; isection < n_section; isection++) {
-        int id_section = sections_id[isection];
-
-        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
-                                                                id_section,
-                                                                0);
-
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
-                                                                                id_section);
-
-        assert(PDM_Mesh_nodal_elt_dim_get(t_elt) == 2);
-
-        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
-                                                                   id_section,
-                                                                   0,
-                                                                   PDM_OWNERSHIP_KEEP);
-        if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-          /* Polygonal section */
-          int *connec_idx;
-          int *connec;
-          PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
-                                                       id_section,
-                                                       0,
-                                                       &connec_idx,
-                                                       &connec,
-                                                       PDM_OWNERSHIP_KEEP);
-
-          for (int ielt = 0; ielt < n_elt; ielt++) {
-            int iface = ielt;
-            if (parent_num != NULL) {
-              iface = parent_num[ielt];
-            }
-
-            int face_vtx_n = connec_idx[ielt+1] - connec_idx[ielt];
-
-            face_vtx_idx[i][iface+1] = face_vtx_n;
-          }
-        }
-        else {
-          /* Standard section */
-          int         *connec              = NULL;
-          PDM_g_num_t *numabs              = NULL;
-          int         *_parent_num         = NULL;
-          PDM_g_num_t *parent_entity_g_num = NULL;
-          int          order               = 0;
-          const char  *ho_ordering         = NULL;
-          PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
-                                                       id_section,
-                                                       0,
-                                                       &connec,
-                                                       &numabs,
-                                                       &_parent_num,
-                                                       &parent_entity_g_num,
-                                                       &order,
-                                                       &ho_ordering,
-                                                       PDM_OWNERSHIP_KEEP);
-          assert(order == 1);
-
-          int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
-                                                        order);
-
-
-          for (int ielt = 0; ielt < n_elt; ielt++) {
-            int iface = ielt;
-            if (parent_num != NULL) {
-              iface = parent_num[ielt];
-            }
-
-            face_vtx_idx[i][iface+1] = face_vtx_n;
-          }
-        }
-
-      } // End of loop on sections
-
-      for (int iface = 0; iface < n_face[i]; iface++) {
-        face_vtx_idx[i][iface+1] += face_vtx_idx[i][iface];
-      }
-
-      /* Fill face_vtx */
-      PDM_malloc(face_vtx[i], face_vtx_idx[i][n_face[i]], int);
-      for (int isection = 0; isection < n_section; isection++) {
-        int id_section = sections_id[isection];
-
-        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
-                                                                id_section,
-                                                                0);
-
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
-                                                                                id_section);
-
-        assert(PDM_Mesh_nodal_elt_dim_get(t_elt) == 2);
-
-        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne,
-                                                                   id_section,
-                                                                   0,
-                                                                   PDM_OWNERSHIP_KEEP);
-        if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-          /* Polygonal section */
-          int *connec_idx;
-          int *connec;
-          PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
-                                                       id_section,
-                                                       0,
-                                                       &connec_idx,
-                                                       &connec,
-                                                       PDM_OWNERSHIP_KEEP);
-
-          for (int ielt = 0; ielt < n_elt; ielt++) {
-            int iface = ielt;
-            if (parent_num != NULL) {
-              iface = parent_num[ielt];
-            }
-
-            int face_vtx_n = connec_idx[ielt+1] - connec_idx[ielt];
-            for (int j = 0; j < face_vtx_n; j++) {
-              face_vtx[i][face_vtx_idx[i][iface]+j] = connec[connec_idx[ielt]+j];
-            }
-          }
-        }
-        else {
-          /* Standard section */
-          int         *connec              = NULL;
-          PDM_g_num_t *numabs              = NULL;
-          int         *_parent_num         = NULL;
-          PDM_g_num_t *parent_entity_g_num = NULL;
-          int          order               = 0;
-          const char  *ho_ordering         = NULL;
-          PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
-                                                       id_section,
-                                                       0,
-                                                       &connec,
-                                                       &numabs,
-                                                       &_parent_num,
-                                                       &parent_entity_g_num,
-                                                       &order,
-                                                       &ho_ordering,
-                                                       PDM_OWNERSHIP_KEEP);
-          assert(order == 1);
-
-          int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
-                                                        order);
-
-
-          for (int ielt = 0; ielt < n_elt; ielt++) {
-            int iface = ielt;
-            if (parent_num != NULL) {
-              iface = parent_num[ielt];
-            }
-
-            for (int j = 0; j < face_vtx_n; j++) {
-              face_vtx[i][face_vtx_idx[i][iface]+j] = connec[face_vtx_n*ielt+j];
-            }
-          }
-        }
-
-      } // End of loop on sections
+      n_face[i_mesh] = PDM_part_mesh_nodal_cell_vtx_connect_get(extract_pmn,
+                                                                PDM_GEOMETRY_KIND_SURFACIC,
+                                                                0,
+                                                                &face_vtx_idx[i_mesh],
+                                                                &face_vtx    [i_mesh]);
     }
     else {
-      PDM_extract_part_connectivity_get(mi->extrp_mesh[i],
-                                        0,
-                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                        &face_vtx[i],
-                                        &face_vtx_idx[i],
-                                        PDM_OWNERSHIP_KEEP);
-      int *_face_edge_idx = NULL;
-      PDM_extract_part_connectivity_get(mi->extrp_mesh[i],
-                                        0,
-                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                        &face_edge[i],
-                                        &_face_edge_idx,
-                                        PDM_OWNERSHIP_KEEP);
-      if (face_vtx_idx[i] == NULL) {
-        assert(_face_edge_idx != NULL);
-        face_vtx_idx[i] = _face_edge_idx;
-      }
+      /* Ngon mesh */
+      n_face[i_mesh] = PDM_extract_part_connectivity_get(mi->extrp_mesh[i_mesh],
+                                                         0,
+                                                         PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                                         &face_vtx    [i_mesh],
+                                                         &face_vtx_idx[i_mesh],
+                                                         PDM_OWNERSHIP_BAD_VALUE);
 
-      int *_edge_vtx_idx = NULL;
-      PDM_extract_part_connectivity_get(mi->extrp_mesh[i],
-                                        0,
-                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        &edge_vtx[i],
-                                        &_edge_vtx_idx,
-                                        PDM_OWNERSHIP_KEEP);
+      if (face_vtx[i_mesh] == NULL && n_face[i_mesh] > 0) {
+        PDM_extract_part_connectivity_get(mi->extrp_mesh[i_mesh],
+                                          0,
+                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                          &face_edge   [i_mesh],
+                                          &face_vtx_idx[i_mesh],
+                                          PDM_OWNERSHIP_BAD_VALUE);
 
-
-    }
-
-    if (dbg_enabled) {
-      char filename[999];
-      sprintf(filename, "mesh_intersection_surf_surf_mesh%d_rank%d.vtk", i, i_rank);
-
-      int *_face_vtx = face_vtx[i];
-      if (face_vtx[i] == NULL) {
-        PDM_compute_face_vtx_from_face_and_edge(n_face[i],
-                                                face_vtx_idx[i],
-                                                face_edge[i],
-                                                edge_vtx[i],
-                                                &_face_vtx);
-      }
-
-      PDM_vtk_write_polydata(filename,
-                             n_vtx[i],
-                             vtx_coord[i],
-                             NULL,
-                             n_face[i],
-                             face_vtx_idx[i],
-                             _face_vtx,
-                             face_ln_to_gn[i],
-                             NULL);
-
-      if (face_vtx[i] == NULL) {
-        PDM_free(_face_vtx);
+        int *edge_vtx_idx;
+        PDM_extract_part_connectivity_get(mi->extrp_mesh[i_mesh],
+                                          0,
+                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                          &edge_vtx[i_mesh],
+                                          &edge_vtx_idx,
+                                          PDM_OWNERSHIP_BAD_VALUE);
       }
     }
-  }
+  } // End loop on meshes
 
 
-  double *a_to_b_volume = NULL;
-  PDM_malloc(a_to_b_volume, a_to_b_idx[n_face[0]], double);
-
-
-  /* Compute face normals of B */
-  double *faceB_normals = NULL;
-  PDM_malloc(faceB_normals, n_face[1] * 3, double);
-  for (int faceB_id = 0; faceB_id < n_face[1]; faceB_id++) {
-    double faceB_center[3];
-    if (face_vtx[1] == NULL) {
-      _polygon_geom_properties(face_vtx_idx[1][faceB_id+1] - face_vtx_idx[1][faceB_id],
-                               face_edge[1] + face_vtx_idx[1][faceB_id],
-                               edge_vtx[1],
-                               vtx_coord[1],
-                               faceB_normals + 3*faceB_id,
-                               faceB_center);
-    }
-    else {
-      int is_degenerate = 0;
-      PDM_geom_elem_polygon_properties(1,
-                                       face_vtx_idx[1] + faceB_id,
-                                       face_vtx[1],
-                                       vtx_coord[1],
-                                       faceB_normals + 3*faceB_id,
-                                       faceB_center,
-                                       NULL,
-                                       &is_degenerate);
-      if (is_degenerate) {
-        // PDM_error()
-      }
-    }
-  }
 
   /* Main loop */
-  for (int faceA_id = 0; faceA_id < n_face[0]; faceA_id++) {
+  double *a_to_b_area = NULL;
+  PDM_malloc(a_to_b_area, a_to_b_idx[n_face[0]], double);
 
-    /* Compute faceA center and normal vector */
-    double faceA_normal[3];
-    double faceA_center[3];
+  PDM_mesh_intersection_surf_surf_polygon_t poly_a;
+  PDM_mesh_intersection_surf_surf_polygon_t poly_b;
+
+  poly_a.edge_vtx = edge_vtx[0];
+  poly_a.coord    = vtx_coord[0];
+
+  poly_b.edge_vtx = edge_vtx[1];
+  poly_b.coord    = vtx_coord[1];
+
+
+  double center_ab[3]; // TODO: store for all pairs A-B
+
+  for (int i_face_a = 0; i_face_a < n_face[0]; i_face_a++) {
+
+    poly_a.n_edge = face_vtx_idx[0][i_face_a+1] - face_vtx_idx[0][i_face_a];
     if (face_vtx[0] == NULL) {
-      _polygon_geom_properties(face_vtx_idx[0][faceA_id+1] - face_vtx_idx[0][faceA_id],
-                               face_edge[0] + face_vtx_idx[0][faceA_id],
-                               edge_vtx[0],
-                               vtx_coord[0],
-                               faceA_normal,
-                               faceA_center);
+      poly_a.face_vtx  = NULL;
+      poly_a.face_edge = &face_edge[0][face_vtx_idx[0][i_face_a]];
     }
     else {
-      int is_degenerate = 0;
-      PDM_geom_elem_polygon_properties(1,
-                                       face_vtx_idx[0] + faceA_id,
-                                       face_vtx[0],
-                                       vtx_coord[0],
-                                       faceA_normal,
-                                       faceA_center,
-                                       NULL,
-                                       &is_degenerate);
-
-      if (is_degenerate) {
-        continue;
-      }
+      poly_a.face_vtx  = &face_vtx[0][face_vtx_idx[0][i_face_a]];
+      poly_a.face_edge = NULL;
     }
 
 
-    /* Unit normal */
-    double mag = PDM_DOT_PRODUCT(faceA_normal, faceA_normal);
-    if (mag <= 0) {
-      // degenerate polygon
-      continue;
-    }
+    for (int idx_face_b = a_to_b_idx[i_face_a]; idx_face_b < a_to_b_idx[i_face_a+1]; idx_face_b++) {
 
-    double imag = 1./sqrt(mag);
-    for (int i = 0; i < 3; i++) {
-      faceA_normal[i] *= imag;
-    }
+      int i_face_b = a_to_b[idx_face_b];
 
-    int faceA_vtx_n = face_vtx_idx[0][faceA_id+1] - face_vtx_idx[0][faceA_id];
-
-
-    for (int ifaceB = a_to_b_idx[faceA_id]; ifaceB < a_to_b_idx[faceA_id+1]; ifaceB++) {
-
-      int faceB_id = a_to_b[ifaceB];
-
-      int dbg_pair = 0;// dbg_enabled && (faceA_id == 5 && faceB_id == 0);
-
-      double area = 0.;
-
-      int signAB = (int) PDM_SIGN(PDM_DOT_PRODUCT(faceA_normal, faceB_normals + 3*faceB_id));
-      if (dbg_pair) {
-        log_trace("faceA %d ("PDM_FMT_G_NUM") faceB %d ("PDM_FMT_G_NUM"), signAB = %d\n",
-                  faceA_id, face_ln_to_gn[0][faceA_id],
-                  faceB_id, face_ln_to_gn[1][faceB_id],
-                  signAB);
-        log_trace("faceA_center = %f %f %f\n", faceA_center[0], faceA_center[1], faceA_center[2]);
-        log_trace("faceA_normal = %f %f %f\n", faceA_normal[0], faceA_normal[1], faceA_normal[2]);
-      }
-
-      int faceB_vtx_n = face_vtx_idx[1][faceB_id+1] - face_vtx_idx[1][faceB_id];
-
-
-      for (int idxA = 0; idxA < faceA_vtx_n; idxA++) {
-
-        int vtxA_id0 = -1;
-        int vtxA_id1 = -1;
-
-        if (face_vtx[0] == NULL) {
-          int iedgeA = face_vtx_idx[0][faceA_id] + idxA;
-          int edgeA_id   = PDM_ABS (face_edge[0][iedgeA]) - 1;
-          int edgeA_sign = PDM_SIGN(face_edge[0][iedgeA]);
-
-          vtxA_id0 = edge_vtx[0][2*edgeA_id  ] - 1;
-          vtxA_id1 = edge_vtx[0][2*edgeA_id+1] - 1;
-          if (edgeA_sign < 0) {
-            int tmp = vtxA_id0;
-            vtxA_id0 = vtxA_id1;
-            vtxA_id1 = tmp;
-          }
-        }
-        else {
-          vtxA_id0 = face_vtx[0][face_vtx_idx[0][faceA_id] + idxA]                 - 1;
-          vtxA_id1 = face_vtx[0][face_vtx_idx[0][faceA_id] + (idxA+1)%faceA_vtx_n] - 1;
-        }
-
-        double *a = vtx_coord[0] + 3*vtxA_id0;
-        double *b = vtx_coord[0] + 3*vtxA_id1;
-
-
-        double ka[3], kb[3];
-        _vector_ab(ka, faceA_center, a);
-        _vector_ab(kb, faceA_center, b);
-
-        double kaka = PDM_DOT_PRODUCT(ka, ka);
-        double kakb = PDM_DOT_PRODUCT(ka, kb);
-        double kbkb = PDM_DOT_PRODUCT(kb, kb);
-
-        double det = kaka*kbkb - kakb*kakb;
-
-        if (det <= 0.) {
-          // points k, a and b are collinear, skip edge ab
-          continue;
-        }
-
-        double idet = 1./det;
-
-        double normal_kab[3];
-        PDM_CROSS_PRODUCT(normal_kab, ka, kb);
-
-        double area_kab = 0.5*PDM_DOT_PRODUCT(normal_kab, faceA_normal);
-
-        for (int idxB = 0; idxB < faceB_vtx_n; idxB++) {
-
-          int vtxB_id0 = -1;
-          int vtxB_id1 = -1;
-
-          if (face_vtx[1] == NULL) {
-            int iedgeB = face_vtx_idx[1][faceB_id] + idxB;
-            int edgeB_id   = PDM_ABS (face_edge[1][iedgeB]) - 1;
-            int edgeB_sign = PDM_SIGN(face_edge[1][iedgeB]);
-
-            vtxB_id0 = edge_vtx[1][2*edgeB_id  ] - 1;
-            vtxB_id1 = edge_vtx[1][2*edgeB_id+1] - 1;
-            if (edgeB_sign < 0) {
-              int tmp = vtxB_id0;
-              vtxB_id0 = vtxB_id1;
-              vtxB_id1 = tmp;
-            }
-          }
-          else {
-            vtxB_id0 = face_vtx[1][face_vtx_idx[1][faceB_id] + idxB]                 - 1;
-            vtxB_id1 = face_vtx[1][face_vtx_idx[1][faceB_id] + (idxB+1)%faceB_vtx_n] - 1;
-          }
-
-          double *c = vtx_coord[1] + 3*vtxB_id0;
-          double *d = vtx_coord[1] + 3*vtxB_id1;
-
-          /* Compute the barycentric coordinates of c and d in kab */
-          double kc[3], kd[3];
-          _vector_ab(kc, faceA_center, c);
-          _vector_ab(kd, faceA_center, d);
-
-          double kcka = PDM_DOT_PRODUCT(kc, ka);
-          double kckb = PDM_DOT_PRODUCT(kc, kb);
-          double kdka = PDM_DOT_PRODUCT(kd, ka);
-          double kdkb = PDM_DOT_PRODUCT(kd, kb);
-
-          double uc = kcka*kbkb - kckb*kakb;
-          double ud = kdka*kbkb - kdkb*kakb;
-
-          if (dbg_pair) {
-            log_trace("      uc = %f, ud = %f\n", uc, ud);
-          }
-
-          if (uc <= 0 && ud <= 0) {
-            continue;
-          }
-
-          double vc = kaka*kckb - kakb*kcka;
-          double vd = kaka*kdkb - kakb*kdka;
-
-          if (dbg_pair) {
-            log_trace("      vc = %f, vd = %f\n", vc, vd);
-          }
-
-          if (vc <= 0 && vd <= 0) {
-            continue;
-          }
-
-          PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
-          if (uc*vd - vc*ud == 0) {
-            // points k, c and d are collinear, skip edge cd
-            continue;
-          }
-          PDM_GCC_SUPPRESS_WARNING_POP
-
-          uc *= idet;
-          vc *= idet;
-          ud *= idet;
-          vd *= idet;
-
-          /* Compute intersection between ab and cd */
-          int intersect = 0;
-          double m00 = -1;
-          double m01 = uc - ud;
-          double m10 = 1;
-          double m11 = vc - vd;
-          double s;
-
-          double det2 = m00*m11 - m01*m10;
-          PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
-          if (det2 != 0) {
-            double idet2 = 1./det2;
-            double r0 = uc - 1;
-            double r1 = vc;
-            s        = (r0*m11 - r1*m01) * idet2;
-            double t = (m00*r1 - m10*r0) * idet2;
-            if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-              intersect = 1;
-            }
-          }
-          PDM_GCC_SUPPRESS_WARNING_POP
-
-          /* Clip kcd by 'quarter space' {u,v >= 0} */
-          _clip1(&uc, &vc, ud, vd);
-          _clip1(&ud, &vd, uc, vc);
-
-          /* Clip kcd by triangle kab {u+v <= 1} */
-          _clip2(&uc, &vc);
-          _clip2(&ud, &vd);
-
-          if (dbg_pair) {
-            log_trace("      final uc = %f, vc = %f\n", uc, vc);
-            log_trace("      final ud = %f, vd = %f\n", ud, vd);
-          }
-
-          /* Add contribution */
-          double f = 0;
-          if (intersect) {
-            f = (1-s)*(vd - vc) + s*(uc - ud);
-            if (dbg_pair) {
-              log_trace("    c2 = %f %f %f\n",
-                        faceA_center[0] + uc*ka[0] + vc*kb[0],
-                        faceA_center[1] + uc*ka[1] + vc*kb[1],
-                        faceA_center[2] + uc*ka[2] + vc*kb[2]);
-              log_trace("    x  = %f %f %f\n",
-                        faceA_center[0] + (1-s)*ka[0] + s*kb[0],
-                        faceA_center[1] + (1-s)*ka[1] + s*kb[1],
-                        faceA_center[2] + (1-s)*ka[2] + s*kb[2]);
-              log_trace("    d2 = %f %f %f\n",
-                        faceA_center[0] + ud*ka[0] + vd*kb[0],
-                        faceA_center[1] + ud*ka[1] + vd*kb[1],
-                        faceA_center[2] + ud*ka[2] + vd*kb[2]);
-            }
-          }
-          else {
-            f = uc*vd - vc*ud;
-            if (dbg_pair) {
-              log_trace("    c2 = %f %f %f\n",
-                        faceA_center[0] + uc*ka[0] + vc*kb[0],
-                        faceA_center[1] + uc*ka[1] + vc*kb[1],
-                        faceA_center[2] + uc*ka[2] + vc*kb[2]);
-              log_trace("    d2 = %f %f %f\n",
-                        faceA_center[0] + ud*ka[0] + vd*kb[0],
-                        faceA_center[1] + ud*ka[1] + vd*kb[1],
-                        faceA_center[2] + ud*ka[2] + vd*kb[2]);
-            }
-          }
-
-          if (dbg_pair) {
-            log_trace("    f = %f\n", f);
-            log_trace("    area += %f\n", f*area_kab);
-          }
-          area += f*area_kab;
-
-        } // End of loop on edges of current face B
-
-      } // End of loop on edges of current face A
-
-      a_to_b_volume[ifaceB] = signAB * area;
-      if (0) {//dbg_enabled) {
-        log_trace("faceA %d ("PDM_FMT_G_NUM") faceB %d ("PDM_FMT_G_NUM"), volume = %20.16f (%3.3f%)\n",
-                  faceA_id, face_ln_to_gn[0][faceA_id],
-                  faceB_id, face_ln_to_gn[1][faceB_id],
-                  a_to_b_volume[ifaceB],
-                  100*a_to_b_volume[ifaceB]*imag*2);
-      }
-
-    }  // End of loop on faces B
-
-  } // End of loop on faces A
-
-
-  if (dbg_enabled) {
-    // Crude check
-    double l_total_area_AB = 0;
-    for (int i = 0; i < a_to_b_idx[n_face[0]]; i++) {
-      l_total_area_AB += a_to_b_volume[i];
-    }
-
-    double l_total_area_A = 0;
-    int idx = 0;
-    for (int faceA_id = 0; faceA_id < n_face[0]; faceA_id++) {
-      double faceA_normal[3];
-      double faceA_center[3];
-      if (face_vtx[0] == NULL) {
-        _polygon_geom_properties(face_vtx_idx[0][faceA_id+1] - face_vtx_idx[0][faceA_id],
-                                 face_edge[0] + face_vtx_idx[0][faceA_id],
-                                 edge_vtx[0],
-                                 vtx_coord[0],
-                                 faceA_normal,
-                                 faceA_center);
+      poly_b.n_edge = face_vtx_idx[1][i_face_b+1] - face_vtx_idx[1][i_face_b];
+      if (face_vtx[1] == NULL) {
+        poly_b.face_vtx  = NULL;
+        poly_b.face_edge = &face_edge[1][face_vtx_idx[1][i_face_b]];
       }
       else {
-        int is_degenerate = 0;
-        PDM_geom_elem_polygon_properties(1,
-                                         face_vtx_idx[0] + faceA_id,
-                                         face_vtx[0],
-                                         vtx_coord[0],
-                                         faceA_normal,
-                                         faceA_center,
-                                         NULL,
-                                         &is_degenerate);
-
-        if (is_degenerate) {
-          continue;
-        }
-      }
-      double area = PDM_MODULE(faceA_normal);
-      if (face_vtx[0] == NULL) {
-        area *= 0.5;
+        poly_b.face_vtx  = &face_vtx[1][face_vtx_idx[1][i_face_b]];
+        poly_b.face_edge = NULL;
       }
 
-      if (1) {//faceA_ln_to_gn[faceA_id] == 2385) {
-        double sum = 0;
-        for (int j = a_to_b_idx[faceA_id]; j < a_to_b_idx[faceA_id+1]; j++) {
-        // for (int j = 0; j < a_to_b_n[faceA_id]; j++) {
-          log_trace(PDM_FMT_G_NUM"-"PDM_FMT_G_NUM" : %20.16f\n",
-                    face_ln_to_gn[0][faceA_id], face_ln_to_gn[1][a_to_b[idx]], a_to_b_volume[idx]);
-          sum += a_to_b_volume[idx];
-          idx++;
-        }
-        log_trace(PDM_FMT_G_NUM" : sum = %20.16f / %20.16f (%f%%)\n",
-                  face_ln_to_gn[0][faceA_id], sum,area, 100*sum/area);
-      }
+      PDM_mesh_intersection_surf_surf_atomic_compute(&poly_a,
+                                                     &poly_b,
+                                                     &a_to_b_area[idx_face_b],
+                                                     center_ab);
 
-      l_total_area_A += area;
-    }
+    } // End loop on faces B
 
-    double g_total_area_AB;
-    PDM_MPI_Allreduce(&l_total_area_AB, &g_total_area_AB, 1,
-                      PDM_MPI_DOUBLE, PDM_MPI_SUM, mi->comm);
+  } // End loop on faces A
 
-    double g_total_area_A;
-    PDM_MPI_Allreduce(&l_total_area_A, &g_total_area_A, 1,
-                      PDM_MPI_DOUBLE, PDM_MPI_SUM, mi->comm);
 
-    log_trace("total area of A inter B : local = %20.16f, global = %20.16f (%3.3f%%)\n",
-              l_total_area_AB, g_total_area_AB,
-              100*g_total_area_AB / g_total_area_A);
 
-    // cas plan, translation (0.5,0.5,0) + rotation PI/5
-    double exact = 0.0875401518835469;
-    log_trace("error : absolute = %e, relative = %e\n",
-              PDM_ABS(g_total_area_AB - exact),
-              PDM_ABS(g_total_area_AB - exact)/exact);
-
-  }
-  PDM_free(faceB_normals);
-  for (int i = 0; i < 2; i++) {
-    if (mi->mesh[i] == NULL) {
-      PDM_free(face_vtx_idx[i]);
-      PDM_free(face_vtx    [i]);
+  /* Free memory */
+  for (int i_mesh = 0; i_mesh < 2; i_mesh++) {
+    if (mi->mesh[i_mesh] == NULL) {
+      PDM_free(face_vtx_idx[i_mesh]);
+      PDM_free(face_vtx    [i_mesh]);
     }
   }
+
 
   /* Build part_to_part object */
   _build_ptp(mi,
              a_to_b_idx,
              a_to_b,
-             a_to_b_volume);
+             a_to_b_area);
 
-  PDM_free(a_to_b_volume);
+  PDM_free(a_to_b_area);
 }
 
 
