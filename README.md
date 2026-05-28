@@ -4,13 +4,13 @@
 
 **ParaDiGM** (*Parallel Distributed General Mesh*) is a library for managing meshes in a massively parallel distributed environment, with interfaces in C, Python and Fortran.
 
-## Documentation  ##
+## Documentation
 
 The user documentation is available [here](https://onera.github.io/paradigm/index.html).
 
 ONERA users can also access the documentation deployed on ONERA's [internal Gitlab pages server](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html).
 
-## Build and install ##
+## Build and Install
 
 ### Dependencies
 
@@ -134,19 +134,26 @@ Refer to [FindMPI](https://cmake.org/cmake/help/latest/module/FindMPI.html) in t
 
 </details>
 
-## Quick start
+## Quick Start
 
 Examples of use can be found in the ``test`` and ``training`` directories and in the [documentation](#documentation).
 
 
-## Issues ##
+## Questions & Bug Reporting
 
-Issues can be reported directly in the [Issues](https://gitlab.onera.net/numerics/mesh/paradigm/-/issues) section.
+If you have a question or encounter a problem, please follow the [rules of our community](COMMUNITY).
 
-## License ##
+
+## Contributing to ParaDiGM
+
+If you would like to contribute to **ParaDiGM**, make sure you follow [these instructions](CONTRIBUTING).
+
+
+## License
 
 **ParaDiGM** is available under the [LGPL3 license](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
-## Copyright ##
 
-Copyright 2025, ONERA The French Aerospace Lab
+## Copyright
+
+Copyright 2026, ONERA The French Aerospace Lab
