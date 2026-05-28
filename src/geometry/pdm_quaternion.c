@@ -44,8 +44,7 @@ static const double QUATERNION_EPS  = __DBL_EPSILON__;
  * Private function definitions
  *============================================================================*/
 
-void _PDM_quaternion_compute_squared(PDM_quaternion* qt);
-
+static
 void
 _PDM_quaternion_compute_squared
 (
@@ -132,7 +131,7 @@ PDM_quaternion_norm
   const PDM_quaternion* qt
 )
 {
-  return sqrt(qt->q_squared[0] +qt->q_squared[1] +qt->q_squared[2] +qt->q_squared[3]);
+  return sqrt(qt->q_squared[0]+qt->q_squared[1]+qt->q_squared[2]+qt->q_squared[3]);
 }
 
 void
@@ -142,7 +141,7 @@ PDM_quaternion_normalize
 )
 {
   double inv_len    = 1. / PDM_quaternion_norm(qt);
-  double inv_len_sq = 1. / (qt->q_squared[0] +qt->q_squared[1] +qt->q_squared[2] +qt->q_squared[3]);
+  double inv_len_sq = 1. / (qt->q_squared[0]+qt->q_squared[1]+qt->q_squared[2]+qt->q_squared[3]);
   qt->q[0] *= inv_len;
   qt->q[1] *= inv_len;
   qt->q[2] *= inv_len;

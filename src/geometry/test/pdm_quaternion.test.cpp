@@ -43,8 +43,15 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_conjugate", 1) {
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_norm", 1) {
     PDM_quaternion q;
+    double norm;
+    PDM_quaternion_set(3.,4.,0.,0.,&q);
+    norm = PDM_quaternion_norm(&q);
+    CHECK(PDM_ABS(norm-5.)<__DBL_EPSILON__);
     PDM_quaternion_set(0.,3.,4.,0.,&q);
-    double norm = PDM_quaternion_norm(&q);
+    norm = PDM_quaternion_norm(&q);
+    CHECK(PDM_ABS(norm-5.)<__DBL_EPSILON__);
+    PDM_quaternion_set(0.,0.,3.,4.,&q);
+    norm = PDM_quaternion_norm(&q);
     CHECK(PDM_ABS(norm-5.)<__DBL_EPSILON__);
 }
 
@@ -60,44 +67,6 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_normalize", 1) {
     PDM_quaternion_print(&q);
     CHECK(PDM_quaternion_equal(&q,1.,0.,0.,0.,EPS));
 }
-
-MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate", 1) {
-    // rotation of 120deg of axis 1,1,1 (i->k,k->j,j->i)
-    PDM_quaternion q;
-    PDM_quaternion_set(-.5,.5,.5,.5,&q);
-    double vector[9] = {1.,0.,0.,
-        0.,1.,0.,
-        0.,0.,1.,
-    };
-    double out_vect[9];
-    double exp_vect[9] = {0.,0.,1.,
-        1.,0.,0.,
-        0.,1.,0.};
-        PDM_quaternion_rotate(&q,vector,3,out_vect);
-        CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,9,EPS);
-
-    PDM_quaternion qt;
-    PDM_quaternion_set(-.5,-.5,-.5,-.5,&qt);
-    double exp_vect_2[9] = {0.,1.,0.,
-                            0.,0.,1.,
-                            1.,0.,0.};
-    PDM_quaternion_rotate(&qt,vector,3,out_vect);
-    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect_2,9,EPS);
-}
-
-MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate 2", 1) {
-    // rotation of 90 deg around y-axis
-    double sin_45 = .5*sqrt(2.);
-    PDM_quaternion q;
-    PDM_quaternion_set(sin_45,0.,sin_45,0.,&q);
-    double vector[3] = {1.,2.,3.};
-    double out_vect[3];
-    double exp_vect[3] = {3.,2.,-1.};
-    PDM_quaternion_rotate(&q,vector,1,out_vect);
-    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
-
-}
-
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_compose", 1) {
     PDM_quaternion q1;
@@ -165,6 +134,98 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_compose 2", 1) {
 
 }
 
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate", 1) {
+    // rotation of 120deg of axis 1,1,1 (i->k,k->j,j->i)
+    PDM_quaternion q;
+    PDM_quaternion_set(-.5,.5,.5,.5,&q);
+    double vector[9] = {1.,0.,0.,
+        0.,1.,0.,
+        0.,0.,1.,
+    };
+    double out_vect[9];
+    double exp_vect[9] = {0.,0.,1.,
+        1.,0.,0.,
+        0.,1.,0.};
+        PDM_quaternion_rotate(&q,vector,3,out_vect);
+        CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,9,EPS);
+
+    PDM_quaternion qt;
+    PDM_quaternion_set(-.5,-.5,-.5,-.5,&qt);
+    double exp_vect_2[9] = {0.,1.,0.,
+                            0.,0.,1.,
+                            1.,0.,0.};
+    PDM_quaternion_rotate(&qt,vector,3,out_vect);
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect_2,9,EPS);
+}
+
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate 2", 1) {
+
+    For checks: https://www.andre-gaschler.com/rotationconverter/
+    PDM_quaternion q;
+    double sin_45 = .5*sqrt(2.);
+    double vector[3] = {1.,2.,3.};
+    double out_vect[3];
+    double exp_vect[3];
+
+    // rotation of 90 deg around x-axis
+    PDM_quaternion_set(sin_45,sin_45,0.,0.,&q);
+    exp_vect[0] =  1.;
+    exp_vect[1] = -3.;
+    exp_vect[2] =  2.;
+    PDM_quaternion_rotate(&q,vector,1,out_vect);
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
+
+    // rotation of 90 deg around y-axis
+    PDM_quaternion_set(sin_45,0.,sin_45,0.,&q);
+    exp_vect[0] =  3.;
+    exp_vect[1] =  2.;
+    exp_vect[2] = -1.;
+    PDM_quaternion_rotate(&q,vector,1,out_vect);
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
+
+    // rotation of 90 deg around z-axis
+    PDM_quaternion_set(sin_45,0.,sin_45,0.,&q);
+    exp_vect[0] = -2.;
+    exp_vect[1] =  1.;
+    exp_vect[2] =  3.;
+    PDM_quaternion_rotate(&q,vector,1,out_vect);
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
+
+    // arbitrary rotation of 37 deg around a (1,2,3)-axis
+    double cos_18_5 = cos(37.*0.5*DEG2RAD);
+    double sin_18_5 = sin(37.*0.5*DEG2RAD);
+    double axis[3] = {1.,2.,3.};
+    double ax_inv_norm = 1./sqrt(axis[0]*axis[0]+axis[1]*axis[1]+axis[2]*axis[2]);
+    axis[0] *= ax_inv_norm;
+    axis[1] *= ax_inv_norm;
+    axis[2] *= ax_inv_norm;
+    PDM_quaternion_set(cos_18_5,axis[0]*sin_18_5,axis[1]*sin_18_5,axis[2]*sin_18_5,&q);
+    vector[0] = 0.;
+    vector[1] = 1.;
+    vector[2] = 0.;
+    exp_vect[0] =  0.8130186879010576;
+    exp_vect[1] = -0.45375913575998306;
+    exp_vect[2] =  0.36483319453963614;
+    PDM_quaternion_rotate(&q,vector,1,out_vect);
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
+    vector[0] = 0.;
+    vector[1] = 1.;
+    vector[2] = 0.;
+    exp_vect[0] =  0.5112918471750423;
+    exp_vect[1] =  0.856168221462352;
+    exp_vect[2] = -0.07454276336658205;
+    PDM_quaternion_rotate(&q,vector,1,out_vect);
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
+    vector[0] = 0.;
+    vector[1] = 1.;
+    vector[2] = 0.;
+    exp_vect[0] = -0.2785341274170473;
+    exp_vect[1] = 0.24714089761175967;
+    exp_vect[2] = 0.928084110731176;
+    PDM_quaternion_rotate(&q,vector,1,out_vect);
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
+}
+
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_two_vectors", 1) {
     PDM_quaternion q;
     PDM_quaternion_set(0.,0.,0.,0.,&q);
@@ -177,6 +238,114 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_two_vectors", 1) {
     double v3[3];
     PDM_quaternion_rotate(&q,v1,1,v3);
     CHECK_EQ_C_ARRAY_FLOAT(v3,v2,3,EPS);
+
+    // arbitrary test case
+    v1[0] =  1.;
+    v1[1] = -2.;
+    v1[2] =  3.;
+    v2[0] = -4.;
+    v2[1] =  5.;
+    v2[2] = -6.;
+    PDM_quaternion_from_two_vectors(v1,v2,&q);
+    double v1_inv_norm = 1./sqrt(v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2]);
+    double v2_inv_norm = 1./sqrt(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2]);
+    v1[0] *= v1_inv_norm;
+    v1[1] *= v1_inv_norm;
+    v1[2] *= v1_inv_norm;
+    v2[0] *= v2_inv_norm;
+    v2[1] *= v2_inv_norm;
+    v2[2] *= v2_inv_norm;
+    PDM_quaternion_rotate(&q,v1,1,v3);
+    CHECK_EQ_C_ARRAY_FLOAT(v3,v2,3,EPS);
+
+    // parallel vectors
+    v1[0] =  1.;
+    v1[1] = -2.;
+    v1[2] =  3.;
+    v2[0] =  2.;
+    v2[1] = -4.;
+    v2[2] =  6.;
+    PDM_quaternion_from_two_vectors(v1,v2,&q);
+    CHECK(PDM_quaternion_equal(&q,1.,0.,0.,0.,EPS)); // expects identity
+    v1_inv_norm = 1./sqrt(v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2]);
+    v2_inv_norm = 1./sqrt(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2]);
+    v1[0] *= v1_inv_norm;
+    v1[1] *= v1_inv_norm;
+    v1[2] *= v1_inv_norm;
+    v2[0] *= v2_inv_norm;
+    v2[1] *= v2_inv_norm;
+    v2[2] *= v2_inv_norm;
+    PDM_quaternion_rotate(&q,v1,1,v3);
+    CHECK_EQ_C_ARRAY_FLOAT(v3,v2,3,EPS);
+
+    // opposite vectors v1 is z axis
+    v1[0] =  0.;
+    v1[1] =  0.;
+    v1[2] = -3.;
+    v2[0] =  0.;
+    v2[1] =  0.;
+    v2[2] =  1.;
+    PDM_quaternion_from_two_vectors(v1,v2,&q);
+    CHECK(PDM_quaternion_equal(&q,0.,0.,1.,0.,EPS)); // expects 180 rotation around y-axis
+    v1_inv_norm = 1./sqrt(v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2]);
+    v2_inv_norm = 1./sqrt(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2]);
+    v1[0] *= v1_inv_norm;
+    v1[1] *= v1_inv_norm;
+    v1[2] *= v1_inv_norm;
+    v2[0] *= v2_inv_norm;
+    v2[1] *= v2_inv_norm;
+    v2[2] *= v2_inv_norm;
+    PDM_quaternion_rotate(&q,v1,1,v3);
+    CHECK_EQ_C_ARRAY_FLOAT(v3,v2,3,EPS);
+
+    // opposite vectors v1 is not z axis
+    v1[0] =  1.;
+    v1[1] =  2.;
+    v1[2] = -3.;
+    v2[0] = -2.;
+    v2[1] = -4.;
+    v2[2] =  6.;
+    PDM_quaternion_from_two_vectors(v1,v2,&q);
+    CHECK(PDM_quaternion_equal(&q,0.,0.,0.,1.,EPS)); // expects 180 rotation around z-axis
+    v1_inv_norm = 1./sqrt(v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2]);
+    v2_inv_norm = 1./sqrt(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2]);
+    v1[0] *= v1_inv_norm;
+    v1[1] *= v1_inv_norm;
+    v1[2] *= v1_inv_norm;
+    v2[0] *= v2_inv_norm;
+    v2[1] *= v2_inv_norm;
+    v2[2] *= v2_inv_norm;
+    PDM_quaternion_rotate(&q,v1,1,v3);
+    CHECK_EQ_C_ARRAY_FLOAT(v3,v2,3,EPS);
+}
+
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_aligned_rotation", 1) {
+    PDM_quaternion q;
+    double ang = 37*DEG2RAD;
+    double cos_a = cos(ang*0.5);
+    double sin_a = sin(ang*0.5);
+
+    PDM_quaternion_from_axis_aligned_rotation(ang,0,&q);
+    CHECK(PDM_quaternion_equal(&q,cos_a,sin_a,0.,0.,EPS));
+    PDM_quaternion_from_axis_aligned_rotation(ang,1,&q);
+    CHECK(PDM_quaternion_equal(&q,cos_a,0.,sin_a,0.,EPS));
+    PDM_quaternion_from_axis_aligned_rotation(ang,2,&q);
+    CHECK(PDM_quaternion_equal(&q,cos_a,0.,0.,sin_a,EPS));
+
+}
+
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_aligned_symmetry", 1) {
+    PDM_quaternion q;
+    double cos_a = 0.;
+    double sin_a = 1.;
+
+    PDM_quaternion_from_axis_aligned_symmetry(0,&q);
+    CHECK(PDM_quaternion_equal(&q,cos_a,sin_a,0.,0.,EPS));
+    PDM_quaternion_from_axis_aligned_symmetry(1,&q);
+    CHECK(PDM_quaternion_equal(&q,cos_a,0.,sin_a,0.,EPS));
+    PDM_quaternion_from_axis_aligned_symmetry(2,&q);
+    CHECK(PDM_quaternion_equal(&q,cos_a,0.,0.,sin_a,EPS));
+
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_angle", 1) {
