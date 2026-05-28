@@ -43,13 +43,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
-
 /*============================================================================
  * Definition des types locaux
  *============================================================================*/
@@ -850,6 +843,13 @@ _dump_global_hierarchical_json
 /*============================================================================
  * Definition des fonctions publiques
  *============================================================================*/
+
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
 
 PDM_timer_t*
 PDM_timer_create
