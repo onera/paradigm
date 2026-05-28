@@ -141,12 +141,12 @@ Examples of use can be found in the ``test`` and ``training`` directories and in
 
 ## Questions & Bug Reporting
 
-If you have a question or encounter a problem, please follow the [rules of our community](COMMUNITY).
+If you have a question or encounter a problem, please follow the [rules of our community](COMMUNITY.md).
 
 
 ## Contributing to ParaDiGM
 
-If you would like to contribute to **ParaDiGM**, make sure you follow [these instructions](CONTRIBUTING).
+If you would like to contribute to **ParaDiGM**, make sure you follow [these instructions](CONTRIBUTING.md).
 
 
 ## License
