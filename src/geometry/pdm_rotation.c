@@ -661,9 +661,9 @@ PDM_rotation_homogeneous_matrix_to_periodic_t_info
     PDM_quaternion_to_axis_angle(&qt,axis,&angle);
     if (PDM_ABS(angle)<ROTATION_EPS){
       // no rotation
-      rotation_angle[0] = 0.;
-      rotation_angle[1] = 0.;
-      rotation_angle[2] = 0.;
+      ang_x = 0.;
+      ang_y = 0.;
+      ang_z = 0.;
       translation[0]     = homogeneous_matrix[3]*sign;
       translation[1]     = homogeneous_matrix[7]*sign;
       translation[2]     = homogeneous_matrix[11]*sign;
