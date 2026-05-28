@@ -64,7 +64,7 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_normalize", 1) {
 
     PDM_quaternion_set(2.,0.,0.,0.,&q);
     PDM_quaternion_normalize(&q);
-    PDM_quaternion_print(&q);
+    // PDM_quaternion_print(&q);
     CHECK(PDM_quaternion_equal(&q,1.,0.,0.,0.,EPS));
 }
 
@@ -160,7 +160,7 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate", 1) {
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate 2", 1) {
 
-    For checks: https://www.andre-gaschler.com/rotationconverter/
+    // For checks: https://www.andre-gaschler.com/rotationconverter/
     PDM_quaternion q;
     double sin_45 = .5*sqrt(2.);
     double vector[3] = {1.,2.,3.};
@@ -184,7 +184,7 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate 2", 1) {
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
 
     // rotation of 90 deg around z-axis
-    PDM_quaternion_set(sin_45,0.,sin_45,0.,&q);
+    PDM_quaternion_set(sin_45,0.,0.,sin_45,&q);
     exp_vect[0] = -2.;
     exp_vect[1] =  1.;
     exp_vect[2] =  3.;
@@ -200,28 +200,28 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate 2", 1) {
     axis[1] *= ax_inv_norm;
     axis[2] *= ax_inv_norm;
     PDM_quaternion_set(cos_18_5,axis[0]*sin_18_5,axis[1]*sin_18_5,axis[2]*sin_18_5,&q);
-    vector[0] = 0.;
-    vector[1] = 1.;
+    vector[0] = 1.;
+    vector[1] = 0.;
     vector[2] = 0.;
     exp_vect[0] =  0.8130186879010576;
-    exp_vect[1] = -0.45375913575998306;
-    exp_vect[2] =  0.36483319453963614;
+    exp_vect[1] =  0.5112918471750423;
+    exp_vect[2] = -0.2785341274170473;
     PDM_quaternion_rotate(&q,vector,1,out_vect);
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
     vector[0] = 0.;
     vector[1] = 1.;
     vector[2] = 0.;
-    exp_vect[0] =  0.5112918471750423;
+    exp_vect[0] = -0.45375913575998306;
     exp_vect[1] =  0.856168221462352;
-    exp_vect[2] = -0.07454276336658205;
+    exp_vect[2] =  0.24714089761175967;
     PDM_quaternion_rotate(&q,vector,1,out_vect);
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
     vector[0] = 0.;
-    vector[1] = 1.;
-    vector[2] = 0.;
-    exp_vect[0] = -0.2785341274170473;
-    exp_vect[1] = 0.24714089761175967;
-    exp_vect[2] = 0.928084110731176;
+    vector[1] = 0.;
+    vector[2] = 1.;
+    exp_vect[0] =  0.36483319453963614;
+    exp_vect[1] = -0.07454276336658205;
+    exp_vect[2] =  0.928084110731176;
     PDM_quaternion_rotate(&q,vector,1,out_vect);
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
 }
@@ -286,7 +286,6 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_two_vectors", 1) {
     v2[1] =  0.;
     v2[2] =  1.;
     PDM_quaternion_from_two_vectors(v1,v2,&q);
-    CHECK(PDM_quaternion_equal(&q,0.,0.,1.,0.,EPS)); // expects 180 rotation around y-axis
     v1_inv_norm = 1./sqrt(v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2]);
     v2_inv_norm = 1./sqrt(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2]);
     v1[0] *= v1_inv_norm;
@@ -306,7 +305,6 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_two_vectors", 1) {
     v2[1] = -4.;
     v2[2] =  6.;
     PDM_quaternion_from_two_vectors(v1,v2,&q);
-    CHECK(PDM_quaternion_equal(&q,0.,0.,0.,1.,EPS)); // expects 180 rotation around z-axis
     v1_inv_norm = 1./sqrt(v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2]);
     v2_inv_norm = 1./sqrt(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2]);
     v1[0] *= v1_inv_norm;
@@ -352,16 +350,24 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_angle", 1) {
     PDM_quaternion q;
     PDM_quaternion_set(0.,0.,0.,0.,&q);
     double axis[3] = {1.,1.,1.};
-    double angle = 120.*M_PI/180.;
+    double angle = 120.*DEG2RAD;
     PDM_quaternion_from_axis_angle(axis,angle,&q);
 
     CHECK(PDM_quaternion_equal(&q,.5,.5,.5,.5,EPS));
 
     double axis2[3] = {-1.,-1.,-1.};
-    angle = -120.*M_PI/180.;
+    angle = -120.*DEG2RAD;
     PDM_quaternion_from_axis_angle(axis2,angle,&q);
 
     CHECK(PDM_quaternion_equal(&q,.5,.5,.5,.5,EPS));
+
+    angle = 37*DEG2RAD;
+    axis[0] = -1.;
+    axis[1] =  2.;
+    axis[2] = -3.;
+    PDM_quaternion_from_axis_angle(axis,angle,&q);
+    CHECK(PDM_quaternion_equal(&q,9.4832365520619932e-01,-8.4803236535420032e-02, 1.6960647307084006e-01,-2.5440970960626014e-01,EPS));
+
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_angle 2", 1) {
@@ -513,7 +519,7 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_angle 2", 1) {
     }
 }
 
-MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles", 1) {
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles intrinsic [2,1,0]", 1) {
     PDM_quaternion q;
     PDM_quaternion_set(0.,0.,0.,0.,&q);
     double sin_45 = .5*sqrt(2.);
@@ -535,7 +541,7 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles", 1) {
 
 }
 
-MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles 2", 1) {
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles 2 intrinsic [2,1,0]", 1) {
     PDM_quaternion _q;
     PDM_quaternion* q = &_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
@@ -671,10 +677,110 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles 2", 1) {
     }
 }
 
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles intrinsic/extrinsic ", 1) {
+    PDM_quaternion q;
+    PDM_quaternion q_expec;
+    PDM_bool_t intrinsic = PDM_TRUE;
+    PDM_bool_t extrinsic = PDM_FALSE;
+    int order[3],rev_order[3];
+    double ang_x = 15.*DEG2RAD;
+    double ang_y = 25.*DEG2RAD;
+    double ang_z = 35.*DEG2RAD;
+
+    // XYZ
+    order[0] = 0;
+    order[1] = 1;
+    order[2] = 2;
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&q);
+    PDM_quaternion_set(
+        9.1464902421112626e-01,1.8606208846158473e-01,1.6633655702976691e-01,3.1800976642617612e-01,
+        &q_expec);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,rev_order,extrinsic,&q);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+
+    // XZY
+    order[0] = 0;
+    order[1] = 2;
+    order[2] = 1;
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&q);
+    PDM_quaternion_set(
+        9.3163952654103022e-01,5.7006410511950115e-02,1.6633655702976691e-01,3.1800976642617612e-01,
+        &q_expec);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,rev_order,extrinsic,&q);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+
+    // YXZ
+    order[0] = 1;
+    order[1] = 0;
+    order[2] = 2;
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&q);
+    PDM_quaternion_set(
+        9.3163952654103022e-01,1.8606208846158473e-01,1.6633655702976691e-01,2.6412277754711250e-01,
+        &q_expec);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,rev_order,extrinsic,&q);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+
+    // YZX
+    order[0] = 1;
+    order[1] = 2;
+    order[2] = 0;
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&q);
+    PDM_quaternion_set(
+        9.1464902421112626e-01,1.8606208846158473e-01,2.4297576037075486e-01,2.6412277754711250e-01,
+        &q_expec);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,rev_order,extrinsic,&q);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+
+    // ZXY
+    order[0] = 2;
+    order[1] = 0;
+    order[2] = 1;
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&q);
+    PDM_quaternion_set(
+        9.1464902421112626e-01,5.7006410511950115e-02,2.4297576037075486e-01,3.1800976642617612e-01,
+        &q_expec);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,rev_order,extrinsic,&q);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+
+    // ZYX
+    order[0] = 2;
+    order[1] = 1;
+    order[2] = 0;
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&q);
+    PDM_quaternion_set(
+        9.3163952654103022e-01,5.7006410511950115e-02,2.4297576037075486e-01,2.6412277754711250e-01,
+        &q_expec);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,rev_order,extrinsic,&q);
+    CHECK(PDM_quaternion_equal_quaternion(&q,&q_expec,EPS));
+}
+
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_rotation_matrix", 1) {
-    PDM_quaternion _q;
-    PDM_quaternion* q = &_q;
-    PDM_quaternion_set(0.,0.,0.,0.,q);
+    PDM_quaternion q;
+    PDM_quaternion_set(0.,0.,0.,0.,&q);
     double ang_x,ang_y,ang_z;
     PDM_bool_t intrinsic = PDM_TRUE;
     int order[3] = {2,1,0};
@@ -698,8 +804,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_rotation_matrix", 1) 
                 rot_mat[3*1+2] = cos(ang_x)*sin(ang_y)*sin(ang_z)-sin(ang_x)*cos(ang_z);
                 rot_mat[3*2+2] = cos(ang_x)*cos(ang_y);
 
-                PDM_quaternion_from_rotation_matrix(r_mat,q);
-                PDM_quaternion_to_euler_angles(q,order,intrinsic,&out_ang_x,&out_ang_y,&out_ang_z);
+                PDM_quaternion_from_rotation_matrix(r_mat,&q);
+                PDM_quaternion_to_euler_angles(&q,order,intrinsic,&out_ang_x,&out_ang_y,&out_ang_z);
                 CHECK(PDM_ABS(ang_x-out_ang_x)<EPS);
                 CHECK(PDM_ABS(ang_y-out_ang_y)<EPS);
                 CHECK(PDM_ABS(ang_z-out_ang_z)<EPS);
@@ -788,14 +894,160 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_euler_angles", 1) {
         }
     }
 }
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_euler_angles intrinsic/extrinsic", 1) {
+    PDM_quaternion q;
+    PDM_quaternion_set(1.,-2.,3.,-4,&q);
+    PDM_bool_t intrinsic = PDM_TRUE;
+    PDM_bool_t extrinsic = PDM_FALSE;
+    double ang_x,ang_y,ang_z;
+    double exp_x,exp_y,exp_z;
+    int order[3],rev_order[3];
+
+    // XYZ
+    order[0] = 0;
+    order[1] = 1;
+    order[2] = 2;
+    PDM_quaternion_to_euler_angles(&q,order,intrinsic,&ang_x,&ang_y,&ang_z);
+    exp_x = 1.3734007669450157e+00;
+    exp_y = 8.2321197712587590e-01;
+    exp_z = 2.9441970937399122e+00;
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    PDM_quaternion_to_euler_angles(&q,rev_order,extrinsic,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // XZY
+    order[0] = 0;
+    order[1] = 2;
+    order[2] = 1;
+    PDM_quaternion_to_euler_angles(&q,order,intrinsic,&ang_x,&ang_y,&ang_z);
+    exp_x = -1.9138202672155999e+00;
+    exp_y =  2.3086113869153615e+00;
+    exp_z =  1.3373158940994179e-01;
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    PDM_quaternion_to_euler_angles(&q,rev_order,extrinsic,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // YXZ
+    order[0] = 1;
+    order[1] = 0;
+    order[2] = 2;
+    PDM_quaternion_to_euler_angles(&q,order,intrinsic,&ang_x,&ang_y,&ang_z);
+    exp_x =  7.2972765622696656e-01;
+    exp_y =  1.3909428270024184e+00;
+    exp_z = -2.0344439357957027e+00;
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    PDM_quaternion_to_euler_angles(&q,rev_order,extrinsic,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // YZX
+    order[0] = 1;
+    order[1] = 2;
+    order[2] = 0;
+    PDM_quaternion_to_euler_angles(&q,order,intrinsic,&ang_x,&ang_y,&ang_z);
+    exp_x =  2.0344439357957027e+00;
+    exp_y = -2.6779450445889870e+00;
+    exp_z = -7.2972765622696634e-01;
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    PDM_quaternion_to_euler_angles(&q,rev_order,extrinsic,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // ZXY
+    order[0] = 2;
+    order[1] = 0;
+    order[2] = 1;
+    PDM_quaternion_to_euler_angles(&q,order,intrinsic,&ang_x,&ang_y,&ang_z);
+    exp_x = -1.2035883062370594e+00;
+    exp_y = -1.1902899496825317e+00;
+    exp_z =  2.7610862764774282e+00;
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    PDM_quaternion_to_euler_angles(&q,rev_order,extrinsic,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // ZYX
+    order[0] = 2;
+    order[1] = 1;
+    order[2] = 0;
+    PDM_quaternion_to_euler_angles(&q,order,intrinsic,&ang_x,&ang_y,&ang_z);
+    exp_x = -1.4288992721907328e+00;
+    exp_y = -3.3983690945412182e-01;
+    exp_z = -2.3561944901923448e+00;
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    PDM_quaternion_to_euler_angles(&q,rev_order,extrinsic,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+}
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix", 1) {
-    PDM_quaternion _q;
-    PDM_quaternion* q = &_q;
-    PDM_quaternion _q_out;
-    PDM_quaternion* q_out = &_q_out;
-    PDM_quaternion_set(0.,0.,0.,0.,q);
-    PDM_quaternion_set(0.,0.,0.,0.,q_out);
+    PDM_quaternion q;
+    PDM_quaternion_set(1.,-2.,3.,-4,&q);
+    PDM_quaternion_normalize(&q);
+    double rot_mat[9];
+    PDM_quaternion_to_rotation_matrix(&q,rot_mat);
+    // printf("%s::%d\n [\n%23.16e,%23.16e,%23.16e,\n%23.16e,%23.16e,%23.16e,\n%23.16e,%23.16e,%23.16e]\n",
+    //     __FILE__,__LINE__,
+    //     rot_mat[3*0+0],
+    //     rot_mat[3*0+1],
+    //     rot_mat[3*0+2],
+    //     rot_mat[3*1+0],
+    //     rot_mat[3*1+1],
+    //     rot_mat[3*1+2],
+    //     rot_mat[3*2+0],
+    //     rot_mat[3*2+1],
+    //     rot_mat[3*2+2]);
+    double exp_mat[9] = {
+        -6.6666666666666663e-01,-1.3333333333333336e-01, 7.3333333333333317e-01,
+        -6.6666666666666652e-01,-3.3333333333333331e-01,-6.6666666666666663e-01,
+         3.3333333333333326e-01,-9.3333333333333324e-01, 1.3333333333333341e-01
+    };
+    CHECK_EQ_C_ARRAY_FLOAT(rot_mat,exp_mat,9,EPS);
+}
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix 2", 1) {
+    PDM_quaternion q;
+    PDM_quaternion q_out;
+    PDM_quaternion_set(0.,0.,0.,0.,&q);
+    PDM_quaternion_set(0.,0.,0.,0.,&q_out);
     PDM_bool_t intrinsic = PDM_TRUE;
     int order[3] = {2,1,0};
     double ang_x,ang_y,ang_z;
@@ -808,10 +1060,10 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix", 1) {
             ang_y = -10.+j*10.;
             for (int i = 0; i<3; i++) {
                 ang_x = -10.+i*10.;
-                PDM_quaternion_from_euler_angles(ang_x*DEG2RAD,ang_y*DEG2RAD,ang_z*DEG2RAD,order,intrinsic,q);
-                PDM_quaternion_to_rotation_matrix(q,rot_mat);
-                PDM_quaternion_from_rotation_matrix(r_mat,q_out);
-                CHECK(PDM_quaternion_equal_quaternion(q,q_out,EPS));
+                PDM_quaternion_from_euler_angles(ang_x*DEG2RAD,ang_y*DEG2RAD,ang_z*DEG2RAD,order,intrinsic,&q);
+                PDM_quaternion_to_rotation_matrix(&q,rot_mat);
+                PDM_quaternion_from_rotation_matrix(r_mat,&q_out);
+                CHECK(PDM_quaternion_equal_quaternion(&q,&q_out,EPS));
             }
         }
     }

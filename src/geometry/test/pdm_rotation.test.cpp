@@ -160,6 +160,252 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_n_by_n_matrix", 1) {
     CHECK_EQ_C_ARRAY_FLOAT(vector_out,exp_out,12,EPS);
 }
 
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_axis_angle_to_euler_angles", 1) {
+    double angle = 37*DEG2RAD;
+    double axis[3] = {-3.,4.,-5};
+    int order[3],rev_order[3];
+    double ang_x,ang_y,ang_z;
+    double exp_x,exp_y,exp_z;
+
+    // direct, [0,1,2], intrinsic
+    order[0] = 0;
+    order[1] = 1;
+    order[2] = 2;
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,order,PDM_TRUE,&ang_x,&ang_y,&ang_z);
+    exp_x = -1.9195732121200226e-01;
+    exp_y =  4.1244155008887562e-01;
+    exp_z = -4.2437040657168013e-01;
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,rev_order,PDM_FALSE,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // direct, [0,2,1], intrinsic
+    order[0] = 0;
+    order[1] = 2;
+    order[2] = 1;
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,order,PDM_TRUE,&ang_x,&ang_y,&ang_z);
+    exp_x = -3.7112789994533268e-01;
+    exp_y =  4.4762159939481483e-01;
+    exp_z = -3.8679270256453857e-01;
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,rev_order,PDM_FALSE,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // direct, [1,0,2], intrinsic
+    order[0] = 1;
+    order[1] = 0;
+    order[2] = 2;
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,order,PDM_TRUE,&ang_x,&ang_y,&ang_z);
+    exp_x = -1.7568506091904279e-01;
+    exp_y =  4.1929215641494677e-01;
+    exp_z = -5.0211818050329748e-01;
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,rev_order,PDM_FALSE,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // direct, [1,2,0], intrinsic
+    order[0] = 1;
+    order[1] = 2;
+    order[2] = 0;
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,order,PDM_TRUE,&ang_x,&ang_y,&ang_z);
+    exp_x = -1.9981002701339715e-01;
+    exp_y =  3.2361964206307259e-01;
+    exp_z = -4.9368599869889129e-01;
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,rev_order,PDM_FALSE,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // direct, [2,0,1], intrinsic
+    order[0] = 2;
+    order[1] = 0;
+    order[2] = 1;
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,order,PDM_TRUE,&ang_x,&ang_y,&ang_z);
+    exp_x = -3.4253328559234930e-01;
+    exp_y =  3.0186325235851291e-01;
+    exp_z = -4.1204660950517663e-01;
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,rev_order,PDM_FALSE,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // direct, [2,1,0], intrinsic
+    order[0] = 2;
+    order[1] = 1;
+    order[2] = 0;
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,order,PDM_TRUE,&ang_x,&ang_y,&ang_z);
+    exp_x = -3.5743456350361774e-01;
+    exp_y =  2.8382394280353651e-01;
+    exp_z = -5.1625197447159565e-01;
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+    for (int i=0;i<3;i++){
+        rev_order[i] = order[2-i];
+    }
+    PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_FALSE,rev_order,PDM_FALSE,&ang_x,&ang_y,&ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+    // reverse
+    PDM_rotation_axis_angle_to_euler_angles(axis,-angle,PDM_FALSE,order,PDM_TRUE,&exp_x,&exp_y,&exp_z);
+    PDM_rotation_axis_angle_to_euler_angles(axis, angle,PDM_TRUE, order,PDM_TRUE,&ang_x,&ang_y,&ang_z);
+    // printf("%s::%d intrinsic order[%d %d %d] => [%23.16e %23.16e %23.16e]\n",__FILE__,__LINE__,
+    //     order[0],order[1],order[2],ang_x,ang_y,ang_z);
+    CHECK(PDM_ABS(ang_x-exp_x)<EPS);
+    CHECK(PDM_ABS(ang_y-exp_y)<EPS);
+    CHECK(PDM_ABS(ang_z-exp_z)<EPS);
+
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_axis_angle_to_rotation_matrix", 1) {
+    double angle = 37*DEG2RAD;
+    double axis[3] = {-3.,4.,-5};
+    double rot_mat[9];
+    double exp_mat[9];
+    // testing only reverse
+    PDM_rotation_axis_angle_to_rotation_matrix(axis,-angle,PDM_FALSE,rot_mat);
+    PDM_rotation_axis_angle_to_rotation_matrix(axis, angle,PDM_TRUE, exp_mat);
+    CHECK_EQ_C_ARRAY_FLOAT(rot_mat,exp_mat,9,EPS);
+}
+
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_axis_angle_to_homogeneous_matrix", 1) {
+    double angle = 37*DEG2RAD;
+    double axis[3] = {-3.,4.,-5};
+    double homo_mat[16];
+    double expe_mat[16];
+    // testing only reverse
+    PDM_rotation_axis_angle_to_homogeneous_matrix(axis,-angle,PDM_FALSE,homo_mat);
+    PDM_rotation_axis_angle_to_homogeneous_matrix(axis, angle,PDM_TRUE, expe_mat);
+    CHECK_EQ_C_ARRAY_FLOAT(homo_mat,expe_mat,16,EPS);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix", 1) {
+    double angle = 37*DEG2RAD;
+    double axis[3] = {-3.,4.,-5};
+    double homo_mat[16];
+    double expe_mat[16];
+    double rot_center[3] = {1,-2,3};
+    double orig[3] = {0,0,0};
+    PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix(axis,angle,orig,PDM_FALSE,expe_mat);
+    PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix(axis,angle,rot_center,PDM_FALSE,homo_mat);
+    double rot_mat[9];
+    double exp_mat[9];
+    PDM_rotation_homogeneous_matrix_to_rotation_matrix(homo_mat,PDM_FALSE,rot_mat);
+    PDM_rotation_homogeneous_matrix_to_rotation_matrix(expe_mat,PDM_FALSE,exp_mat);
+    CHECK_EQ_C_ARRAY_FLOAT(rot_mat,exp_mat,9,EPS);
+    double RT[3];
+    PDM_rotation_apply_n_by_n_matrix(rot_mat,rot_center,3,1,RT);
+    double expec_T[3] = {
+        rot_center[0]-RT[0],
+        rot_center[1]-RT[1],
+        rot_center[2]-RT[2],
+    };
+    CHECK(PDM_ABS(homo_mat[3] -expec_T[0]) < EPS);
+    CHECK(PDM_ABS(homo_mat[7] -expec_T[1]) < EPS);
+    CHECK(PDM_ABS(homo_mat[11]-expec_T[2]) < EPS);
+
+    // reverse
+    PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix(axis,angle,rot_center,PDM_FALSE,expe_mat);
+    PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix(axis,-angle,rot_center,PDM_TRUE,homo_mat);
+    CHECK_EQ_C_ARRAY_FLOAT(homo_mat,expe_mat,16,EPS);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_to_axis_angle", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_to_euler_angles", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_to_rotation_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_to_homogeneous_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_periodic_t_info_to_homogeneous_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_rotation_matrix_to_axis_angle", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_rotation_matrix_to_euler_angles", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_rotation_matrix_to_homogeneous_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_axis_angle", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_euler_angles", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic_t_info", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_rotation_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_axis_angle", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_euler_angles", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_rotation_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_homogeneous_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_and_rotation_center_to_homogeneous_matrix", 1) {
+    CHECK(0==1);
+}
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_axes_and_origin_to_homogeneous_matrix", 1) {
+    CHECK(0==1);
+}
+
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_euler_angles_and_rotation_center", 1) {
     PDM_bool_t intrinsic = PDM_TRUE;
     PDM_bool_t reverse = PDM_FALSE;
@@ -236,6 +482,10 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_axis_angle_and_rotation_
     PDM_rotation_apply_axis_angle_and_rotation_center(axis,angle,rotation_center,
         reverse,vector,n_samp,vector_out);
     CHECK_EQ_C_ARRAY_FLOAT(vector_out,expec_vector_out,12,EPS);
+}
+
+MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_rotation_matrix_and_rotation_center", 1) {
+    CHECK(0==1);
 }
 
 #endif

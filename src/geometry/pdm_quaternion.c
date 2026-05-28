@@ -101,7 +101,8 @@ PDM_quaternion_print
   const PDM_quaternion* qt
 )
 {
-  PDM_printf("qt = [%12.5e %12.5e %12.5e %12.5e]\n",
+  // PDM_printf("qt = [%12.5e %12.5e %12.5e %12.5e]\n",
+  PDM_printf("qt = [%23.16e,%23.16e,%23.16e,%23.16e]\n",
     qt->q[0],
     qt->q[1],
     qt->q[2],
@@ -251,6 +252,7 @@ PDM_quaternion_rotate_derivative
   double* vector_output_der
 )
 {
+  // /!\ not tested in pdm_quaternion.test.cpp yet !
   double ww_der = 2*qt->q[0] * qt_der->q[0];
   double xx_der = 2*qt->q[1] * qt_der->q[1];
   double yy_der = 2*qt->q[2] * qt_der->q[2];
@@ -286,6 +288,7 @@ PDM_quaternion_slerp_from_two_vectors
         double* out
 )
 {
+  // /!\ not tested in pdm_quaternion.test.cpp yet !
   PDM_quaternion qt;
   PDM_quaternion_from_two_vectors(vector_1,vector_2,&qt);
   double axis[3];
@@ -307,6 +310,7 @@ PDM_quaternion_slerp_from_two_vectors_derivative
         double* out
 )
 {
+  // /!\ not tested in pdm_quaternion.test.cpp yet !
   PDM_quaternion qt;
   PDM_quaternion qt_der;
   PDM_quaternion_from_two_vectors(vector_1,vector_2,&qt);
@@ -341,48 +345,38 @@ PDM_quaternion_from_two_vectors
   double norm_2 = sqrt(vector_2[0]*vector_2[0] + vector_2[1]*vector_2[1] + vector_2[2]*vector_2[2]);
   double dot = PDM_DOT_PRODUCT(vector_1,vector_2);
   double cross[3];
-  PDM_CROSS_PRODUCT(cross,vector_1,vector_2);
 
-  if (PDM_ABS(dot) > norm_1*norm_2-QUATERNION_EPS) {
+  if (PDM_ABS(dot) > ((norm_1*norm_2)*(1.-QUATERNION_EPS))) {
     if (dot > 0.) { // parallel vectors
       PDM_quaternion_set_identity(qt_out);
+      return;
     }
     else { // opposite vectors
       double z_axis[3] = {0., 0., 1.};
       double dot2 = PDM_DOT_PRODUCT(vector_1,z_axis);
-      if (PDM_ABS(dot2) > norm_1 - QUATERNION_EPS) { // vector 1 is z_axis
-        qt_out->q[0] = 0.;
-        qt_out->q[1] = 0.;
-        qt_out->q[2] = 1.;
-        qt_out->q[3] = 0.;
-        qt_out->q_squared[0] = 0.;
-        qt_out->q_squared[1] = 0.;
-        qt_out->q_squared[2] = 1.;
-        qt_out->q_squared[3] = 0.;
+      if (PDM_ABS(dot2) > (norm_1*(1-QUATERNION_EPS))) { // vector 1 is z_axis
+        double y_axis[3] = {0., 1., 0.};
+        PDM_CROSS_PRODUCT(cross,vector_1,y_axis);
       }
       else { // vector != z_axis -> rotation around z-axis
-        qt_out->q[0] = 0.;
-        qt_out->q[1] = 0.;
-        qt_out->q[2] = 0.;
-        qt_out->q[3] = 1.;
-        qt_out->q_squared[0] = 0.;
-        qt_out->q_squared[1] = 0.;
-        qt_out->q_squared[2] = 0.;
-        qt_out->q_squared[3] = 1.;
+        PDM_CROSS_PRODUCT(cross,vector_1,z_axis);
       }
+      qt_out->q[0] = 0.;
+      qt_out->q_squared[0] = 0.;
     }
   }
   else {
+    PDM_CROSS_PRODUCT(cross,vector_1,vector_2);
     qt_out->q[0] = sqrt(normsq_1*normsq_2)+dot;
-    qt_out->q[1] = cross[0];
-    qt_out->q[2] = cross[1];
-    qt_out->q[3] = cross[2];
     qt_out->q_squared[0] = normsq_1*normsq_2+dot*dot+2*sqrt(normsq_1*normsq_2)*dot;
-    qt_out->q_squared[1] = cross[0]*cross[0];
-    qt_out->q_squared[2] = cross[1]*cross[1];
-    qt_out->q_squared[3] = cross[2]*cross[2];
-    PDM_quaternion_normalize(qt_out);
   }
+  qt_out->q[1] = cross[0];
+  qt_out->q[2] = cross[1];
+  qt_out->q[3] = cross[2];
+  qt_out->q_squared[1] = cross[0]*cross[0];
+  qt_out->q_squared[2] = cross[1]*cross[1];
+  qt_out->q_squared[3] = cross[2]*cross[2];
+  PDM_quaternion_normalize(qt_out);
 }
 
 void
@@ -416,6 +410,7 @@ PDM_quaternion_from_axis_angle_derivative(
         PDM_quaternion* qt_out
 )
 {
+  // /!\ not tested in pdm_quaternion.test.cpp yet !
   double c     =      sin(0.5*angle);
   double c_der =  0.5*cos(0.5*angle)*angle_der;
   qt_out->q[0]         = -0.5*sin(0.5*angle)*angle_der;
@@ -756,15 +751,15 @@ PDM_quaternion_to_rotation_matrix
         double*         rotation_matrix
 )
 {
-  rotation_matrix[3*0+0] = 1 - 2 * qt->q_squared[2]     - 2 * qt->q_squared[3]    ;
+  rotation_matrix[3*0+0] = 1 - 2 * qt->q_squared[2]    - 2 * qt->q_squared[3]   ;
   rotation_matrix[3*0+1] =     2 * qt->q[1] * qt->q[2] - 2 * qt->q[3] * qt->q[0];
   rotation_matrix[3*0+2] =     2 * qt->q[1] * qt->q[3] + 2 * qt->q[2] * qt->q[0];
   rotation_matrix[3*1+0] =     2 * qt->q[1] * qt->q[2] + 2 * qt->q[3] * qt->q[0];
-  rotation_matrix[3*1+1] = 1 - 2 * qt->q_squared[3]     - 2 * qt->q_squared[1]    ;
+  rotation_matrix[3*1+1] = 1 - 2 * qt->q_squared[3]    - 2 * qt->q_squared[1]   ;
   rotation_matrix[3*1+2] =     2 * qt->q[2] * qt->q[3] - 2 * qt->q[1] * qt->q[0];
   rotation_matrix[3*2+0] =     2 * qt->q[1] * qt->q[3] - 2 * qt->q[2] * qt->q[0];
   rotation_matrix[3*2+1] =     2 * qt->q[2] * qt->q[3] + 2 * qt->q[1] * qt->q[0];
-  rotation_matrix[3*2+2] = 1 - 2 * qt->q_squared[1]     - 2 * qt->q_squared[2]    ;
+  rotation_matrix[3*2+2] = 1 - 2 * qt->q_squared[1]    - 2 * qt->q_squared[2]   ;
 }
 
 void

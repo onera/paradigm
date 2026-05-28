@@ -207,33 +207,17 @@ PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix
         double *homogeneous_matrix
 ){
   // helper matrices (matrix multiplication (dgemm) is not inplace)
-  double trans_mat    [16];
-  double rot_mat      [16];
-  double rot_trans_mat[16];
-  // Trans+.Rot.Trans-
-  // translation of -rotation_center
-  set_translation_to_homogeneous_matrix(rotation_center,
-                                        PDM_TRUE,
-                                        trans_mat);
+  double rot_mat[9];
   // rotation
   double langle = (reverse ? -angle : angle);
-  PDM_rotation_axis_angle_to_homogeneous_matrix(axis,
-                                                langle,
-                                                PDM_FALSE,
-                                                rot_mat);
-  PDM_rotation_multiply_n_by_n_matrices(rot_mat,
-                                        trans_mat,
-                                        4,
-                                        rot_trans_mat);
-  // translation of rotation_center
-  // re-using trans_mat
-  set_translation_to_homogeneous_matrix(rotation_center,
-                                        PDM_FALSE,
-                                        trans_mat);
-  PDM_rotation_multiply_n_by_n_matrices(trans_mat,
-                                        rot_trans_mat,
-                                        4,
-                                        homogeneous_matrix);
+  PDM_rotation_axis_angle_to_rotation_matrix(axis,
+                                             langle,
+                                             PDM_FALSE,
+                                             rot_mat);
+  PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix(rot_mat,
+                                                                         rotation_center,
+                                                                         PDM_FALSE,
+                                                                         homogeneous_matrix);
 }
 
 // Euler angles to other formats ---
@@ -1088,11 +1072,8 @@ PDM_rotation_apply_homogeneous_matrix
 )
 {
   // applying the rotation
-  double rotation_matrix[9] = {
-    homogeneous_matrix[0], homogeneous_matrix[1], homogeneous_matrix[2],
-    homogeneous_matrix[4], homogeneous_matrix[5], homogeneous_matrix[6],
-    homogeneous_matrix[8], homogeneous_matrix[9], homogeneous_matrix[10],
-  };
+  double rotation_matrix[9];
+  PDM_rotation_homogeneous_matrix_to_rotation_matrix(homogeneous_matrix,PDM_FALSE,rotation_matrix);
   PDM_rotation_apply_n_by_n_matrix(rotation_matrix,vector,3,n_samp,vector_out);
 
   // applying the translation
