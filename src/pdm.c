@@ -175,6 +175,40 @@ PDM_geometry_kind_to_entity_type
 }
 
 
+int
+PDM_geometry_kind_to_dimension
+(
+ PDM_geometry_kind_t   geom_kind
+)
+{
+  switch (geom_kind) {
+
+    case PDM_GEOMETRY_KIND_VOLUMIC: {
+      return 3;
+    }
+    case PDM_GEOMETRY_KIND_SURFACIC: {
+      return 2;
+    }
+    case PDM_GEOMETRY_KIND_RIDGE: {
+      return 1;
+    }
+    case PDM_GEOMETRY_KIND_CORNER: {
+      return 0;
+    }
+    case PDM_GEOMETRY_KIND_MAX: {
+      return -1;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+    }
+
+  }
+
+  return -1;
+}
+
+
+
 PDM_geometry_kind_t
 PDM_entity_type_to_geometry_kind
 (

@@ -1179,10 +1179,8 @@ _dist_cloud_surf_compute_optim
     if (mesh_nodal != NULL) {
       switch (geom_kind) {
       case PDM_GEOMETRY_KIND_RIDGE:
-        pmne = mesh_nodal->ridge;
-        break;
       case PDM_GEOMETRY_KIND_SURFACIC:
-        pmne = mesh_nodal->surfacic;
+        pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(mesh_nodal, geom_kind);
         break;
       default:
         PDM_error(__FILE__, __LINE__, 0, "invalid geom_kind %d\n", (int) geom_kind);

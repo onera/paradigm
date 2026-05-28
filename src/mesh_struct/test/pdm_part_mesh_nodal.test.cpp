@@ -124,8 +124,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
                                                                 3, 3, 3, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // > Remove computed corners
-  PDM_part_mesh_nodal_elmts_free(pmn->corner);
-  pmn->corner = NULL; // because shitty C
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[0]);
+  pmn->pmne[0] = NULL; // because shitty C
 
   PDM_part_mesh_nodal_compute_straddling_entities(pmn,
                                                   PDM_GEOMETRY_KIND_SURFACIC,
@@ -182,8 +182,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
                                                                 2, 2, 2, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // > Remove computed corners
-  PDM_part_mesh_nodal_elmts_free(pmn->ridge);
-  pmn->ridge = NULL; // because shitty C
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[1]);
+  pmn->pmne[1] = NULL; // because shitty C
 
   PDM_part_mesh_nodal_compute_straddling_entities(pmn,
                                                   PDM_GEOMETRY_KIND_SURFACIC,
@@ -236,8 +236,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 
                                                                 3, 3, 3, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // > Remove computed corners
-  PDM_part_mesh_nodal_elmts_free(pmn->corner);
-  pmn->corner = NULL; // because shitty C
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[0]);
+  pmn->pmne[0] = NULL; // because shitty C
 
   PDM_part_mesh_nodal_compute_straddling_entities(pmn,
                                                   PDM_GEOMETRY_KIND_RIDGE,
@@ -292,12 +292,12 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // Oups ! We suppress pcg !
   PDM_part_comm_graph_free(pmn->pcg_vtx);
-  PDM_part_comm_graph_free(pmn->pcg[PDM_GEOMETRY_KIND_CORNER  ]);
-  PDM_part_comm_graph_free(pmn->pcg[PDM_GEOMETRY_KIND_RIDGE   ]);
-  PDM_part_comm_graph_free(pmn->pcg[PDM_GEOMETRY_KIND_SURFACIC]);
-  pmn->pcg[PDM_GEOMETRY_KIND_CORNER  ] = NULL;
-  pmn->pcg[PDM_GEOMETRY_KIND_RIDGE   ] = NULL;
-  pmn->pcg[PDM_GEOMETRY_KIND_SURFACIC] = NULL;
+  PDM_part_comm_graph_free(pmn->pcg[0]);
+  PDM_part_comm_graph_free(pmn->pcg[1]);
+  PDM_part_comm_graph_free(pmn->pcg[2]);
+  pmn->pcg[0] = NULL;
+  pmn->pcg[1] = NULL;
+  pmn->pcg[2] = NULL;
 
   PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum(pmn);
   std::vector<std::vector<int>> expected_graph = {{10, 1, 1, 1,
