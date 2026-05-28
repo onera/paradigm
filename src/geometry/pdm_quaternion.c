@@ -44,9 +44,7 @@ static const double QUATERNION_EPS  = __DBL_EPSILON__;
  * Private function definitions
  *============================================================================*/
 
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
+void _PDM_quaternion_compute_squared(PDM_quaternion* qt);
 
 void
 _PDM_quaternion_compute_squared
@@ -59,6 +57,10 @@ _PDM_quaternion_compute_squared
   qt->q_squared[2] = qt->q[2] * qt->q[2];
   qt->q_squared[3] = qt->q[3] * qt->q[3];
 }
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
 
 void
 PDM_quaternion_set
