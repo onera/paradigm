@@ -57,6 +57,17 @@ _PDM_quaternion_compute_squared
   qt->q_squared[3] = qt->q[3] * qt->q[3];
 }
 
+static
+double
+_PDM_quaternion_3x3_mat_det
+(
+  const double rot_mat[9]
+)
+{ return (rot_mat[3*0+0] * (rot_mat[3*1+1] * rot_mat[3*2+2] - rot_mat[3*2+1] * rot_mat[3*1+2])
+         -rot_mat[3*1+0] * (rot_mat[3*0+1] * rot_mat[3*2+2] - rot_mat[3*2+1] * rot_mat[3*0+2])
+         +rot_mat[3*2+0] * (rot_mat[3*0+1] * rot_mat[3*1+2] - rot_mat[3*1+1] * rot_mat[3*0+2]));
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -548,59 +559,120 @@ PDM_quaternion_from_rotation_matrix
 )
 {
   double tr = rotation_matrix[3*0+0]+rotation_matrix[3*1+1]+rotation_matrix[3*2+2];
-  double inv_tmp;
-  if (PDM_ABS(tr) > QUATERNION_EPS){
-    inv_tmp = 0.5/sqrt(1+tr);
-    qt->q[0] = .5*sqrt(1+tr);
-    qt->q[1] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
-    qt->q[2] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*inv_tmp;
-    qt->q[3] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*inv_tmp;
+  // printf("%s::%d det = %23.16e\n",__FILE__,__LINE__,_PDM_quaternion_3x3_mat_det(rotation_matrix));
+  double pivots[4] = {
+    rotation_matrix[3*0+0],
+    rotation_matrix[3*1+1],
+    rotation_matrix[3*2+2],
+    tr,
+  };
+  int choice = 0;
+  for (int i=1;i<4;i++){
+    if (pivots[i]>pivots[choice]){
+      choice = i;
+    }
+  };
 
-    inv_tmp = 0.25/PDM_ABS(1+tr);
-    qt->q_squared[0] = .25*PDM_ABS(1+tr);
-    qt->q_squared[1] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
-    qt->q_squared[2] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*(rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*inv_tmp;
-    qt->q_squared[3] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*inv_tmp;
-  }
-  else if ((rotation_matrix[3*0+0]>rotation_matrix[3*1+1]) & (rotation_matrix[3*0+0]>rotation_matrix[3*2+2])){
-    inv_tmp = .5/sqrt(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
-    qt->q[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
-    qt->q[1] = .5*sqrt(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
-    qt->q[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
-    qt->q[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
+  int i,j,k;
 
-    inv_tmp = .25/PDM_ABS(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
-    qt->q_squared[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
-    qt->q_squared[1] = .25*PDM_ABS(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
-    qt->q_squared[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
-    qt->q_squared[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*(rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
-  }
-  else if (rotation_matrix[3*1+1]>rotation_matrix[3*2+2]){
-    inv_tmp  = .5/sqrt(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
-    qt->q[0] = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*inv_tmp;
-    qt->q[1] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*(rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*inv_tmp;
-    qt->q[2] = 0.5*sqrt(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
-    qt->q[3] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+  if (choice != 3){ // 0,1,2
+    i = choice;
+    j = (i+1)%3;
+    k = (j+1)%3;
 
-    inv_tmp  = .25/PDM_ABS(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
-    qt->q_squared[0] = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*inv_tmp;
-    qt->q_squared[1] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*(rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*inv_tmp;
-    qt->q_squared[2] = .25*PDM_ABS(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
-    qt->q_squared[3] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+    qt->q[0]   = rotation_matrix[3*k+j] - rotation_matrix[3*j+k]; // w
+    qt->q[1+i] = 1 + rotation_matrix[3*i+i] - rotation_matrix[3*j+j] - rotation_matrix[3*k+k];
+    qt->q[1+j] = rotation_matrix[3*j+i] + rotation_matrix[3*i+j];
+    qt->q[1+k] = rotation_matrix[3*k+i] + rotation_matrix[3*i+k];
   }
   else {
-    inv_tmp = .5/sqrt(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
-    qt->q[0] = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*inv_tmp;
-    qt->q[1] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*inv_tmp;
-    qt->q[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
-    qt->q[3] = .5*sqrt(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
-
-    inv_tmp = .25/PDM_ABS(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
-    qt->q_squared[0] = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*(rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*inv_tmp;
-    qt->q_squared[1] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*inv_tmp;
-    qt->q_squared[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
-    qt->q_squared[3] = .25*PDM_ABS(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
+    qt->q[0] = 1+tr; // w
+    qt->q[1] = rotation_matrix[3*2+1] - rotation_matrix[3*1+2];
+    qt->q[2] = rotation_matrix[3*0+2] - rotation_matrix[3*2+0];
+    qt->q[3] = rotation_matrix[3*1+0] - rotation_matrix[3*0+1];
   }
+  _PDM_quaternion_compute_squared(qt);
+  PDM_quaternion_normalize(qt);
+
+
+  // else if (choice == 1){
+  //   tmp = 1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2];
+  //   inv_tmp = .5/sqrt(tmp);
+  //   qt->q[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+  //   qt->q[1] = .5*sqrt(tmp);
+  //   qt->q[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
+  //   qt->q[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
+
+  //   inv_tmp = .25/PDM_ABS(tmp);
+  //   qt->q_squared[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+  //   qt->q_squared[1] = .25*PDM_ABS(tmp);
+  //   qt->q_squared[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
+  //   qt->q_squared[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*(rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
+  // }
+
+  // double tmp_1_sq = 1.+tr;
+  // double tmp_2_sq = 1.+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2];
+  // double tmp_3_sq = 1.+rotation_matrix[3*1+1]-rotation_matrix[3*0+0]-rotation_matrix[3*2+2];
+  // double tmp_4_sq = 1.+rotation_matrix[3*2+2]-rotation_matrix[3*0+0]-rotation_matrix[3*1+1];
+
+  // double tmp_sq = PDM_ABS(tmp_1_sq);
+
+  // if (sqrt(tmp_1) > QUATERNION_EPS){
+  //   printf("%s::%d ONE %23.16e\n",__FILE__,__LINE__,tr);
+  //   inv_tmp = 0.5/sqrt(tmp_1_sq);
+  //   qt->q[0] = .5*sqrt(tmp_1_sq);
+  //   qt->q[1] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+  //   qt->q[2] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*inv_tmp;
+  //   qt->q[3] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*inv_tmp;
+
+  //   inv_tmp = 0.25/PDM_ABS(tmp_1_sq);
+  //   qt->q_squared[0] = .25*PDM_ABS(tmp_1_sq);
+  //   qt->q_squared[1] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+  //   qt->q_squared[2] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*(rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*inv_tmp;
+  //   qt->q_squared[3] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*inv_tmp;
+  // }
+  // else if ((rotation_matrix[3*0+0]>rotation_matrix[3*1+1]) & (rotation_matrix[3*0+0]>rotation_matrix[3*2+2])){
+  //   printf("%s::%d TWO\n",__FILE__,__LINE__);
+  //   inv_tmp = .5/sqrt(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
+  //   qt->q[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+  //   qt->q[1] = .5*sqrt(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
+  //   qt->q[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
+  //   qt->q[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
+
+  //   inv_tmp = .25/PDM_ABS(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
+  //   qt->q_squared[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+  //   qt->q_squared[1] = .25*PDM_ABS(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
+  //   qt->q_squared[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
+  //   qt->q_squared[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*(rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
+  // }
+  // else if (rotation_matrix[3*1+1]>rotation_matrix[3*2+2]){
+  //   printf("%s::%d THREE\n",__FILE__,__LINE__);
+  //   inv_tmp  = .5/sqrt(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
+  //   qt->q[0] = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*inv_tmp;
+  //   qt->q[1] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*(rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*inv_tmp;
+  //   qt->q[2] = 0.5*sqrt(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
+  //   qt->q[3] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+
+  //   inv_tmp  = .25/PDM_ABS(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
+  //   qt->q_squared[0] = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*inv_tmp;
+  //   qt->q_squared[1] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*(rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*inv_tmp;
+  //   qt->q_squared[2] = .25*PDM_ABS(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
+  //   qt->q_squared[3] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+  // }
+  // else {
+  //   printf("%s::%d FOUR\n",__FILE__,__LINE__);
+  //   inv_tmp = .5/sqrt(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
+  //   qt->q[0] = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*inv_tmp;
+  //   qt->q[1] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*inv_tmp;
+  //   qt->q[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+  //   qt->q[3] = .5*sqrt(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
+
+  //   inv_tmp = .25/PDM_ABS(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
+  //   qt->q_squared[0] = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*(rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*inv_tmp;
+  //   qt->q_squared[1] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*inv_tmp;
+  //   qt->q_squared[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+  //   qt->q_squared[3] = .25*PDM_ABS(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
+  // }
 }
 
 void
@@ -636,18 +708,10 @@ PDM_quaternion_to_axis_angle
         double* angle
 )
 {
-  // Prefer positive axis components
-  int n_comp_neg = 0;
-  int n_comp_neg_opp = 0;
-  if (axis[0] < -QUATERNION_EPS) n_comp_neg += 1;
-  if (axis[1] < -QUATERNION_EPS) n_comp_neg += 1;
-  if (axis[2] < -QUATERNION_EPS) n_comp_neg += 1;
-  if (axis[0] >  QUATERNION_EPS)  n_comp_neg_opp += 1;
-  if (axis[1] >  QUATERNION_EPS)  n_comp_neg_opp += 1;
-  if (axis[2] >  QUATERNION_EPS)  n_comp_neg_opp += 1;
-  double sign = 1.;
-  if (n_comp_neg_opp < n_comp_neg) sign = -1.;
-  (*angle) = sign * 2.0 * acos(qt->q[0]);
+  // Prefer positive angle
+  (*angle) = 2.0 * acos(qt->q[0]);
+  double sign = (*angle)>0. ? 1. : -1.;
+  (*angle) *= sign;
   double divider = sign*sqrt(1.0 - qt->q_squared[0]);
 
   if(PDM_ABS(divider) > QUATERNION_EPS) {

@@ -8,6 +8,7 @@
 
 static const double EPS = 8*__DBL_EPSILON__;
 static const double DEG2RAD = M_PI/180.;
+static const double RAD2DEG = 180./M_PI;
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_set", 1) {
     PDM_quaternion q;
@@ -813,6 +814,93 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_rotation_matrix", 1) 
         }
     }
 }
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_rotation_matrix 2", 1) {
+    PDM_quaternion q;
+
+    // identity -> choice 3
+    double rot_mat_0[9] = {
+        1.,0.,0.,
+        0.,1.,0.,
+        0.,0.,1.
+    };
+    PDM_quaternion_from_rotation_matrix(rot_mat_0,&q);
+    // printf("%s::%d\n",__FILE__,__LINE__);
+    // PDM_quaternion_print(&q);
+    CHECK(PDM_quaternion_equal(&q,1.,0.,0.,0.,EPS));
+
+    // arbitrary -> choice 2
+    double axis[3] = {1.,-2.,3.};
+    double angle = 135*DEG2RAD;
+    double rot_mat[9];
+    PDM_quaternion_from_axis_angle(axis,angle,&q);
+    // printf("%s::%d \n",__FILE__,__LINE__);
+    // PDM_quaternion_print(&q);
+    PDM_quaternion_to_rotation_matrix(&q,rot_mat);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
+    PDM_quaternion_from_rotation_matrix(rot_mat,&q);
+    // PDM_quaternion_print(&q);
+    CHECK(PDM_quaternion_equal(&q,3.8268343236508995e-01,2.4691719123643649e-01,-4.9383438247287298e-01,7.4075157370930944e-01,EPS));
+
+    // 120° around [1,1,1] => tr == 0 // choice 0
+    double rot_mat_1[9] = {
+        0.,0.,1.,
+        1.,0.,0.,
+        0.,1.,0.
+    };
+    // printf("%s::%d\n",__FILE__,__LINE__);
+    PDM_quaternion_from_rotation_matrix(rot_mat_1,&q);
+    // PDM_quaternion_print(&q);
+    CHECK(PDM_quaternion_equal(&q,0.5,0.5,0.5,0.5,EPS));
+
+    // 180° around [1,1,1] -> choice 3
+    axis[0] = 1.;
+    axis[1] = 1.;
+    axis[2] = 1.;
+    angle = 0.5*M_PI;
+    PDM_quaternion_from_axis_angle(axis,angle,&q);
+    // printf("%s::%d \n",__FILE__,__LINE__);
+    // PDM_quaternion_print(&q);
+    PDM_quaternion_to_rotation_matrix(&q,rot_mat);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
+    PDM_quaternion_from_rotation_matrix(rot_mat,&q);
+    // PDM_quaternion_print(&q);
+    CHECK(PDM_quaternion_equal(&q,7.0710678118654746e-01,4.0824829046386296e-01,4.0824829046386296e-01,4.0824829046386296e-01,EPS));
+
+    // 120° around [1,-2,1] -> choice 1
+    axis[0] = 1.;
+    axis[1] = -2.;
+    axis[2] = 1.;
+    angle = -120*DEG2RAD;
+    PDM_quaternion_from_axis_angle(axis,angle,&q);
+    // printf("%s::%d \n",__FILE__,__LINE__);
+    PDM_quaternion_to_rotation_matrix(&q,rot_mat);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
+    // PDM_quaternion_print(&q);
+    PDM_quaternion_from_rotation_matrix(rot_mat,&q);
+    CHECK(PDM_quaternion_equal(&q,5.0000000000000011e-01,-3.5355339059327379e-01,7.0710678118654757e-01,-3.5355339059327379e-01,EPS));
+
+    // 120° around [1,1,-2] -> choice 2
+    axis[0] = 1.;
+    axis[1] = 1.;
+    axis[2] = -2.;
+    angle = -120*DEG2RAD;
+    PDM_quaternion_from_axis_angle(axis,angle,&q);
+    // printf("%s::%d \n",__FILE__,__LINE__);
+    PDM_quaternion_to_rotation_matrix(&q,rot_mat);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
+    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
+    PDM_quaternion_from_rotation_matrix(rot_mat,&q);
+    PDM_quaternion_print(&q);
+    CHECK(PDM_quaternion_equal(&q,5.0000000000000011e-01,-3.5355339059327379e-01,-3.5355339059327379e-01,7.0710678118654735e-01,EPS));
+
+}
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_axis_angle", 1) {
     PDM_quaternion _q;
@@ -1043,6 +1131,7 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix", 1) {
     };
     CHECK_EQ_C_ARRAY_FLOAT(rot_mat,exp_mat,9,EPS);
 }
+
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix 2", 1) {
     PDM_quaternion q;
     PDM_quaternion q_out;
@@ -1069,3 +1158,27 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix 2", 1) 
     }
 }
 
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix 3", 1) {
+    PDM_quaternion q;
+    PDM_quaternion_set(1.,-2.,3.,-4,&q);
+    PDM_quaternion_normalize(&q);
+    double rot_mat[9];
+    PDM_quaternion_to_rotation_matrix(&q,rot_mat);
+    // printf("%s::%d\n [\n%23.16e,%23.16e,%23.16e,\n%23.16e,%23.16e,%23.16e,\n%23.16e,%23.16e,%23.16e]\n",
+    //     __FILE__,__LINE__,
+    //     rot_mat[3*0+0],
+    //     rot_mat[3*0+1],
+    //     rot_mat[3*0+2],
+    //     rot_mat[3*1+0],
+    //     rot_mat[3*1+1],
+    //     rot_mat[3*1+2],
+    //     rot_mat[3*2+0],
+    //     rot_mat[3*2+1],
+    //     rot_mat[3*2+2]);
+    double exp_mat[9] = {
+        -6.6666666666666663e-01,-1.3333333333333336e-01, 7.3333333333333317e-01,
+        -6.6666666666666652e-01,-3.3333333333333331e-01,-6.6666666666666663e-01,
+         3.3333333333333326e-01,-9.3333333333333324e-01, 1.3333333333333341e-01
+    };
+    CHECK_EQ_C_ARRAY_FLOAT(rot_mat,exp_mat,9,EPS);
+}

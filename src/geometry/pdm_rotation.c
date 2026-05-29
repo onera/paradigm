@@ -505,11 +505,8 @@ PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix
                                         trans_mat);
   // rotation
   PDM_rotation_rotation_matrix_to_homogeneous_matrix(rotation_matrix,
-                                                     PDM_FALSE,
+                                                     reverse,
                                                      rot_mat);
-  if (reverse){
-    transpose_homogeneous_matrix(rot_mat);
-  }
   PDM_rotation_multiply_n_by_n_matrices(rot_mat,
                                         trans_mat,
                                         4,
@@ -846,36 +843,15 @@ PDM_rotation_two_vectors_and_rotation_center_to_homogeneous_matrix
         double *homogeneous_matrix
 )
 {
-  // helper matrices (matrix multiplication (dgemm) is not inplace)
-  double trans_mat    [16];
-  double rot_mat      [16];
-  double rot_trans_mat[16];
-  // Trans+.Rot.Trans-
-  // translation of -rotation_center
-  set_translation_to_homogeneous_matrix(rotation_center,
-                                        PDM_TRUE,
-                                        trans_mat);
-  // rotation
-  PDM_rotation_two_vectors_to_homogeneous_matrix(vector_1,
-                                                 vector_2,
-                                                 PDM_FALSE,
-                                                 rot_mat);
-  if (reverse){
-    transpose_homogeneous_matrix(rot_mat);
-  }
-  PDM_rotation_multiply_n_by_n_matrices(rot_mat,
-                                        trans_mat,
-                                        4,
-                                        rot_trans_mat);
-  // translation of rotation_center
-  // re-using trans_mat
-  set_translation_to_homogeneous_matrix(rotation_center,
-                                        PDM_FALSE,
-                                        trans_mat);
-  PDM_rotation_multiply_n_by_n_matrices(trans_mat,
-                                        rot_trans_mat,
-                                        4,
-                                        homogeneous_matrix);
+  double rot_mat[9];
+  PDM_rotation_two_vectors_to_rotation_matrix(vector_1,
+                                              vector_2,
+                                              reverse,
+                                              rot_mat);
+  PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix(rot_mat,
+                                                                         rotation_center,
+                                                                         PDM_FALSE,
+                                                                         homogeneous_matrix);
 }
 
 void
@@ -933,6 +909,19 @@ PDM_rotation_axes_and_origin_to_homogeneous_matrix
   double translation_vec[3];
   set_identity_to_homogeneous_matrix(homogeneous_matrix);
   if (reverse){
+    homogeneous_matrix[4*0+0] = inv_norm[0]*axis_1[0];
+    homogeneous_matrix[4*0+1] = inv_norm[1]*axis_2[0];
+    homogeneous_matrix[4*0+2] = inv_norm[2]*axis_3[0];
+    homogeneous_matrix[4*1+0] = inv_norm[0]*axis_1[1];
+    homogeneous_matrix[4*1+1] = inv_norm[1]*axis_2[1];
+    homogeneous_matrix[4*1+2] = inv_norm[2]*axis_3[1];
+    homogeneous_matrix[4*2+0] = inv_norm[0]*axis_1[2];
+    homogeneous_matrix[4*2+1] = inv_norm[1]*axis_2[2];
+    homogeneous_matrix[4*2+2] = inv_norm[2]*axis_3[2];
+    homogeneous_matrix[4*0+3] = origin[0];
+    homogeneous_matrix[4*1+3] = origin[1];
+    homogeneous_matrix[4*2+3] = origin[2];
+  }else{
     // with homogeneous matrices the translation occurs in the second reference frame:
     // y = H.x = R.x + V
     // x = R^T.y + V_rev
@@ -953,24 +942,12 @@ PDM_rotation_axes_and_origin_to_homogeneous_matrix
     homogeneous_matrix[4*0+3] = -translation_vec[0];
     homogeneous_matrix[4*1+3] = -translation_vec[1];
     homogeneous_matrix[4*2+3] = -translation_vec[2];
+    homogeneous_matrix[4*3+3] = 1.;
     for (int i = 0; i < 3; i++){
       for (int j = 0; j < 3; j++){
         homogeneous_matrix[4*i+j] = rot_mat_T[3*i+j];
       }
     }
-  }else{
-    homogeneous_matrix[4*0+0] = inv_norm[0]*axis_1[0];
-    homogeneous_matrix[4*0+1] = inv_norm[1]*axis_2[0];
-    homogeneous_matrix[4*0+2] = inv_norm[2]*axis_3[0];
-    homogeneous_matrix[4*1+0] = inv_norm[0]*axis_1[1];
-    homogeneous_matrix[4*1+1] = inv_norm[1]*axis_2[1];
-    homogeneous_matrix[4*1+2] = inv_norm[2]*axis_3[1];
-    homogeneous_matrix[4*2+0] = inv_norm[0]*axis_1[2];
-    homogeneous_matrix[4*2+1] = inv_norm[1]*axis_2[2];
-    homogeneous_matrix[4*2+2] = inv_norm[2]*axis_3[2];
-    homogeneous_matrix[4*0+3] = origin[0];
-    homogeneous_matrix[4*1+3] = origin[1];
-    homogeneous_matrix[4*2+3] = origin[2];
   }
 }
 
