@@ -897,7 +897,7 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_rotation_matrix 2", 1
     // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
     // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
     PDM_quaternion_from_rotation_matrix(rot_mat,&q);
-    PDM_quaternion_print(&q);
+    // PDM_quaternion_print(&q);
     CHECK(PDM_quaternion_equal(&q,5.0000000000000011e-01,-3.5355339059327379e-01,-3.5355339059327379e-01,7.0710678118654735e-01,EPS));
 
 }

@@ -1110,41 +1110,6 @@ PDM_rotation_apply_euler_angles_and_rotation_center
                                                                       rotation_center,
                                                                       reverse,
                                                                       homogeneous_matrix);
-  // // building the homogeneous matrix corresponding to whole transformation:
-  // // Trans+.Rot.Trans-
-  // double homogeneous_matrix_tmp[16];
-  // double tmp_matrix[16];
-  // set_identity_to_homogeneous_matrix(homogeneous_matrix);
-  // // translation of -rotation_center
-  // set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
-  //   homogeneous_matrix);
-
-  // // rotation
-  // PDM_rotation_euler_angles_to_homogeneous_matrix(ang_x,ang_y,ang_z,order,
-  //   intrinsic,tmp_matrix);
-  // if (reverse){
-  //   transpose_homogeneous_matrix(tmp_matrix);
-  // }
-  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-  //                                       homogeneous_matrix,
-  //                                       4,
-  //                                       homogeneous_matrix_tmp);
-  // for(int i = 0; i < 16; ++i) {
-  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  // }
-
-  // // translation of rotation_center
-  // set_translation_to_homogeneous_matrix(rotation_center,
-  //                                       PDM_FALSE,
-  //                                       tmp_matrix);
-  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-  //                                       homogeneous_matrix,
-  //                                       4,
-  //                                       homogeneous_matrix_tmp);
-  // for(int i = 0; i < 16; ++i) {
-  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  // }
-
   // applying the homogeneous matrix to the coordinate vector
   PDM_rotation_apply_homogeneous_matrix(homogeneous_matrix,
                                         vector,
@@ -1171,43 +1136,6 @@ PDM_rotation_apply_axis_angle_and_rotation_center
                                                                     rotation_center,
                                                                     reverse,
                                                                     homogeneous_matrix);
-  // // building the homogeneous matrix corresponding to whole transformation:
-  // // Trans+.Rot.Trans-
-  // double homogeneous_matrix[16];
-  // double homogeneous_matrix_tmp[16];
-  // double tmp_matrix[16];
-  // set_identity_to_homogeneous_matrix(homogeneous_matrix);
-  // // translation of -rotation_center
-  // set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
-  //   homogeneous_matrix);
-
-  // // rotation
-  // double langle = (reverse ? -angle : angle);
-  // PDM_rotation_axis_angle_to_homogeneous_matrix(axis,langle,tmp_matrix);
-
-  // // BLAS_DGEMM does not support inplace
-  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-  //                                       homogeneous_matrix,
-  //                                       4,
-  //                                       homogeneous_matrix_tmp);
-
-  // for(int i = 0; i < 16; ++i) {
-  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  // }
-
-  // // translation of rotation_center
-  // set_translation_to_homogeneous_matrix(rotation_center,
-  //                                       PDM_FALSE,
-  //                                       tmp_matrix);
-
-  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-  //                                       homogeneous_matrix,
-  //                                       4,
-  //                                       homogeneous_matrix_tmp);
-
-  // for(int i = 0; i < 16; ++i) {
-  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  // }
 
   // applying the homogeneous matrix to the coordinate vector
   PDM_rotation_apply_homogeneous_matrix(homogeneous_matrix,
@@ -1232,42 +1160,6 @@ PDM_rotation_apply_rotation_matrix_and_rotation_center
                                                                          rotation_center,
                                                                          reverse,
                                                                          homogeneous_matrix);
-  // // building the homogeneous matrix corresponding to whole transformation:
-  // // Trans+.Rot.Trans-
-  // double homogeneous_matrix_tmp[16];
-  // double tmp_matrix[16];
-  // // translation of -rotation_center
-  // set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
-  //   homogeneous_matrix);
-
-  // // rotation
-  // PDM_rotation_rotation_matrix_to_homogeneous_matrix(rotation_matrix,
-  //   tmp_matrix);
-  // if (reverse){
-  //   transpose_homogeneous_matrix(tmp_matrix);
-  // }
-  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-  //                                       homogeneous_matrix,
-  //                                       4,
-  //                                       homogeneous_matrix_tmp);
-
-  // for(int i = 0; i < 16; ++i) {
-  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  // }
-
-  // // translation of rotation_center
-  // set_translation_to_homogeneous_matrix(rotation_center,
-  //                                       PDM_FALSE,
-  //                                       tmp_matrix);
-
-  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-  //                                       homogeneous_matrix,
-  //                                       4,
-  //                                       homogeneous_matrix_tmp);
-
-  // for(int i = 0; i < 16; ++i) {
-  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  // }
 
   // applying the homogeneous matrix to the coordinate vector
   PDM_rotation_apply_homogeneous_matrix(homogeneous_matrix,vector,n_samp,
