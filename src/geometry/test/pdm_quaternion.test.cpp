@@ -8,7 +8,7 @@
 
 static const double EPS = 8*__DBL_EPSILON__;
 static const double DEG2RAD = M_PI/180.;
-static const double RAD2DEG = 180./M_PI;
+// static const double RAD2DEG = 180./M_PI;
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_set", 1) {
     PDM_quaternion q;

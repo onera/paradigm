@@ -57,16 +57,16 @@ _PDM_quaternion_compute_squared
   qt->q_squared[3] = qt->q[3] * qt->q[3];
 }
 
-static
-double
-_PDM_quaternion_3x3_mat_det
-(
-  const double rot_mat[9]
-)
-{ return (rot_mat[3*0+0] * (rot_mat[3*1+1] * rot_mat[3*2+2] - rot_mat[3*2+1] * rot_mat[3*1+2])
-         -rot_mat[3*1+0] * (rot_mat[3*0+1] * rot_mat[3*2+2] - rot_mat[3*2+1] * rot_mat[3*0+2])
-         +rot_mat[3*2+0] * (rot_mat[3*0+1] * rot_mat[3*1+2] - rot_mat[3*1+1] * rot_mat[3*0+2]));
-}
+// static
+// double
+// _PDM_quaternion_3x3_mat_det
+// (
+//   const double rot_mat[9]
+// )
+// { return (rot_mat[3*0+0] * (rot_mat[3*1+1] * rot_mat[3*2+2] - rot_mat[3*2+1] * rot_mat[3*1+2])
+//          -rot_mat[3*1+0] * (rot_mat[3*0+1] * rot_mat[3*2+2] - rot_mat[3*2+1] * rot_mat[3*0+2])
+//          +rot_mat[3*2+0] * (rot_mat[3*0+1] * rot_mat[3*1+2] - rot_mat[3*1+1] * rot_mat[3*0+2]));
+// }
 
 /*=============================================================================
  * Public function definitions
