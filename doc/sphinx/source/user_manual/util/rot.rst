@@ -69,8 +69,10 @@ API
         .. autofunction:: Pypdm.Pypdm.rotation_matrix_to_homogeneous_matrix
         .. autofunction:: Pypdm.Pypdm.rotation_matrix_and_rotation_center_to_homogeneous_matrix
 
+        .. autofunction:: Pypdm.Pypdm.homogeneous_matrix_to_axis_angle
         .. autofunction:: Pypdm.Pypdm.homogeneous_matrix_to_euler_angles
         .. autofunction:: Pypdm.Pypdm.homogeneous_matrix_to_euler_angles_and_rotation_center
+        .. autofunction:: Pypdm.Pypdm.homogeneous_matrix_to_rotation_matrix
         .. autofunction:: Pypdm.Pypdm.homogeneous_matrix_to_periodic_t_info
 
         .. autofunction:: Pypdm.Pypdm.two_vectors_to_axis_angle

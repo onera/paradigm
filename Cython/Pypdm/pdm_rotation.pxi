@@ -704,9 +704,31 @@ def rotation_matrix_and_rotation_center_to_homogeneous_matrix(
 
 # region homogeneous matrix to other formats -----------------------------------
 
-# to be implemented
-def homogeneous_matrix_to_axis_angle():
-  raise NotImplementedError
+def homogeneous_matrix_to_axis_angle(
+  NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
+  bint reverse = False,):
+  """homogeneous_matrix_to_axis_angle(homogeneous_matrix,reverse=False)
+
+  Converts a rotation expressed as an homogeneous matrix to axis-angle
+
+  Caution: does not consider the affine part of the transformation (rotation center and translation)
+
+  Parameters:
+    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    reverse            (bool)                    : If True computes the reverse transformation
+
+  Returns:
+    Rotation axis  (`np.ndarray[np.double_t]`, shape = (3,))
+    Rotation angle (`double`, in *radians*)
+  """
+  _check_matrix_shape(homogeneous_matrix,(4,4))
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
+  cdef NPY.double_t angle
+  PDM_rotation_homogeneous_matrix_to_axis_angle(<double*> homogeneous_matrix.data,
+                                                <PDM_bool_t> reverse,
+                                                <double*> axis.data,
+                                                &angle)
+  return axis,angle
 
 def homogeneous_matrix_to_euler_angles(
     NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
@@ -814,8 +836,26 @@ def homogeneous_matrix_to_periodic_t_info(
                                                      <double*> translation.data)
   return rotation_center,rotation_angle,translation
 
-def homogeneous_matrix_to_rotation_matrix():
-  raise NotImplementedError
+def homogeneous_matrix_to_rotation_matrix(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
+    bint reverse = False):
+  """homogeneous_matrix_to_rotation_matrix(homogeneous_matrix,reverse=False)
+
+  Converts a rotation expressed as an homogeneous matrix to a rotation matrix
+
+  Parameters:
+    homogeneous_matrix      (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    reverse         (bool)                    : If True computes the reverse transformation
+
+  Returns:
+    3-by-3 rotation matrix (`np.ndarray[np.double_t]`, shape = (3,3))
+  """
+  _check_matrix_shape(homogeneous_matrix,(4,4))
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)
+  PDM_rotation_homogeneous_matrix_to_rotation_matrix(<double*> homogeneous_matrix.data,
+                                                     <PDM_bool_t> reverse,
+                                                     <double*> rotation_matrix.data)
+  return rotation_matrix
 
 # region 2 unit vectors to other formats ---------------------------------------
 
