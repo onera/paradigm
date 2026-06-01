@@ -61,10 +61,10 @@ class Test_axis_angle_to_euler_angles:
         for axis,axis_valid in axes:
             for angle,angle_valid in angles:
                 if axis_valid and angle_valid:
-                    out = PDM.axis_angle_to_euler_angles(axis,angle)  
+                    out = PDM.axis_angle_to_euler_angles(axis,angle)
                 else:
                     try:
-                        out = PDM.axis_angle_to_euler_angles(axis,angle)  
+                        out = PDM.axis_angle_to_euler_angles(axis,angle)
                     except:
                         pass
 
@@ -82,13 +82,13 @@ class Test_axis_angle_to_euler_angles:
     def test_compute():
         axis = np.array([2.,0.,0.])
         angle = 45*deg2rad
-        out = PDM.axis_angle_to_euler_angles(axis,angle)  
+        out = PDM.axis_angle_to_euler_angles(axis,angle)
         expec = (angle,0.,0.)
         import itertools
         for intr in [True,False]:
             for order in itertools.permutations(range(3),3):
                 order = np.array(order,dtype=np.int32)
-                out = PDM.axis_angle_to_euler_angles(axis,angle,order=order,intrinsic=intr)  
+                out = PDM.axis_angle_to_euler_angles(axis,angle,order=order,intrinsic=intr)
                 for a,ex in zip(out,expec):
                     assert abs(a-ex)<1e-12
 
@@ -113,10 +113,10 @@ class Test_axis_angle_to_rotation_matrix:
         for axis,axis_valid in axes:
             for angle,angle_valid in angles:
                 if axis_valid and angle_valid:
-                    out = PDM.axis_angle_to_rotation_matrix(axis,angle)  
+                    out = PDM.axis_angle_to_rotation_matrix(axis,angle)
                 else:
                     try:
-                        out = PDM.axis_angle_to_rotation_matrix(axis,angle)  
+                        out = PDM.axis_angle_to_rotation_matrix(axis,angle)
                     except:
                         pass
 
@@ -186,7 +186,7 @@ class Test_euler_angles_to_axis_angle:
             for order,order_valid in orders:
                 for intr,intrinsic_valid in intrinsic:
                     if angle_valid and order_valid and intrinsic_valid:
-                        out = PDM.euler_angles_to_axis_angle(*angl,order,intr)  
+                        out = PDM.euler_angles_to_axis_angle(*angl,order,intr)
                     else:
                         try:
                             out = PDM.euler_angles_to_axis_angle(*angl,order,intr)
@@ -198,7 +198,7 @@ class Test_euler_angles_to_axis_angle:
         ang_y = 20.*deg2rad
         ang_z = 4. *deg2rad
         axis,angle = PDM.euler_angles_to_axis_angle(ang_x,ang_y,ang_z)
-        
+
         expec_axis = np.array([0.4801993,  0.8735463,  0.07953301])
         expec_angle = 0.4061631775316828
         assert np.allclose(axis,expec_axis)
@@ -210,17 +210,17 @@ class Test_euler_angles_to_axis_angle:
         assert np.allclose(angle2,expec_angle)
 
 
-        axis,angle = PDM.euler_angles_to_axis_angle(ang_x,ang_y,ang_z,intrinsic=False)  
+        axis,angle = PDM.euler_angles_to_axis_angle(ang_x,ang_y,ang_z,intrinsic=False)
         expec_axis = np.array([0.52422041, 0.81348871, 0.2518513])
         expec_angle = 0.41854053477833275
         assert np.allclose(axis,expec_axis)
         assert np.allclose(angle,expec_angle)
-        
+
         rotation_matrix = PDM.euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,intrinsic=False)
         axis2,angle2 = PDM.rotation_matrix_to_axis_angle(rotation_matrix)
         assert np.allclose(axis2,expec_axis)
         assert np.allclose(angle2,expec_angle)
-        
+
 class Test_euler_angles_to_euler_angles:
     @staticmethod
     def test_arguments():
@@ -274,7 +274,7 @@ class Test_euler_angles_to_euler_angles:
         assert abs(out[0]-ang_x)<1e-12
         assert abs(out[1]-ang_y)<1e-12
         assert abs(out[2]-ang_z)<1e-12
-        
+
 class Test_euler_angles_to_rotation_matrix:
     @staticmethod
     def test_arguments():
@@ -304,7 +304,7 @@ class Test_euler_angles_to_rotation_matrix:
             for order,order_valid in orders:
                 for intr,intrinsic_valid in intrinsic:
                     if angle_valid and order_valid and intrinsic_valid:
-                        out = PDM.euler_angles_to_rotation_matrix(*angl,order,intr)  
+                        out = PDM.euler_angles_to_rotation_matrix(*angl,order,intr)
                     else:
                         try:
                             out = PDM.euler_angles_to_rotation_matrix(*angl,order,intr)
@@ -394,7 +394,7 @@ class Test_rotation_matrix_to_axis_angle:
         axis /=np.linalg.norm(axis)
         assert np.allclose(axis,axis2)
         assert np.allclose(angle,angle2)
-        
+
 class Test_rotation_matrix_to_euler_angles:
     @staticmethod
     def test_arguments():
@@ -533,14 +533,14 @@ class Test_two_vectors_to_euler_angles:
                                 out = PDM.two_vectors_to_euler_angles(vec1,vec2,False,order,intr)
                             except:
                                 pass
-        
+
     @staticmethod
     def test_compute():
         vec1 = np.array([1.,0.,0.])
         vec2 = np.array([1.,1.,0.])
         out = PDM.two_vectors_to_euler_angles(vec1,vec2)
         print(out)
-        
+
 class Test_two_vectors_to_rotation_matrix:
     @staticmethod
     def test_arguments():
@@ -591,19 +591,22 @@ class Test_axes_origin_to_homogeneous_matrix:
             axes_origin_A = np.array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.],[0.,0.,0.]])
             axes_origin_B = PDM.apply_homogeneous_matrix_to_coords(axes_origin_A,homo)
             axis1,axis2,axis3,_ = axes_origin_B
-            
+
             # testing direct transformation
             homo = PDM.axes_and_origin_to_homogeneous_matrix(axis1,axis2,axis3,orig)
-            coords_B = PDM.apply_homogeneous_matrix_to_coords(axes_origin_A,homo)
-            true_coords_B = axes_origin_B+orig[None]
+            coords_B = PDM.apply_homogeneous_matrix_to_coords(axes_origin_B+orig[None],homo)
+
+            true_coords_B = axes_origin_A
             assert np.allclose(coords_B,true_coords_B)
 
             # testing reverse transformation
             homo_r = PDM.axes_and_origin_to_homogeneous_matrix(axis1,axis2,axis3,orig,reverse=True)
             assert np.allclose(homo_r@homo,np.eye(4))
-            coords_A = PDM.apply_homogeneous_matrix_to_coords(coords_B,homo_r)
-            assert np.allclose(coords_A,axes_origin_A)
-        
+            coords_A = PDM.apply_homogeneous_matrix_to_coords(axes_origin_A,homo_r)
+            coords_A -= orig[None]
+            true_coords_A = axes_origin_B
+            assert np.allclose(coords_A,true_coords_A)
+
 
 class Test_periodic_t_info_to_homogeneous_matrix:
     @staticmethod
