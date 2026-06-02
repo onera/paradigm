@@ -120,7 +120,7 @@ _generate_mesh
 )
 {
   int              n_part       = 1;
-  PDM_split_dual_t split_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_split_dual_t split_method = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /* Warmup */
   PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(pdm_comm,
