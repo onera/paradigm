@@ -854,7 +854,8 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_euler_an
     exp_trsl[0] =  5.0658452273779386e-01;
     exp_trsl[1] = -5.4022762270905922e+00;
     exp_trsl[2] =  6.8962876743603436e+00;
-    CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,10*EPS); // sensitive to compilation options
+    CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,EPS); // sensitive to compilation options
+    // CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,10*EPS); // sensitive to compilation options
 }
 
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic_t_info no rot_center", 1) {
@@ -924,7 +925,7 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic
     exp_trsl[0] =  5.0658452273779386e-01;
     exp_trsl[1] = -5.4022762270905922e+00;
     exp_trsl[2] =  6.8962876743603436e+00;
-    CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,10*EPS); // sensitive to compilation options
+    CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,EPS); // sensitive to compilation options
 }
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic_t_info rot_center", 1) {
     double axis[3] = {1.,-2.,3.};
@@ -1094,7 +1095,7 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_axis_angle", 1)
     exp_vect[0] = -2.3452078799117118e+00;
     exp_vect[1] =  4.6904157598234306e+00;
     exp_vect[2] = -7.0356236397351442e+00;
-    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,10*EPS); // sensitive to compilation options
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS); // sensitive to compilation options
 
     // double cross[3];
     // double dot;

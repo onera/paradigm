@@ -122,13 +122,13 @@ cdef extern from "pdm_rotation.h":
                                                              double*    ang_z)
 
   void PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation(const double*    homogeneous_matrix,
-                                                                           const PDM_bool_t reverse,
-                                                                           const int        order[3],
-                                                                           const PDM_bool_t intrinsic,
-                                                                                 double*    ang_x,
-                                                                                 double*    ang_y,
-                                                                                 double*    ang_z,
-                                                                                 double     rotation_center[3])
+                                                                       const PDM_bool_t reverse,
+                                                                       const int        order[3],
+                                                                       const PDM_bool_t intrinsic,
+                                                                             double*    ang_x,
+                                                                             double*    ang_y,
+                                                                             double*    ang_z,
+                                                                             double     rotation_center[3])
 
   void PDM_rotation_homogeneous_matrix_to_periodic_t_info(const double*    homogeneous_matrix,
                                                           const PDM_bool_t reverse,
@@ -706,7 +706,7 @@ def rotation_matrix_and_rotation_center_to_homogeneous_matrix(
 
 def homogeneous_matrix_to_axis_angle(
   NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
-  bint reverse = False,):
+  bint reverse = False):
   """homogeneous_matrix_to_axis_angle(homogeneous_matrix,reverse=False)
 
   Converts a rotation expressed as an homogeneous matrix to axis-angle
@@ -737,7 +737,7 @@ def homogeneous_matrix_to_euler_angles(
     bint intrinsic = True):
   """homogeneous_matrix_to_euler_angles(homogeneous_matrix,reverse=False,order=(2,1,0),intrinsic=True)
 
-  Computes a rotation expressed as an homogeneous matrix to Euler angles
+  Converts a rotation expressed as an homogeneous matrix to Euler angles
 
   Caution: does not consider the affine part of the transformation (rotation center and translation)
 
@@ -772,7 +772,7 @@ def homogeneous_matrix_to_euler_angles_and_rotation_center(
     bint intrinsic = True):
   """homogeneous_matrix_to_euler_angles_and_rotation_center(homogeneous_matrix,reverse=False,order=(2,1,0),intrinsic=True)
 
-  Computes a rotation expressed as an homogeneous matrix to Euler angles and a rotation center
+  Converts a rotation expressed as an homogeneous matrix to Euler angles and a rotation center
 
   Caution: does not consider the rotation-axis-wise translation component
 
