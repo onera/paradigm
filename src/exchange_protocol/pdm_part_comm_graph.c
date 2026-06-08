@@ -289,59 +289,6 @@ _compute_owner_gen
 
 static
 void
-_compute_hash_owner
-(
-  PDM_part_comm_graph_t *pcg
-)
-{
-  int i_rank = -1;
-  PDM_MPI_Comm_rank(pcg->comm, &i_rank);
-
-  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
-    int n_entity_graph = pcg->n_entity_graph[i_part];
-
-    int *lbound_entity = NULL;
-    PDM_malloc(lbound_entity, n_entity_graph, int);
-
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      lbound_entity[idx_entity] = pcg->pentity_graph[i_part][4*idx_entity];
-      pcg->bound_owner[i_part][idx_entity] = -1;
-    }
-
-    int n_unique = PDM_inplace_unique(lbound_entity, 0, n_entity_graph-1);
-
-    int *lowner = PDM_array_const_int(n_unique, -1);
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int l_entity = pcg->pentity_graph[i_part][4*idx_entity];
-      int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
-
-      pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
-
-      int my_location[3] = {i_rank, i_part+1, l_entity};
-
-      if(lowner[pos] != 0) {
-        if (_compare_nuplets_hash_abs(3, my_location, &pcg->pentity_graph[i_part][4*idx_entity+1]) >= 0) {
-          lowner[pos] = 1;
-        }
-        else {
-          lowner[pos] = 0;
-        }
-      }
-    }
-
-    /* Last loop to fill */
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int pos = pcg->bound_owner[i_part][idx_entity];
-      pcg->bound_owner[i_part][idx_entity] = lowner[pos];
-    }
-
-    PDM_free(lowner);
-    PDM_free(lbound_entity);
-  }
-}
-
-static
-void
 _allocate_send_buffer_strid_cst
 (
   PDM_part_comm_graph_t   *pcg,
