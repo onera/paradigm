@@ -276,11 +276,11 @@ PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix
 
 /**
  *
- * \brief Converts the info of a CGNS Periodic_t node to a 4-by-4 homogeneous rotation matrix
+ * \brief Converts the info of a CGNS Periodic_t node (rotation center, Euler angles and translation vector) to a 4-by-4 homogeneous rotation matrix, assuming a ZYX intrinsic order
  *
- * \param [in]   rotation_center
- * \param [in]   rotation_angle
- * \param [in]   translation
+ * \param [in]   rotation_center    Rotation center
+ * \param [in]   rotation_angle     Rotation angles (Euler angles ZYX intrinsic)
+ * \param [in]   translation        Translation vector (applied **after** rotation)
  * \param [in]   reverse            If True, encodes the reverse transformation
  * \param [out]  homogeneous_matrix 4-by-4 rotation matrix
  *
@@ -429,6 +429,58 @@ PDM_rotation_homogeneous_matrix_to_euler_angles
         double     *ang_x,
         double     *ang_y,
         double     *ang_z
+);
+
+/**
+ *
+ * \brief Converts a rotation expressed as a 4-by-4 homogeneous rotation matrix to euler angles and rotation center
+ *
+ * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [in]   reverse            If True, encodes the reverse transformation
+ * \param [in]   order              Order of rotations to apply
+ * \param [in]   intrinsic          <a href="https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations">Axis conventions</a>
+ * \param [out]  ang_x              Rotation angle around the x-axis
+ * \param [out]  ang_y              Rotation angle around the y-axis
+ * \param [out]  ang_z              Rotation angle around the z-axis
+ * \param [out]  translation        Translation vector
+ *
+ */
+
+void
+PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation
+(
+  const double*    homogeneous_matrix,
+  const PDM_bool_t reverse,
+  const int        order[3],
+  const PDM_bool_t intrinsic,
+        double*    ang_x,
+        double*    ang_y,
+        double*    ang_z,
+        double     translation[3]
+);
+
+/**
+ *
+ * \brief Converts a 4-by-4 homogeneous rotation matrix to the info of a CGNS Periodic_t node (rotation center, Euler angles and translation vector), assuming a ZYX intrinsic order
+ *
+ * \param [in]  homogeneous_matrix      4-by-4 rotation matrix
+ * \param [in]  reverse                 If True, encodes the reverse transformation
+ * \param [in]  compute_rotation_center If True computes the rotation center so that the translation is along the rotation axis, set to 0. otherwise
+ * \param [out] rotation_center         Rotation center
+ * \param [out] rotation_angle          Rotation angles (Euler angles ZYX intrinsic)
+ * \param [out] translation             Translation vector (applied **after** rotation)
+ *
+ */
+
+void
+PDM_rotation_homogeneous_matrix_to_periodic_t_info
+(
+  const double*    homogeneous_matrix,
+  const PDM_bool_t reverse,
+  const PDM_bool_t compute_rotation_center,
+        double     rotation_center[3],
+        double     rotation_angle[3],
+        double     translation[3]
 );
 
 /**
