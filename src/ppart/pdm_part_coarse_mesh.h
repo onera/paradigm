@@ -1,10 +1,3 @@
-/*
- * \file
- * \author jmagnene
- *
- * \date July 8, 2016, 9:29 AM
- */
-
 #ifndef PDM_PART_COARSE_MESH_H
 #define	PDM_PART_COARSE_MESH_H
 
@@ -16,11 +9,9 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
-
+#endif /* __cplusplus */
 
 typedef struct _coarse_mesh_t PDM_coarse_mesh_t;
 
@@ -350,9 +341,9 @@ PDM_part_coarse_mesh_display
 
 
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif	/* PDM_PART_COARSE_MESH_H */
 

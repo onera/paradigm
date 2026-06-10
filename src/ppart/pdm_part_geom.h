@@ -1,13 +1,5 @@
-/*
- * \file
- */
-
 #ifndef __PDM_PART_GEOM_H__
 #define __PDM_PART_GEOM_H__
-
-/*============================================================================
- * Mesh partitioning with geometric methods (SFC)
- *============================================================================*/
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -21,9 +13,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
