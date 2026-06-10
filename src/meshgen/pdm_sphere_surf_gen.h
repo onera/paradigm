@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_SPHERE_SURF_GEN_H__
 #define __PDM_SPHERE_SURF_GEN_H__
 
@@ -22,9 +18,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -224,5 +217,5 @@ PDM_sphere_surf_icosphere_gen_part
 
 #ifdef __cplusplus
 }
-#endif
-#endif
+#endif /* __cplusplus */
+#endif /* __PDM_SPHERE_SURF_GEN_H__ */
