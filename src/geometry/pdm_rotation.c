@@ -100,20 +100,6 @@ transpose_homogeneous_matrix
   }
 }
 
-// static
-// void
-// print_matrix(const double* mat,const int n_row,const int n_col) {
-//     PDM_printf("#####\n");
-//     for (int i=0; i<n_row;i++){
-//         PDM_printf("|");
-//         for (int j=0; j<n_col;j++){
-//             PDM_printf("%5.3f\t",mat[n_col*i+j]);
-//         }
-//         PDM_printf("|\n");
-//     }
-//     PDM_printf("#####\n");
-// }
-
 static
 void
 set_translation_to_homogeneous_matrix

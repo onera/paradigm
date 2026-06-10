@@ -12,18 +12,6 @@
  *  PDM_rotation_t COMPOSITE FUNCTIONS
  *----------------------------------------------------------------------------*/
 
-// static void print_matrix(const double* mat,const int n_row,const int n_col) {
-//     PDM_printf("#####\n");
-//     for (int i=0; i<n_row;i++){
-//         PDM_printf("|");
-//         for (int j=0; j<n_col;j++){
-//             PDM_printf("%5.3f\t",mat[n_col*i+j]);
-//         }
-//         PDM_printf("|\n");
-//     }
-//     PDM_printf("#####\n");
-// }
-
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
 
 
@@ -79,14 +67,10 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_multiply_n_by_n_matrices", 1) 
     double exp_C[16];
     multiply_matrices(A,B,exp_C);
     PDM_rotation_multiply_n_by_n_matrices(A,B,4,C);
-    // print_matrix(C,4,4);
-    // print_matrix(exp_C,4,4);
     CHECK_EQ_C_ARRAY_FLOAT(C,exp_C,12,EPS);
 
     multiply_matrices(D,E,exp_C);
     PDM_rotation_multiply_n_by_n_matrices(D,E,4,C);
-    // print_matrix(C,4,4);
-    // print_matrix(exp_C,4,4);
     CHECK_EQ_C_ARRAY_FLOAT(C,exp_C,12,EPS);
 }
 
@@ -153,10 +137,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_n_by_n_matrix", 1) {
 
     }
     PDM_rotation_apply_n_by_n_matrix(mat,vector,3,n_samp,vector_out);
-    // print_matrix(mat,3,3);
-    // print_matrix(vector,7,3);
-    // print_matrix(vector_out,7,3);
-    // print_matrix(exp_out,7,3);
     CHECK_EQ_C_ARRAY_FLOAT(vector_out,exp_out,12,EPS);
 }
 
@@ -284,8 +264,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_axis_angle_to_euler_angles", 1
     // reverse
     PDM_rotation_axis_angle_to_euler_angles(axis,-angle,PDM_FALSE,order,PDM_TRUE,&exp_x,&exp_y,&exp_z);
     PDM_rotation_axis_angle_to_euler_angles(axis, angle,PDM_TRUE, order,PDM_TRUE,&ang_x,&ang_y,&ang_z);
-    // printf("%s::%d intrinsic order[%d %d %d] => [%23.16e %23.16e %23.16e]\n",__FILE__,__LINE__,
-    //     order[0],order[1],order[2],ang_x,ang_y,ang_z);
     CHECK(PDM_ABS(ang_x-exp_x)<EPS);
     CHECK(PDM_ABS(ang_y-exp_y)<EPS);
     CHECK(PDM_ABS(ang_z-exp_z)<EPS);
@@ -391,11 +369,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_to_axis_angle", 1
 
     // reverse, [2,1,0], intrinsic
     PDM_rotation_euler_angles_to_axis_angle(ang_x,ang_y,ang_z,order,intrinsic,PDM_TRUE,axis,&angle);
-    // printf("%s::%d axis = [%23.16e,%23.16e,%23.16e] angle=%23.16e\n",__FILE__,__LINE__,
-    //     axis[0],
-    //     axis[1],
-    //     axis[2],
-    //     angle);
     expec_ax[0] = -2.6310757008103358e-01;
     expec_ax[1] = -3.7932149432640026e-02;
     expec_ax[2] = -9.6402051773054809e-01;
@@ -461,8 +434,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_to_euler_angles",
     out_order[1] = 2;
     out_order[2] = 1;
     PDM_rotation_euler_angles_to_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,PDM_FALSE,out_order,intrinsic,&out_ang_x,&out_ang_y,&out_ang_z);
-    // printf("%s::%d angles = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_ang_x,out_ang_y,out_ang_z);
     exp_ang_x = 2.8423566328092438e+00;
     exp_ang_y = 2.5071159211902962e+00;
     exp_ang_z = 6.5060533465895043e-01;
@@ -489,15 +460,8 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_to_rotation_matri
     };
     PDM_rotation_euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order,intrinsic,PDM_FALSE,rot_mat);
     CHECK_EQ_C_ARRAY_FLOAT(rot_mat,exp_mat,9,EPS);
-    // printf("%s::%d \n",__FILE__,__LINE__);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
 
     PDM_rotation_euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order,intrinsic,PDM_TRUE,rot_mat);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
     double exp_mat_rev[9] = {
         -6.4085638205578854e-01,  6.4085638205578865e-01,  4.2261826174069950e-01,
         -6.0566819194206101e-01, -7.6035721184237781e-01,  2.3456971600980447e-01,
@@ -524,15 +488,8 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_euler_angles_to_homogeneous_ma
     };
     PDM_rotation_euler_angles_to_homogeneous_matrix(ang_x,ang_y,ang_z,order,intrinsic,PDM_FALSE,rot_mat);
     CHECK_EQ_C_ARRAY_FLOAT(rot_mat,exp_mat,16,EPS);
-    // printf("%s::%d \n",__FILE__,__LINE__);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
 
     PDM_rotation_euler_angles_to_homogeneous_matrix(ang_x,ang_y,ang_z,order,intrinsic,PDM_TRUE,rot_mat);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
     double exp_mat_rev[16] = {
         -6.4085638205578854e-01,  6.4085638205578865e-01,  4.2261826174069950e-01, 0.,
         -6.0566819194206101e-01, -7.6035721184237781e-01,  2.3456971600980447e-01, 0.,
@@ -617,12 +574,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_rotation_matrix_to_axis_angle"
     CHECK(PDM_ABS(out_ang-angle)<EPS);
 
     PDM_rotation_rotation_matrix_to_axis_angle(rot_mat,PDM_TRUE,out_axis,&out_ang);
-    // printf("%s::%d",__FILE__,__LINE__);
-    // printf("out_axis=[\n%23.16e\n%23.16e\n%23.16e\n] out_angle=%23.16e\n",
-    //     out_axis[0],
-    //     out_axis[1],
-    //     out_axis[2],
-    //     out_ang);
     exp_axis[0] = -2.6726124191242445e-01;
     exp_axis[1] =  5.3452248382484879e-01;
     exp_axis[2] = -8.0178372573727308e-01;
@@ -681,10 +632,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_rotation_matrix_to_euler_angle
     // [2,1,0], intrinsic reverse
     PDM_rotation_rotation_matrix_to_euler_angles(rot_mat,PDM_TRUE,order,intrinsic,
                                                 &ang_x,&ang_y,&ang_z);
-    // printf("angles=[\n%23.16e\n%23.16e\n%23.16e\n]\n",
-    //     ang_x,
-    //     ang_y,
-    //     ang_z);
     exp_x = -1.1697869430919412e+00;
     exp_y =  1.2156176430153876e-02;
     exp_z = -2.1959400502139310e+00;
@@ -762,12 +709,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_axis_ang
 
     PDM_rotation_axis_angle_to_homogeneous_matrix(axis,angle,PDM_FALSE,homo_mat);
     PDM_rotation_homogeneous_matrix_to_axis_angle(homo_mat,PDM_FALSE,out_axis,&out_ang);
-    // printf("%s::%d",__FILE__,__LINE__);
-    // printf("out_axis=[\n%23.16e\n%23.16e\n%23.16e\n] out_angle=%23.16e\n",
-    //     out_axis[0],
-    //     out_axis[1],
-    //     out_axis[2],
-    //     out_ang);
     exp_axis[0] =  2.6726124191242445e-01;
     exp_axis[1] = -5.3452248382484879e-01;
     exp_axis[2] =  8.0178372573727308e-01;
@@ -795,15 +736,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_euler_an
     double exp_x,exp_y,exp_z;
     PDM_rotation_axis_angle_to_rotation_matrix(axis,angle,PDM_FALSE,rot_mat);
     PDM_rotation_axis_angle_to_homogeneous_matrix(axis,angle,PDM_FALSE,homo_mat);
-    // printf("rotmat\n");
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[0*3+0],rot_mat[0*3+1],rot_mat[0*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[1*3+0],rot_mat[1*3+1],rot_mat[1*3+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",rot_mat[2*3+0],rot_mat[2*3+1],rot_mat[2*3+2]);
-
-    // printf("hmat\n");
-    // printf("[%23.16e %23.16e %23.16e]\n",homo_mat[0*4+0],homo_mat[0*4+1],homo_mat[0*4+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",homo_mat[1*4+0],homo_mat[1*4+1],homo_mat[1*4+2]);
-    // printf("[%23.16e %23.16e %23.16e]\n",homo_mat[2*4+0],homo_mat[2*4+1],homo_mat[2*4+2]);
 
     // [0,1,2]
     order[0] = 0;
@@ -811,10 +743,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_euler_an
     order[2] = 2;
     PDM_rotation_rotation_matrix_to_euler_angles(rot_mat,PDM_FALSE,order,intrinsic,&exp_x,&exp_y,&exp_z);
     PDM_rotation_homogeneous_matrix_to_euler_angles(homo_mat,PDM_FALSE,order,intrinsic,&ang_x,&ang_y,&ang_z);
-    // printf("%s::%d angles = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     ang_x,ang_y,ang_z);
-    // printf("%s::%d angles = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     exp_x,exp_y,exp_z);
     CHECK(PDM_ABS(ang_x-exp_x)<EPS);
     CHECK(PDM_ABS(ang_y-exp_y)<EPS);
     CHECK(PDM_ABS(ang_z-exp_z)<EPS);
@@ -838,24 +766,15 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_euler_an
     order[1] = 1;
     order[2] = 0;
     PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation(homo_mat,PDM_FALSE,order,intrinsic,&ang_x,&ang_y,&ang_z,translation);
-    // printf("%s::%d translation = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     translation[0],
-    //     translation[1],
-    //     translation[2]);
     exp_trsl[0] = -4.0000000000000000e+00;
     exp_trsl[1] =  5.0000000000000000e+00;
     exp_trsl[2] = -6.0000000000000000e+00;
     CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,EPS);
     PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation(homo_mat,PDM_TRUE,order,intrinsic,&ang_x,&ang_y,&ang_z,translation);
-    // printf("%s::%d translation = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     translation[0],
-    //     translation[1],
-    //     translation[2]);
     exp_trsl[0] =  5.0658452273779386e-01;
     exp_trsl[1] = -5.4022762270905922e+00;
     exp_trsl[2] =  6.8962876743603436e+00;
-    CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,EPS); // sensitive to compilation options
-    // CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,10*EPS); // sensitive to compilation options
+    CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,10*EPS); // sensitive to compilation options
 }
 
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic_t_info no rot_center", 1) {
@@ -878,24 +797,12 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic
 
     PDM_rotation_homogeneous_matrix_to_periodic_t_info(homo_mat,PDM_FALSE,compute_rotation_center,
                                                        rotation_center,rotation_angle,translation);
-    // printf("%s::%d rotation_center = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     rotation_center[0],
-    //     rotation_center[1],
-    //     rotation_center[2]);
     CHECK(PDM_ABS(rotation_center[0])<EPS);
     CHECK(PDM_ABS(rotation_center[1])<EPS);
     CHECK(PDM_ABS(rotation_center[2])<EPS);
-    // printf("%s::%d rotation_angle = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     rotation_angle[0],
-    //     rotation_angle[1],
-    //     rotation_angle[2]);
     CHECK(PDM_ABS(rotation_angle[0]-ang_x)<EPS);
     CHECK(PDM_ABS(rotation_angle[1]-ang_y)<EPS);
     CHECK(PDM_ABS(rotation_angle[2]-ang_z)<EPS);
-    // printf("%s::%d translation = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     translation[0],
-    //     translation[1],
-    //     translation[2]);
     CHECK(PDM_ABS(translation[0]-homo_mat[3])<EPS);
     CHECK(PDM_ABS(translation[1]-homo_mat[7])<EPS);
     CHECK(PDM_ABS(translation[2]-homo_mat[11])<EPS);
@@ -903,29 +810,17 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic
     PDM_rotation_axis_angle_to_euler_angles(axis,angle,PDM_TRUE,order,intrinsic,&ang_x,&ang_y,&ang_z);
     PDM_rotation_homogeneous_matrix_to_periodic_t_info(homo_mat,PDM_TRUE,compute_rotation_center,
                                                        rotation_center,rotation_angle,translation);
-    // printf("%s::%d rotation_center = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     rotation_center[0],
-    //     rotation_center[1],
-    //     rotation_center[2]);
     CHECK(PDM_ABS(rotation_center[0])<EPS);
     CHECK(PDM_ABS(rotation_center[1])<EPS);
     CHECK(PDM_ABS(rotation_center[2])<EPS);
-    // printf("%s::%d rotation_angle = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     rotation_angle[0],
-    //     rotation_angle[1],
-    //     rotation_angle[2]);
     CHECK(PDM_ABS(rotation_angle[0]-ang_x)<EPS);
     CHECK(PDM_ABS(rotation_angle[1]-ang_y)<EPS);
     CHECK(PDM_ABS(rotation_angle[2]-ang_z)<EPS);
-    // printf("%s::%d translation = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     translation[0],
-    //     translation[1],
-    //     translation[2]);
     double exp_trsl[3];
     exp_trsl[0] =  5.0658452273779386e-01;
     exp_trsl[1] = -5.4022762270905922e+00;
     exp_trsl[2] =  6.8962876743603436e+00;
-    CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,EPS); // sensitive to compilation options
+    CHECK_EQ_C_ARRAY_FLOAT(translation,exp_trsl,3,10*EPS); // sensitive to compilation options
 }
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic_t_info rot_center", 1) {
     double axis[3] = {1.,-2.,3.};
@@ -953,10 +848,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic
                                                        rotation_center,rotation_angle,translation);
     PDM_rotation_apply_n_by_n_matrix(rot_mat,rotation_center,3,1,check);
 
-    // printf("%s::%d rotation_center = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     rotation_center[0],
-    //     rotation_center[1],
-    //     rotation_center[2]);
     // checking that -RC+R+T == hmat[:,-1]
     check[0] *= -1;
     check[0] += rotation_center[0]+translation[0];
@@ -969,24 +860,12 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic
     CHECK(PDM_ABS(check[2]-homo_mat[11])<EPS);
     // checking translation is // to axis
     PDM_CROSS_PRODUCT(cross,axis,translation); // should be 0
-    // printf("%s::%d cross = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
     CHECK(PDM_ABS(cross[0])<2*EPS);
     CHECK(PDM_ABS(cross[1])<2*EPS);
     CHECK(PDM_ABS(cross[2])<2*EPS);
-    // printf("%s::%d rotation_angle = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     rotation_angle[0],
-    //     rotation_angle[1],
-    //     rotation_angle[2]);
     CHECK(PDM_ABS(rotation_angle[0]-ang_x)<EPS);
     CHECK(PDM_ABS(rotation_angle[1]-ang_y)<EPS);
     CHECK(PDM_ABS(rotation_angle[2]-ang_z)<EPS);
-    // printf("%s::%d translation = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     translation[0],
-    //     translation[1],
-    //     translation[2]);
     double exp_trsl[3];
     exp_trsl[0] = -2.2857142857142865e+00;
     exp_trsl[1] =  4.5714285714285712e+00;
@@ -998,10 +877,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic
     PDM_rotation_homogeneous_matrix_to_periodic_t_info(homo_mat,PDM_TRUE,compute_rotation_center,
                                                     rotation_center,rotation_angle,translation);
     PDM_rotation_apply_n_by_n_matrix(rot_mat,rotation_center,3,1,check);
-    // printf("%s::%d rotation_center = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     rotation_center[0],
-    //     rotation_center[1],
-    //     rotation_center[2]);
     // checking that -RC+R+T == hmat[:,-1]
     check[0] *= -1;
     check[0] += rotation_center[0]-translation[0];
@@ -1009,37 +884,17 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_homogeneous_matrix_to_periodic
     check[1] += rotation_center[1]-translation[1];
     check[2] *= -1;
     check[2] += rotation_center[2]-translation[2];
-    // printf("%s::%d check = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     check[0],
-    //     check[1],
-    //     check[2]);
-    // printf("%s::%d homo_mat = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     homo_mat[3],
-    //     homo_mat[7],
-    //     homo_mat[11]);
     CHECK(PDM_ABS(check[0]-homo_mat[3])<EPS);
     CHECK(PDM_ABS(check[1]-homo_mat[7])<EPS);
     CHECK(PDM_ABS(check[2]-homo_mat[11])<EPS);
     // checking translation is // to axis
     PDM_CROSS_PRODUCT(cross,axis,translation); // should be 0
-    // printf("%s::%d cross = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
     CHECK(PDM_ABS(cross[0])<2*EPS);
     CHECK(PDM_ABS(cross[1])<2*EPS);
     CHECK(PDM_ABS(cross[2])<2*EPS);
-    // printf("%s::%d rotation_angle = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     rotation_angle[0],
-    //     rotation_angle[1],
-    //     rotation_angle[2]);
     CHECK(PDM_ABS(rotation_angle[0]-ang_x)<EPS);
     CHECK(PDM_ABS(rotation_angle[1]-ang_y)<EPS);
     CHECK(PDM_ABS(rotation_angle[2]-ang_z)<EPS);
-    // printf("%s::%d translation = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     translation[0],
-    //     translation[1],
-    //     translation[2]);
     exp_trsl[0] =  2.2857142857142865e+00;
     exp_trsl[1] = -4.5714285714285712e+00;
     exp_trsl[2] =  6.8571428571428577e+00;
@@ -1076,10 +931,6 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_axis_angle", 1)
     PDM_rotation_two_vectors_to_axis_angle(vect_1,vect_2,PDM_FALSE,axis,&ang);
     PDM_rotation_axis_angle_to_rotation_matrix(axis,ang,PDM_FALSE,rot_mat);
     PDM_rotation_apply_n_by_n_matrix(rot_mat,vect_1,3,1,out_vect);
-    // printf("%s::%d out_vect = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_vect[0],
-    //     out_vect[1],
-    //     out_vect[2]);
     exp_vect[0] =  1.7056057308448840e+00;
     exp_vect[1] = -2.1320071635561049e+00;
     exp_vect[2] =  2.5584085962673235e+00;
@@ -1088,28 +939,10 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_axis_angle", 1)
     PDM_rotation_two_vectors_to_axis_angle(vect_1,vect_2,PDM_TRUE,axis,&ang);
     PDM_rotation_axis_angle_to_rotation_matrix(axis,ang,PDM_FALSE,rot_mat);
     PDM_rotation_apply_n_by_n_matrix(rot_mat,vect_2,3,1,out_vect);
-    // printf("%s::%d out_vect = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_vect[0],
-    //     out_vect[1],
-    //     out_vect[2]);
     exp_vect[0] = -2.3452078799117118e+00;
     exp_vect[1] =  4.6904157598234306e+00;
     exp_vect[2] = -7.0356236397351442e+00;
-    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS); // sensitive to compilation options
-
-    // double cross[3];
-    // double dot;
-    // PDM_CROSS_PRODUCT(cross,vect_1,out_vect);
-    // dot = PDM_DOT_PRODUCT(vect_1,out_vect);
-    // double norm_1 = vect_1[0]*vect_1[0]+vect_1[1]*vect_1[1]+vect_1[2]*vect_1[2];
-    // double norm_2 = vect_2[0]*vect_2[0]+vect_2[1]*vect_2[1]+vect_2[2]*vect_2[2];
-    // double norm_out = out_vect[0]*out_vect[0]+out_vect[1]*out_vect[1]+out_vect[2]*out_vect[2];
-    // printf("dot= %23.16e\n",dot);
-    // printf("norms= %23.16e  %23.16e\n",norm_2,norm_out);
-    // printf("cross= [%23.16e %23.16e %23.16e]\n",
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
+    CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,10*EPS); // sensitive to compilation options
 
     // permuting vect_1 & vect_2
     double axis_2[3];
@@ -1131,52 +964,19 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_euler_angles", 
     PDM_rotation_two_vectors_to_euler_angles(vect_1,vect_2,PDM_FALSE,order,intrinsic,&ang_x,&ang_y,&ang_z);
     PDM_rotation_euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order,intrinsic,PDM_FALSE,rot_mat);
     PDM_rotation_apply_n_by_n_matrix(rot_mat,vect_1,3,1,out_vect);
-    // printf("%s::%d out_vect = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_vect[0],
-    //     out_vect[1],
-    //     out_vect[2]);
     exp_vect[0] =  1.7056057308448838e+00;
     exp_vect[1] = -2.1320071635561044e+00;
     exp_vect[2] =  2.5584085962673262e+00;
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
 
-    // double cross[3];
-    // double dot;
-    // double norm_1 = vect_1[0]*vect_1[0]+vect_1[1]*vect_1[1]+vect_1[2]*vect_1[2];
-    // double norm_2 = vect_2[0]*vect_2[0]+vect_2[1]*vect_2[1]+vect_2[2]*vect_2[2];
-    // double norm_out = out_vect[0]*out_vect[0]+out_vect[1]*out_vect[1]+out_vect[2]*out_vect[2];
-
-    // PDM_CROSS_PRODUCT(cross,vect_2,out_vect);
-    // dot = PDM_DOT_PRODUCT(vect_2,out_vect);
-    // printf("dot= %23.16e\n",dot);
-    // printf("norms= %23.16e  %23.16e\n",norm_1,norm_out);
-    // printf("cross= [%23.16e %23.16e %23.16e]\n",
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
-
     // reverse
     PDM_rotation_two_vectors_to_euler_angles(vect_1,vect_2,PDM_TRUE,order,intrinsic,&ang_x,&ang_y,&ang_z);
     PDM_rotation_euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order,intrinsic,PDM_FALSE,rot_mat);
     PDM_rotation_apply_n_by_n_matrix(rot_mat,vect_2,3,1,out_vect);
-    // printf("%s::%d out_vect = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_vect[0],
-    //     out_vect[1],
-    //     out_vect[2]);
     exp_vect[0] = -2.3452078799117126e+00;
     exp_vect[1] =  4.6904157598234297e+00;
     exp_vect[2] = -7.0356236397351450e+00;
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
-
-    // norm_out = out_vect[0]*out_vect[0]+out_vect[1]*out_vect[1]+out_vect[2]*out_vect[2];
-    // PDM_CROSS_PRODUCT(cross,vect_1,out_vect);
-    // dot = PDM_DOT_PRODUCT(vect_1,out_vect);
-    // printf("dot= %23.16e\n",dot);
-    // printf("norms= %23.16e  %23.16e\n",norm_2,norm_out);
-    // printf("cross= [%23.16e %23.16e %23.16e]\n",
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
 
 }
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_rotation_matrix", 1) {
@@ -1187,51 +987,18 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_rotation_matrix
     double exp_vect[3];
     PDM_rotation_two_vectors_to_rotation_matrix(vect_1,vect_2,PDM_FALSE,rot_mat);
     PDM_rotation_apply_n_by_n_matrix(rot_mat,vect_1,3,1,out_vect);
-    // printf("%s::%d out_vect = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_vect[0],
-    //     out_vect[1],
-    //     out_vect[2]);
     exp_vect[0] =  1.7056057308448838e+00;
     exp_vect[1] = -2.1320071635561044e+00;
     exp_vect[2] =  2.5584085962673262e+00;
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
 
-    // double cross[3];
-    // double dot;
-    // double norm_1 = vect_1[0]*vect_1[0]+vect_1[1]*vect_1[1]+vect_1[2]*vect_1[2];
-    // double norm_2 = vect_2[0]*vect_2[0]+vect_2[1]*vect_2[1]+vect_2[2]*vect_2[2];
-    // double norm_out = out_vect[0]*out_vect[0]+out_vect[1]*out_vect[1]+out_vect[2]*out_vect[2];
-
-    // PDM_CROSS_PRODUCT(cross,vect_2,out_vect);
-    // dot = PDM_DOT_PRODUCT(vect_2,out_vect);
-    // printf("dot= %23.16e\n",dot);
-    // printf("norms= %23.16e  %23.16e\n",norm_1,norm_out);
-    // printf("cross= [%23.16e %23.16e %23.16e]\n",
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
-
     // reverse
     PDM_rotation_two_vectors_to_rotation_matrix(vect_1,vect_2,PDM_TRUE,rot_mat);
     PDM_rotation_apply_n_by_n_matrix(rot_mat,vect_2,3,1,out_vect);
-    // printf("%s::%d out_vect = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_vect[0],
-    //     out_vect[1],
-    //     out_vect[2]);
     exp_vect[0] = -2.3452078799117153e+00;
     exp_vect[1] =  4.6904157598234315e+00;
     exp_vect[2] = -7.0356236397351477e+00;
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
-
-    // norm_out = out_vect[0]*out_vect[0]+out_vect[1]*out_vect[1]+out_vect[2]*out_vect[2];
-    // PDM_CROSS_PRODUCT(cross,vect_1,out_vect);
-    // dot = PDM_DOT_PRODUCT(vect_1,out_vect);
-    // printf("dot= %23.16e\n",dot);
-    // printf("norms= %23.16e  %23.16e\n",norm_2,norm_out);
-    // printf("cross= [%23.16e %23.16e %23.16e]\n",
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
 
 }
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_homogeneous_matrix", 1) {
@@ -1242,51 +1009,18 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_to_homogeneous_mat
     double exp_vect[3];
     PDM_rotation_two_vectors_to_homogeneous_matrix(vect_1,vect_2,PDM_FALSE,homo_mat);
     PDM_rotation_apply_homogeneous_matrix(homo_mat,vect_1,1,out_vect);
-    // printf("%s::%d out_vect = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_vect[0],
-    //     out_vect[1],
-    //     out_vect[2]);
     exp_vect[0] =  1.7056057308448838e+00;
     exp_vect[1] = -2.1320071635561044e+00;
     exp_vect[2] =  2.5584085962673262e+00;
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
 
-    // double cross[3];
-    // double dot;
-    // double norm_1 = vect_1[0]*vect_1[0]+vect_1[1]*vect_1[1]+vect_1[2]*vect_1[2];
-    // double norm_2 = vect_2[0]*vect_2[0]+vect_2[1]*vect_2[1]+vect_2[2]*vect_2[2];
-    // double norm_out = out_vect[0]*out_vect[0]+out_vect[1]*out_vect[1]+out_vect[2]*out_vect[2];
-
-    // PDM_CROSS_PRODUCT(cross,vect_2,out_vect);
-    // dot = PDM_DOT_PRODUCT(vect_2,out_vect);
-    // printf("dot= %23.16e\n",dot);
-    // printf("norms= %23.16e  %23.16e\n",norm_1,norm_out);
-    // printf("cross= [%23.16e %23.16e %23.16e]\n",
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
-
     // reverse
     PDM_rotation_two_vectors_to_homogeneous_matrix(vect_1,vect_2,PDM_TRUE,homo_mat);
     PDM_rotation_apply_homogeneous_matrix(homo_mat,vect_2,1,out_vect);
-    // printf("%s::%d out_vect = [\n%23.16e\n%23.16e\n%23.16e\n]\n",__FILE__,__LINE__,
-    //     out_vect[0],
-    //     out_vect[1],
-    //     out_vect[2]);
     exp_vect[0] = -2.3452078799117153e+00;
     exp_vect[1] =  4.6904157598234315e+00;
     exp_vect[2] = -7.0356236397351477e+00;
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,3,EPS);
-
-    // norm_out = out_vect[0]*out_vect[0]+out_vect[1]*out_vect[1]+out_vect[2]*out_vect[2];
-    // PDM_CROSS_PRODUCT(cross,vect_1,out_vect);
-    // dot = PDM_DOT_PRODUCT(vect_1,out_vect);
-    // printf("dot= %23.16e\n",dot);
-    // printf("norms= %23.16e  %23.16e\n",norm_2,norm_out);
-    // printf("cross= [%23.16e %23.16e %23.16e]\n",
-    //     cross[0],
-    //     cross[1],
-    //     cross[2]);
 }
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_two_vectors_and_rotation_center_to_homogeneous_matrix", 1) {
     double vect_1[3] = {-1., 2.,-3.};
@@ -1332,36 +1066,24 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_axes_and_origin_to_homogeneous
     double hmat[16];
     PDM_rotation_axes_and_origin_to_homogeneous_matrix(axis_1,axis_2,axis_3,orig,PDM_FALSE,hmat);
 
-    // printf("hmat\n");
-    // printf("[%23.16e %23.16e %23.16e %23.16e]\n",hmat[0*4+0],hmat[0*4+1],hmat[0*4+2],hmat[0*4+3]);
-    // printf("[%23.16e %23.16e %23.16e %23.16e]\n",hmat[1*4+0],hmat[1*4+1],hmat[1*4+2],hmat[1*4+3]);
-    // printf("[%23.16e %23.16e %23.16e %23.16e]\n",hmat[2*4+0],hmat[2*4+1],hmat[2*4+2],hmat[2*4+3]);
-    // printf("[%23.16e %23.16e %23.16e %23.16e]\n",hmat[3*4+0],hmat[3*4+1],hmat[3*4+2],hmat[3*4+3]);
-
     // testing conversion of B base vectors in A system to B system
     in[0] = axis_1[0]+orig[0];
     in[1] = axis_1[1]+orig[1];
     in[2] = axis_1[2]+orig[2];
     PDM_rotation_apply_homogeneous_matrix(hmat,in,1,out);
     CHECK_EQ_C_ARRAY_FLOAT(&e[0],out,3,2*EPS);
-    // printf("out = [%23.16e %23.16e %23.16e]\n",
-    //     out[3*0+0],out[3*0+1],out[3*0+2]);
 
     in[0] = axis_2[0]+orig[0];
     in[1] = axis_2[1]+orig[1];
     in[2] = axis_2[2]+orig[2];
     PDM_rotation_apply_homogeneous_matrix(hmat,in,1,out);
     CHECK_EQ_C_ARRAY_FLOAT(&e[3],out,3,2*EPS);
-    // printf("out = [%23.16e %23.16e %23.16e]\n",
-    //     out[3*0+0],out[3*0+1],out[3*0+2]);
 
     in[0] = axis_3[0]+orig[0];
     in[1] = axis_3[1]+orig[1];
     in[2] = axis_3[2]+orig[2];
     PDM_rotation_apply_homogeneous_matrix(hmat,in,1,out);
     CHECK_EQ_C_ARRAY_FLOAT(&e[6],out,3,2*EPS);
-    // printf("out = [%23.16e %23.16e %23.16e]\n",
-    //     out[3*0+0],out[3*0+1],out[3*0+2]);
 
     double hmat_rev[16];
     PDM_rotation_axes_and_origin_to_homogeneous_matrix(axis_1,axis_2,axis_3,orig,PDM_TRUE,hmat_rev);

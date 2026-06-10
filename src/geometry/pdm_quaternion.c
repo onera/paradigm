@@ -57,17 +57,6 @@ _PDM_quaternion_compute_squared
   qt->q_squared[3] = qt->q[3] * qt->q[3];
 }
 
-// static
-// double
-// _PDM_quaternion_3x3_mat_det
-// (
-//   const double rot_mat[9]
-// )
-// { return (rot_mat[3*0+0] * (rot_mat[3*1+1] * rot_mat[3*2+2] - rot_mat[3*2+1] * rot_mat[3*1+2])
-//          -rot_mat[3*1+0] * (rot_mat[3*0+1] * rot_mat[3*2+2] - rot_mat[3*2+1] * rot_mat[3*0+2])
-//          +rot_mat[3*2+0] * (rot_mat[3*0+1] * rot_mat[3*1+2] - rot_mat[3*1+1] * rot_mat[3*0+2]));
-// }
-
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -112,7 +101,7 @@ PDM_quaternion_print
   const PDM_quaternion* qt
 )
 {
-  // PDM_printf("qt = [%23.16e,%23.16e,%23.16e,%23.16e]\n",
+
   PDM_printf("qt = [%12.5e %12.5e %12.5e %12.5e]\n",
     qt->q[0],
     qt->q[1],
@@ -183,10 +172,7 @@ PDM_quaternion_compose
   qt_out->q[2] = v2;
   qt_out->q[3] = v3;
   _PDM_quaternion_compute_squared(qt_out);
-  // _qt_out->q_squared[0] = w  * w;
-  // _qt_out->q_squared[1] = v1 * v1;
-  // _qt_out->q_squared[2] = v2 * v2;
-  // _qt_out->q_squared[3] = v3 * v3;
+
 }
 
 PDM_bool_t
@@ -559,7 +545,6 @@ PDM_quaternion_from_rotation_matrix
 )
 {
   double tr = rotation_matrix[3*0+0]+rotation_matrix[3*1+1]+rotation_matrix[3*2+2];
-  // printf("%s::%d det = %23.16e\n",__FILE__,__LINE__,_PDM_quaternion_3x3_mat_det(rotation_matrix));
   double pivots[4] = {
     rotation_matrix[3*0+0],
     rotation_matrix[3*1+1],
