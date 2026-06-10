@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_IO_UTILS_H__
 #define __PDM_IO_UTILS_H__
 
