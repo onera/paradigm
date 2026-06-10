@@ -58,28 +58,6 @@ extern "C" {
  *  \param[in, out] order      <-> ordering array base on Morton encoding, or
  *                                 lexicographical coordinate ordering for ties
  */
-
-/*
-  This function comes from "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2004-2009  EDF
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 inline static void
 _reorder_coords_lexicographic
 (
@@ -155,28 +133,6 @@ PDM_l_num_t        order[]
  *                              lexicographical coordinate ordering for ties
  *
  */
-
-/*
-  This function comes from "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2004-2009  EDF
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 static void
 _check_morton_ordering
 (
@@ -225,28 +181,6 @@ PDM_l_num_t              order[]
  * \param [in]   _gnum          Current _pdm_gen_gnum_t structure
  *
  */
-
-/*
-  This function comes from "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2004-2009  EDF
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 static void
 _gnum_from_coords_compute
 (
