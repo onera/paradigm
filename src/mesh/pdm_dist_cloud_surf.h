@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_DIST_CLOUD_SURF_H
-#define PDM_DIST_CLOUD_SURF_H
+#ifndef __PDM_DIST_CLOUD_SURF_H__
+#define __PDM_DIST_CLOUD_SURF_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -16,9 +12,9 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -319,8 +315,8 @@ PDM_dist_cloud_surf_distri_data
 );
 
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif // PDM_MESH_DIST_H
+#endif /* __PDM_DIST_CLOUD_SURF_H__ */

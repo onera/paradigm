@@ -1,10 +1,5 @@
-/*
- * \file
- */
-
 #ifndef __PDM_FIELD_CELL_TO_VTX_H__
 #define __PDM_FIELD_CELL_TO_VTX_H__
-
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -25,9 +20,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -195,5 +187,5 @@ PDM_field_cell_to_vtx_free
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_field_cell_to_vtx_H__ */
+#endif /* __PDM_FIELD_CELL_TO_VTX_H__ */
 

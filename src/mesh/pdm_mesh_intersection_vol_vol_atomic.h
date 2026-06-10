@@ -1,5 +1,5 @@
-#ifndef PDM_MESH_INTERSECTION_VOL_VOL_ATOMIC_H
-#define PDM_MESH_INTERSECTION_VOL_VOL_ATOMIC_H
+#ifndef __PDM_MESH_INTERSECTION_VOL_VOL_ATOMIC_H__
+#define __PDM_MESH_INTERSECTION_VOL_VOL_ATOMIC_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -8,15 +8,11 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 
-
 /*----------------------------------------------------------------------------*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -25,8 +21,6 @@ extern "C" {
 /*============================================================================
  * Type definitions
  *============================================================================*/
-
-
 
 /*============================================================================
  * Public function definitions
@@ -59,8 +53,8 @@ PDM_mesh_intersection_vol_vol_atomic_compute3
  double triaB_coord[9]
 );
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif  /* PDM_MESH_INTERSECTION_H */
+#endif  /* __PDM_MESH_INTERSECTION_VOL_VOL_ATOMIC_H__ */

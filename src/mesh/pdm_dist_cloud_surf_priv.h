@@ -20,9 +20,9 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -111,8 +111,9 @@ struct _pdm_dist_cloud_surf_t {
  * Static global variables
  *============================================================================*/
 #undef NTIMER
-#ifdef  __cplusplus
+
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif  /* __PDM_DIST_CLOUD_SURF_PRIV_H__ */

@@ -46,12 +46,10 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
+
+#ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -4236,7 +4234,7 @@ PDM_mesh_location_part_to_part_get
   ml->ptp_ownership[icloud] = ownership;
 }
 
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
+

@@ -49,12 +49,9 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -3104,6 +3101,7 @@ PDM_dist_cloud_surf_cloud_dim_get
 }
 
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
+
