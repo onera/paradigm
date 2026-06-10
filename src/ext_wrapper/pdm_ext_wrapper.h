@@ -1,27 +1,21 @@
-/*
- * \file
- * \author equemera
- *
- * \date December 6, 2016, 9:50 AM
- */
-
-#ifndef PDM_EXT_WRAPPER_H
-#define PDM_EXT_WRAPPER_H
+#ifndef __PDM_EXT_WRAPPER_H__
+#define __PDM_EXT_WRAPPER_H__
 
 /*----------------------------------------------------------------------------
- *  System headers
+ * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+
 /*----------------------------------------------------------------------------
- *  Local headers
+ *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_config.h"
 
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 
 #ifdef PDM_HAVE_PARMETIS
@@ -77,9 +71,10 @@ const int  n_part,
 
 #endif
 
-#ifdef	__cplusplus
-}
-#endif
 
-#endif	/* PDM_EXT_WRAPPER_H */
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* __PDM_EXT_WRAPPER_H__ */
 
