@@ -1,34 +1,5 @@
-/*
- * \file
- */
-
 #ifndef __PDM_HO_BASIS_H__
 #define __PDM_HO_BASIS_H__
-
-/*============================================================================
- * Functions about high order meshes
- *============================================================================*/
-
-/*
-  This file is part of the "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2018       ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -40,9 +11,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*=============================================================================
@@ -66,13 +34,16 @@ extern "C" {
  *
  *----------------------------------------------------------------------------*/
 
-typedef void (*PDM_ho_basis_fct_t)
-(const int     entities_dim,
- const int     order,
- const int     n_nodes,
- const int     n_pts,
- const double *uvw,
- double       *weights);
+typedef
+void (*PDM_ho_basis_fct_t)
+(
+  const int     entities_dim,
+  const int     order,
+  const int     n_nodes,
+  const int     n_pts,
+  const double *uvw,
+  double       *weights
+);
 
 /*=============================================================================
  * Static global variables
@@ -95,16 +66,15 @@ typedef void (*PDM_ho_basis_fct_t)
  * \param [out] weights   Weights (size = \ref n_pts * \ref n_nodes)
  *
  */
-
 void
 PDM_ho_basis
 (
- const PDM_Mesh_nodal_elt_t type,
- const int                  order,
- const int                  n_nodes,
- const int                  n_pts,
- const double              *uvw,
- double                    *weights
+ const PDM_Mesh_nodal_elt_t  type,
+ const int                   order,
+ const int                   n_nodes,
+ const int                   n_pts,
+ const double               *uvw,
+       double               *weights
  );
 
 #ifdef __cplusplus

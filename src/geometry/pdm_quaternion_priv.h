@@ -1,5 +1,5 @@
-#ifndef __PDM_ROTATION_PRIV_H__
-#define __PDM_ROTATION_PRIV_H__
+#ifndef __PDM_QUATERNION_PRIV_H__
+#define __PDM_QUATERNION_PRIV_H__
 
 /*----------------------------------------------------------------------------*/
 
@@ -40,4 +40,4 @@ struct _pdm_quaternion_t {
 }
 #endif
 
-#endif	/* __PDM_ROTATION_PRIV_H__ */
+#endif	/* __PDM_QUATERNION_PRIV_H__ */
