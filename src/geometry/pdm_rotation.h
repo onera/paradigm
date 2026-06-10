@@ -276,7 +276,7 @@ PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix
 
 /**
  *
- * \brief Converts the info of a CGNS Periodic_t node to a 4-by-4 homogeneous rotation matrix (assuming a ZYX intrinsic order)
+ * \brief Converts the info of a CGNS Periodic_t node (rotation center, Euler angles and translation vector) to a 4-by-4 homogeneous rotation matrix, assuming a ZYX intrinsic order
  *
  * \param [in]   rotation_center    Rotation center
  * \param [in]   rotation_angle     Rotation angles (Euler angles ZYX intrinsic)
@@ -461,7 +461,7 @@ PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation
 
 /**
  *
- * \brief Converts a 4-by-4 homogeneous rotation matrix to the info of a CGNS Periodic_t node (assuming a ZYX intrinsic order)
+ * \brief Converts a 4-by-4 homogeneous rotation matrix to the info of a CGNS Periodic_t node (rotation center, Euler angles and translation vector), assuming a ZYX intrinsic order
  *
  * \param [in]  homogeneous_matrix      4-by-4 rotation matrix
  * \param [in]  reverse                 If True, encodes the reverse transformation

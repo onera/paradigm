@@ -570,7 +570,8 @@ def periodic_t_info_to_homogeneous_matrix(
     bint reverse = False):
   """periodic_t_info_to_homogeneous_matrix(rotation_center,rotation_angle,translation,reverse=False)
 
-  Converts the info of a CGNS Periodic_t node to a 4-by-4 homogeneous matrix.
+  Converts the info of a CGNS Periodic_t node (rotation center, Euler angles and translation vector)
+  to a 4-by-4 homogeneous matrix.
   Rotation angles are applied as **intrinsic Euler angles** applied in a *(2,1,0)* order.
   Translation is applied after the rotation.
 
@@ -811,6 +812,7 @@ def homogeneous_matrix_to_periodic_t_info(
   """homogeneous_matrix_to_periodic_t_info(homogeneous_matrix,reverse=False)
 
   Converts a 4-by-4 homogeneous matrix to the info of a CGNS Periodic_t node
+  (rotation center, Euler angles and translation vector).
   Rotation angles are applied as **intrinsic Euler angles** applied in a *(2,1,0)* order.
   Translation is applied after the rotation.
 
