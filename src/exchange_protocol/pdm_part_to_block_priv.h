@@ -1,5 +1,5 @@
-#ifndef __PDM_writer_PART_TO_BLOCK_PRIV_H__
-#define __PDM_writer_PART_TO_BLOCK_PRIV_H__
+#ifndef __PDM_PART_TO_BLOCK_PRIV_H__
+#define __PDM_PART_TO_BLOCK_PRIV_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -135,4 +135,4 @@ struct _pdm_part_to_block_t {
 }
 #endif /* __cplusplus */
 
-#endif /*  __PDM_writer_PART_TO_BLOCK_PRIV_H__ */
+#endif /*  __PDM_PART_TO_BLOCK_PRIV_H__ */
