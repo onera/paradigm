@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_DISTRIB_H
-#define PDM_DISTRIB_H
+#ifndef __PDM_DISTRIB_H__
+#define __PDM_DISTRIB_H__
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -16,9 +12,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -148,4 +141,4 @@ PDM_distrib_weight
 }
 #endif /* __cplusplus */
 
-#endif // PDM_DISTRIB_H
+#endif /* __PDM_DISTRIB_H__ */
