@@ -16,9 +16,6 @@
 
 #ifdef  __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
 #endif
 
 

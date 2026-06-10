@@ -20,7 +20,6 @@ extern "C" {
  *============================================================================*/
 
 typedef struct _pdm_quaternion_t PDM_quaternion;
-typedef struct _pdm_twist_t      PDM_twist;
 
 /*=============================================================================
  * Static global variables

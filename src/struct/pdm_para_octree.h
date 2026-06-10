@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_PARA_OCTREE_H
-#define	PDM_PARA_OCTREE_H
+#ifndef __PDM_PARA_OCTREE_H__
+#define	__PDM_PARA_OCTREE_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -17,9 +13,6 @@
 
 #ifdef	__cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
 #endif
 
 /*============================================================================
@@ -37,7 +30,7 @@ typedef struct _pdm_para_octree_t PDM_para_octree_t;
  * \brief Names of 8 children of a node
  *
  */
-#ifndef PDM_OCTREE_H
+#ifndef __PDM_OCTREE_H__
 typedef enum {
   PDM_BOTTOM,
   PDM_UP,
@@ -480,4 +473,4 @@ PDM_para_octree_neighbor_get
 }
 #endif
 
-#endif	/* PDM_PARA_OCTREE_H */
+#endif	/* __PDM_PARA_OCTREE_H__ */

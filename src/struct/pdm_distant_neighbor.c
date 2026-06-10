@@ -9,9 +9,9 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_array.h"
 #include "pdm_distant_neighbor.h"
 #include "pdm_distant_neighbor_priv.h"
-#include "pdm_array.h"
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
@@ -19,9 +19,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================

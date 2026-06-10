@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_GLOBAL_POINT_MEAN_H__
 #define __PDM_GLOBAL_POINT_MEAN_H__
 
@@ -20,9 +16,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================

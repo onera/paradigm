@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_KDTREE_SEQ_H
-#define PDM_KDTREE_SEQ_H
+#ifndef __PDM_KDTREE_SEQ_H__
+#define __PDM_KDTREE_SEQ_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -14,9 +10,6 @@
 
 #ifdef  __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
 #endif
 
 
@@ -279,5 +272,5 @@ PDM_kdtree_seq_point_range_get
 }
 #endif
 
-#endif  /* PDM_KDTREE_SEQ_H */
+#endif  /* __PDM_KDTREE_SEQ_H__ */
 
