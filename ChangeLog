@@ -8,6 +8,7 @@
   - improve precision of quaternions and add unit tests
 ### Deprecated
 ### Removed
+- Remove fake brace for emacs editor & clean all licensing (outdated)
 ### Fixed
 - PDM_mesh_intersection: Fix numerical issues in surface-surface intersection
 ## [2.8.0] - 2026-05-21
