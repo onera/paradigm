@@ -1897,7 +1897,7 @@ _build_ptp
     elt_a_elt_b_n[elt_a_id] = 0;
     elt_a_elt_b_init_loc_stride[elt_a_id] = 0;
     for (int i = 0; i < n; i++) {
-      if (elt_a_elt_b_volume[idx_read+i] > 1e-15) {
+      if (PDM_ABS(elt_a_elt_b_volume[idx_read+i]) > 1e-15) {
         // elt_a_elt_b       [idx_write] = elt_a_elt_b       [idx_read+i];
         int elt_b_id = elt_a_elt_b[idx_read+i];
         elt_a_elt_b_g_num [idx_write]     = elt_b_ln_to_gn[elt_b_id];
