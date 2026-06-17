@@ -1,12 +1,5 @@
-/*
- * \file
- * \author equemera
- *
- * \date November 16, 2017, 3:36 PM
- */
-
-#ifndef PDM_POINTS_MERGE_H
-#define	PDM_POINTS_MERGE_H
+#ifndef __PDM_POINTS_MERGE_H__
+#define __PDM_POINTS_MERGE_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -17,9 +10,9 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -164,9 +157,9 @@ PDM_points_merge_make_interface
   PDM_g_num_t       ***out_itrf_gnum_opp
 );
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif	/* PDM_POINTS_MERGE_H */
+#endif	/* __PDM_POINTS_MERGE_H__ */
 

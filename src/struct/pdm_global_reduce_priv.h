@@ -19,9 +19,9 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -58,8 +58,9 @@ struct _pdm_global_reduce_t {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-#ifdef  __cplusplus
+
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif  /* __PDM_GLOBAL_REDUCE_PRIV_H__ */

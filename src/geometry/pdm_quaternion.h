@@ -5,9 +5,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*----------------------------------------------------------------------------
@@ -23,7 +20,6 @@ extern "C" {
  *============================================================================*/
 
 typedef struct _pdm_quaternion_t PDM_quaternion;
-typedef struct _pdm_twist_t      PDM_twist;
 
 /*=============================================================================
  * Static global variables

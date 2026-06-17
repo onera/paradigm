@@ -21,9 +21,9 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -61,8 +61,9 @@ struct _pdm_global_point_mean_t {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-#ifdef  __cplusplus
+
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif  /* __PDM_GLOBAL_MEAN_PRIV_H__ */

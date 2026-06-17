@@ -1,5 +1,5 @@
-#ifndef PDM_MESH_INTERSECTION_SURF_SURF_ATOMIC_H
-#define PDM_MESH_INTERSECTION_SURF_SURF_ATOMIC_H
+#ifndef __PDM_MESH_INTERSECTION_SURF_SURF_ATOMIC_H__
+#define __PDM_MESH_INTERSECTION_SURF_SURF_ATOMIC_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -11,12 +11,9 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -56,8 +53,8 @@ void PDM_mesh_intersection_surf_surf_atomic_compute
   double                                    *center_ab
 );
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif  /* PDM_MESH_INTERSECTION_H */
+#endif  /* __PDM_MESH_INTERSECTION_SURF_SURF_ATOMIC_H__ */

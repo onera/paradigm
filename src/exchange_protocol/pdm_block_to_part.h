@@ -1,12 +1,5 @@
-/*
- * \file
- * \author equemera
- *
- * \date April 14, 2016, 7:56 AM
- */
-
-#ifndef PDM_BLOCK_TO_PART_H
-#define	PDM_BLOCK_TO_PART_H
+#ifndef __PDM_BLOCK_TO_PART_H__
+#define	__PDM_BLOCK_TO_PART_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -364,4 +357,4 @@ PDM_block_to_part_n_elt_get
 }
 #endif
 
-#endif	/* PDM_BLOCK_TO_PART_H */
+#endif	/* __PDM_BLOCK_TO_PART_H__ */

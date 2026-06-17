@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_MPI_EXTENDED_H__
 #define __PDM_MPI_EXTENDED_H__
 
@@ -9,15 +5,9 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-/*----------------------------------------------------------------------------*/
-
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
-
 
 /*=============================================================================
  * Macro definitions

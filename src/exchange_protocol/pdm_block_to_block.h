@@ -1,12 +1,5 @@
-/*
- * \file
- * \author equemera
- *
- * \date January 18, 2018, 9:48 AM
- */
-
-#ifndef PDM_BLOCK_TO_BLOCK_H
-#define	PDM_BLOCK_TO_BLOCK_H
+#ifndef __PDM_BLOCK_TO_BLOCK_H__
+#define	__PDM_BLOCK_TO_BLOCK_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -151,5 +144,5 @@ PDM_block_to_block_free
 }
 #endif
 
-#endif	/* PDM_BLOCK_TO_BLOCK_H */
+#endif	/* __PDM_BLOCK_TO_BLOCK_H__ */
 

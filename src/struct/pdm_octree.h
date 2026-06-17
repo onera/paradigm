@@ -1,12 +1,5 @@
-/*
- * \file
- * \author equemera
- *
- * \date November 8, 2017, 11:27 AM
- */
-
-#ifndef PDM_OCTREE_H
-#define	PDM_OCTREE_H
+#ifndef __PDM_OCTREE_H__
+#define	__PDM_OCTREE_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -18,12 +11,9 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -385,9 +375,9 @@ PDM_g_num_t      *closest_octree_pt_g_num,
 double           *closest_octree_pt_dist2
 );
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif	/* PDM_OCTREE_H */
+#endif	/* __PDM_OCTREE_H__ */
 

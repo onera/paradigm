@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_MULTI_BLOCK_TO_PART_H
-#define PDM_MULTI_BLOCK_TO_PART_H
+#ifndef __PDM_MULTI_BLOCK_TO_PART_H__
+#define __PDM_MULTI_BLOCK_TO_PART_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -122,4 +118,4 @@ PDM_multi_block_to_part_free
 }
 #endif
 
-#endif  /* PDM_BLOCK_TO_PART_H */
+#endif  /* __PDM_MULTI_BLOCK_TO_PART_H__ */

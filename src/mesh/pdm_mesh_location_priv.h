@@ -19,9 +19,9 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -140,8 +140,9 @@ struct _pdm_mesh_location_t {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-#ifdef  __cplusplus
+
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif  /* __PDM_MESH_LOCATION_PRIV_H__ */

@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_PART_TO_PART_H__
 #define	__PDM_PART_TO_PART_H__
 
@@ -1090,4 +1086,4 @@ PDM_part_to_part_comm_get
 }
 #endif
 
-#endif	/* PDM_PART_tO_pART_H */
+#endif	/* __PDM_PART_TO_PART_H__ */

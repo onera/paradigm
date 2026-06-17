@@ -17,9 +17,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation csback to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*=============================================================================
@@ -87,4 +84,4 @@ struct _pdm_dmesh_nodal_t {
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_MESH_NODAL_PRIV_H__ */
+#endif /* __PDM_DMESH_NODAL_PRIV_H__ */

@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_EXCHANGE_HELPER_H__
 #define __PDM_EXCHANGE_HELPER_H__
 

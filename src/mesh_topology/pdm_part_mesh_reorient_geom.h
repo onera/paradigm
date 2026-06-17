@@ -8,12 +8,9 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -86,6 +83,7 @@ PDM_part_mesh_reorient_geom
  const PDM_MPI_Comm           comm
 );
 
-#ifdef	__cplusplus
+
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */

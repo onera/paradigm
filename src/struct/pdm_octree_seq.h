@@ -1,12 +1,5 @@
-/*
- * \file
- * \author: equemera
- *
- * \date November 8, 2017, 11:27 AM
- */
-
-#ifndef PDM_OCTREE_SEQ_H
-#define	PDM_OCTREE_SEQ_H
+#ifndef __PDM_OCTREE_SEQ_H__
+#define	__PDM_OCTREE_SEQ_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -18,9 +11,6 @@
 
 #ifdef	__cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
 #endif
 
 /*============================================================================
@@ -450,5 +440,5 @@ PDM_octree_seq_points_inside_balls
 }
 #endif
 
-#endif	/* PDM_OCTREE_SEQ_H */
+#endif	/* __PDM_OCTREE_SEQ_H__ */
 

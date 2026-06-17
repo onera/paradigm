@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_SPHERE_VOL_GEN_H__
 #define __PDM_SPHERE_VOL_GEN_H__
 
@@ -24,9 +20,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 
@@ -187,5 +180,5 @@ PDM_sphere_vol_hollow_gen_nodal
 
 #ifdef __cplusplus
 }
-#endif
-#endif
+#endif /* __cplusplus */
+#endif /* __PDM_SPHERE_VOL_GEN_H__ */

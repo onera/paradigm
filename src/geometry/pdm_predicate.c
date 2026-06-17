@@ -19,25 +19,17 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
  * Type
  *============================================================================*/
 
-
 /*
  *  from Triangle (https://github.com/libigl/triangle)
  *
  *  Jonathan Richard Shewchuk, Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates, Discrete & Computational Geometry 18:305-363, 1997. Also Technical Report CMU-CS-96-140, School of Computer Science, Carnegie Mellon University, Pittsburgh, Pennsylvania, May 1996
  */
-
-
-
-
 
 /* Global constants.                                                         */
 
