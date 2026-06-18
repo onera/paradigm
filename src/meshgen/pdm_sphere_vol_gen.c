@@ -806,7 +806,7 @@ const int  *cell_vtx,
       }
 
       if (edge_id == 0) {
-        PDM_error(__FILE__, __LINE__, 0, "Error cell_edge edge not in a face\n");
+        PDM_error("Error cell_edge edge not in a face\n");
       }
 
       _cell_edge[idx_edge] = edge_id;
@@ -1407,7 +1407,7 @@ _gen_from_base_mesh
       }
 
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Wrong subcell hextet %d\n", hextet);
+        PDM_error("Wrong subcell hextet %d\n", hextet);
       }
     }
 
@@ -1544,7 +1544,7 @@ _gen_from_base_mesh
       }
 
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+        PDM_error("Wrong subface quadtria %d\n", quadtria);
       }
     }
 
@@ -1802,7 +1802,7 @@ _extrude_base_surface_mesh
       }
 
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+        PDM_error("Wrong subface quadtria %d\n", quadtria);
       }
     }
 
@@ -1896,7 +1896,7 @@ _extrude_base_surface_mesh
       }
 
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+        PDM_error("Wrong subface quadtria %d\n", quadtria);
       }
     }
 
