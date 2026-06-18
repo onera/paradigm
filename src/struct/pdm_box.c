@@ -1177,8 +1177,7 @@ PDM_box_set_dump(const PDM_box_set_t  *boxes,
     const double *bmax = _local_boxes->extents + boxes->dim*(2*i + 1);
     for (j = 0; j < boxes->dim; j++) {
       if (bmin[j] > bmax[j]) {
-        PDM_error(__FILE__, __LINE__, 0,
-                  "PDM_box_set_dump error : Inconsistent box found (min > max):\n"
+        PDM_error("Error : Inconsistent box found (min > max):\n"
                     "  global number:  %llu\n"
                     "  min       :  %10.4g\n"
                     "  max       :  %10.4g\n",

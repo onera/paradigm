@@ -302,7 +302,7 @@ PDM_global_reduce_field_compute
     break;
 
     default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid reduction operation\n");
+    PDM_error("Invalid reduction operation\n");
   }
 
 

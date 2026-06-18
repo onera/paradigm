@@ -1497,8 +1497,7 @@ PDM_point_tree_seq_create
 {
   if (tree_type != PDM_DOCTREE_LOCAL_TREE_OCTREE &&
       tree_type != PDM_DOCTREE_LOCAL_TREE_KDTREE) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Tree_type %d not implemented yet\n", (int) tree_type);
+    PDM_error("Tree_type %d not implemented yet\n", (int) tree_type);
   }
 
 
@@ -1760,8 +1759,7 @@ PDM_point_tree_n_children_get
     return 2;
 
     default:
-    PDM_error(__FILE__, __LINE__, 0,
-              "Invalid tree_type %d\n", (int) ptree->tree_type);
+    PDM_error("Invalid tree_type %d\n", (int) ptree->tree_type);
     break;
   }
 
@@ -2853,8 +2851,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
     n_children = 8;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Invalid tree_type %d\n", (int) shm_ptree->tree_type);
+    PDM_error("Invalid tree_type %d\n", (int) shm_ptree->tree_type);
   }
 
   const int depth_max = 31;
@@ -3150,8 +3147,7 @@ PDM_point_tree_seq_closest_point_shared
     n_children = 8;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Invalid tree_type %d\n", (int) shm_ptree->tree_type);
+    PDM_error("Invalid tree_type %d\n", (int) shm_ptree->tree_type);
   }
 
   const int depth_max = 31;
@@ -3636,8 +3632,7 @@ PDM_tree_intersection_point_box2
             break;
           }
           default: {
-            PDM_error(__FILE__, __LINE__, 0,
-                      "Subdivision criterion %d not implemented\n", (int) subdiv_crit);
+            PDM_error("Subdivision criterion %d not implemented\n", (int) subdiv_crit);
             break;
           }
         }

@@ -1104,7 +1104,7 @@ _distribute_octants
                                              L->codes[i],
                                              morton_index + irank + 1);
       if (irank >= n_ranks) {
-        PDM_error(__FILE__, __LINE__, 0, "irank = %d/%d\n", irank, n_ranks);
+        PDM_error("irank = %d/%d\n", irank, n_ranks);
       }
     }
     send_count[irank] += L->dim + 1;

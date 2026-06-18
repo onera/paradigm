@@ -703,11 +703,9 @@ _define_rank_distrib(int                      dim,
       sum += g_distrib[rank_id];
 
     if (sum != gsum_weight) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Error while computing global distribution.\n"
+      PDM_error("Error while computing global distribution.\n"
                 "sum = %u and gsum_weight = %u\n",
                 sum, gsum_weight);
-      abort();
     }
   }
 #endif /* sanity check */
@@ -1263,10 +1261,7 @@ PDM_morton_local_order(int                     n_codes,
 #if 0 && defined(dbg_enabled) && !defined(Ndbg_enabled)   /* Check ordering */
   for (i = 1; i < n_codes; i++) {
     if (_a_gt_b(morton_codes[order[i-1]], morton_codes[order[i]])) {
-      PDM_error(__FILE__, __LINE__, 0,
-              "Id: %u inconsistent: bad ordering of Morton codes.",
-              (unsigned)i);
-      abort();
+      PDM_error("Id: %u inconsistent: bad ordering of Morton codes.", (unsigned)i);
     }
   }
 #endif
@@ -1301,10 +1296,7 @@ PDM_morton_local_sort(int               n_codes,
 #if 0 && defined(dbg_enabled) && !defined(Ndbg_enabled)   /* Check good ordering */
   for (i = 1; i < n_codes; i++) {
     if (_a_gt_b(dim, morton_codes[i - 1], morton_codes[i])) {
-      PDM_error(__FILE__, __LINE__, 0,
-              "Id: %u inconsistent: bad ordering of Morton codes.",
-              (unsigned)i);
-      abort();
+      PDM_error("Id: %u inconsistent: bad ordering of Morton codes.", (unsigned)i);
     }
   }
 #endif
