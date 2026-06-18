@@ -75,12 +75,17 @@ extern "C" {
  *   arg_ptr:        <-> variable argument list based on format string.
  */
 
-static void
-_PDM_error_handler_default(const char     *const file_name,
-                           const int             line_num,
-                           const int             sys_error_code,
-                           const char     *const format,
-                           va_list               arg_ptr);
+static
+void
+_PDM_error_handler_default
+(
+  const char     *const file_name,
+  const char     *const func,
+  const int             line_num,
+  const int             sys_error_code,
+  const char     *const format,
+  va_list               arg_ptr
+);
 
 /*-----------------------------------------------------------------------------
  * Local static variable definitions
@@ -107,11 +112,15 @@ static PDM_error_handler_t  *_PDM_error_handler = (_PDM_error_handler_default);
  */
 
 static void
-_PDM_error_handler_default(const char     *const file_name,
-                           const int             line_num,
-                           const int             sys_error_code,
-                           const char     *const format,
-                           va_list               arg_ptr)
+_PDM_error_handler_default
+(
+  const char     *const file_name,
+  const char     *const func,
+  const int             line_num,
+  const int             sys_error_code,
+  const char     *const format,
+  va_list               arg_ptr
+)
 {
   PDM_printf_flush();
 
@@ -120,7 +129,7 @@ _PDM_error_handler_default(const char     *const file_name,
   if (sys_error_code != 0)
     fprintf(stderr, "\nSystem error: %s\n", strerror(sys_error_code));
 
-  fprintf(stderr, "\n%s:%d: Fatal error.\n\n", file_name, line_num);
+  fprintf(stderr, "\n%s (File %s:%d): Fatal error.\n\n", func, file_name, line_num);
 
   vfprintf(stderr, format, arg_ptr);
 
@@ -136,24 +145,31 @@ _PDM_error_handler_default(const char     *const file_name,
  *============================================================================*/
 
 void
-PDM_error(const char  *const file_name,
-          const int          line_num,
-          const int          sys_error_code,
-          const char  *const format,
-          ...)
+_PDM_error
+(
+  const char  *const file_name,
+  const char  *const func,
+  const int          line_num,
+  const int          sys_error_code,
+  const char  *const format,
+  ...
+)
 {
   va_list  arg_ptr;
 
   va_start(arg_ptr, format);
 
-  _PDM_error_handler(file_name, line_num, sys_error_code, format, arg_ptr);
+  _PDM_error_handler(file_name, func, line_num, sys_error_code, format, arg_ptr);
 
   va_end(arg_ptr);
 }
 
 
 PDM_error_handler_t *
-PDM_error_handler_get(void)
+PDM_error_handler_get
+(
+  void
+)
 {
   return _PDM_error_handler;
 }
