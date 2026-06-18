@@ -324,9 +324,8 @@ size_t *hostname_length
     PDM_malloc(hostname, nHostname, char);
 
     if (hostname == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "allocating %lu bytes of memory for hostname failed: %s.\n",
+      PDM_error("Allocating %lu bytes of memory for hostname failed: %s.\n",
               sizeof(char) * nHostname, strerror(errno));
-      abort();
     }
 
     int error;
@@ -342,8 +341,7 @@ size_t *hostname_length
         PDM_free(hostname);
         hostname = NULL;
 
-        PDM_error(__FILE__, __LINE__, 0, "gethostname failed with error %d: %s.\n", errno, strerror(errno));
-        abort();
+        PDM_error("gethostname failed with error %d: %s.\n", errno, strerror(errno));
       }
 
     }

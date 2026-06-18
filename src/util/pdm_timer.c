@@ -124,7 +124,7 @@ void PDM_timer_init(PDM_timer_t *timer)
 void PDM_timer_resume(PDM_timer_t *timer)
 {
   if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_reprise : \n"
+    PDM_error("Erreur PDM_timer_reprise : \n"
             "La mesure d'une tranche est deja en cours\n");
     exit(EXIT_FAILURE);
   }
@@ -157,7 +157,7 @@ void PDM_timer_hang_on(PDM_timer_t *timer)
 {
 
   if (!timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_suspend : \n"
+    PDM_error("Erreur PDM_timer_suspend : \n"
             "La mesure de temps n'a pas ete declenchee par PDM_timer_reprise\n");
     exit(EXIT_FAILURE);
   }
@@ -206,7 +206,7 @@ void PDM_timer_hang_on(PDM_timer_t *timer)
 double PDM_timer_cpu(PDM_timer_t *timer)
 {
   if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_cpu : \n"
+    PDM_error("Erreur PDM_timer_get_cpu : \n"
             "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
             "PDM_timer_get_cpu\n");
     exit(EXIT_FAILURE);
@@ -225,7 +225,7 @@ double PDM_timer_cpu(PDM_timer_t *timer)
 double PDM_timer_cpu_user(PDM_timer_t *timer)
 {
   if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_cpu_user : \n"
+    PDM_error("Erreur PDM_timer_get_cpu_user : \n"
             "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
             "PDM_timer_get_cpu\n");
     exit(EXIT_FAILURE);
@@ -248,7 +248,7 @@ double PDM_timer_cpu_user(PDM_timer_t *timer)
 double PDM_timer_cpu_sys(PDM_timer_t *timer)
 {
   if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_cpu_user : \n"
+    PDM_error("Erreur PDM_timer_get_cpu_user : \n"
             "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
             "PDM_timer_get_cpu\n");
     exit(EXIT_FAILURE);
@@ -271,7 +271,7 @@ double PDM_timer_cpu_sys(PDM_timer_t *timer)
 double PDM_timer_elapsed(PDM_timer_t *timer)
 {
   if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_elapsed : \n"
+    PDM_error("Erreur PDM_timer_get_elapsed : \n"
             "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
             "PDM_timer_get_elapsed\n");
     exit(EXIT_FAILURE);
