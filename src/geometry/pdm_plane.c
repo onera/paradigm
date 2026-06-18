@@ -231,7 +231,7 @@ PDM_plane_get_cartesian_plane
 )
 {
   if (tolerance < 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid tolerance %f (must be >= 0)\n", tolerance);
+    PDM_error("Invalid tolerance %f (must be >= 0)\n", tolerance);
   }
 
   double l_min[3] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL};

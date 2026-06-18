@@ -2627,7 +2627,7 @@ PDM_geom_elem_edge_upwind_and_downwind_2d
 
 
   if (i_plane < 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid cartesian plane %d\n", i_plane);
+    PDM_error("Invalid cartesian plane %d\n", i_plane);
   }
 
   int i_coord0 =  i_plane;

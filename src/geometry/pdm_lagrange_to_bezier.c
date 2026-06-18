@@ -1277,7 +1277,7 @@ PDM_bezier_bounding_boxes
       PDM_lagrange_to_bezier_tria(order, lagrange_coord, bezier_coord, matrix);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "Only implemented for other elements in pdm_t_dcube_nodal_gen.c\n");
+      PDM_error("Only implemented for other elements in pdm_t_dcube_nodal_gen.c\n");
     }
 
     for (int k = 0; k < n_nodes; k++) {
