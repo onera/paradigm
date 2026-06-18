@@ -30,7 +30,7 @@ typedef void (PDM_error_handler_t) (const char    *const file_name,
  * Public function prototypes
  *============================================================================*/
 
-#define PDM_error(fmt, ...) _PDM_error(__FILE__, __func__, __LINE__, 0, fmt, ##__VA_ARGS__)
+#define PDM_error(...) _PDM_error(__FILE__, __func__, __LINE__, 0, __VA_ARGS__)
 
 /*
  * Calls the error handler (set by PDM_error_handler_set() or default).
