@@ -154,7 +154,7 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
@@ -172,7 +172,7 @@ int PDM_MPI_File_close(PDM_MPI_File *fh)
     char buffer[MPI_MAX_ERROR_STRING];
     int  buffer_len;
     MPI_Error_string(code, buffer, &buffer_len);
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
     abort();
   }
   return code;
@@ -275,7 +275,7 @@ int PDM_MPI_File_read_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
@@ -307,7 +307,7 @@ int PDM_MPI_File_read_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
@@ -340,7 +340,7 @@ int PDM_MPI_File_write_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
@@ -372,7 +372,7 @@ int PDM_MPI_File_write_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
@@ -403,7 +403,7 @@ int PDM_MPI_File_read(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
@@ -434,7 +434,7 @@ int PDM_MPI_File_read_all(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
@@ -464,7 +464,7 @@ int PDM_MPI_File_write(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
@@ -495,7 +495,7 @@ int PDM_MPI_File_write_all(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s\n", buffer);
 
     abort();
   }
