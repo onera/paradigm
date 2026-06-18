@@ -551,15 +551,13 @@ const int  n_part,
                            _edlotab);
 
   if (ierr) {
-    PDM_error(__FILE__, __LINE__, 0, "PART error : Error in SCOTCH_graphBuild\n");
-    exit(1);
+    PDM_error("Error in SCOTCH_graphBuild\n");
   }
 
   if (check) {
     ierr = SCOTCH_graphCheck (&grafptr);
     if (ierr) {
-      PDM_error(__FILE__, __LINE__, 0, "PART error : Error in Scotch graph check\n");
-      exit(1);
+      PDM_error("Error in Scotch graph check\n");
     }
   }
 
@@ -574,8 +572,7 @@ const int  n_part,
                            _part);
 
   if (ierr) {
-    PDM_error(__FILE__, __LINE__, 0, "PART error : Error in SCOTCH_graphPart\n");
-    exit(1);
+    PDM_error("Error in SCOTCH_graphPart\n");
   }
 
   if (sizeof(int) != sizeof(SCOTCH_Num)) {
