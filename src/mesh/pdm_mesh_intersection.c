@@ -503,7 +503,7 @@ _compute_mesh_nodal_extents
     geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
+    PDM_error("Invalid dimension %d", dim_mesh);
   }
 
   int n_part = PDM_part_mesh_nodal_n_part_get(mesh_nodal);
@@ -869,7 +869,7 @@ _select_elements_by_global_bbox_nodal
     geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
+    PDM_error("Invalid dimension %d", dim_mesh);
   }
 
   int i_rank;
@@ -1449,7 +1449,7 @@ _create_extract_part_nodal
       pmne = mesh_nodal->pmne[3];
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
+      PDM_error("Invalid dimension %d", dim_mesh);
     }
 
     assert(n_part == PDM_part_mesh_nodal_n_part_get(mesh_nodal));
@@ -1841,7 +1841,7 @@ _build_ptp
       entity_type[imesh] = PDM_MESH_ENTITY_CELL;
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "invalid dimension for mesh %d\n", imesh);
+      PDM_error("Invalid dimension for mesh %d", imesh);
     }
   }
 
@@ -2050,7 +2050,7 @@ _build_ptp
         geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
         break;
       default:
-        PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", mi->dim_mesh[0]);
+        PDM_error("Invalid dimension %d", mi->dim_mesh[0]);
       }
 
       int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(mi->mesh_nodal[0],
@@ -2163,7 +2163,7 @@ _build_ptp
         geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
         break;
       default:
-        PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", mi->dim_mesh[1]);
+        PDM_error("Invalid dimension %d", mi->dim_mesh[1]);
       }
 
       int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(mi->mesh_nodal[1],
@@ -3550,8 +3550,7 @@ _mesh_intersection_vol_line
                                                        i_part,
                                                        PDM_MESH_ENTITY_EDGE);
     } else {
-      PDM_error(__FILE__, __LINE__, 0, "invalid mesh type \n");
-      abort();
+      PDM_error("Invalid mesh type \n");
     }
 
   }
@@ -4958,7 +4957,7 @@ PDM_mesh_intersection_compute
             break;
           }
           default: {
-            PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension %d for mesh %d\n", mi->dim_mesh[imesh], imesh);
+            PDM_error("Invalid mesh dimension %d for mesh %d", mi->dim_mesh[imesh], imesh);
           }
         }
 
@@ -5012,8 +5011,7 @@ PDM_mesh_intersection_compute
                                   redistribute_box_a_to_box_b_idx,
                                   redistribute_box_a_to_box_b);
     } else {
-      PDM_error(__FILE__, __LINE__, 0,
-                "PDM_mesh_intersection_compute error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh[0], mi->dim_mesh[1]);
+      PDM_error("Error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh[0], mi->dim_mesh[1]);
     }
     PDM_box_set_destroy (&boxes_mesh[0]);
     PDM_box_set_destroy (&boxes_mesh[1]);
@@ -5436,10 +5434,8 @@ PDM_mesh_intersection_elt_volume_get
         break;
       }
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Invalid dim_mesh %d for mesh %d\n", mi->dim_mesh[imesh], imesh);
+        PDM_error("Invalid dim_mesh %d for mesh %d", mi->dim_mesh[imesh], imesh);
       }
-
-
 
       if (mi->dim_mesh[imesh] > 1 && face_vtx == NULL) {
         PDM_free(_face_vtx);
@@ -5447,7 +5443,7 @@ PDM_mesh_intersection_elt_volume_get
     }
     else if (mi->mesh_nodal[imesh] != NULL) {
       // TODO...
-      PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for nodal mesh\n");
+      PDM_error("Not implemented yet for nodal mesh\n");
     }
   }
 

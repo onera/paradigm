@@ -583,7 +583,7 @@ const int                   append
             }
 
             char *ligne_ss_dim = ligne + index_loc;
-            int index_dim;
+            int index_dim = 0;
             PDM_writer_var_loc_t var_loc;
 
             if (strncmp(ligne_ss_dim, "node:    ", strlen("node:    ")) == 0) {
