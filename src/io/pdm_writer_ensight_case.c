@@ -584,7 +584,7 @@ const int                   append
 
             char *ligne_ss_dim = ligne + index_loc;
             int index_dim = 0;
-            PDM_writer_var_loc_t var_loc;
+            PDM_writer_var_loc_t var_loc = PDM_WRITER_VAR_VERTICES;
 
             if (strncmp(ligne_ss_dim, "node:    ", strlen("node:    ")) == 0) {
               index_dim = strlen("node:    ");
