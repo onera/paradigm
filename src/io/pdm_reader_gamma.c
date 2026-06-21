@@ -220,7 +220,7 @@ PDM_reader_gamma_dmesh_nodal
     FILE *f = fopen(filename, "r");
 
     if (f == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Could not read file %s\n", filename);
+      PDM_error("Could not read file %s", filename);
     }
 
     while (1) {
@@ -1341,7 +1341,7 @@ PDM_write_gamma_matsym
     }
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d (expected 2 or 3)\n", dim);
+    PDM_error("Invalid dimension %d (expected 2 or 3)", dim);
   }
   fprintf(f, "End\n");
   fclose(f);
@@ -1425,7 +1425,7 @@ PDM_read_gamma_sol_at_vertices
   FILE *f = fopen(filename, "r");
 
   if (f == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Could not read file %s\n", filename);
+    PDM_error("Could not read file %s", filename);
   }
 
   *n_field      = 0;
@@ -1480,7 +1480,7 @@ PDM_read_gamma_sol_at_vertices
             break;
           }
           default: {
-            PDM_error(__FILE__, __LINE__, 0, "Invalid field type %d\n", field_type);
+            PDM_error("Invalid field type %d", field_type);
           }
         }
 
@@ -1531,7 +1531,7 @@ PDM_read_gamma_sol_at_vertices
               break;
             }
             default: {
-              PDM_error(__FILE__, __LINE__, 0, "Invalid field stride %d\n", (*field_stride)[i_field]);
+              PDM_error("Invalid field stride %d", (*field_stride)[i_field]);
             }
           }
         }

@@ -1060,7 +1060,7 @@ PDM_writer_ensight_geom_write
     PDM_geometry_kind_t geom_kind = PDM_Mesh_nodal_geom_kind_from_elt_type((PDM_Mesh_nodal_elt_t) t_elt);
 
     if (geom_kind != geom->geom_kind) {
-      PDM_error(__FILE__, __LINE__, 0, "Multiple geometry kinds are not supported\n");
+      PDM_error("Multiple geometry kinds are not supported");
     }
 
     /* Type de bloc */
@@ -1123,9 +1123,7 @@ PDM_writer_ensight_geom_write
         break;
 
       default :
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_ensight_geom_ecr : Type d'element inconnu\n");
-        abort();
-
+        PDM_error("Unrecognized element type");
       }
 
       /* Copie de la connectivité en numérotation absolue */
@@ -1292,8 +1290,7 @@ PDM_writer_ensight_geom_write
         n_comp_tmp2 = (PDM_l_num_t *) n_comp_tmp;
       }
       else {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_ensight_geom_ecr : sizeof(int32_t) != sizeof(PDM_l_num_t)\n");
-        abort();
+        PDM_error("sizeof(int32_t) != sizeof(PDM_l_num_t)");
       }
 
       _ecr_entrelace_int(_cs,
@@ -1861,11 +1858,8 @@ PDM_writer_ensight_var_write
       }
 
       else if (var->loc == PDM_WRITER_VAR_PARTICLES) {
-
         /* Ecriture des valeurs aux particules */
-
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_ensight_var_ecr    : Ecriture des variables aux particules indisponible\n");
-        abort();
+        PDM_error("Particles writing is not implemented");
 
       }
     }

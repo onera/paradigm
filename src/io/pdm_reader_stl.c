@@ -85,7 +85,7 @@ _read_distributed_stl
     FILE *f = fopen(filename, "r");
 
     if (f == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Could not read file %s\n", filename);
+      PDM_error("Could not read file %s", filename);
     }
 
     char header[999];
