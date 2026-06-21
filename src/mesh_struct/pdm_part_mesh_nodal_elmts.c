@@ -40,24 +40,24 @@ extern "C" {
  * Local macro definitions
  *============================================================================*/
 
-#define CHECK_PMNE(pmne)                                                            \
-  if ((pmne) == NULL) {                                                             \
-    PDM_error(__FILE__, __LINE__, 0, "Undefined Part Mesh Nodal Elmts instance\n"); \
+#define CHECK_PMNE(pmne)                                     \
+  if ((pmne) == NULL) {                                      \
+    PDM_error("Undefined Part Mesh Nodal Elmts instance\n"); \
   }
 
-#define CHECK_I_PART(pmne, i_part)                                                          \
-  if ((i_part) < 0 || (i_part) >= (pmne)->n_part) {                                         \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)", (i_part), (pmne)->n_part); \
+#define CHECK_I_PART(pmne, i_part)                                   \
+  if ((i_part) < 0 || (i_part) >= (pmne)->n_part) {                  \
+    PDM_error("Invalid i_part (%d / %d)", (i_part), (pmne)->n_part); \
   }
 
 #define CHECK_SECTION(section)                           \
   if ((section) == NULL) {                               \
-    PDM_error (__FILE__, __LINE__, 0, "NULL section\n"); \
+    PDM_error ("NULL section\n"); \
   }
 
-#define CHECK_GROUP(pmne, i_group)                                                             \
-  if ((i_group) < 0 || (i_group) >= (pmne)->n_group) {                                         \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_group (%d / %d)", (i_group), (pmne)->n_group); \
+#define CHECK_GROUP(pmne, i_group)                                      \
+  if ((i_group) < 0 || (i_group) >= (pmne)->n_group) {                  \
+    PDM_error("Invalid i_group (%d / %d)", (i_group), (pmne)->n_group); \
   }
 
 /*============================================================================
@@ -1272,8 +1272,7 @@ PDM_part_mesh_nodal_elmts_add
 
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
   if (elt_dim != pmne->mesh_dimension) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_part_mesh_nodal_elmts_add = expected = %i and given = %i \n",
-               pmne->mesh_dimension, elt_dim);
+    PDM_error("Bad mesh_dimension expected = %i and given = %i", pmne->mesh_dimension, elt_dim);
   }
 
   int id_section = -1;
@@ -1340,9 +1339,7 @@ PDM_part_mesh_nodal_elmts_add
 
       id_section += PDM_BLOCK_ID_BLOCK_STD;
       if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
-        PDM_error(__FILE__, __LINE__, 0, "The number of standard blocks must be less than %d\n",
-                  PDM_BLOCK_ID_BLOCK_POLY2D);
-        abort();
+        PDM_error("The number of standard blocks must be less than %d", PDM_BLOCK_ID_BLOCK_POLY2D);
       }
     }
 
@@ -1391,8 +1388,7 @@ PDM_part_mesh_nodal_elmts_add
 
       id_section += PDM_BLOCK_ID_BLOCK_POLY2D;
       if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
-        PDM_error(__FILE__, __LINE__, 0, "The number of polygon blocks must be less than %d\n",
-                  PDM_BLOCK_ID_BLOCK_POLY3D - PDM_BLOCK_ID_BLOCK_POLY2D);
+        PDM_error("The number of polygon blocks must be less than %d", PDM_BLOCK_ID_BLOCK_POLY3D - PDM_BLOCK_ID_BLOCK_POLY2D);
       }
     }
 
@@ -1456,7 +1452,7 @@ PDM_part_mesh_nodal_elmts_add
     break;
 
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
+    PDM_error("Unknown element type");
     break;
 
   }
@@ -2393,7 +2389,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
                                     matrix);
         break;
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", t_elt);
+        PDM_error("Invalid elt type %d", t_elt);
       }
     }
 
@@ -2732,7 +2728,7 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
     case PDM_MESH_NODAL_BARHO_BEZIER:
     case PDM_MESH_NODAL_TRIAHO:
     case PDM_MESH_NODAL_TRIAHO_BEZIER:
-      PDM_error(__FILE__, __LINE__, 0, "Cell center computation not yet implemented for HO elements\n");
+      PDM_error("Cell center computation not yet implemented for HO elements");
     case PDM_MESH_NODAL_POLY_2D:
     case PDM_MESH_NODAL_POLY_3D:
       break;
@@ -3051,8 +3047,7 @@ PDM_part_mesh_nodal_elmts_g_num_get_from_part
       for (int i_section = 0; i_section < pmne->n_section; i_section++) {
         int lis_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i_section], i_part, PDM_OWNERSHIP_KEEP) == NULL);
         if(is_not_parent_num != lis_not_parent_num) {
-          PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_elmts_g_num_get_from_part have strange mix of parent_num : is_not_parent_num = %i / current_section = %i (lis_not_parent_num=%i) \n",
-                    is_not_parent_num, i_section, lis_not_parent_num);
+          PDM_error("Strange mix of parent_num : is_not_parent_num = %i / current_section = %i (lis_not_parent_num=%i) \n", is_not_parent_num, i_section, lis_not_parent_num);
         }
       }
     }
@@ -3297,7 +3292,7 @@ PDM_part_mesh_elmts_nodal_cell3d_cellface_add
   }
 
   if (pmne->prepa_blocks->t_add != 1) {
-    PDM_error(__FILE__, __LINE__, 0, "Error PDM_part_mesh_elmts_nodal_cell3d_cellface_add : Another type of elements is currently is still in progress \n");
+    PDM_error("Another type of elements is currently is still in progress");
   }
 
   /* Determination du type de chaque element */
@@ -3819,9 +3814,7 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
   }
 
   if (pmne->prepa_blocks->t_add != 2) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error in PDM_part_mesh_nodal_elmts_face2d_faceedge_add : prepa_blocks already used for another type of connectivity (%d)\n",
-              pmne->prepa_blocks->t_add);
+    PDM_error("Prepa_blocks already used for another type of connectivity (%d)", pmne->prepa_blocks->t_add);
   }
 
   /* Count number of elements of each type */
@@ -3843,7 +3836,7 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
       l_connec_poly += _n_edge;
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid 2D element with only %d edge(s)\n", _n_edge);
+      PDM_error("Invalid 2D element with only %d edge(s)", _n_edge);
     }
   }
 
@@ -4153,8 +4146,7 @@ PDM_part_mesh_nodal_elmts_cells_cellvtx_add
   }
 
   if (pmne->prepa_blocks->t_add != 1) {
-    PDM_error(__FILE__, __LINE__, 0, "Error in PDM_part_mesh_nodal_elmts_cells_cellvtx_add : Another type of elements is currently is still in progress \n");
-    abort();
+    PDM_error("Another type of elements is currently is still in progress");
   }
 
   /* Determination du type de chaque element */
@@ -4241,7 +4233,7 @@ PDM_part_mesh_nodal_elmts_cells_cellvtx_add
     }
 
     if (som_elts[4] > 0) {
-      PDM_error(__FILE__, __LINE__, 0, "Non standard element detected\n");
+      PDM_error("Non standard element detected");
     }
 
     /* Determination de la connectivite de chaque element */
@@ -4499,8 +4491,7 @@ PDM_part_mesh_nodal_elmts_faces_facevtx_add
   }
 
   if (pmne->prepa_blocks->t_add != 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Error in PDM_part_mesh_nodal_elmts_cells_cellvtx_add : Another type of elements is currently is still in progress \n");
-    abort();
+    PDM_error("Another type of elements is currently is still in progress");
   }
 
   PDM_l_num_t n_tria    = 0;
@@ -5464,14 +5455,12 @@ PDM_part_mesh_nodal_elmts_group_to_tag
       }
 
       if(n_elmt_tag != n_elmt) {
-        PDM_error(__FILE__, __LINE__, 0,
-                  "PDM_part_mesh_nodal_elmts_group_to_tag - All elements from PDM_part_mesh_nodal_elmts are not in groups for dimension %d (n_elmt_tag = %d, n_elmt = %d)\n",
+        PDM_error("All elements from PDM_part_mesh_nodal_elmts are not in groups for dimension %d (n_elmt_tag = %d, n_elmt = %d)",
                   pmne->mesh_dimension, n_elmt_tag, n_elmt);
       }
 
       if(elt_group_is_multiple == 1) {
-        PDM_error(__FILE__, __LINE__, 0,
-                  "PDM_part_mesh_nodal_elmts_group_to_tag - Several elements are more than one group associated (n_elmt_with_different_group=%i, n_elmt = %d) \n",
+        PDM_error("Several elements are more than one group associated (n_elmt_with_different_group=%i, n_elmt = %d)",
                   n_elmt_with_different_group, n_elmt);
       }
     }

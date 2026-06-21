@@ -213,7 +213,7 @@ PDM_dmesh_vtx_coord_set
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
   }
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+    PDM_error("Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s", ownership);
   }
   dmesh->owner_vtx_coord = ownership;
 }
@@ -238,7 +238,7 @@ PDM_dmesh_connectivity_set
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
   }
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+    PDM_error("Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s", ownership);
   }
   dmesh->owner_connectivity[connectivity_type] = ownership;
 }
@@ -357,7 +357,7 @@ PDM_dmesh_distrib_get
      *distrib = dmesh->vtx_distrib;
      break;
    default:
-    PDM_error(__FILE__, __LINE__, 0, "PDM_dmesh_distrib_get invalid entity_type %d\n", entity_type);
+    PDM_error("PDM_dmesh_distrib_get invalid entity_type %d", entity_type);
     break;
    }
    int n_rank;
@@ -463,7 +463,7 @@ PDM_dmesh_bound_set
   }
 
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+    PDM_error("Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s", ownership);
   }
   dmesh->owner_bound[bound_type] = ownership;
 }
@@ -911,7 +911,7 @@ PDM_dmesh_dimension_get
 )
 {
   if (dmesh == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dmesh\n");
+    PDM_error("Invalid dmesh");
   }
 
   int dim = -1;

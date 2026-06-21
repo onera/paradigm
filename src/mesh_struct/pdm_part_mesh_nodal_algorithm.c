@@ -482,7 +482,7 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
 {
   int dim = PDM_geometry_kind_to_dimension(geom_kind);
   if (pmn->pcg[dim] != NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum: pmn->pcg[dim=%d]!=NULL\n", dim);
+    PDM_error("pmn->pcg[dim=%d]!=NULL", dim);
   }
 
   int          *n_entity    = NULL;
@@ -516,7 +516,7 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
 {
 
   if (pmn->pcg_vtx == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_graph_comm_deduce_from_vtx: pmn->pcg_vtx is mandatory in order to deduce other \n");
+    PDM_error("pmn->pcg_vtx is mandatory in order to deduce other");
   }
 
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
@@ -529,7 +529,7 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
   } else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
     pmne = pmn->pmne[0];
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx not implemented for geom_kind %d\n", geom_kind);
+    PDM_error("Not implemented for geom_kind %d", geom_kind);
   }
 
   int dim = PDM_geometry_kind_to_dimension(geom_kind);
@@ -592,7 +592,7 @@ PDM_part_mesh_nodal_complete_part_comm_graph
   PDM_MPI_Allreduce(&have_vtx_gnum, &have_g_vtx_gnum, 1, PDM_MPI_INT, PDM_MPI_MIN, pmn->comm);
 
   if (pmn->pcg_vtx == NULL && have_g_vtx_gnum == 0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_complete_part_comm_graph: pmn->pcg_vtx !=NULL or gnum for vertices is mandatory in order to deduce other \n");
+    PDM_error("pmn->pcg_vtx != NULL or gnum for vertices is mandatory in order to deduce other");
   }
 
   /*
@@ -640,7 +640,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
   if (!((geom_kind==PDM_GEOMETRY_KIND_SURFACIC && (geom_kind_tgt==PDM_GEOMETRY_KIND_RIDGE ||
                                                    geom_kind_tgt==PDM_GEOMETRY_KIND_CORNER  ) ) ||
         (geom_kind==PDM_GEOMETRY_KIND_RIDGE    &&  geom_kind_tgt==PDM_GEOMETRY_KIND_CORNER    )  )) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners cannot build entities of geom_kind %d from entities of geom_kind %d\n", geom_kind_tgt, geom_kind);
+    PDM_error("Cannot build entities of geom_kind %d from entities of geom_kind %d", geom_kind_tgt, geom_kind);
   }
 
 
@@ -652,7 +652,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
     pmne = pmn->pmne[1];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners not implemented for geom_kind %d\n", geom_kind);
+    PDM_error("Not implemented for geom_kind %d", geom_kind);
   }
 
   if (pmne==NULL) {
@@ -789,7 +789,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
   if (geom_kind_tgt==PDM_GEOMETRY_KIND_CORNER) {
 
     if (pmn->pmne[0]!=NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners : part_mesh_nodal already has corner section\n");
+      PDM_error("part_mesh_nodal already has corner section");
     }
 
     /**
@@ -875,8 +875,8 @@ PDM_part_mesh_nodal_compute_straddling_entities
   }
   else { //edge
 
-    if (pmn->pmne[1]!=NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners : part_mesh_nodal already has ridge section\n");
+    if (pmn->pmne[1] != NULL) {
+      PDM_error("part_mesh_nodal already has ridge section\n");
     }
 
     /**
