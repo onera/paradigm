@@ -555,8 +555,8 @@ const int                   append
             break;
           else {
 
-            int index_loc;
-            int var_dim;
+            int index_loc = 0;
+            int var_dim   = 0;
 
             if (strncmp(ligne, "constant per case file:", strlen("constant per case file:")) == 0) {
               index_loc = strlen("constant per case file:");

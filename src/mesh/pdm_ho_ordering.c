@@ -950,8 +950,7 @@ PDM_ho_ordering_user_to_ijk_add
   _ordering_t **data = (_ordering_t **) PDM_hash_tab_data_get (elt_ordering, (void *) &key);
   for (int i = 0; i < n_data; i++) {
     if (data[i]->order == order) {
-      PDM_error(__FILE__, __LINE__, 0, "Ordering '%s' already specified for elt %d at order %d\n",
-                name, (int) t_elt, order);
+      PDM_error("Ordering '%s' already specified for elt %d at order %d", name, (int) t_elt, order);
     }
   }
 
@@ -990,15 +989,14 @@ PDM_ho_ordering_user_to_ijk_add
     elt_dim = 3;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", (int) t_elt);
+    PDM_error("Invalid t_elt %d", (int) t_elt);
   }
 
   if (!_check_ijk_to_user (n_nodes, ijk_to_user)) {
     for (int i = 0; i < n_nodes; i++) {
       printf("ijk %3d -> user %3d\n", i, ijk_to_user[i]);
     }
-    PDM_error(__FILE__, __LINE__, 0, "Invalid user_to_ijk for ordering '%s', t_elt %d, order %d\n",
-              name, (int) t_elt, order);
+    PDM_error("Invalid user_to_ijk for ordering '%s', t_elt %d, order %d", name, (int) t_elt, order);
   }
 
   int *_user_to_ijk;
@@ -1040,17 +1038,15 @@ PDM_ho_ordering_user_to_ijk_get
   int id = PDM_ho_ordering_id_get (name);
 
   if (id < 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Ordering '%s' not defined\n", name);
+    PDM_error("Ordering '%s' not defined", name);
   }
 
   PDM_ho_ordering_t *hoo = ho_orderings[id];
   PDM_hash_tab_t *elt_ordering = hoo->elt_ordering[t_elt];
 
   if (elt_ordering == NULL) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Ordering '%s' not defined for elt type %d\n", name, (int) t_elt);
+    PDM_error("Ordering '%s' not defined for elt type %d", name, (int) t_elt);
   }
-
 
   int key = order % key_max_order;
 
@@ -1064,9 +1060,7 @@ PDM_ho_ordering_user_to_ijk_get
     }
   }
 
-  PDM_error(__FILE__, __LINE__, 0,
-            "Ordering '%s' not defined for elt type %d at order %d\n", name, (int) t_elt, order);
-
+  PDM_error("Ordering '%s' not defined for elt type %d at order %d", name, (int) t_elt, order);
 
   return NULL;
 }
@@ -1095,15 +1089,14 @@ PDM_ho_ordering_ijk_to_user_get
   int id = PDM_ho_ordering_id_get (name);
 
   if (id < 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Ordering '%s' not defined\n", name);
+    PDM_error("Ordering '%s' not defined", name);
   }
 
   PDM_ho_ordering_t *hoo = ho_orderings[id];
   PDM_hash_tab_t *elt_ordering = hoo->elt_ordering[t_elt];
 
   if (elt_ordering == NULL) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Ordering '%s' not defined for elt type %d\n", name, (int) t_elt);
+    PDM_error("Ordering '%s' not defined for elt type %d", name, (int) t_elt);
   }
 
 
@@ -1119,8 +1112,7 @@ PDM_ho_ordering_ijk_to_user_get
     }
   }
 
-  PDM_error(__FILE__, __LINE__, 0,
-            "Ordering '%s' not defined for elt type %d at order %d\n", name, (int) t_elt, order);
+  PDM_error("Ordering '%s' not defined for elt type %d at order %d", name, (int) t_elt, order);
 
   return NULL;
 }
@@ -1170,7 +1162,7 @@ PDM_ho_ordering_compute_ijk_to_user
     ijk_to_user = _compute_ijk_to_user_hexa(order, user_to_ijk);
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", (int) t_elt);
+    PDM_error("Invalid t_elt %d", (int) t_elt);
   }
 
   return ijk_to_user;
