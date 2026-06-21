@@ -433,7 +433,7 @@ PDM_closest_point_t *cls
   PDM_MPI_Allreduce (&ln_src_pts, &gn_src_pts, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cls->comm);
 
   if(gn_src_pts < cls->n_closest) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_closest_points_compute : User request n_closest = %d but total number of points in source cloud is lower (= "PDM_FMT_G_NUM") \n", cls->n_closest, gn_src_pts);
+    PDM_error("User request n_closest = %d but total number of points in source cloud is lower (= "PDM_FMT_G_NUM")", cls->n_closest, gn_src_pts);
   }
 
   const int depth_max             = 31;
@@ -638,8 +638,7 @@ PDM_closest_points_tgt_in_src_get
 {
 
   if (cls->compute_reverse_results == PDM_FALSE) {
-    PDM_error(__FILE__, __LINE__, 0,
-      "PDM_closest_points_tgt_in_src_get error: reverse results not available.\n");
+    PDM_error("Error: reverse results not available.");
   }
 
   assert (cls->src_cloud->tgt_in_src_idx != NULL);
@@ -666,8 +665,7 @@ PDM_closest_points_tgt_in_src_dist_get
 {
 
   if (cls->compute_reverse_results == PDM_FALSE) {
-    PDM_error(__FILE__, __LINE__, 0,
-      "PDM_closest_points_tgt_in_src_dist_get error: reverse results not available.\n");
+    PDM_error("Error: reverse results not available.");
   }
 
   assert (cls->src_cloud->tgt_in_src_idx != NULL);
@@ -928,8 +926,7 @@ PDM_closest_points_part_to_part_get
 {
 
   if (cls->compute_reverse_results == PDM_FALSE) {
-    PDM_error(__FILE__, __LINE__, 0,
-      "PDM_closest_points_part_to_part_get error: reverse results not available.\n");
+    PDM_error("Error: reverse results not available.");
   }
 
   *ptp = cls->ptp;

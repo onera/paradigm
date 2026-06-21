@@ -125,7 +125,7 @@ static double _compute_laplacian_smoothing
   // Check pointers
   if (p_n_vtx_frozen != NULL) {
     if (p_vtx_frozen == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "p_vtx_frozen is NULL\n");
+      PDM_error("p_vtx_frozen is NULL.");
     }
   }
 
