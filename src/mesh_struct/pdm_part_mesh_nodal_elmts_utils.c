@@ -670,7 +670,7 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
 
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-        PDM_error("PDM_MESH_NODAL_POLY_2D Not implemented\n");
+        PDM_error("PDM_MESH_NODAL_POLY_2D Not implemented");
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
         int i_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -723,7 +723,7 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
                                                               i_part);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-        PDM_error("PDM_MESH_NODAL_POLY_2D Not implemented\n");
+        PDM_error("PDM_MESH_NODAL_POLY_2D Not implemented");
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
         int i_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;

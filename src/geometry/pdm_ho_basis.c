@@ -817,7 +817,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
     }
   }
   else {
-    PDM_error("Ordre de la pyramide non implémenté\n");
+    PDM_error("Ordre de la pyramide non implémenté");
   }
 
 }
@@ -1221,7 +1221,7 @@ _get_user_elt (PDM_Mesh_nodal_elt_t elt_type)
     break;
 
   default:
-    PDM_error("Unvailable element type %d\n", (int) elt_type);
+    PDM_error("Unvailable element type %d", (int) elt_type);
   }
 
   return NULL;
@@ -1298,7 +1298,7 @@ _default_elt_basis
     break;
 
   default:
-    PDM_error("PDM_ho_basis : '%d' element type not yet implemented\n", type);
+    PDM_error("PDM_ho_basis : '%d' element type not yet implemented", type);
   }
 }
 

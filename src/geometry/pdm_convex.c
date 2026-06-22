@@ -53,7 +53,7 @@ PDM_points_inside_convex_hull
   * If such hyperplane does not exist then tgt_coord is inside the convex hull.
   */
   if (dim > 3) {
-    PDM_error("Invalid dim %d (must be <= 3)\n", dim);
+    PDM_error("Invalid dim %d (must be <= 3)", dim);
   }
 
   // Setup LP arrays

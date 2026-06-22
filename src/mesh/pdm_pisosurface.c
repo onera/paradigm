@@ -290,7 +290,7 @@ PDM_isosurface_part_mesh_set
                                      &isos->cell_face_idx[i_part],
                                      PDM_OWNERSHIP_BAD_VALUE);
       if (isos->cell_face_idx[i_part] == NULL) {
-        PDM_error("Error : cell_face_idx is NULL for part %d", i_part);
+        PDM_error("cell_face_idx is NULL for part %d", i_part);
       }
     }
 

@@ -39,7 +39,7 @@ extern "C" {
 
 #define CHECK_INSTANCE(dme) \
   if ((dme) == NULL) { \
-    PDM_error("Invalid PDM_dmesh_extract_t instance\n"); \
+    PDM_error("Invalid PDM_dmesh_extract_t instance"); \
   }
 
 

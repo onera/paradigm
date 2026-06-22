@@ -86,7 +86,7 @@ _build_extract_part_bound
       break;
 
     default:
-      PDM_error("Invalid bound_type %d\n", bound_type);
+      PDM_error("Invalid bound_type %d", bound_type);
   }
 
   PDM_UNUSED(entity_type);
@@ -862,7 +862,7 @@ PDM_part_mesh_gnum_compute_from_part_comm_graph
 )
 {
   if (pmesh->pcg[entity_type] == NULL) {
-    PDM_error("Invalid pmesh->pcg[entity_type=%d] == NULL but it's required to compute\n", entity_type);
+    PDM_error("Invalid pmesh->pcg[entity_type=%d] == NULL but it's required to compute", entity_type);
   }
 
   if(pmesh->is_owner_ln_to_gn[entity_type] == PDM_TRUE) {

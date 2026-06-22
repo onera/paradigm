@@ -38,19 +38,19 @@ extern "C" {
  * Macro definition
  *============================================================================*/
 
-#define CHECK_PMNE(pmne)                                     \
-  if ((pmne) == NULL) {                                      \
-    PDM_error("Undefined Part Mesh Nodal Elmts instance\n"); \
+#define CHECK_PMNE(pmne)                                   \
+  if ((pmne) == NULL) {                                    \
+    PDM_error("Undefined Part Mesh Nodal Elmts instance"); \
   }
 
-#define CHECK_PMN(pmn)                                 \
-  if ((pmn) == NULL) {                                 \
-    PDM_error("Undefined Part Mesh Nodal instance\n"); \
+#define CHECK_PMN(pmn)                               \
+  if ((pmn) == NULL) {                               \
+    PDM_error("Undefined Part Mesh Nodal instance"); \
   }
 
-#define CHECK_GEOM_KIND(geom_kind, expected)                                            \
-  if ((geom_kind) != (expected)) {                                                      \
-    PDM_error("Invalid geom_kind (expected %d but got %d)\n", (expected), (geom_kind)); \
+#define CHECK_GEOM_KIND(geom_kind, expected)                                          \
+  if ((geom_kind) != (expected)) {                                                    \
+    PDM_error("Invalid geom_kind (expected %d but got %d)", (expected), (geom_kind)); \
   }
 
 #define CHECK_I_PART(pmn, i_part)                                   \

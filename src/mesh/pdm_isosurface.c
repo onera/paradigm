@@ -1606,7 +1606,6 @@ _ngonize
   }
   else {
     // We have elements other than simplices, we need to ngonize
-    // PDM_error("Nodal not implemented yet for elements other than TRIA3 and TETRA4");
     isos->ngonize = 1; // need to good managing of memory
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
 
@@ -3736,7 +3735,7 @@ PDM_isosurface_part_to_part_enable
   }
 
   if (id_isosurface >= isos->n_isosurface) {
-    PDM_error("PDM_isosurface_part_to_part_enable : Invalid id_isosurface %d (n_isosurface = %d)", id_isosurface, isos->n_isosurface);
+    PDM_error("Invalid id_isosurface %d (n_isosurface = %d)", id_isosurface, isos->n_isosurface);
   }
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];

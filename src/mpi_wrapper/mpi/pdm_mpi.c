@@ -154,7 +154,7 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -172,7 +172,7 @@ int PDM_MPI_File_close(PDM_MPI_File *fh)
     char buffer[MPI_MAX_ERROR_STRING];
     int  buffer_len;
     MPI_Error_string(code, buffer, &buffer_len);
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
     abort();
   }
   return code;
@@ -275,7 +275,7 @@ int PDM_MPI_File_read_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -307,7 +307,7 @@ int PDM_MPI_File_read_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -340,7 +340,7 @@ int PDM_MPI_File_write_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -372,7 +372,7 @@ int PDM_MPI_File_write_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -403,7 +403,7 @@ int PDM_MPI_File_read(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -434,7 +434,7 @@ int PDM_MPI_File_read_all(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -464,7 +464,7 @@ int PDM_MPI_File_write(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -495,7 +495,7 @@ int PDM_MPI_File_write_all(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error("%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -1362,7 +1362,7 @@ PDM_MPI_Alltoallv_init
   PDM_UNUSED(recvtype);
   PDM_UNUSED(comm);
   PDM_UNUSED(request);
-  PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Alltoallv_Init : Persistent collective communication not available !");
+  PDM_error("Persistent collective communication not available.");
   return -1;
 #endif
 }
@@ -1408,7 +1408,7 @@ PDM_MPI_Neighbor_alltoallv_init
   PDM_UNUSED(recvtype);
   PDM_UNUSED(comm);
   PDM_UNUSED(request);
-  PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Neighbor_alltoallv_init : Persistent collective communication not available !");
+  PDM_error("Persistent collective communication not available.");
   return -1;
 #endif
 }
@@ -1557,8 +1557,7 @@ int PDM_MPI_Topo_test(PDM_MPI_Comm comm, int *status) {
   } else if(_status == PDM_MPI_GRAPH) {
     *status = PDM_MPI_GRAPH;
   } else {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Topo_test :"
-            " _status '%d' non valide\n", _status);
+    PDM_error("status '%d' non valide", _status);
   }
 
   return code;
@@ -1679,9 +1678,7 @@ int PDM_MPI_Comm_split_type(PDM_MPI_Comm comm, int split_type, PDM_MPI_Comm *new
   } else if(split_type == PDM_MPI_SPLIT_NUMA) {
     PDM_MPI_Comm_split_type_numa(comm, newcomm);
   } else {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Comm_split_type :"
-            " split_type '%d' non valide\n", split_type);
-    abort();
+    PDM_error("split_type '%d' non valide", split_type);
   }
   return code;
 }

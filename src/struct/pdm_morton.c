@@ -696,20 +696,6 @@ _define_rank_distrib(int                      dim,
 
   } /* End of loop on ranks */
 
-#if 0 && defined(dbg_enabled) && !defined(Ndbg_enabled) /* Sanity check in dbg_enabled */
-  {
-    PDM_g_num_t   sum = 0;
-    for (rank_id = 0; rank_id < n_ranks; rank_id++)
-      sum += g_distrib[rank_id];
-
-    if (sum != gsum_weight) {
-      PDM_error("Error while computing global distribution.\n"
-                "sum = %u and gsum_weight = %u\n",
-                sum, gsum_weight);
-    }
-  }
-#endif /* sanity check */
-
 }
 
 /*----------------------------------------------------------------------------
@@ -1258,13 +1244,6 @@ PDM_morton_local_order(int                     n_codes,
 
   }
 
-#if 0 && defined(dbg_enabled) && !defined(Ndbg_enabled)   /* Check ordering */
-  for (i = 1; i < n_codes; i++) {
-    if (_a_gt_b(morton_codes[order[i-1]], morton_codes[order[i]])) {
-      PDM_error("Id: %u inconsistent: bad ordering of Morton codes.", (unsigned)i);
-    }
-  }
-#endif
 }
 
 
@@ -1292,14 +1271,6 @@ PDM_morton_local_sort(int               n_codes,
     _descend_morton_heap(0, i, morton_codes);
 
   }
-
-#if 0 && defined(dbg_enabled) && !defined(Ndbg_enabled)   /* Check good ordering */
-  for (i = 1; i < n_codes; i++) {
-    if (_a_gt_b(dim, morton_codes[i - 1], morton_codes[i])) {
-      PDM_error("Id: %u inconsistent: bad ordering of Morton codes.", (unsigned)i);
-    }
-  }
-#endif
 
 }
 

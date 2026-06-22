@@ -1734,7 +1734,7 @@ _new_node(PDM_box_tree_t     *bt,
 
   if ((int)(morton_code.L) > bt->max_level) {
     PDM_error("Error adding a new node in box tree (%p).\n"
-              "Max level reached. Current level: %u and Max level: %d\n",
+              "Max level reached. Current level: %u and Max level: %d",
               (void *)bt, morton_code.L, bt->max_level);
   }
 
@@ -3500,15 +3500,15 @@ PDM_box_tree_create(int    max_level,
   /* Sanity checks */
 
   if (max_level < 0) {
-    PDM_error("Forbidden max_level value (%d) in the tree structure\n", max_level);
+    PDM_error("Forbidden max_level value (%d) in the tree structure", max_level);
   }
 
   if (threshold < 1) {
-    PDM_error("Forbidden threshold value (%d) in the tree structure\n", threshold);
+    PDM_error("Forbidden threshold value (%d) in the tree structure", threshold);
   }
 
   if (max_box_ratio < 1.0) {
-    PDM_error("Forbidden max_box_ratio value (%f) in the tree structure\n", (double)max_box_ratio);
+    PDM_error("Forbidden max_box_ratio value (%f) in the tree structure", (double)max_box_ratio);
   }
 
   /* Create and initialize tree structure according to its type */
@@ -6928,7 +6928,7 @@ PDM_box_tree_intersect_volume_boxes
  )
  {
   if (i_copied_rank >= bt->n_copied_ranks) {
-    PDM_error("Copied rank %d >= Number of copied ranks\n", (int) i_copied_rank);
+    PDM_error("Copied rank %d >= Number of copied ranks", (int) i_copied_rank);
   }
 
   const int dim = bt->boxes->dim;
@@ -8220,7 +8220,7 @@ PDM_tree_intersection_point_box
             break;
           }
           default: {
-            PDM_error("Subdivision criterion %d not implemented\n", (int) subdiv_crit);
+            PDM_error("Subdivision criterion %d not implemented", (int) subdiv_crit);
             break;
           }
         }

@@ -2321,12 +2321,6 @@ _run_ppart_domain
 
   dn_node = PDM_dmesh_dn_entity_get(dmesh, entity_type1);
 
-  // if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
-  //   if (dn_node <= 0) {
-  //     PDM_error("Error : Graph-based partitioning requires non-empty blocks (dn_node = %d)", dn_node);
-  //   }
-  // }
-
   switch (dim) {
     case 3: {
       _renum_node_method_none    = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");

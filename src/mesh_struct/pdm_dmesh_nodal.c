@@ -1202,7 +1202,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
       s_connec += dconnec_idx[n_elt];
     }
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-      PDM_error("PDM_dmesh_nodal_dump_vtk_with_field : POLY_3D are not supported");
+      PDM_error("POLY_3D are not supported");
     }
     else {
       int order;

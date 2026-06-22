@@ -161,7 +161,7 @@ PDM_global_mean_field_compute
   int gstride = 0;
   PDM_MPI_Allreduce(&gmean->stride, &gstride, 1, PDM_MPI_INT, PDM_MPI_MAX, gmean->comm);
   if (gmean->stride>0 && gstride!=gmean->stride) {
-    PDM_error("Inconsistent stride over all procs (local is %d, global is %d)\n", gmean->stride, gstride);
+    PDM_error("Inconsistent stride over all procs (local is %d, global is %d)", gmean->stride, gstride);
   }
   gmean->stride = gstride;
 
@@ -268,7 +268,7 @@ PDM_global_mean_field_compute
 
   for (int i = 0; i <  n_elt_block; i++) {
     if (PDM_ABS(gmean->s_weight[i]) < 1e-15) {
-      PDM_error("Sum of weights < 1e-15\n");
+      PDM_error("Sum of weights < 1e-15");
     }
     for (int k = 0; k < gmean->stride; k++) {
        block_field[gmean->stride * i + k] =

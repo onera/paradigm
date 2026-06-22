@@ -87,7 +87,7 @@ PDM_file_seq_open
   }
 
   if (fichier->fichier == NULL) {
-    PDM_error("Error when open file %s\n", nom);
+    PDM_error("Error when open file %s", nom);
   }
 
   return fichier;
@@ -130,7 +130,7 @@ PDM_file_seq_read
 
   if (fichier->mode == FICHIER_SEQ_MODE_ECRITURE ||
       fichier->mode == FICHIER_SEQ_MODE_AJOUT) {
-    PDM_error("Read forbidden for file '%s' opened in write/append mode\n", fichier->nom);
+    PDM_error("Read forbidden for file '%s' opened in write/append mode", fichier->nom);
   }
 
   size_t _n_donnees = (size_t) n_donnees ;

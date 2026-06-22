@@ -793,7 +793,7 @@ PDM_linear_algebra_eig_sym2
   PDM_UNUSED(a);
   PDM_UNUSED(val);
   PDM_UNUSED(vec);
-  PDM_error("PDM_linear_algebra_eig_sym2 needs LAPACK\n");
+  PDM_error("PDM_linear_algebra_eig_sym2 needs LAPACK");
 #endif
 }
 
@@ -939,7 +939,7 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
         PDM_error("eigv_3x3_sym : error with matrix\n"
                   "%f %f %f\n"
                   "%f %f %f\n"
-                  "%f %f %f\n",
+                  "%f %f %f",
                   a[0], a[1], a[2],
                   a[1], a[3], a[4],
                   a[2], a[4], a[5]);
@@ -952,7 +952,7 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
         PDM_error("eigv_3x3_sym : error with matrix\n"
                   "%f %f %f\n"
                   "%f %f %f\n"
-                  "%f %f %f\n",
+                  "%f %f %f",
                   a[0], a[1], a[2],
                   a[1], a[3], a[4],
                   a[2], a[4], a[5]);

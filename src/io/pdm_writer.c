@@ -2097,7 +2097,7 @@ PDM_writer_var_free
     /* Acces a l'objet de geometrie courant */
 
     if (id_var >= cs->var_tab->n_var) {
-      PDM_error("Invalid var identifier\n");
+      PDM_error("Invalid var identifier");
     }
 
     PDM_writer_var_t *var = cs->var_tab->var[id_var];
@@ -2155,11 +2155,11 @@ PDM_writer_fmt_add
   _load_intern_fmt();
 
   if (geom_write_fct == NULL) {
-    PDM_error("Undefined geom write function\n");
+    PDM_error("Undefined geom write function");
   }
 
   if (var_write_fct == NULL) {
-    PDM_error("Undefined var write function\n");
+    PDM_error("Undefined var write function");
   }
 
   if (n_fmt_tab >= s_fmt_tab) {

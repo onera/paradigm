@@ -167,7 +167,7 @@ PDM_part_comm_graph_entity1_to_entity2
   PDM_MPI_Allreduce(&i_have_nuplet, &have_nuplet, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
   if (i_have_nuplet != have_nuplet) {
-    PDM_error("Inconsistent 'i_have_nuplet'\n");
+    PDM_error("Inconsistent 'i_have_nuplet'");
   }
 
   /* Create transpose graph information - More pratical */
@@ -873,7 +873,7 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
 )
 {
   if (pcg_entity2 == NULL) {
-    PDM_error("Part Comm Graph is NULL\n");
+    PDM_error("Part Comm Graph is NULL");
   }
 
   int n_part = pcg_entity2->n_part;

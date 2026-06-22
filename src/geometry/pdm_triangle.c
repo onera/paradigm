@@ -1013,7 +1013,6 @@ PDM_triangle_ngon_to_nodal
           if (fe[i] < 0) log_trace("%6d %6d\n", edge_vtx[2*(-fe[i]-1)+1], edge_vtx[2*(-fe[i]-1)  ]);
           else           log_trace("%6d %6d\n", edge_vtx[2*( fe[i]-1)  ], edge_vtx[2*( fe[i]-1)+1]);
         }
-        // PDM_error("PDM_triangle_ngon_to_nodal failed, see paradigm_*.log\n");
         printf("PDM_triangle_ngon_to_nodal failed (see paradigm_*.log) !\n");
         fflush(stdout);
         return iface+1;

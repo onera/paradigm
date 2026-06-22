@@ -40,9 +40,9 @@ extern "C" {
  * Local macro definitions
  *============================================================================*/
 
-#define CHECK_PMNE(pmne)                                     \
-  if ((pmne) == NULL) {                                      \
-    PDM_error("Undefined Part Mesh Nodal Elmts instance\n"); \
+#define CHECK_PMNE(pmne)                                   \
+  if ((pmne) == NULL) {                                    \
+    PDM_error("Undefined Part Mesh Nodal Elmts instance"); \
   }
 
 #define CHECK_I_PART(pmne, i_part)                                   \
@@ -50,9 +50,9 @@ extern "C" {
     PDM_error("Invalid i_part (%d / %d)", (i_part), (pmne)->n_part); \
   }
 
-#define CHECK_SECTION(section)                           \
-  if ((section) == NULL) {                               \
-    PDM_error ("NULL section\n"); \
+#define CHECK_SECTION(section)  \
+  if ((section) == NULL) {      \
+    PDM_error ("NULL section"); \
   }
 
 #define CHECK_GROUP(pmne, i_group)                                      \
@@ -3047,7 +3047,7 @@ PDM_part_mesh_nodal_elmts_g_num_get_from_part
       for (int i_section = 0; i_section < pmne->n_section; i_section++) {
         int lis_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i_section], i_part, PDM_OWNERSHIP_KEEP) == NULL);
         if(is_not_parent_num != lis_not_parent_num) {
-          PDM_error("Strange mix of parent_num : is_not_parent_num = %i / current_section = %i (lis_not_parent_num=%i) \n", is_not_parent_num, i_section, lis_not_parent_num);
+          PDM_error("Strange mix of parent_num : is_not_parent_num = %i / current_section = %i (lis_not_parent_num=%i)", is_not_parent_num, i_section, lis_not_parent_num);
         }
       }
     }

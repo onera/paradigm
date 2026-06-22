@@ -94,7 +94,7 @@ void           *data
   } else if (ht->t_key == PDM_HASH_TAB_KEY_LONG) {
     _key = *((PDM_g_num_t *) (key));
   } else {
-	  PDM_error("PDM_hash_tab_data_add error : unknown PDM_hash_tab_key_t\n");
+	  PDM_error("PDM_hash_tab_data_add error : unknown PDM_hash_tab_key_t");
 	}
 
   assert ((PDM_g_num_t) _key < ht->key_max);
@@ -131,7 +131,7 @@ void           *key
   } else if (ht->t_key == PDM_HASH_TAB_KEY_LONG) {
     _key = *((PDM_g_num_t *) (key));
   } else {
-	  PDM_error("PDM_hash_tab_data_free error : unknown PDM_hash_tab_key_t\n");
+	  PDM_error("PDM_hash_tab_data_free error : unknown PDM_hash_tab_key_t");
 	}
 
   assert ((PDM_g_num_t) _key < ht->key_max);
@@ -162,7 +162,7 @@ void           *key
   } else if (ht->t_key == PDM_HASH_TAB_KEY_LONG) {
     _key = *((PDM_g_num_t *) (key));
   } else {
-	  PDM_error("PDM_hash_tab_data_get error : unknown PDM_hash_tab_key_t\n");
+	  PDM_error("PDM_hash_tab_data_get error : unknown PDM_hash_tab_key_t");
 	}
 
   assert ((PDM_g_num_t) _key < ht->key_max);
@@ -185,7 +185,7 @@ void           *key
   } else if (ht->t_key == PDM_HASH_TAB_KEY_LONG) {
     _key = *((PDM_g_num_t *) (key));
   } else {
-	  PDM_error("PDM_hash_tab_data_get error : unknown PDM_hash_tab_key_t\n");
+	  PDM_error("PDM_hash_tab_data_get error : unknown PDM_hash_tab_key_t");
 	}
   assert ((PDM_g_num_t) _key < ht->key_max);
   return ht->data[_key];

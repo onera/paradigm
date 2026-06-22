@@ -1054,7 +1054,7 @@ _compute_dist2_from_closest_edge_subdivision
                                     &_child);
 
     if (is_empty) {
-      PDM_error("Heap is empty \n");
+      PDM_error("Heap is empty");
     }
 
     if ((distance_extension == 0) && (_dist2_current > dist2_pre)) {
@@ -1229,7 +1229,7 @@ _compute_dist2_from_uniform_edge_subdivision
 
 
     if (is_empty) {
-      PDM_error("Heap is empty\n");
+      PDM_error("Heap is empty");
     }
 
     dist2_min_min = PDM_MIN (dist2_min_min, _dist2_current);
@@ -2314,7 +2314,7 @@ _compute_dist2_from_closest_tria_subdivision
 
 
     if (is_empty) {
-      PDM_error("Heap is empty\n");
+      PDM_error("Heap is empty");
     }
 
     if ((distance_extension == 0) && (_dist2_current > dist2_pre)) {
@@ -2489,7 +2489,7 @@ _compute_dist2_from_uniform_tria_subdivision
 
 
     if (is_empty) {
-      PDM_error("Heap is empty\n");
+      PDM_error("Heap is empty");
     }
 
     dist2_min_min = PDM_MIN (dist2_min_min, _dist2_current);
@@ -4723,7 +4723,7 @@ _compute_dist2_from_closest_tetra_subdivision
                                     &_child);
 
     if (is_empty) {
-      PDM_error("Heap is empty\n");
+      PDM_error("Heap is empty");
     }
 
     if (dbg_enabled) {
@@ -4921,7 +4921,7 @@ _compute_dist2_from_uniform_tetra_subdivision
                                     &_child);
 
     if (is_empty) {
-      PDM_error("Heap is empty\n");
+      PDM_error("Heap is empty");
     }
 
     dist2_min_min = PDM_MIN (dist2_min_min, _dist2_current);
@@ -5556,7 +5556,7 @@ _default_location
 
 
   default:
-    PDM_error("PDM_ho_location : %d Element type not implemented yet\n", _type);
+    PDM_error("%d Element type not implemented yet", _type);
 
   }
 
@@ -5622,7 +5622,7 @@ _get_user_elt (PDM_Mesh_nodal_elt_t elt_type)
     break;
 
   default:
-    PDM_error("Unvailable element type %d\n", (int) elt_type);
+    PDM_error("Unvailable element type %d", (int) elt_type);
   }
 
   return NULL;
@@ -6014,7 +6014,7 @@ _boundary_child_element_coord
     }
 
     default:
-      PDM_error("Invalid elt_type %d\n", (int) parent_elt_type);
+      PDM_error("Invalid elt_type %d", (int) parent_elt_type);
 
   }
 
@@ -6069,7 +6069,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[1] = 1 - child_uvw[0];
       break;
     default:
-      PDM_error("Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_QUADHO:
@@ -6091,7 +6091,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[1] = 1 - child_uvw[0];
       break;
     default:
-      PDM_error("Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_TETRAHO:
@@ -6117,7 +6117,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[2] = 0;
       break;
     default:
-      PDM_error("Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_PYRAMIDHO:
@@ -6148,7 +6148,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[2] = child_uvw[1];
       break;
     default:
-      PDM_error("Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_PRISMHO:
@@ -6179,7 +6179,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[2] = child_uvw[1];
       break;
     default:
-      PDM_error("Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_HEXAHO: {
@@ -6190,7 +6190,7 @@ _boundary_child_uvw_to_parent_uvw
     break;
   }
   default:
-    PDM_error("Invalid elt_type %d\n", (int) parent_elt_type);
+    PDM_error("Invalid elt_type %d", (int) parent_elt_type);
   }
 }
 
@@ -6237,7 +6237,7 @@ _init_uvw
     uvw[2] = 0.5;
     break;
   default:
-    PDM_error("Invalid elt_type %d\n", (int) elt_type);
+    PDM_error("Invalid elt_type %d", (int) elt_type);
   }
 }
 
@@ -6487,7 +6487,7 @@ _compute_uvw_ho
       }
 
       default:
-        PDM_error("Invalid elt dimension %d\n", elt_dim);
+        PDM_error("Invalid elt dimension %d", elt_dim);
       }
 
     if (singular) {
@@ -6723,7 +6723,7 @@ PDM_ho_location_uvw_nodes
     break;
 
     default:
-    PDM_error("Invalid element type %d\n", type);
+    PDM_error("Invalid element type %d", type);
   }
 }
 

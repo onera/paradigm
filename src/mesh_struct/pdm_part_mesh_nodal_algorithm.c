@@ -876,7 +876,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
   else { //edge
 
     if (pmn->pmne[1] != NULL) {
-      PDM_error("part_mesh_nodal already has ridge section\n");
+      PDM_error("part_mesh_nodal already has ridge section");
     }
 
     /**

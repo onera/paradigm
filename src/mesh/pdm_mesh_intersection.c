@@ -3550,7 +3550,7 @@ _mesh_intersection_vol_line
                                                        i_part,
                                                        PDM_MESH_ENTITY_EDGE);
     } else {
-      PDM_error("Invalid mesh type \n");
+      PDM_error("Invalid mesh type");
     }
 
   }
@@ -5011,7 +5011,7 @@ PDM_mesh_intersection_compute
                                   redistribute_box_a_to_box_b_idx,
                                   redistribute_box_a_to_box_b);
     } else {
-      PDM_error("Error : Cannot handle meshA with dim = %i and meshB = %i \n", mi->dim_mesh[0], mi->dim_mesh[1]);
+      PDM_error("Error : Cannot handle meshA with dim = %i and meshB = %i", mi->dim_mesh[0], mi->dim_mesh[1]);
     }
     PDM_box_set_destroy (&boxes_mesh[0]);
     PDM_box_set_destroy (&boxes_mesh[1]);
@@ -5443,7 +5443,7 @@ PDM_mesh_intersection_elt_volume_get
     }
     else if (mi->mesh_nodal[imesh] != NULL) {
       // TODO...
-      PDM_error("Not implemented yet for nodal mesh\n");
+      PDM_error("Not implemented yet for nodal mesh");
     }
   }
 

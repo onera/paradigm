@@ -131,7 +131,7 @@ _generate_mesh_sphere
 
 
   } else {
-    PDM_error("Not implemented yet for element type %d\n", (int) elt_type);
+    PDM_error("Not implemented yet for element type %d", (int) elt_type);
   }
 }
 
@@ -199,7 +199,7 @@ _generate_mesh_ball
                                            dmn);
 
       } else {
-        PDM_error("Not implemented yet for element type %d\n", (int) elt_type);
+        PDM_error("Not implemented yet for element type %d", (int) elt_type);
       }
 
     }
@@ -224,7 +224,7 @@ _generate_mesh_ball
                                       dmn);
 
     } else {
-      PDM_error("Not implemented yet for element type %d\n", (int) elt_type);
+      PDM_error("Not implemented yet for element type %d", (int) elt_type);
     }
   }
 
@@ -1631,7 +1631,7 @@ PDM_generate_mesh_nodal_from_file
                               &mpart);
 
   if (error == 1) {
-    PDM_error("PDM_generate_mesh_nodal_from_file: Unknown mesh format %s\n", filename);
+    PDM_error("PDM_generate_mesh_nodal_from_file: Unknown mesh format %s", filename);
   }
 
   // Retrieve partitioned mesh
@@ -1670,7 +1670,7 @@ PDM_generate_mesh_from_file
                               &mpart);
 
   if (error == 1) {
-    PDM_error("PDM_generate_mesh_from_file: Unknown mesh format %s\n", filename);
+    PDM_error("PDM_generate_mesh_from_file: Unknown mesh format %s", filename);
   }
 
   // Retrieve partitioned mesh

@@ -846,7 +846,7 @@ PDM_io_seek
   }
 
   if (err_code){
-    PDM_error("Invalid file ");
+    PDM_error("Invalid file");
   }
 }
 
@@ -1090,7 +1090,7 @@ PDM_io_global_write
 
 	        /* Traitement de l'erreur de lecture */
           if (n_donnees_ecrites !=  l_string_donnee_shortint - 1) {
-            PDM_error("[%d] Failed to write to file '%s'\n", fichier->rang, fichier->nom);
+            PDM_error("[%d] Failed to write to file '%s'", fichier->rang, fichier->nom);
             PDM_file_seq_close(fichier->PDM_file_seq);
           }
         }
@@ -1136,7 +1136,7 @@ PDM_io_global_write
       	/* Traitement de l'erreur de lecture */
 
         if (n_donnees_ecrites_gnum != n_donnees) {
-          PDM_error("Failed to write to file '%s' \n", fichier->nom);
+          PDM_error("Failed to write to file '%s'", fichier->nom);
         }
 
         if (fichier->acces != PDM_IO_KIND_SEQ) {
@@ -1233,7 +1233,7 @@ PDM_io_par_interlaced_read
     PDM_timer_t *timer_fichier = fichier->timer_fichier;
 
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-      PDM_error("Unsupported text format\n");
+      PDM_error("Unsupported text format");
     }
 
     PDM_timer_resume(timer_total);
@@ -1292,8 +1292,7 @@ PDM_io_par_interlaced_read
       }
 
 			else {
-				PDM_error("PDM_io_par_interlaced_read Error : unknown PDM_stride_t \n");
-				abort();
+				PDM_error("Unknown PDM_stride_t");
 			}
 
       PDM_timer_hang_on(timer_distribution);
@@ -1598,7 +1597,7 @@ PDM_io_par_interlaced_read
 
             if (n_donnees_lues != n_donnees_bloc) {
               PDM_error("Erreur PDM_io_par_interlaced_read :"
-                      " Erreur de lecture du fichier '%s' \n", fichier->nom);
+                        " Erreur de lecture du fichier '%s'", fichier->nom);
               abort();
             }
           }
@@ -1659,7 +1658,7 @@ PDM_io_par_interlaced_read
 
           if (etat_lecture == 0) {
             PDM_error("Erreur PDM_io_par_interlaced_read :"
-                    " Erreur de lecture du fichier '%s' \n", fichier->nom);
+                      " Erreur de lecture du fichier '%s'", fichier->nom);
             abort();
           }
 
@@ -1948,9 +1947,8 @@ PDM_io_par_block_read
   if (fichier != NULL) {
 
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-      PDM_error( "Erreur PDM_io_par_block_read :\n"
-              "Unsupported text format\n");
-      abort();
+      PDM_error("Erreur PDM_io_par_block_read :\n"
+                "Unsupported text format");
     }
 
     PDM_timer_t *timer_total = fichier->timer_total;
@@ -2259,8 +2257,7 @@ PDM_io_par_block_read
 
           if (etat_lecture == 0) {
             PDM_error("Erreur PDM_io_par_block_read :"
-                    " Erreur de lecture du fichier '%s' \n", fichier->nom);
-            abort();
+                      " Erreur de lecture du fichier '%s'", fichier->nom);
           }
 
           PDM_free(n_donnees_blocs_actifs);
@@ -2338,8 +2335,7 @@ PDM_io_par_block_read
     err_code = 1;
 
   if (err_code){
-    PDM_error("PDM_io_par_block_read: invalid file");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3707,8 +3703,7 @@ PDM_io_par_block_write
     err_code = 1;
 
   if (err_code){
-    PDM_error("PDM_io_par_block_write: invalid file");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3788,7 +3783,7 @@ PDM_io_close
   PDM_MPI_Barrier (fichier->comm);
 
   if (err_code){
-    PDM_error("PDM_io_close: invalid file");
+    PDM_error("Invalid file");
   }
 }
 
@@ -3866,8 +3861,7 @@ PDM_io_get_timer_fichier
     err_code = 1;
 
   if (err_code){
-    PDM_error("PDM_io_get_timer_fichier: invalid file");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 

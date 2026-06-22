@@ -1123,13 +1123,6 @@ _dist_cloud_surf_compute_optim
       vertices_coords = PDM_surf_mesh_part_vtx_get      (surf_mesh, i_part);
       vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get(surf_mesh, i_part);
     }
-    // else {
-    //   PDM_error("PDM_dist_cloud_surf error : The surface mesh is not defined. "
-    //       "To do that : \n"
-    //       "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
-    //       "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
-    //       " PDM_dist_cloud_surf_surf_mesh_part_set\n");
-    // }
 
     if (octree_type == PDM_OCTREE_SERIAL) {
       PDM_octree_point_cloud_set (octree, i_part, n_vertices,

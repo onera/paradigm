@@ -305,7 +305,7 @@ int *part
 
   ierr = SCOTCH_dgraphInit (&graph, mpi_comm);
   if (ierr) {
-    PDM_error("Error in PT-Scotch graph initialization\n");
+    PDM_error("Error in PT-Scotch graph initialization");
   }
 
   SCOTCH_Num _baseval = 0;
@@ -407,7 +407,7 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
                               _edloloctab);
 
   if (ierr) {
-    PDM_error("Error in SCOTCH_dgraphBuild\n");
+    PDM_error("Error in SCOTCH_dgraphBuild");
     exit(1);
   }
 
@@ -419,8 +419,7 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
   }
 
   if (ierr) {
-    PDM_error("Error in PT-Scotch graph check\n");
-    exit(1);
+    PDM_error("Error in PT-Scotch graph check");
   }
 
   /* Partitioning strategy : */
