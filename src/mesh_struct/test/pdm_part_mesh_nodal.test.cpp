@@ -404,8 +404,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_complete_part_comm_grap
 MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph", 2) {
   /**
    *
-   *               Rank0      |     Rank1     |   gids vtx   |   gids tri
-   *                 ↓        |       ↓       |      ↓       |      ↓
+   *                Rank0     |     Rank1     |   gids vtx   |   gids tri
+   *                  ↓       |       ↓       |      ↓       |      ↓
    *                          |   4 x---x 5   |    5 / 6     |
    *                  4       |      \2/      |              |      3
    *                  x       |       x 3     |      4       |

@@ -2061,9 +2061,9 @@ PDM_part_mesh_nodal_elmts_free
 
         for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
           if(pmne->ownership_group[i_part][i_group] == PDM_OWNERSHIP_KEEP) {
-            PDM_free(pmne->group_elmt    [i_part][i_group]);
+            PDM_free(pmne->group_elmt[i_part][i_group]);
           }
-          if(pmne->ownership_group_ln_to_gn[i_part][i_group] == PDM_OWNERSHIP_KEEP) {
+          if (pmne->ownership_group_ln_to_gn[i_part][i_group] == PDM_OWNERSHIP_KEEP) {
             PDM_free(pmne->group_ln_to_gn[i_part][i_group]);
           }
         }
