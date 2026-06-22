@@ -1254,8 +1254,8 @@ PDM_io_par_interlaced_read
 
       PDM_timer_resume(timer_distribution);
 
-      int           _n_donnees_buff;
-      int            n_octet;
+      int            _n_donnees_buff = 0;
+      int            n_octet = 0;
       unsigned char *_donnees = (unsigned char*) donnees;
 
       /* Calcul de l'indice max */
