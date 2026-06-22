@@ -212,9 +212,8 @@ _define_rank_distrib(const int             sampling_factor,
       sum += g_distrib[rank_id];
 
     if (sum != gsum_weight)
-      PDM_error(__FILE__, __LINE__, 0,
-                "Error while computing global distribution.\n"
-                "sum = %u and gsum_weight = %u\n",
+      PDM_error("Error while computing global distribution.\n"
+                "sum = %u and gsum_weight = %u",
                 sum, gsum_weight);
     exit(1);
   }

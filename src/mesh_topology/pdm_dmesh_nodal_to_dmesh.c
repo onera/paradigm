@@ -2880,7 +2880,7 @@ PDM_dmesh_nodal_to_dmesh_get_missing
     *dmissing_parent_g_num = dmn_to_dm->link[i_mesh]->dmissing_surface_parent_g_num;
   }
   else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_dmesh_nodal_to_dmesh_get_missing : invalid geom_kind %d\n", geom_kind);
+    PDM_error("Invalid geom_kind %d", geom_kind);
   }
 }
 
