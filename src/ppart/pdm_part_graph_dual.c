@@ -826,7 +826,7 @@ PDM_part_assembly_dual_graph
 
   if(have_arc_node == 0) {
     if(have_node_arc != 1) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_part_assembly_dual_graph - Missing node_arc and arc_node is NULL \n");
+      PDM_error("Missing node_arc and arc_node is NULL");
     }
 
     PDM_part_connectivity_transpose(n_part,
@@ -843,7 +843,7 @@ PDM_part_assembly_dual_graph
 
   if(have_node_arc == 0) {
     if(have_arc_node != 1) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_part_assembly_dual_graph - Missing arc_node and node_arc is NULL \n");
+      PDM_error("Missing arc_node and node_arc is NULL");
     }
 
     PDM_part_connectivity_transpose(n_part,

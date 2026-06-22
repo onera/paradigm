@@ -146,18 +146,18 @@ _delmt_vtx_to_pelmt_vtx
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Error PDM_sections_decompose_edges : Element type is not supported");
         break;
       }
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Error PDM_sections_decompose_edges : Element type is not supported");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Error PDM_sections_decompose_edges : Element type is not supported");
     }
 
   }
@@ -371,12 +371,12 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         section_order      [i_section] = 1;
         section_ho_ordering[i_section] = NULL;
         // pid_section        [i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
+        PDM_error("Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported", (int) t_elt);
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
+        PDM_error("Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported", (int) t_elt);
     }
 
   }
@@ -478,12 +478,12 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       case PDM_MESH_NODAL_POLY_3D:
       {
         pid_section[i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
+        PDM_error("Element type %d is not supported", (int) t_elt);
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts : Element type %d is not supported\n", (int) t_elt);
+        PDM_error("Element type %d is not supported", (int) t_elt);
     }
 
   }
@@ -586,7 +586,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         connec_idx[i_section][idx_write+1] = pelmts_stride_idx[i_part][i_elmt+1] - pelmts_stride_idx[i_part][i_elmt];
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error (__FILE__, __LINE__, 0, "Poly3d are not yet supported\n");
+        PDM_error("Poly3d are not yet supported");
       }
     }
 
@@ -600,7 +600,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         PDM_malloc(connec[i_section], connec_idx[i_section][pelmt_by_section_n[i_section]], int);
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error (__FILE__, __LINE__, 0, "Poly3d are not yet supported\n");
+        PDM_error("Poly3d are not yet supported");
       }
       else {
         int order = section_order[i_section];
@@ -1541,18 +1541,18 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Element type is not supported");
         break;
       }
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Element type is not supported");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Element type is not supported");
     }
 
     /*   */
@@ -1655,18 +1655,18 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
       }
       case PDM_MESH_NODAL_POLY_2D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Element type is not supported");
         break;
       }
 
       case PDM_MESH_NODAL_POLY_3D:
       {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Element type is not supported");
         break;
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not supported\n");
+        PDM_error("Element type is not supported");
     }
 
     dn_extract_elmt[i_section] = dn_extract_elmt[i_section] * n_vtx_per_elmt;

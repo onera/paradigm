@@ -2899,7 +2899,7 @@ _create_cell_graph_comm
       }
       PDM_free(pn_vtx);
     } else {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
+      PDM_error("Wrong extend_type");
     }
 
   }
@@ -2990,7 +2990,7 @@ _create_cell_graph_comm
         part_ext->n_entity_bound[i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
         _entity_part_bound = part_ext->parts[i_domain][i_part].vtx_part_bound;
       } else {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
+        PDM_error("Wrong extend_type");
       }
 
       PDM_malloc(part_ext->neighbor_idx[i_part+shift_part], part_ext->n_entity_bound[i_part+shift_part]+1, int);
@@ -3015,7 +3015,7 @@ _create_cell_graph_comm
       // } else if (part_ext->extend_type == PDM_EXTEND_FROM_VTX){
       //   interface_kind = PDM_BOUND_TYPE_VTX;
       // } else {
-      //   PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
+      //   PDM_error("PDM_part_extension_compute wrong extend_type");
       // }
 
       // int            n_interface        = 0;
@@ -6539,7 +6539,7 @@ PDM_part_extension_compute
       _rebuild_connectivity_face_vtx(part_ext);
     }
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
+    PDM_error("Wrong extend_type");
   }
 
   int     *n_vtx          = NULL;
