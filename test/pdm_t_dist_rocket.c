@@ -1095,8 +1095,7 @@ _get_connectivity
             printf("  %d ("PDM_FMT_G_NUM")\n", _vertices[l], _vtx_ln_to_gn[_vertices[l]-1]);
           }
           printf("\n");
-          PDM_error(__FILE__, __LINE__, 0,"Error to compute vtx_edge !!!!\n");
-          abort();
+          PDM_error("Error to compute vtx_edge !!!!");
         }
       }
       /*printf("face ("PDM_FMT_G_NUM"), vtx :", _face_ln_to_gn[i]);

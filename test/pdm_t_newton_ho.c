@@ -243,7 +243,7 @@ _gen_ho_elt
     }
 
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid elt_type %d\n", (int) t_elt);
+      PDM_error("Invalid elt_type %d", (int) t_elt);
 
   }
 

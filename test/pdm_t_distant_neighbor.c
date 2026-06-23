@@ -152,7 +152,7 @@ char *argv[]
     }
 
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "pdm_t_distant_neighbor error : Bad number of process for test cases \n");
+    PDM_error("Bad number of process for test cases");
   }
 
 

@@ -678,8 +678,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < 3 * n_cell_vtx; i++) {
       if (PDM_ABS (local_field[i_part][i] - global_mean_field_ptr[i_part][i]) > 1e-5) {
-        PDM_error (__FILE__, __LINE__, 0, "Error in global mean\n");
-        abort();
+        PDM_error("Error in global mean");
       }
     }
 

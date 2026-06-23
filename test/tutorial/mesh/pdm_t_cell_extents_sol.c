@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
   if (n_rank != 1) {
-    PDM_error(__FILE__, __LINE__, 0, "This test can only be run on a single proc!\n");
+    PDM_error("This test can only be run on a single proc!");
   }
 
 

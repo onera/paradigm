@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", (int) t_elt);
+    PDM_error("Invalid t_elt %d", (int) t_elt);
   }
 
   int n_rep = 5;

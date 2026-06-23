@@ -599,8 +599,7 @@ _get_connectivity
             break;
         }
         if (!find_vtx) {
-          PDM_error(__FILE__, __LINE__, 0,"Error to compute vtx_edge !!!!\n");
-          abort();
+          PDM_error("Error to compute vtx_edge !!!!");
         }
       }
     }

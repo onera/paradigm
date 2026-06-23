@@ -207,8 +207,7 @@
 
    int elt_dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
    if (elt_dim != 2) {
-     PDM_error(__FILE__, __LINE__, 0,
-               "Invalid element dimension for element type %d (expected 2, got %d)",
+     PDM_error("Invalid element dimension for element type %d (expected 2, got %d)",
                elt_type, elt_dim);
    }
 

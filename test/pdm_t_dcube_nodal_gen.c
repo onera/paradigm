@@ -723,7 +723,7 @@ int main(int argc, char *argv[])
       t_elt == PDM_MESH_NODAL_PRISM6   ||
       t_elt == PDM_MESH_NODAL_HEXA8) {
     if (order != 1) {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid order %d for linear element type %d\n", order, (int) t_elt);
+      PDM_error("Invalid order %d for linear element type %d", order, (int) t_elt);
     }
   }
 

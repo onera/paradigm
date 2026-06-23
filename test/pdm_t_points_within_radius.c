@@ -494,7 +494,7 @@ _read_point_cloud
 {
   FILE *f = fopen(filename, "r");
   if (f == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Unable to open %s", filename);
+    PDM_error("Unable to open %s", filename);
   }
 
   char line[999];
