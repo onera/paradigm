@@ -6543,7 +6543,7 @@ PDM_extract_part_create
 
   if(extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
     if(n_part_in != n_part_out) {
-      PDM_error("PDM_extract_part_create : cannot not equilibrate with not same number of n_part_in / n_part_out");
+      PDM_error("Cannot not equilibrate with not same number of n_part_in / n_part_out");
     }
   }
 
@@ -6949,7 +6949,7 @@ PDM_extract_part_part_nodal_set
 )
 {
   if (extrp->dim != pmn->mesh_dimension) {
-    PDM_error("PDM_extract_part_part_nodal_set : extrp->dim (%d) does not match pmn->dim (%d)", extrp->dim, pmn->mesh_dimension);
+    PDM_error("extrp->dim (%d) does not match pmn->dim (%d)", extrp->dim, pmn->mesh_dimension);
   }
   extrp->is_nodal = 1;
   extrp->pmn      = pmn;
@@ -6977,7 +6977,7 @@ PDM_extract_part_selected_lnum_set
 )
 {
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error("PDM_extract_part_selected_lnum_set : ownership cannot be PDM_OWNERSHIP_BAD_VALUE");
+    PDM_error("Ownership cannot be PDM_OWNERSHIP_BAD_VALUE");
   }
   extrp->n_extract         [i_part] = n_extract;
   extrp->extract_lnum      [i_part] = extract_lnum;
@@ -7009,10 +7009,10 @@ PDM_extract_part_target_set
 {
   extrp->from_target = 1;
   if (extrp->extract_kind != PDM_EXTRACT_PART_KIND_FROM_TARGET) {
-    PDM_error("PDM_extract_part_target_set : extract_kind must be PDM_EXTRACT_PART_KIND_FROM_TARGET");
+    PDM_error("Extract_kind must be PDM_EXTRACT_PART_KIND_FROM_TARGET");
   }
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error("PDM_extract_part_target_set : ownership cannot be PDM_OWNERSHIP_BAD_VALUE");
+    PDM_error("Ownership cannot be PDM_OWNERSHIP_BAD_VALUE");
   }
   extrp->n_target       [i_part] = n_target;
   extrp->target_gnum    [i_part] = target_gnum;
@@ -7129,7 +7129,7 @@ PDM_extract_part_connectivity_get
   }
 
   if (i_part_out >= extrp->n_part_out) {
-    PDM_error("PDM_extract_part_connectivity_get : invalid i_part %d / %d", i_part_out, extrp->n_part_out);
+    PDM_error("Invalid i_part %d / %d", i_part_out, extrp->n_part_out);
   }
 
   PDM_mesh_entities_t entity_type = PDM_connectivity_type_to_entity_type(connectivity_type);
