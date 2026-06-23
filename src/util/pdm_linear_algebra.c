@@ -793,7 +793,7 @@ PDM_linear_algebra_eig_sym2
   PDM_UNUSED(a);
   PDM_UNUSED(val);
   PDM_UNUSED(vec);
-  PDM_error("PDM_linear_algebra_eig_sym2 needs LAPACK");
+  PDM_error("Needs LAPACK, please recompile with PDM_ENABLE_BLASLAPACK=ON");
 #endif
 }
 

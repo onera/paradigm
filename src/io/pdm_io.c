@@ -1069,7 +1069,7 @@ PDM_io_global_write
           if ((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
             n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
             if (n_donnees_ecrites_gnum > 2147483647) {
-              PDM_error("l_string_donnee exceeds the maximum size allowed in parallel (2147483647) in file '%s' \n", fichier->nom);
+              PDM_error("l_string_donnee exceeds the maximum size allowed in parallel (2147483647) in file '%s'", fichier->nom);
             }
           }
         }
@@ -1079,7 +1079,7 @@ PDM_io_global_write
         if (fichier->rang_actif) {
 	        /* Vérification de non dépassement de la taille maximale pour l_string_donnee */
           if (l_string_donnee > 2147483647) {
-            PDM_error("l_string_donnee exceeds the maximum size allowed in parallel (2147483647) in file '%s' \n", fichier->nom);
+            PDM_error("l_string_donnee exceeds the maximum size allowed in parallel (2147483647) in file '%s'", fichier->nom);
           }
           int l_string_donnee_shortint = (int) l_string_donnee ;
 
