@@ -306,7 +306,7 @@ const int     *face_vtx
       }
 
       if (n_processed_face == 0) {
-        PDM_error (__FILE__, __LINE__, 0, "Error reorient : no processed face found\n");
+        PDM_error("Error during reorient : no processed face found");
       }
 
       for (int iface = 0; iface < npoly_face; iface++) {
@@ -474,9 +474,7 @@ const int     *face_vtx
         }
 
         if (tag_face[iFace] == FACE_IN_STACK) {
-          // printf(" oooo %i \n", iFace);
-          // printf(" oooo %i \n", face);
-          PDM_error (__FILE__, __LINE__, 0, "Error reorient : no neighbour processed face found\n");
+          PDM_error("Error during reorient : no neighbour processed face found, i_face = %i", iFace);
         }
       }
 
@@ -486,9 +484,7 @@ const int     *face_vtx
 
         if (!((tag_face[iface] == FACE_UNCHANGED_CYCLE) ||
               (tag_face[iface] == FACE_CHANGED_CYCLE))) {
-          printf(" oooo %i \n", iface);
-          printf(" Link to : %i %i \n", face_cell[2*iface], face_cell[2*iface+1]);
-          PDM_error (__FILE__, __LINE__, 0, "Error reorient : a face of polyhedron is not processed\n");
+          PDM_error("Error during reorient : a face of polyhedron is not processed - i_face = %i / i_cell1 = %i / i_cell2 = %i", iface, face_cell[2*iface], face_cell[2*iface+1]);
         }
 
         if (tag_face[iface] == FACE_CHANGED_CYCLE) {

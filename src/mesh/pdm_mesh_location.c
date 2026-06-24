@@ -1374,8 +1374,7 @@ PDM_mesh_location_cell_vertex_get
 {
 
   if (!ml->reverse_result) {
-    PDM_error(__FILE__, __LINE__, 0,
-      "PDM_mesh_location_cell_vertex_get : Reverse results computation is disabled\n");
+    PDM_error("Reverse results computation is disabled");
   }
 
   *cell_vtx_idx = ml->cell_vtx_idx[i_part];
@@ -1422,8 +1421,7 @@ PDM_mesh_location_points_in_elt_get
 {
 
   if (!ml->reverse_result) {
-    PDM_error(__FILE__, __LINE__, 0,
-      "PDM_mesh_location_points_in_elt_get : Reverse results computation is disabled\n");
+    PDM_error("Reverse results computation is disabled");
   }
 
   assert (ml->point_clouds != NULL);
@@ -1844,7 +1842,7 @@ PDM_mesh_location_compute
     geom_kind = PDM_GEOMETRY_KIND_CORNER;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", mesh_dimension);
+    PDM_error("Invalid mesh_dimension %d.", mesh_dimension);
   }
   if (dbg_enabled) {
     log_trace("geom_kind = %d, mesh_dimension = %d\n", (int) geom_kind, mesh_dimension);
@@ -1866,7 +1864,7 @@ PDM_mesh_location_compute
       pmne = ml->mesh_nodal->pmne[3];
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", mesh_dimension);
+      PDM_error("Invalid dimension %d.", mesh_dimension);
     }
 
     n_part    = PDM_part_mesh_nodal_n_part_get(ml->mesh_nodal);
@@ -2925,7 +2923,7 @@ PDM_mesh_location_compute
 
           }
           else {
-            PDM_error(__FILE__, __LINE__, 0, "Not yet implemented\n");
+            PDM_error("Not yet implemented.");
             // PDM_MPI_Barrier (ml->comm);
             PDM_dbbtree_points_inside_boxes_shared(dbbt,
                                                    dn_pts,
@@ -2944,8 +2942,7 @@ PDM_mesh_location_compute
           break;
         }
         default: {
-          PDM_error(__FILE__, __LINE__, 0,
-                    "PDM_mesh_location : unknown location method %d\n", (int) ml->method);
+          PDM_error("Unknown location method %d", (int) ml->method);
         }
       }
       PDM_free(delt_extents1);
@@ -3104,7 +3101,7 @@ PDM_mesh_location_compute
         break;
       }
       default:
-      PDM_error(__FILE__, __LINE__, 0, "incorrect mesh_dimension %d\n", mesh_dimension);
+      PDM_error("Incorrect mesh_dimension %d", mesh_dimension);
     }
     PDM_extract_part_target_set(extrp,
                                 0,

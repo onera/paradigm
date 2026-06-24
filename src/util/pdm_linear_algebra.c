@@ -793,7 +793,7 @@ PDM_linear_algebra_eig_sym2
   PDM_UNUSED(a);
   PDM_UNUSED(val);
   PDM_UNUSED(vec);
-  PDM_error(__FILE__, __LINE__, 0, "PDM_linear_algebra_eig_sym2 needs LAPACK\n");
+  PDM_error("Needs LAPACK, please recompile with PDM_ENABLE_BLASLAPACK=ON");
 #endif
 }
 
@@ -936,11 +936,10 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
     if (hdet >= 0.) {
       int err = _compute_eigvec0 (a00, a01, a02, a11, a12, a22, val[2], vec + 6);
       if (err != 0) {
-        PDM_error(__FILE__, __LINE__, 0,
-                  "eigv_3x3_sym : error with matrix\n"
+        PDM_error("eigv_3x3_sym : error with matrix\n"
                   "%f %f %f\n"
                   "%f %f %f\n"
-                  "%f %f %f\n",
+                  "%f %f %f",
                   a[0], a[1], a[2],
                   a[1], a[3], a[4],
                   a[2], a[4], a[5]);
@@ -950,11 +949,10 @@ PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
     } else {
       int err = _compute_eigvec0 (a00, a01, a02, a11, a12, a22, val[0], vec);
       if (err != 0) {
-        PDM_error(__FILE__, __LINE__, 0,
-                  "eigv_3x3_sym : error with matrix\n"
+        PDM_error("eigv_3x3_sym : error with matrix\n"
                   "%f %f %f\n"
                   "%f %f %f\n"
-                  "%f %f %f\n",
+                  "%f %f %f",
                   a[0], a[1], a[2],
                   a[1], a[3], a[4],
                   a[2], a[4], a[5]);

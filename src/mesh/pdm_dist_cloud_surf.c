@@ -152,12 +152,11 @@ _dist_cloud_surf_compute
     n_part_mesh = PDM_surf_mesh_n_part_get (surf_mesh);
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0,
-        "PDM_dist_cloud_surf error : The surface mesh is not defined. "
-        "To do that : \n"
-        "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
-        "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
-        " PDM_dist_cloud_surf_surf_mesh_part_set\n");
+    PDM_error("PDM_dist_cloud_surf error : The surface mesh is not defined. "
+              "To do that : \n"
+              "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+              "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+              " PDM_dist_cloud_surf_surf_mesh_part_set");
   }
 
   PDM_octree_t      *octree      = NULL;
@@ -192,12 +191,11 @@ _dist_cloud_surf_compute
       vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get (surf_mesh, i_part);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0,
-          "PDM_dist_cloud_surf error : The surface mesh is not defined. "
-          "To do that : \n"
-          "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
-          "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
-          " PDM_dist_cloud_surf_surf_mesh_part_set\n");
+      PDM_error("PDM_dist_cloud_surf error : The surface mesh is not defined. "
+                "To do that : \n"
+                "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+                "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+                " PDM_dist_cloud_surf_surf_mesh_part_set");
     }
 
     if (octree_type == PDM_OCTREE_SERIAL) {
@@ -1125,14 +1123,6 @@ _dist_cloud_surf_compute_optim
       vertices_coords = PDM_surf_mesh_part_vtx_get      (surf_mesh, i_part);
       vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get(surf_mesh, i_part);
     }
-    // else {
-    //   PDM_error(__FILE__, __LINE__, 0,
-    //       "PDM_dist_cloud_surf error : The surface mesh is not defined. "
-    //       "To do that : \n"
-    //       "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
-    //       "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
-    //       " PDM_dist_cloud_surf_surf_mesh_part_set\n");
-    // }
 
     if (octree_type == PDM_OCTREE_SERIAL) {
       PDM_octree_point_cloud_set (octree, i_part, n_vertices,
@@ -1180,7 +1170,7 @@ _dist_cloud_surf_compute_optim
         pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(mesh_nodal, geom_kind);
         break;
       default:
-        PDM_error(__FILE__, __LINE__, 0, "invalid geom_kind %d\n", (int) geom_kind);
+        PDM_error("Invalid geom_kind %d", (int) geom_kind);
       }
 
     }
@@ -1621,7 +1611,7 @@ _dist_cloud_surf_compute_optim
           break;
         }
         default : {
-          PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+          PDM_error("Invalid geom_kind %d", geom_kind);
         }
       }
 
@@ -1913,8 +1903,7 @@ _dist_cloud_surf_compute_optim
                                                           t_elt,
                                                           order);
             if (ijk_to_user == NULL) {
-              PDM_error(__FILE__, __LINE__, 0, "Undefined ijk_to_user for ho_ordering %s, type %d, order %d\n",
-                        ho_ordering, (int) t_elt, order);
+              PDM_error("Undefined ijk_to_user for ho_ordering %s, type %d, order %d", ho_ordering, (int) t_elt, order);
             }
           }
 

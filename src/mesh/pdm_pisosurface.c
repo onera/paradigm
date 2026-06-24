@@ -27,24 +27,24 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#define CHECK_IS_NOT_DIST(isos) \
-  if ((isos)->entry_is_part==-1) { \
-    (isos)->entry_is_part=1; \
-  } \
-  else if ((isos)->entry_is_part==0) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t already set as distributed.\n", __func__); \
+#define CHECK_IS_NOT_DIST(isos)                                  \
+  if ((isos)->entry_is_part==-1) {                               \
+    (isos)->entry_is_part=1;                                     \
+  }                                                              \
+  else if ((isos)->entry_is_part==0) {                           \
+    PDM_error("PDM_isosurface_t already set as distributed."); \
   }
 
-#define CHECK_I_PART_SET(isos, i_part) \
-  if (i_part >= (isos)->n_part) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s: Invalid i_part (%d / %d).\n", \
-      __func__, i_part, (isos)->n_part); \
+#define CHECK_I_PART_SET(isos, i_part)     \
+  if (i_part >= (isos)->n_part) {          \
+    PDM_error("Invalid i_part (%d / %d).", \
+      i_part, (isos)->n_part);             \
   }
 
-#define CHECK_I_PART_GET(isos, i_part) \
-  if (i_part >= (isos)->iso_n_part) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s: Invalid i_part (%d / %d).\n", \
-              __func__, i_part, (isos)->iso_n_part); \
+#define CHECK_I_PART_GET(isos, i_part)      \
+  if (i_part >= (isos)->iso_n_part) {       \
+    PDM_error("Invalid i_part (%d / %d).",  \
+               i_part, (isos)->iso_n_part); \
   }
 /*=============================================================================
  * Local structure definitions
@@ -152,7 +152,7 @@ PDM_isosurface_pconnectivity_set
       isos->edge_vtx     [i_part] = connect;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid connectivity_type (%d) for isosurface.\n", connectivity_type);
+      PDM_error("Invalid connectivity_type (%d) for isosurface.", connectivity_type);
       break;
   }
 }
@@ -203,7 +203,7 @@ PDM_isosurface_ln_to_gn_set
       isos->vtx_gnum[i_part]  = ln_to_gn;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface.\n", entity_type);
+      PDM_error("Invalid entity_type (%d) for isosurface.", entity_type);
       break;
   }
 }
@@ -239,7 +239,7 @@ PDM_isosurface_pgroup_set
     //   isos->group_vtx    [i_part]  = group_entity;
     //   break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
+      PDM_error("Invalid entity_type (%d) for isosurface boundary.", entity_type);
       break;
   }
 }
@@ -290,7 +290,7 @@ PDM_isosurface_part_mesh_set
                                      &isos->cell_face_idx[i_part],
                                      PDM_OWNERSHIP_BAD_VALUE);
       if (isos->cell_face_idx[i_part] == NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : cell_face_idx is NULL for part %d\n", i_part);
+        PDM_error("cell_face_idx is NULL for part %d", i_part);
       }
     }
 
@@ -309,7 +309,7 @@ PDM_isosurface_part_mesh_set
                                    PDM_OWNERSHIP_BAD_VALUE);
 
     if (isos->face_edge_idx[i_part] == NULL && isos->face_vtx_idx[i_part] == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : face_edge_idx and face_vtx_idx are both NULL for part %d\n", i_part);
+      PDM_error("Error : face_edge_idx and face_vtx_idx are both NULL for part %d", i_part);
     }
 
     int *edge_vtx_idx = NULL;
@@ -321,7 +321,7 @@ PDM_isosurface_part_mesh_set
                                    PDM_OWNERSHIP_BAD_VALUE);
 
     if (isos->face_edge_idx[i_part] != NULL && isos->n_edge[i_part] > 0 && isos->edge_vtx[i_part] == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : edge_vtx is NULL for part %d\n", i_part);
+      PDM_error("Error : edge_vtx is NULL for part %d", i_part);
     }
 
     // Coordinates
@@ -330,7 +330,7 @@ PDM_isosurface_part_mesh_set
                                 &isos->vtx_coord[i_part],
                                 PDM_OWNERSHIP_BAD_VALUE);
     if (isos->n_vtx[i_part] > 0 && isos->vtx_coord[i_part] == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : vtx_coord is NULL for part %d\n", i_part);
+      PDM_error("Error : vtx_coord is NULL for part %d", i_part);
     }
 
     // Global IDs
@@ -341,7 +341,7 @@ PDM_isosurface_part_mesh_set
                                         &isos->cell_gnum[i_part],
                                         PDM_OWNERSHIP_BAD_VALUE);
       if (isos->n_cell[i_part] > 0 && isos->cell_gnum[i_part] == NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : cell_gnum is NULL for part %d\n", i_part);
+        PDM_error("Error : cell_gnum is NULL for part %d", i_part);
       }
     }
 
@@ -351,7 +351,7 @@ PDM_isosurface_part_mesh_set
                                       &isos->face_gnum[i_part],
                                       PDM_OWNERSHIP_BAD_VALUE);
     if (isos->n_face[i_part] > 0 && isos->face_gnum[i_part] == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : face_gnum is NULL for part %d\n", i_part);
+      PDM_error("Error : face_gnum is NULL for part %d", i_part);
     }
 
     PDM_part_mesh_entity_ln_to_gn_get(pmesh,
@@ -360,7 +360,7 @@ PDM_isosurface_part_mesh_set
                                       &isos->edge_gnum[i_part],
                                       PDM_OWNERSHIP_BAD_VALUE);
     if (isos->n_edge[i_part] > 0 && isos->edge_gnum[i_part] == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : edge_gnum is NULL for part %d\n", i_part);
+      PDM_error("Error : edge_gnum is NULL for part %d", i_part);
     }
 
     PDM_part_mesh_entity_ln_to_gn_get(pmesh,
@@ -369,7 +369,7 @@ PDM_isosurface_part_mesh_set
                                       &isos->vtx_gnum[i_part],
                                       PDM_OWNERSHIP_BAD_VALUE);
     if (isos->n_vtx[i_part] > 0 && isos->vtx_gnum[i_part] == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : vtx_gnum is NULL for part %d\n", i_part);
+      PDM_error("Error : vtx_gnum is NULL for part %d", i_part);
     }
 
     // Surfaces
@@ -382,7 +382,7 @@ PDM_isosurface_part_mesh_set
                                      &isos->group_face_gnum[i_part],
                                      PDM_OWNERSHIP_BAD_VALUE);
       if (isos->group_face_idx[i_part] == NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : group_face_idx is NULL for part %d\n", i_part);
+        PDM_error("Error : group_face_idx is NULL for part %d", i_part);
       }
     }
   }
@@ -401,7 +401,7 @@ PDM_isosurface_part_mesh_nodal_set
   
   /* Check that entry part_mesh_nodal contains all required data */
   if (pmn == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_nodal_set : pmn is NULL\n");
+    PDM_error("Error : pmn is NULL");
   }
 
   // Sections of highest dimension
@@ -415,7 +415,7 @@ PDM_isosurface_part_mesh_nodal_set
 
   int n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn, geom_kind);
   if (n_section == 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_nodal_set : pmn does not contain any section of dimension %d\n", isos->entry_mesh_dim);
+    PDM_error("Error : pmn does not contain any section of dimension %d", isos->entry_mesh_dim);
   }
 
   isos->pmesh_nodal = pmn;
@@ -459,11 +459,11 @@ PDM_isosurface_pfield_set
   // > Check i_part is valid
   int n_part = isos->n_part;
   if (n_part==-1) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: mesh seems not to be defined.\n", isos->entry_mesh_type);
+    PDM_error("PDM_isosurface_t: mesh seems not to be defined.", isos->entry_mesh_type);
   }
 
   if (i_part>=n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: trying to defined field for i_part >= n_part (%d >= %d).\n", i_part, n_part);
+    PDM_error("PDM_isosurface_t: trying to defined field for i_part >= n_part (%d >= %d).", i_part, n_part);
   }
  
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
@@ -498,7 +498,7 @@ PDM_isosurface_plocal_parent_get
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
   if (isos->extract_kind!=PDM_EXTRACT_PART_KIND_LOCAL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: extract_kind is not PDM_EXTRACT_PART_KIND_LOCAL.\n");
+    PDM_error("PDM_isosurface_t: extract_kind is not PDM_EXTRACT_PART_KIND_LOCAL.");
   }
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
@@ -591,7 +591,7 @@ PDM_isosurface_pconnectivity_get
 
   if (connectivity_type != PDM_CONNECTIVITY_TYPE_EDGE_VTX &&
       connectivity_type != PDM_CONNECTIVITY_TYPE_FACE_VTX) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no connectivity of type %d.\n", connectivity_type);
+    PDM_error("PDM_isosurface_t: has no connectivity of type %d.", connectivity_type);
   }
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
@@ -612,7 +612,7 @@ PDM_isosurface_pconnectivity_get
     *connect_idx = _iso->iso_connec_idx[connectivity_type   ][i_part];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no connectivity of type %d.\n", connectivity_type);
+    PDM_error("PDM_isosurface_t: has no connectivity of type %d.", connectivity_type);
   }
 
   return n_entity;
@@ -671,7 +671,7 @@ PDM_isosurface_ln_to_gn_get
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
   if (isos->entry_mesh_dim == 2 && entity_type == PDM_MESH_ENTITY_FACE) {
-    PDM_error(__FILE__, __LINE__, 0, "%s: No iso-faces for 2D meshes\n", __func__);
+    PDM_error("No iso-faces for 2D meshes");
   }
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
@@ -719,7 +719,7 @@ PDM_isosurface_pgroup_get
     *group_entity_gnum = _iso->iso_edge_group_gnum[i_part];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t: has no bounds for entity %d.\n", __func__, entity_type);
+    PDM_error("PDM_isosurface_t: has no bounds for entity %d.", entity_type);
   }
 
   return n_group;

@@ -979,7 +979,7 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   }
 
   else if (elt_type == PDM_MESH_NODAL_POLY_3D) {
-    PDM_error(__FILE__, __LINE__, 0, "Poly3d not implemented yet\n");
+    PDM_error("Poly3d not implemented yet");
   }
 
   else {

@@ -673,7 +673,7 @@ PDM_part_domain_interface_set
     dom_intrf->interface_dom_face     [i_domain][i_part][i_interface] = interface_dom;
     dom_intrf->interface_describe_by_face  = 1;
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "Kind of interface not supported\n");
+    PDM_error("Kind of interface not supported");
   }
 }
 
@@ -722,7 +722,7 @@ PDM_part_domain_interface_get
     *interface_ids_idx  = dom_intrf->interface_ids_face_idx [i_domain][i_part][i_interface];
     *interface_dom      = dom_intrf->interface_dom_face     [i_domain][i_part][i_interface];
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "Kind of interface not supported\n");
+    PDM_error("Kind of interface not supported");
   }
 }
 

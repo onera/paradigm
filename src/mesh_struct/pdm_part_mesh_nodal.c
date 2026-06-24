@@ -38,24 +38,24 @@ extern "C" {
  * Macro definition
  *============================================================================*/
 
-#define CHECK_PMNE(pmne)                                                            \
-  if ((pmne) == NULL) {                                                             \
-    PDM_error(__FILE__, __LINE__, 0, "Undefined Part Mesh Nodal Elmts instance\n"); \
+#define CHECK_PMNE(pmne)                                   \
+  if ((pmne) == NULL) {                                    \
+    PDM_error("Undefined Part Mesh Nodal Elmts instance"); \
   }
 
-#define CHECK_PMN(pmn)                                                        \
-  if ((pmn) == NULL) {                                                        \
-    PDM_error(__FILE__, __LINE__, 0, "Undefined Part Mesh Nodal instance\n"); \
+#define CHECK_PMN(pmn)                               \
+  if ((pmn) == NULL) {                               \
+    PDM_error("Undefined Part Mesh Nodal instance"); \
   }
 
-#define CHECK_GEOM_KIND(geom_kind, expected)                                                                   \
-  if ((geom_kind) != (expected)) {                                                                             \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind (expected %d but got %d)\n", (expected), (geom_kind)); \
+#define CHECK_GEOM_KIND(geom_kind, expected)                                          \
+  if ((geom_kind) != (expected)) {                                                    \
+    PDM_error("Invalid geom_kind (expected %d but got %d)", (expected), (geom_kind)); \
   }
 
-#define CHECK_I_PART(pmn, i_part)                                                          \
-  if ((i_part) < 0 || (i_part) >= (pmn)->n_part) {                                         \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)", (i_part), (pmn)->n_part); \
+#define CHECK_I_PART(pmn, i_part)                                   \
+  if ((i_part) < 0 || (i_part) >= (pmn)->n_part) {                  \
+    PDM_error("Invalid i_part (%d / %d)", (i_part), (pmn)->n_part); \
   }
 
 /*============================================================================
@@ -113,7 +113,7 @@ _get_from_geometry_kind
   PDM_geometry_kind_t principal_geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn);
 
   if (principal_geom_kind > geom_kind) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind (expected >= %d but got %d)\n", principal_geom_kind, geom_kind);
+    PDM_error("Invalid geom_kind (expected >= %d but got %d)", principal_geom_kind, geom_kind);
   }
 
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
@@ -130,7 +130,7 @@ _get_from_geometry_kind
     pmne = pmn->pmne[0];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+    PDM_error("Invalid geom_kind %d", geom_kind);
   }
   return pmne;
 }
@@ -221,7 +221,7 @@ PDM_part_mesh_nodal_coord_set
 
   if ((vtx->_coords != NULL) ||
       (vtx->_numabs != NULL)) {
-    PDM_error(__FILE__, __LINE__, 0, "these partition vertices are already defined\n");
+    PDM_error("Partition vertices are already defined");
   }
 
   /* Mapping memoire */
@@ -247,7 +247,7 @@ PDM_part_mesh_nodal_vtx_gnum_set
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
   if ((vtx->_numabs != NULL)) {
-    PDM_error(__FILE__, __LINE__, 0, "these partition vertices are already defined\n");
+    PDM_error("Partition vertices are already defined");
   }
 
   vtx->_numabs      = (PDM_g_num_t*) numabs;
@@ -276,7 +276,7 @@ PDM_part_mesh_nodal_coord_from_parent_set
 
   if ((vtx->_coords != NULL) ||
       (vtx->_numabs != NULL)) {
-    PDM_error(__FILE__, __LINE__, 0, "Vertices are already defined\n");
+    PDM_error("Vertices are already defined");
   }
 
   PDM_malloc(vtx->parent,1,PDM_Mesh_nodal_vtx_t);
@@ -324,11 +324,11 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
   }
 
   if (pmn->n_part != pmne->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "pmn and pmne must have the same number of parts (%d / %d)\n", pmn->n_part, pmne->n_part);
+    PDM_error("pmn and pmne must have the same number of parts (%d / %d)", pmn->n_part, pmne->n_part);
   }
 
   if (pmne->mesh_dimension > pmn->mesh_dimension) {
-    PDM_error(__FILE__, __LINE__, 0, "pmne dimension (%d) must be <= pmn dimension (%d)\n", pmne->mesh_dimension, pmn->mesh_dimension);
+    PDM_error("pmne dimension (%d) must be <= pmn dimension (%d)", pmne->mesh_dimension, pmn->mesh_dimension);
   }
 
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
@@ -349,7 +349,7 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
     geom_kind   = PDM_GEOMETRY_KIND_CORNER;
   }
   else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension\n");
+    PDM_error("PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension");
   }
 
   // update pmn->n_section, pmn->section_kind, pmn->section_id
@@ -1785,7 +1785,7 @@ PDM_part_mesh_nodal_vertices_g_num_parent_get
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
   if (vtx->parent == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Undefined parent vertices\n");
+    PDM_error("Undefined parent vertices");
   }
 
   return vtx->parent->_numabs;
@@ -2031,7 +2031,7 @@ PDM_part_mesh_nodal_section_id_and_geom_kind_get
   CHECK_PMN(pmn)
 
   if (i_section >= pmn->n_section) {
-    PDM_error(__FILE__, __LINE__, 0, "i_section (%d) > n_section (%d)\n", i_section, pmn->n_section);
+    PDM_error("i_section (%d) > n_section (%d)", i_section, pmn->n_section);
   }
 
   *geom_kind               = pmn->section_kind[i_section];
@@ -2196,7 +2196,7 @@ PDM_part_mesh_nodal_principal_geom_kind_get
     return PDM_GEOMETRY_KIND_CORNER;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", pmn->mesh_dimension);
+    PDM_error("Invalid mesh_dimension %d", pmn->mesh_dimension);
   }
 
   return PDM_GEOMETRY_KIND_MAX;
@@ -2340,7 +2340,7 @@ PDM_part_mesh_nodal_dump_gamma
             pvtx_tag[i_part][i_vtx] = i_group + 1;
           }
           else {
-            PDM_error(__FILE__, __LINE__, 0, "Vertex referenced by more than one corners\n");
+            PDM_error("Vertex referenced by more than one corners");
           }
         }
       } // End loop on groups

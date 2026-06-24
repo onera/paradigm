@@ -2700,7 +2700,7 @@ _part_extension_3d
 
 
   if (part_ext->extend_type==PDM_EXTEND_FROM_EDGE && part_ext->have_edge==0) {
-    PDM_error(__FILE__, __LINE__, 0, "part_extension with extend_type %d asked but edge seems to miss\n", part_ext->extend_type);
+    PDM_error("part_extension with extend_type %d asked but edge seems to miss", part_ext->extend_type);
   }
 
 
@@ -3533,7 +3533,7 @@ _part_extension_3d
         pn_entity_extended        = pn_face_extended[i_part];
         pn_entity                 = pn_face         [i_part];
       } else {
-        PDM_error(__FILE__, __LINE__, 0, "part_extension with extend_type %d for 3d mesh\n", part_ext->extend_type);
+        PDM_error("part_extension with extend_type %d for 3d mesh", part_ext->extend_type);
       }
       // log_trace("pn_concat_entity_extended = %i \n", pn_concat_entity_extended);
 
@@ -4650,7 +4650,7 @@ _part_extension_2d
 
 
   if (part_ext->extend_type==PDM_EXTEND_FROM_EDGE && part_ext->have_edge==0) {
-    PDM_error(__FILE__, __LINE__, 0, "part_extension with extend_type %d asked but edge seems to miss\n", part_ext->extend_type);
+    PDM_error("part_extension with extend_type %d asked but edge seems to miss", part_ext->extend_type);
   }
 
 
@@ -4787,7 +4787,7 @@ _part_extension_2d
                                             part_ext->comm);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "part_extension with extend_type %d is invalid in 2d\n", part_ext->extend_type);
+      PDM_error("part_extension with extend_type %d is invalid in 2d", part_ext->extend_type);
     }
 
 
@@ -5317,7 +5317,7 @@ _part_extension_2d
         pn_entity_extended        = pn_edge_extended[i_part];
         pn_entity                 = pn_edge         [i_part];
       } else {
-        PDM_error(__FILE__, __LINE__, 0, "part_extension with extend_type %d for 3d mesh\n", part_ext->extend_type);
+        PDM_error("part_extension with extend_type %d for 3d mesh", part_ext->extend_type);
       }
       // log_trace("pn_concat_entity_extended = %i \n", pn_concat_entity_extended);
 
@@ -6116,7 +6116,7 @@ PDM_part_extension_compute2
 )
 {
   if (part_ext->set_part_used==1) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_set_part is invalid with PDM_part_extension_compute2\n");
+    PDM_error("PDM_part_extension_set_part is invalid with PDM_part_extension_compute2");
   }
 
   // TODO : mv dim in create but break API
@@ -6173,7 +6173,7 @@ PDM_part_extension_compute2
   } else if(dim == 1) {
     _part_extension_1d(part_ext);
   } else  {
-    PDM_error(__FILE__, __LINE__, 0, "Wrong dim size in PDM_part_extension_compute2 : %d ( Should be >=1 )\n", (int) dim);
+    PDM_error("Wrong dim size in PDM_part_extension_compute2 : %d ( Should be >=1 )", (int) dim);
   }
 
 
@@ -6850,7 +6850,7 @@ PDM_part_extension_connectivity_get
     break;
 
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+    PDM_error("Unknown connectivity_type");
     break;
 
   }
@@ -6919,14 +6919,14 @@ PDM_part_extension_connectivity_get2
       break;
 
     default :
-      PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+      PDM_error("Unknown connectivity_type");
       break;
 
     }
     part_ext->ownership_border_connectivity[connectivity_type][i_domain][i_part] = ownership;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_connectivity_get2 connectivity_type %d seems not to be computed.\n", connectivity_type);
+    PDM_error("PDM_part_extension_connectivity_get2 connectivity_type %d seems not to be computed.", connectivity_type);
   }
 
   return n_entity;
@@ -6996,7 +6996,7 @@ PDM_part_extension_ln_to_gn_get
     break;
 
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+    PDM_error("Unknown connectivity_type");
     break;
   }
 
@@ -7058,13 +7058,13 @@ PDM_part_extension_ln_to_gn_get2
       break;
 
     default :
-      PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
+      PDM_error("Unknown mesh_entity");
       break;
     }
     part_ext->ownership_border_ln_to_gn[mesh_entity][i_domain][i_part] = ownership;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_ln_to_gn_get2 mesh_entity %d seems not to be computed.\n", mesh_entity);
+    PDM_error("PDM_part_extension_ln_to_gn_get2 mesh_entity %d seems not to be computed.", mesh_entity);
   }
 
   return n_entity;
@@ -7116,14 +7116,14 @@ PDM_part_extension_ancestor_ln_to_gn_get
       break;
 
     default :
-      PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
+      PDM_error("Unknown mesh_entity");
       break;
 
     }
     part_ext->ownership_border_ln_to_gn_ancstr[mesh_entity][i_domain][i_part] = ownership;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_ancestor_ln_to_gn_get mesh_entity %d seems not to be computed.\n", mesh_entity);
+    PDM_error("PDM_part_extension_ancestor_ln_to_gn_get mesh_entity %d seems not to be computed.", mesh_entity);
   }
 
   return n_entity;
@@ -7191,7 +7191,7 @@ PDM_part_extension_interface_get
     break;
 
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+    PDM_error("Unknown connectivity_type");
     break;
 
   }
@@ -7246,14 +7246,14 @@ PDM_part_extension_graph_get
 
       default :
       {
-        PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+        PDM_error("Unknown connectivity_type");
         break;
       }
     }
     part_ext->ownership_border_graph[mesh_entity][i_domain][i_part] = ownership;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_graph_get mesh_entity %d seems not to be computed.\n", mesh_entity);
+    PDM_error("PDM_part_extension_graph_get mesh_entity %d seems not to be computed.", mesh_entity);
   }
 }
 
@@ -7309,14 +7309,14 @@ PDM_part_extension_path_interface_get
 
       default :
       {
-        PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+        PDM_error("Unknown connectivity_type");
         break;
       }
     }
     part_ext->ownership_border_path_itrf[mesh_entity][i_domain][i_part] = ownership;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_path_interface_get mesh_entity %d seems not to be computed.\n", mesh_entity);
+    PDM_error("PDM_part_extension_path_interface_get mesh_entity %d seems not to be computed.", mesh_entity);
   }
   return n_entity;
 }
@@ -7340,7 +7340,7 @@ PDM_part_extension_group_get
   {
     case PDM_MESH_ENTITY_CELL:
     {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_MESH_ENTITY_CELL has no groups\n");
+      PDM_error("PDM_MESH_ENTITY_CELL has no groups");
     }
     break;
 
@@ -7366,12 +7366,12 @@ PDM_part_extension_group_get
 
     case PDM_MESH_ENTITY_VTX:
     {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_MESH_ENTITY_VTX has no groups\n");
+      PDM_error("PDM_MESH_ENTITY_VTX has no groups");
     }
     break;
 
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
+    PDM_error("Unknown mesh_entity");
     break;
 
   }
@@ -7412,7 +7412,7 @@ PDM_part_extension_group_get2
     {
       case PDM_MESH_ENTITY_CELL:
       {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_MESH_ENTITY_CELL has no groups\n");
+        PDM_error("PDM_MESH_ENTITY_CELL has no groups");
       }
       break;
 
@@ -7438,19 +7438,19 @@ PDM_part_extension_group_get2
 
       case PDM_MESH_ENTITY_VTX:
       {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_MESH_ENTITY_VTX has no groups\n");
+        PDM_error("PDM_MESH_ENTITY_VTX has no groups");
       }
       break;
 
     default :
-      PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
+      PDM_error("Unknown mesh_entity");
       break;
 
     }
     part_ext->ownership_border_group[mesh_entity][i_domain][i_part] = ownership;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_group_get2 mesh_entity %d seems not to be computed.\n", mesh_entity);
+    PDM_error("PDM_part_extension_group_get2 mesh_entity %d seems not to be computed.", mesh_entity);
   }
 
   return n_group;
@@ -7739,8 +7739,7 @@ PDM_part_extension_connectivity_set
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Connectivity type %d not yet supported\n",
-                connectivity_type);
+      PDM_error("Connectivity type %d not yet supported", connectivity_type);
       break;
     }
 
@@ -7798,7 +7797,7 @@ PDM_part_extension_ln_to_gn_set
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid entity type %d\n", mesh_entity);
+      PDM_error("Invalid entity type %d", mesh_entity);
       break;
     }
 
@@ -7888,8 +7887,7 @@ PDM_part_extension_part_bound_graph_set
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Entity type %d not yet supported\n",
-                entity_type);
+      PDM_error("Entity type %d not yet supported\n", entity_type);
       break;
     }
 
@@ -7944,8 +7942,7 @@ PDM_part_extension_group_set
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Entity type %d not yet supported\n",
-                entity_type);
+      PDM_error("Entity type %d not yet supported", entity_type);
       break;
     }
   }

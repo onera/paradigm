@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
   }
 
   if(count > 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid count for icoball : %i/%i cells have negative volume \n", count, dn_cell);
+    PDM_error("Invalid count for icoball : %i/%i cells have negative volume", count, dn_cell);
   }
 
   // log_trace("%d cells with negative volume / %d\n", count, dn_cell);

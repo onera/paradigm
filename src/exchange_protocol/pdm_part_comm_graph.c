@@ -34,16 +34,16 @@ extern "C" {
 
 #define CHECK_INSTANCE(pcg) \
   if ((pcg) == NULL) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s : Invalid PDM_part_comm_graph_t instance\n", __func__); \
+    PDM_error("Invalid PDM_part_comm_graph_t instance"); \
   }
 
 #define CHECK_I_PART(pcg, i_part) \
   if ((i_part) < 0 || (i_part) >= (pcg)->n_part) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s : Invalid i_part (%d / %d)\n", __func__, (i_part), (pcg)->n_part); \
+    PDM_error("Invalid i_part (%d / %d)", (i_part), (pcg)->n_part); \
   }
 
 #define INVALID_T_STRIDE(t_stride) \
-  PDM_error(__FILE__, __LINE__, 0, "%s: wrong t_stride %d\n", __func__, (t_stride));
+  PDM_error("Wrong t_stride %d", (t_stride));
 
 
 // move these 3 macros to pdm_priv.h ? (if so, add PDM_ prefix)
@@ -811,7 +811,7 @@ _create
           log_trace("%d : ", i);
           PDM_log_trace_array_int(&pentity_indices[lpart][stride*i], stride, "");
         }
-        PDM_error(__FILE__, __LINE__, 0, "Part-comm graph mismatch(see paradigm_*.log)\n");
+        PDM_error("Part-comm graph mismatch(see paradigm_*.log)");
       }
       pcg->part_to_recv_buffer[lpart][pentity_indices_order[lpart][pos]] = j;
 
@@ -980,7 +980,7 @@ PDM_part_comm_graph_with_nuplet_create
   PDM_MPI_Allreduce(&nuplet_size, &max_nuplet_size, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
   if (min_nuplet_size != max_nuplet_size) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_create_with_nuplet : all ranks must have the same nuplet_size\n");
+    PDM_error("All ranks must have the same nuplet_size");
   }
 
   return _create(n_part,
@@ -1252,7 +1252,7 @@ PDM_part_comm_graph_exch_init
     pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
   }
   else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    PDM_error(__FILE__, __LINE__, 0, "%s: not yet implemented for variable stride\n", __func__);
+    PDM_error("Not yet implemented for variable stride");
   }
   else {
     INVALID_T_STRIDE(t_stride)
@@ -1279,7 +1279,7 @@ PDM_part_comm_graph_exch_start
                          pcg->exch_h->send_buffer[request_id]);
   }
   else if (pcg->exch_h->t_stride[request_id] == PDM_STRIDE_VAR_INTERLACED) {
-    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_STRIDE_VAR_INTERLACED not implemented\n", __func__);
+    PDM_error("PDM_STRIDE_VAR_INTERLACED not implemented");
   }
   else {
     INVALID_T_STRIDE(pcg->exch_h->t_stride[request_id])
@@ -1385,8 +1385,7 @@ PDM_part_comm_graph_exch_one_way_raw_init
     send_or_recv_n   = pcg->active_recv_n;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_part_comm_graph_exch_one_way_raw_init not yet implemented with direction = %i\n", direction);
+    PDM_error("Error PDM_part_comm_graph_exch_one_way_raw_init not yet implemented with direction = %i", direction);
   }
 
   int request_id = PDM_exchange_helper_exch_one_way_init(pcg->exch_h,
@@ -1439,8 +1438,7 @@ PDM_part_comm_graph_iexch_one_way_raw
     send_or_recv_n   = pcg->active_recv_n;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_part_comm_graph_iexch_one_way_raw not yet implemented with direction = %i\n", direction);
+    PDM_error("Error PDM_part_comm_graph_iexch_one_way_raw not yet implemented with direction = %i", direction);
   }
 
   int request_id = PDM_exchange_helper_iexch_one_way(pcg->exch_h,
@@ -1692,7 +1690,7 @@ PDM_part_comm_graph_gather_strided_data
   CHECK_INSTANCE(pcg)
 
   if(t_stride == PDM_STRIDE_VAR_INTERLACED) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_gather_strided_data: PDM_STRIDE_VAR_INTERLACED not implemented \n");
+    PDM_error("PDM_STRIDE_VAR_INTERLACED not implemented");
   }
   else if (t_stride != PDM_STRIDE_CST_INTERLACED) {
     INVALID_T_STRIDE(t_stride)
@@ -1879,11 +1877,11 @@ PDM_part_comm_graph_allreduce
   if (op != PDM_MPI_SUM &&
       op != PDM_MPI_MIN &&
       op != PDM_MPI_MAX) {
-    PDM_error(__FILE__, __LINE__, 0, "%s only available with op = PDM_MPI_SUM, PDM_MPI_MIN or PDM_MPI_MAX\n", __func__);
+    PDM_error("Only available with op = PDM_MPI_SUM, PDM_MPI_MIN or PDM_MPI_MAX");
   }
 
   if (stride < 0) {
-    PDM_error(__FILE__, __LINE__, 0, "%s: invalid stride %d\n", __func__, stride);
+    PDM_error("Invalid stride %d", stride);
   }
   else if (stride == 0) {
     // Nothing to do
@@ -2001,7 +1999,7 @@ PDM_part_comm_graph_allreduce
     }
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "%s only available for PDM_MPI_DOUBLE or PDM_MPI_INT\n", __func__);
+    PDM_error("Only available for PDM_MPI_DOUBLE or PDM_MPI_INT");
   }
 
 #undef REDUCE

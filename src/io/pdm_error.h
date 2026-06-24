@@ -7,8 +7,6 @@
 
 #include <stdarg.h>
 
-/* BFT library headers */
-
 #include "pdm_config.h"
 
 /*-----------------------------------------------------------------------------*/
@@ -22,6 +20,7 @@ extern "C" {
  *============================================================================*/
 
 typedef void (PDM_error_handler_t) (const char    *const file_name,
+                                    const char    *const func,
                                     const int            line_num,
                                     const int            sys_error_code,
                                     const char    *const format,
@@ -30,6 +29,8 @@ typedef void (PDM_error_handler_t) (const char    *const file_name,
 /*============================================================================
  * Public function prototypes
  *============================================================================*/
+
+#define PDM_error(...) _PDM_error(__FILE__, __func__, __LINE__, 0, __VA_ARGS__)
 
 /*
  * Calls the error handler (set by PDM_error_handler_set() or default).
@@ -47,11 +48,15 @@ typedef void (PDM_error_handler_t) (const char    *const file_name,
  */
 
 void
-PDM_error(const char  *const file_name,
-          const int          line_num,
-          const int          sys_error_code,
-          const char  *const format,
-          ...);
+_PDM_error
+(
+  const char  *const file_name,
+  const char  *const func,
+  const int          line_num,
+  const int          sys_error_code,
+  const char  *const format,
+  ...
+);
 
 /*
  * Returns the error handler associated with the PDM_error() function.
@@ -61,7 +66,10 @@ PDM_error(const char  *const file_name,
  */
 
 PDM_error_handler_t *
-PDM_error_handler_get(void);
+PDM_error_handler_get
+(
+  void
+);
 
 /*
  * Associates an error handler with the PDM_error() function.
@@ -71,7 +79,10 @@ PDM_error_handler_get(void);
  */
 
 void
-PDM_error_handler_set(PDM_error_handler_t  *const handler);
+PDM_error_handler_set
+(
+  PDM_error_handler_t  *const handler
+);
 
 /*----------------------------------------------------------------------------*/
 

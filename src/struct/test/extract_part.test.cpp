@@ -1979,7 +1979,7 @@ MPI_TEST_CASE("[pdm_extract_part] - 2p - nodal", 2) {
     geom_kind_parent = PDM_GEOMETRY_KIND_SURFACIC;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "1D not yet available\n");
+    PDM_error("1D not yet available");
   }
   PDM_part_mesh_nodal_t *pmn = _generate_mesh(pdm_comm, elt_type, n_part_in);
 

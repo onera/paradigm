@@ -95,7 +95,7 @@ _get_n_sub_elt
     }
 
     default :
-      PDM_error(__FILE__, __LINE__, 0, "Invalid element type %d\n", (int) t_elmt);
+      PDM_error("Invalid element type %d", (int) t_elmt);
       break;
 
   }
@@ -736,7 +736,7 @@ _generate_ridges
       t_ridge = PDM_MESH_NODAL_BARHO;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt\n");
+      PDM_error("Invalid t_elt");
   }
 
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_ridge, order);
@@ -1106,7 +1106,7 @@ _generate_tetra_surf
     t_tria = PDM_MESH_NODAL_TRIAHO;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt\n");
+    PDM_error("Invalid t_elt");
   }
 
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_tria, order);
@@ -1228,7 +1228,7 @@ _generate_pyramid_surf
     t_quad = PDM_MESH_NODAL_QUADHO;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt\n");
+    PDM_error("Invalid t_elt");
   }
 
   int n_vtx_tria = PDM_Mesh_nodal_n_vtx_elt_get(t_tria, order);
@@ -1514,7 +1514,7 @@ _generate_prism_surf
     t_quad = PDM_MESH_NODAL_QUADHO;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt\n");
+    PDM_error("Invalid t_elt");
   }
 
   int n_vtx_tria = PDM_Mesh_nodal_n_vtx_elt_get(t_tria, order);
@@ -1674,7 +1674,7 @@ _generate_hexa_surf
     t_quad = PDM_MESH_NODAL_QUADHO;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt\n");
+    PDM_error("Invalid t_elt");
   }
 
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_quad, order);
@@ -2352,7 +2352,7 @@ PDM_dcube_nodal_gen_build
   // }
   int dim = PDM_Mesh_nodal_elt_dim_get(dcube->t_elt);
   if (dcube->t_elt == PDM_MESH_NODAL_POINT || dcube->t_elt == PDM_MESH_NODAL_BAR2){
-    PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt (%d) for PDM_dcube_nodal_gen_init\n", (int) dcube->t_elt);
+    PDM_error("Invalid t_elt (%d) for PDM_dcube_nodal_gen_init", (int) dcube->t_elt);
   }
 
   PDM_g_num_t n_vtx_x = dcube->order*dcube->nx + 1;
@@ -2563,7 +2563,7 @@ PDM_dcube_nodal_gen_build
     break;
 
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
+    PDM_error("Unknown element type");
     break;
 
   }

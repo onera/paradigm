@@ -308,7 +308,7 @@ _do_we_have_edges
     int we_have_face_vtx;
     PDM_MPI_Allreduce(&i_have_face_vtx, &we_have_face_vtx, 1, PDM_MPI_INT, PDM_MPI_MAX, isos->comm);
     if (!we_have_face_vtx) {
-      PDM_error(__FILE__, __LINE__, 0, "Either face->vtx or {face->edge, edge->vtx} connectivities must be provided\n");
+      PDM_error("Either face->vtx or {face->edge, edge->vtx} connectivities must be provided");
     }
   }
 
@@ -345,7 +345,7 @@ _dist_to_part
   isos->dist_to_part_computed = 1;
 
   if (isos->entry_is_part != 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Expected block-distributed but got partitioned\n");
+    PDM_error("Expected block-distributed but got partitioned");
   }
 
   int i_rank;
@@ -579,13 +579,13 @@ _compute_iso_field
   if (_iso->kind == PDM_ISO_SURFACE_KIND_FIELD) {
     if (isos->entry_is_part == 1) {
       if (_iso->field==NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "Field seems not to be defined for iso with id %d\n", id_isosurface);
+        PDM_error("Field seems not to be defined for iso with id %d", id_isosurface);
       }
     }
     else {
       assert(isos->entry_is_part == 0);
       if (_iso->dfield==NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "Field seems not to be defined for iso with id %d\n", id_isosurface);
+        PDM_error("Field seems not to be defined for iso with id %d", id_isosurface);
       }
     }
 
@@ -632,7 +632,7 @@ _compute_iso_field
       } // End if REEQUILIBRATE
 
       else {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid extract_kind %d\n", isos->extract_kind);
+        PDM_error("Invalid extract_kind %d", isos->extract_kind);
       }
 
     } // End if use_extract
@@ -774,7 +774,7 @@ _compute_iso_field
         break;
       }
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid isosurface type %d for id_isosurface %d.\n", _iso->kind, id_isosurface);
+        PDM_error("Invalid isosurface type %d for id_isosurface %d.", _iso->kind, id_isosurface);
       }
     }
 
@@ -1606,7 +1606,6 @@ _ngonize
   }
   else {
     // We have elements other than simplices, we need to ngonize
-    // PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
     isos->ngonize = 1; // need to good managing of memory
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
 
@@ -1699,7 +1698,7 @@ _ngonize
             }
 
             if (parent_g_num == NULL) {
-              PDM_error(__FILE__, __LINE__, 0, "NULL parent_g_num for section %d (id %d)\n", i_section, id_section);
+              PDM_error("NULL parent_g_num for section %d (id %d)", i_section, id_section);
             }
 
             if (parent_num == NULL) {
@@ -2538,7 +2537,7 @@ _build_ptp_part
     }
 
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+      PDM_error("Invalid entity_type %d", entity_type);
     }
   }
 
@@ -2660,7 +2659,7 @@ _build_ptp_dist
     }
 
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+      PDM_error("Invalid entity_type %d", entity_type);
     }
   }
 
@@ -2759,7 +2758,7 @@ _build_ptp_dist_nodal
     geom_kind_parent = PDM_GEOMETRY_KIND_VOLUMIC;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+    PDM_error("Invalid entity_type %d", entity_type);
   }
   int  n_section   = PDM_DMesh_nodal_n_section_get  (isos->dmesh_nodal, geom_kind_parent);
   int *sections_id = PDM_DMesh_nodal_sections_id_get(isos->dmesh_nodal, geom_kind_parent);
@@ -2910,7 +2909,7 @@ _free_iso_entity
     }
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+    PDM_error("Invalid entity_type %d", entity_type);
   }
 
 
@@ -3339,7 +3338,7 @@ PDM_isosurface_create
   // > Entry mesh information
   if (mesh_dimension != 3 &&
       mesh_dimension != 2) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension : %d (must be 2 or 3)\n", mesh_dimension);
+    PDM_error("Invalid mesh dimension : %d (must be 2 or 3)", mesh_dimension);
   }
   isos->entry_is_part   = -1;
   isos->entry_mesh_type = 0;
@@ -3382,7 +3381,7 @@ PDM_isosurface_n_group_set
     //   isos->n_group_vtx  = n_group;
     //   break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
+      PDM_error("Invalid entity_type (%d) for isosurface boundary.", entity_type);
       break;
   }
 }
@@ -3396,7 +3395,7 @@ PDM_isosurface_set_tolerance
 )
 {
   if (tolerance < 0.) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid tolerance : %f (must be >= 0)\n", tolerance);
+    PDM_error("Invalid tolerance : %f (must be >= 0)", tolerance);
   }
 
   isos->ISOSURFACE_EPS = tolerance;
@@ -3510,7 +3509,7 @@ PDM_isosurface_field_function_set
     _iso->field_function = func;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Isosurface n°%d doesn't support PDM_isosurface_field_function_set method cause its kind is %d.\n", id_isosurface, _iso->kind);
+    PDM_error("Isosurface n°%d doesn't support PDM_isosurface_field_function_set method cause its kind is %d.", id_isosurface, _iso->kind);
   }
 
 }
@@ -3531,7 +3530,7 @@ isosurface_python_field_function_set
     _iso->field_function_python = func;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Isosurface n°%d doesn't support PDM_isosurface_field_function_set method cause its kind is %d.\n", id_isosurface, _iso->kind);
+    PDM_error("Isosurface n°%d doesn't support PDM_isosurface_field_function_set method cause its kind is %d.", id_isosurface, _iso->kind);
   }
 }
 
@@ -3584,9 +3583,7 @@ PDM_isosurface_compute
   else {
     if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL &&
         isos->iso_n_part   != isos->n_part) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "In PDM_EXTRACT_PART_KIND_LOCAL mode n_part_out (%d) must be equal to n_part_in (%d)\n",
-                isos->iso_n_part, isos->n_part);
+      PDM_error("In PDM_EXTRACT_PART_KIND_LOCAL mode n_part_out (%d) must be equal to n_part_in (%d)", isos->iso_n_part, isos->n_part);
     }
   }
 
@@ -3734,11 +3731,11 @@ PDM_isosurface_part_to_part_enable
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
   if (unify_parent_info!=0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: unify_parent_info option not implemented yet.\n");
+    PDM_error("PDM_isosurface_t: unify_parent_info option not implemented yet.");
   }
 
   if (id_isosurface >= isos->n_isosurface) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_part_to_part_enable : Invalid id_isosurface %d (n_isosurface = %d)\n", id_isosurface, isos->n_isosurface);
+    PDM_error("Invalid id_isosurface %d (n_isosurface = %d)", id_isosurface, isos->n_isosurface);
   }
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
@@ -3764,7 +3761,7 @@ PDM_isosurface_part_to_part_get
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
   if (_iso->compute_ptp[entity_type] == PDM_FALSE) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: part_to_part for entity %d of isosurface %d is not computed.\n", entity_type, id_isosurface);
+    PDM_error("PDM_isosurface_t: part_to_part for entity %d of isosurface %d is not computed.", entity_type, id_isosurface);
   }
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {

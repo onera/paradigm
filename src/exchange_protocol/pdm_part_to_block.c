@@ -272,8 +272,7 @@ _active_ranks
     }
 
     default : {
-      PDM_error(__FILE__, __LINE__, 0,"Error cs_part_to_bloc : unknown distribute type\n");
-      abort();
+      PDM_error("Unknown distribute type");
     }
     }
 
@@ -923,7 +922,7 @@ _distrib_data_hilbert
   ptb->n_elt_block = ptb->tn_recv_data;
 
   if( ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM) {
-    PDM_error(__FILE__, __LINE__, 0,"Error PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM : not implemented \n");
+    PDM_error("Error PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM : not implemented");
   }
 
   /*
@@ -1233,7 +1232,7 @@ _distrib_data_morton
   ptb->n_elt_block = ptb->tn_recv_data;
 
   if( ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM) {
-    PDM_error(__FILE__, __LINE__, 0,"Error PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM : not implemented \n");
+    PDM_error("Error PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM : not implemented");
   }
 
   /*
@@ -3043,8 +3042,7 @@ PDM_part_to_block_exch
 
   if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST_INTERLACED)) {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
-    abort ();
+    PDM_error("PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post");
   }
 
   size_t *i_send_buffer = NULL;
@@ -3368,8 +3366,7 @@ PDM_part_to_block_iexch
 {
   if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST_INTERLACED)) {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
-    abort ();
+    PDM_error("PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post");
   }
 
   /*
@@ -3926,8 +3923,7 @@ PDM_part_to_block_async_exch
 
   if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST_INTERLACED)) {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
-    abort ();
+    PDM_error("PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post");
   }
 
   /*

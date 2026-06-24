@@ -1385,7 +1385,7 @@ _gnum_from_parent_compute_nuplet
   PDM_MPI_Allreduce(&nuplet, &min_nuplet, 1, PDM_MPI_INT, PDM_MPI_MIN, gen_gnum->comm);
   PDM_MPI_Allreduce(&nuplet, &max_nuplet, 1, PDM_MPI_INT, PDM_MPI_MAX, gen_gnum->comm);
   if (min_nuplet != nuplet && max_nuplet != nuplet) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : nuplet mismatch (min = %d, max = %d)\n", min_nuplet, max_nuplet);
+    PDM_error("Nuplet mismatch (min = %d, max = %d)", min_nuplet, max_nuplet);
   }
   PDM_MPI_Type_create_contiguous(nuplet, PDM__PDM_MPI_G_NUM, &mpi_entity_type);
   PDM_MPI_Type_commit(&mpi_entity_type);
@@ -1964,7 +1964,7 @@ PDM_gnum_compute
   } else if (from_graph_g != 0 || from_pcg_g != 0) {
 
     if (from_parent_nuplet_g != 0) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_gnum_compute, nuplet with part_graph_comm is not possible \n");
+      PDM_error("Nuplet with part_graph_comm is not possible");
     }
 
     int build_pcg = 0;

@@ -707,21 +707,6 @@ _define_rank_distrib(int                       dim,
 
   } /* End of loop on ranks */
 
-#if 0 && defined(DEBUG) && !defined(NDEBUG) /* Sanity check in debug */
-  {
-    PDM_g_num_t   sum = 0;
-    for (rank_id = 0; rank_id < n_ranks; rank_id++)
-      sum += g_distrib[rank_id];
-
-    if (sum != gsum_weight)
-      PDM_error(__FILE__, __LINE__, 0,
-                "Error while computing global distribution.\n"
-                "sum = %u and gsum_weight = %u\n",
-                sum, gsum_weight);
-    exit(1);
-  }
-#endif /* sanity check */
-
 }
 
 /*----------------------------------------------------------------------------
@@ -1084,8 +1069,7 @@ PDM_hilbert_encode_coords(int                  dim,
   case PDM_HILBERT_GRIEBEL:
 
     if (e_dim == 2) {
-      PDM_error(__FILE__, __LINE__, 0, "pdm_hilbert_encode_coords : No data for griebel 2D\n");
-      exit(0);
+      PDM_error("No data for griebel 2D");
     }
     else if (e_dim == 3) {
       idata  = _griebel_idata3d;
@@ -1117,8 +1101,7 @@ PDM_hilbert_encode_coords(int                  dim,
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0, "pdm_hilbert_encode_coords : Unknow encode type\n");
-    exit(0);
+    PDM_error("Unknow encode type");
 
   }
 

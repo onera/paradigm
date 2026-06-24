@@ -344,10 +344,8 @@ _compute_shapef_3d
     break;
   }
 
-
-
   default:
-    PDM_error (__FILE__, __LINE__, 0, "Wrong element type\n");
+    PDM_error ("Wrong element type");
 
   }
 
@@ -1303,7 +1301,7 @@ _locate_in_cell_3d
       break;
 
     default:
-      PDM_error (__FILE__, __LINE__, 0, "Wrong standard element type\n");
+      PDM_error ("Wrong standard element type.");
       break;
 
     }
@@ -2530,13 +2528,10 @@ PDM_point_location_nodal
           // HO_BEZIER...
 
           default: {
-            PDM_error(__FILE__, __LINE__, 0,
-                      "PDM_point_location_nodal : element type %d not supported yet\n",
-                      (int) t_elt);
+            PDM_error("Element type %d not supported yet", (int) t_elt);
           }
 
         } // End switch on std elt type
-
 
       } // End if standard section
 

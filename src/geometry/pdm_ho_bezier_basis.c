@@ -79,7 +79,7 @@ _basis_bezier_edge
   }
 
   if (order > 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+    PDM_error("Not implemented yet for order > 3");
   }
 }
 
@@ -155,7 +155,7 @@ _basis_bezier_tria
   }
 
   if (order > 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+    PDM_error("Not implemented yet for order > 3");
   }
 }
 
@@ -213,7 +213,7 @@ _basis_bezier_edge_derivative
   }
 
   if (order > 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+    PDM_error("Not implemented yet for order > 3");
   }
 }
 
@@ -409,7 +409,7 @@ _basis_bezier_tria_derivative
 
 
   if (order > 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet for order > 3\n");
+    PDM_error("Not implemented yet for order > 3");
   }
 }
 
@@ -454,7 +454,7 @@ PDM_ho_bezier_basis
     _basis_bezier_tria(order, n_pts, uvw, weights);
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet type other than BAR and TRIA\n");
+    PDM_error("Not implemented yet type other than BAR and TRIA");
     break;
   }
 }
@@ -498,7 +498,7 @@ PDM_ho_bezier_basis_derivative
     _basis_bezier_tria_derivative(order, n_pts, uvw, dw_du, dw_dv, dw_dw);
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Not implemented yet type other than BAR and TRIA\n");
+    PDM_error("Not implemented yet type other than BAR and TRIA");
     break;
   }
 }

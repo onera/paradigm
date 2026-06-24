@@ -1104,7 +1104,7 @@ _distribute_octants
                                              L->codes[i],
                                              morton_index + irank + 1);
       if (irank >= n_ranks) {
-        PDM_error(__FILE__, __LINE__, 0, "irank = %d/%d\n", irank, n_ranks);
+        PDM_error("irank = %d/%d", irank, n_ranks);
       }
     }
     send_count[irank] += L->dim + 1;
@@ -12783,8 +12783,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     *dbox_pts_n     = NULL;
     *dbox_pts_g_num = NULL;
     *dbox_pts_coord = NULL;
-    PDM_error(__FILE__, __LINE__, 0,
-              "Case n_rank == 1 not yet implemented\n");
+    PDM_error("Case n_rank == 1 not yet implemented");
   }
 
   else {

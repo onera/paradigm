@@ -63,18 +63,18 @@ extern "C" {
 
 
 #define CHECK_INSTANCE(multipart) \
-  if ((multipart) == NULL) { \
-    PDM_error(__FILE__, __LINE__, 0, "Error : Invalid PDM_multipart_t instance\n"); \
+  if ((multipart) == NULL) {      \
+    PDM_error("Error : Invalid PDM_multipart_t instance"); \
   }
 
 #define CHECK_I_DOMAIN(multipart, i_domain) \
-if ((i_domain) >= (multipart)->n_domain) { \
-  PDM_error(__FILE__, __LINE__, 0, "Error : Invalid i_domain (%d / %d)\n", (i_domain), (multipart)->n_domain); \
+if ((i_domain) >= (multipart)->n_domain) {  \
+  PDM_error("Error : Invalid i_domain (%d / %d)", (i_domain), (multipart)->n_domain); \
 }
 
-#define CHECK_I_PART(multipart, i_domain, i_part) \
+#define CHECK_I_PART(multipart, i_domain, i_part)  \
 if ((i_part) >= (multipart)->n_part[(i_domain)]) { \
-  PDM_error(__FILE__, __LINE__, 0, "Error : Invalid i_part for domain %d (%d / %d)\n", (i_domain), (i_part), (multipart)->n_part[(i_domain)]); \
+  PDM_error("Error : Invalid i_part for domain %d (%d / %d)", (i_domain), (i_part), (multipart)->n_part[(i_domain)]); \
 }
 
 /*============================================================================
@@ -1204,7 +1204,7 @@ _split_graph_hilbert
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+      PDM_error("Invalid dimension %d", dim);
     }
   }
 }
@@ -2004,7 +2004,7 @@ _deduce_part_connectivity_3d
                              &dcell_face_idx,
                              PDM_OWNERSHIP_BAD_VALUE);
   if (dcell_face_idx == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - _deduce_part_connectivity_3d : dcell_face_idx = NULL");
+    PDM_error("Error - _deduce_part_connectivity_3d : dcell_face_idx = NULL");
   }
 
   int          *pn_face        = NULL;
@@ -2321,12 +2321,6 @@ _run_ppart_domain
 
   dn_node = PDM_dmesh_dn_entity_get(dmesh, entity_type1);
 
-  // if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
-  //   if (dn_node <= 0) {
-  //     PDM_error(__FILE__, __LINE__, 0, "Error : Graph-based partitioning requires non-empty blocks (dn_node = %d)\n", dn_node);
-  //   }
-  // }
-
   switch (dim) {
     case 3: {
       _renum_node_method_none    = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
@@ -2353,7 +2347,7 @@ _run_ppart_domain
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+      PDM_error("Invalid dimension %d", dim);
     }
   }
 
@@ -2374,7 +2368,7 @@ _run_ppart_domain
     // Check dpart_id
     for (int i_node = 0; i_node < dn_node; i_node++) {
       if (node_part[i_node] < 0 || node_part[i_node] >= distrib_partition[n_rank]) {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid node_part (%d / "PDM_FMT_G_NUM")\n", node_part[i_node], distrib_partition[n_rank]);
+        PDM_error("Invalid node_part (%d / "PDM_FMT_G_NUM")", node_part[i_node], distrib_partition[n_rank]);
       }
     }
 
@@ -3179,7 +3173,7 @@ PDM_multipart_renum_method_set
   }
 
   if (method_renum_id == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering mesh_entity method\n", renum_entity_method);
+    PDM_error("'%s' is an unknown renumbering mesh_entity method", renum_entity_method);
   }
 
   if(i_domain < 0) {
@@ -3212,10 +3206,10 @@ PDM_multipart_set_reordering_options
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
   int _renum_face_method = PDM_part_renum_method_face_idx_get(renum_face_method);
   if (_renum_cell_method == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering cell method\n", renum_cell_method);
+    PDM_error("'%s' is an unknown renumbering cell method", renum_cell_method);
   }
   if (_renum_face_method == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering face method\n", renum_face_method);
+    PDM_error("'%s' is an unknown renumbering face method", renum_face_method);
   }
 
   if(i_domain < 0) {
@@ -3245,7 +3239,7 @@ void PDM_multipart_set_reordering_options_vtx
 
   int _renum_vtx_method = PDM_part_renum_method_vtx_idx_get(renum_vtx_method);
   if (_renum_vtx_method == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering vtx method\n", renum_vtx_method);
+    PDM_error("'%s' is an unknown renumbering vtx method", renum_vtx_method);
   }
 
   if(i_domain < 0) {
@@ -3274,7 +3268,7 @@ PDM_multipart_dpart_id_set
 
   if (ownership != PDM_OWNERSHIP_KEEP &&
       ownership != PDM_OWNERSHIP_USER) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)\n");
+    PDM_error("Error - Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)");
   }
 
   multipart->dpart_id          [i_domain] = dpart_id;
@@ -3468,7 +3462,7 @@ PDM_ownership_t         ownership
     PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_domain];
 
     if (dmesh_nodal == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "NULL dmesh_nodal\n");
+      PDM_error("NULL dmesh_nodal");
     }
 
     _part_mesh_t *pmesh = &(multipart->pmeshes[i_domain]);
@@ -3484,11 +3478,11 @@ PDM_ownership_t         ownership
       *pmesh_nodal = _compute_part_mesh_nodal_1d(dmesh_nodal, pmesh);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_compute_part_mesh_nodal error : Bad dmesh_nodal dimension \n");
+      PDM_error("PDM_multipart_compute_part_mesh_nodal error : Bad dmesh_nodal dimension ");
     }
 
     if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid ownership (expected KEEP or USER)\n");
+      PDM_error("Invalid ownership (expected KEEP or USER)");
     }
 
     multipart->pmesh_nodal          [i_domain] = *pmesh_nodal;
@@ -3905,7 +3899,7 @@ const int                   i_part,
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   if (entity_type < 0 || entity_type >= PDM_MESH_ENTITY_MAX) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_n_entity_get error : Wrong entity_type %d\n", entity_type);
+    PDM_error("PDM_multipart_part_n_entity_get error : Wrong entity_type %d", entity_type);
   }
 
   return PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, entity_type);
@@ -4059,7 +4053,7 @@ PDM_multipart_time_get
 )
 {
   if (!(i_domain < multipart->n_domain)) {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_multipart_time_get : Domain identifier %d is not compatible with %d total domains.\n", i_domain, multipart->n_domain);
+    PDM_error("Domain identifier %d is not compatible with %d total domains.", i_domain, multipart->n_domain);
   }
 
   *elapsed  = multipart->times_elapsed;
@@ -4436,7 +4430,7 @@ PDM_multipart_dn_node_get
   PDM_dmesh_t *dmesh = multipart->dmeshes[i_domain];
 
   if (dmesh == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dn_node_get : Invalid dmesh\n");
+    PDM_error("Error - Invalid dmesh\n");
   }
 
   int dn_entity[4];
@@ -4449,7 +4443,7 @@ PDM_multipart_dn_node_get
   int dim = PDM_dmesh_dimension_get(dmesh);
 
   if (dim < 0 || dim > 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+    PDM_error("Invalid dimension %d", dim);
   }
 
   return dn_entity[dim];

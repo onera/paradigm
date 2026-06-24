@@ -637,9 +637,7 @@ PDM_io_open
         ncharint++;
       }
       if (ncharint > 9) {
-        PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_open :"
-                " en mode sequentiel le format d'ecriture limite a 1 milliard de fichier\n");
-        abort();
+        PDM_error("Sequential mode are limited to 1 billon file");
       }
 
       size_t l_nom = strlen(nom);
@@ -750,8 +748,7 @@ PDM_io_open
 
         int s_rename = rename(nouveau_fichier->nom, fichier_backup);
         if (s_rename != 0) {
-          PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_open : Impossible de renommer le fichier %s en %s\n",nouveau_fichier->nom, fichier_backup);
-          abort();
+          PDM_error("Failed to rename file %s to %s", nouveau_fichier->nom, fichier_backup);
         }
         else {
           PDM_printf("PDM_io_open : backup du fichier %s avant reecriture\n", nouveau_fichier->nom);
@@ -797,8 +794,7 @@ PDM_io_open
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_open : Acces non valide");
-    abort();
+    PDM_error("Invalid access");
   }
 
   /* Test endian */
@@ -850,8 +846,7 @@ PDM_io_seek
   }
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_seek: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -880,8 +875,7 @@ PDM_io_tell
   }
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_tell: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 
   return offset;
@@ -903,9 +897,7 @@ PDM_io_global_read
   if (fichier != NULL) {
 
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-      PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_global_read :\n"
-              "Format text non traite\n");
-      abort();
+      PDM_error("Unhandled text format");
     }
 
     PDM_timer_t *timer_total = fichier->timer_total;
@@ -929,52 +921,41 @@ PDM_io_global_read
       /* Traitement de l'erreur de lecture */
 
       if (n_donnees_lues_gnum != n_donnees) {
-	PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_read :"
-		  " Erreur de lecture dans le fichier '%s' \n", fichier->nom);
-	abort();
+        PDM_error("Error during read file '%s'", fichier->nom);
       }
 
       if (((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) &&
-         fichier->n_rangs > 1) || (fichier->n_rangs_inactifs > 0)
-	  || fichier->swap_endian) {
-	n_donnees_lues = (int) n_donnees_lues_gnum ;
-	if (n_donnees_lues_gnum > 2147483647) {
-	  PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_read :"
-		    " Erreur : n_donnees dépasse la taille maximale autorisée (2147483647) dans le fichier '%s' \n", fichier->nom);
-	  abort() ;
-	}
+         fichier->n_rangs > 1) || (fichier->n_rangs_inactifs > 0) || fichier->swap_endian) {
+        n_donnees_lues = (int) n_donnees_lues_gnum;
+        if (n_donnees_lues_gnum > 2147483647) {
+          PDM_error("Exceeds the maximum allowable limit (2147483647) in file '%s'", fichier->nom);
+        }
       }
     }
     else if (fichier->PDM_file_par != NULL) {
       if (fichier->rang_actif) {
-	/* Vérification de non dépassement de la taille maximale pour n_donnees */
-	if (n_donnees > 2147483647) {
-	  PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_read :"
-		  " Erreur : n_donnees dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-	  abort() ;
-	}
-	int n_donnees_shortint = (int) n_donnees ;
-	n_donnees_lues = PDM_file_par_lecture_globale(fichier->PDM_file_par,
+	      /* Vérification de non dépassement de la taille maximale pour n_donnees */
+        if (n_donnees > 2147483647) {
+          PDM_error("Exceeds the maximum allowable limit (2147483647) in file '%s'", fichier->nom);
+        }
+        int n_donnees_shortint = (int) n_donnees ;
+        n_donnees_lues = PDM_file_par_lecture_globale(fichier->PDM_file_par,
                                                       taille_donnee,
                                                       n_donnees_shortint,
                                                       (void *) donnees);
-	/* Traitement de l'erreur de lecture */
-
-	if (n_donnees_lues != n_donnees_shortint) {
-	  PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_read :"
-		    " Erreur de lecture dans le fichier '%s' \n", fichier->nom);
-	  abort();
-	}
+	      /* Traitement de l'erreur de lecture */
+        if (n_donnees_lues != n_donnees_shortint) {
+          PDM_error("Error during read file '%s'", fichier->nom);
+        }
       }
     }
 
     /* Communication des valeurs autres processus si necessaire */
-
     if (((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) &&
          fichier->n_rangs > 1) || (fichier->n_rangs_inactifs > 0)) {
       PDM_MPI_Bcast(&n_donnees_lues, 1, PDM_MPI_INT, 0, fichier->comm);
       PDM_MPI_Bcast(donnees, n_donnees_lues * taille_donnee,
-                PDM_MPI_BYTE, 0, fichier->comm);
+                    PDM_MPI_BYTE, 0, fichier->comm);
     }
 
     PDM_timer_hang_on(timer_fichier);
@@ -997,8 +978,7 @@ PDM_io_global_read
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_global_read: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -1082,18 +1062,14 @@ PDM_io_global_write
 	/* Traitement de l'erreur de lecture */
 
         if (n_donnees_ecrites_gnum !=  l_string_donnee - 1) {
-          PDM_error(__FILE__, __LINE__, 0,"[%d] Erreur PDM_io_global_write :"
-            " Erreur d'ecriture dans le fichier '%s'\n", fichier->rang, fichier->nom);
-          abort();
+          PDM_error("[%d] Failed to write to file '%s'", fichier->rang, fichier->nom);
           PDM_file_seq_close(fichier->PDM_file_seq);
         }
         if (fichier->acces != PDM_IO_KIND_SEQ) {
           if ((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
             n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
             if (n_donnees_ecrites_gnum > 2147483647) {
-              PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-               " Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-              abort() ;
+              PDM_error("l_string_donnee exceeds the maximum size allowed in parallel (2147483647) in file '%s'", fichier->nom);
             }
           }
         }
@@ -1101,11 +1077,9 @@ PDM_io_global_write
 
       else if (fichier->PDM_file_par != NULL) {
         if (fichier->rang_actif) {
-	  /* Vérification de non dépassement de la taille maximale pour l_string_donnee */
+	        /* Vérification de non dépassement de la taille maximale pour l_string_donnee */
           if (l_string_donnee > 2147483647) {
-            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-            " Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-            abort() ;
+            PDM_error("l_string_donnee exceeds the maximum size allowed in parallel (2147483647) in file '%s'", fichier->nom);
           }
           int l_string_donnee_shortint = (int) l_string_donnee ;
 
@@ -1113,12 +1087,10 @@ PDM_io_global_write
                                                             sizeof(char),
                                                             l_string_donnee_shortint - 1,
                                                             (void *) string_donnee);
-	  /* Traitement de l'erreur de lecture */
 
+	        /* Traitement de l'erreur de lecture */
           if (n_donnees_ecrites !=  l_string_donnee_shortint - 1) {
-            PDM_error(__FILE__, __LINE__, 0,"[%d] Erreur PDM_io_global_write :"
-             " Erreur d'ecriture dans le fichier '%s'\n", fichier->rang, fichier->nom);
-            abort();
+            PDM_error("[%d] Failed to write to file '%s'", fichier->rang, fichier->nom);
             PDM_file_seq_close(fichier->PDM_file_seq);
           }
         }
@@ -1164,18 +1136,14 @@ PDM_io_global_write
       	/* Traitement de l'erreur de lecture */
 
         if (n_donnees_ecrites_gnum != n_donnees) {
-          PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-           " Erreur d'ecriture dans le fichier '%s' \n", fichier->nom);
-          abort();
+          PDM_error("Failed to write to file '%s'", fichier->nom);
         }
 
         if (fichier->acces != PDM_IO_KIND_SEQ) {
           if ((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
             n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
             if (n_donnees_ecrites_gnum > 2147483647) {
-              PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-              " Erreur : l_string_donnee dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-              abort() ;
+              PDM_error("l_string_donnee exceeds the maximum size allowed in parallel (2147483647) in file '%s' ", fichier->nom);
             }
           }
         }
@@ -1183,11 +1151,9 @@ PDM_io_global_write
 
       else if (fichier->PDM_file_par != NULL) {
         if (fichier->rang_actif) {
-	  /* Vérification de non dépassement de la taille maximale pour n_donnees */
+	        /* Vérification de non dépassement de la taille maximale pour n_donnees */
           if (n_donnees > 2147483647) {
-            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-             " Erreur : n_donnees dépasse la taille maximale autorisée en parallèle (2147483647) dans le fichier '%s' \n", fichier->nom);
-            abort() ;
+            PDM_error("n_donnees exceeds the maximum size allowed in parallel (2147483647) in filer '%s' ", fichier->nom);
           }
           int n_donnees_shortint = (int) n_donnees ;
 
@@ -1217,12 +1183,9 @@ PDM_io_global_write
             PDM_free(_donnees);
           }
 
-	  /* Traitement de l'erreur de lecture */
-
+      	  /* Traitement de l'erreur de lecture */
           if (n_donnees_ecrites != n_donnees_shortint) {
-            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-                      " Erreur d'ecriture dans le fichier '%s' \n", fichier->nom);
-            abort();
+            PDM_error(" Failed to write to file '%s' ", fichier->nom);
           }
         }
       }
@@ -1240,8 +1203,7 @@ PDM_io_global_write
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_global_write: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -1271,9 +1233,7 @@ PDM_io_par_interlaced_read
     PDM_timer_t *timer_fichier = fichier->timer_fichier;
 
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-      PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_par_interlaced_read :\n"
-              "Format text non traite\n");
-      abort();
+      PDM_error("Unsupported text format");
     }
 
     PDM_timer_resume(timer_total);
@@ -1282,7 +1242,7 @@ PDM_io_par_interlaced_read
 
     /* if (fichier->acces == PDM_IO_KIND_SEQ) { */
 
-    /*   PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_par_interlaced_read :" */
+    /*   PDM_error("Erreur PDM_io_par_interlaced_read :" */
     /*           " Fonction indisponible en mode sequentiel\n"); */
     /*   abort(); */
 
@@ -1294,8 +1254,8 @@ PDM_io_par_interlaced_read
 
       PDM_timer_resume(timer_distribution);
 
-      int           _n_donnees_buff;
-      int            n_octet;
+      int            _n_donnees_buff = 0;
+      int            n_octet = 0;
       unsigned char *_donnees = (unsigned char*) donnees;
 
       /* Calcul de l'indice max */
@@ -1332,8 +1292,7 @@ PDM_io_par_interlaced_read
       }
 
 			else {
-				PDM_error(__FILE__, __LINE__, 0,"PDM_io_par_interlaced_read Error : unknown PDM_stride_t \n");
-				abort();
+				PDM_error("Unknown PDM_stride_t");
 			}
 
       PDM_timer_hang_on(timer_distribution);
@@ -1637,8 +1596,8 @@ PDM_io_par_interlaced_read
                                              debut_bloc);
 
             if (n_donnees_lues != n_donnees_bloc) {
-              PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_par_interlaced_read :"
-                      " Erreur de lecture du fichier '%s' \n", fichier->nom);
+              PDM_error("Erreur PDM_io_par_interlaced_read :"
+                        " Erreur de lecture du fichier '%s'", fichier->nom);
               abort();
             }
           }
@@ -1698,8 +1657,8 @@ PDM_io_par_interlaced_read
           PDM_MPI_Bcast(&etat_lecture, 1, PDM_MPI_INT, 0, fichier->comm);
 
           if (etat_lecture == 0) {
-            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_par_interlaced_read :"
-                    " Erreur de lecture du fichier '%s' \n", fichier->nom);
+            PDM_error("Erreur PDM_io_par_interlaced_read :"
+                      " Erreur de lecture du fichier '%s'", fichier->nom);
             abort();
           }
 
@@ -1963,7 +1922,7 @@ PDM_io_par_interlaced_read
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_par_interlaced_read: invalid file\n");
+    PDM_error("PDM_io_par_interlaced_read: invalid file");
     abort();
   }
 }
@@ -1988,9 +1947,8 @@ PDM_io_par_block_read
   if (fichier != NULL) {
 
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-      PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_par_block_read :\n"
-              "Format text non traite\n");
-      abort();
+      PDM_error("Erreur PDM_io_par_block_read :\n"
+                "Unsupported text format");
     }
 
     PDM_timer_t *timer_total = fichier->timer_total;
@@ -2004,7 +1962,7 @@ PDM_io_par_block_read
 
     /* if (fichier->acces == PDM_IO_KIND_SEQ) { */
 
-    /*   PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_par_block_read :" */
+    /*   PDM_error("Erreur PDM_io_par_block_read :" */
     /*           " Fonction indisponible en acces sequentiel (PDM_IO_KIND_SEQ) \n"); */
     /*   abort(); */
 
@@ -2298,9 +2256,8 @@ PDM_io_par_block_read
           PDM_MPI_Bcast(&etat_lecture, 1, PDM_MPI_INT, 0, fichier->comm);
 
           if (etat_lecture == 0) {
-            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_par_block_read :"
-                    " Erreur de lecture du fichier '%s' \n", fichier->nom);
-            abort();
+            PDM_error("Erreur PDM_io_par_block_read :"
+                      " Erreur de lecture du fichier '%s'", fichier->nom);
           }
 
           PDM_free(n_donnees_blocs_actifs);
@@ -2378,8 +2335,7 @@ PDM_io_par_block_read
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_par_block_read: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -2591,9 +2547,7 @@ PDM_io_par_interlaced_write
         }
 
         if (n_donnees_ecrites != l_string_donnee - 1) {
-          PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_global_write :"
-                  " Erreur d'ecriture dans le fichier '%s' \n", fichier->nom);
-          abort();
+          PDM_error("Failed to write to file '%s'", fichier->nom);
         }
       }
 
@@ -3259,9 +3213,7 @@ PDM_io_par_interlaced_write
           PDM_MPI_Bcast(&etat_ecriture, 1, PDM_MPI_INT, 0, fichier->comm);
 
           if (etat_ecriture == 0) {
-            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_par_interlaced_write :"
-                    " Erreur d'ecriture du fichier '%s' \n", fichier->nom);
-            abort();
+            PDM_error(" File write error '%s' ", fichier->nom);
           }
 
           break;
@@ -3292,8 +3244,7 @@ PDM_io_par_interlaced_write
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_par_interlaced_write: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3317,9 +3268,7 @@ PDM_io_par_block_write
   if (fichier != NULL) {
 
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-      PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_par_block_write :\n"
-              "Format text non traite\n");
-      abort();
+      PDM_error("Unsupported text format");
     }
 
     PDM_timer_t *timer_total = fichier->timer_total;
@@ -3724,9 +3673,7 @@ PDM_io_par_block_write
           PDM_MPI_Bcast(&etat_ecriture, 1, PDM_MPI_INT, 0, fichier->comm);
 
           if (etat_ecriture == 0) {
-            PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_par_block_write :"
-                    " Erreur d'ecriture du fichier '%s' \n", fichier->nom);
-            abort();
+            PDM_error("File write error '%s' ", fichier->nom);
           }
 
           PDM_free(n_donnees_blocs_actifs);
@@ -3756,8 +3703,7 @@ PDM_io_par_block_write
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_par_block_write: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3837,8 +3783,7 @@ PDM_io_close
   PDM_MPI_Barrier (fichier->comm);
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_close: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3890,8 +3835,7 @@ PDM_io_free
   }
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_free: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3917,8 +3861,7 @@ PDM_io_get_timer_fichier
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_get_timer_fichier: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3944,8 +3887,7 @@ PDM_io_timer_distrib_get
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_timer_distrib_get: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3971,8 +3913,7 @@ PDM_io_timer_swap_endian_get
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_timer_swap_endian_get: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -3998,8 +3939,7 @@ PDM_io_timer_total_get
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_timer_total_get: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -4042,8 +3982,7 @@ PDM_io_dump
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_dump: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -4062,8 +4001,7 @@ PDM_io_comm_get
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_comm_get: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -4082,8 +4020,7 @@ PDM_io_swap_endian_on
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_swap_endian_on: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -4102,8 +4039,7 @@ PDM_io_swap_endian_off
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_swap_endian_off: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -4215,8 +4151,7 @@ PDM_io_fmt_data_set
     err_code = 1;
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_fmt_data_set: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 }
 
@@ -4547,8 +4482,7 @@ PDM_io_n_data_get
   }
 
   if (err_code){
-    PDM_error(__FILE__, __LINE__, 0,"PDM_io_n_data_get: invalid file\n");
-    abort();
+    PDM_error("Invalid file");
   }
 
   return t_n_donnees;

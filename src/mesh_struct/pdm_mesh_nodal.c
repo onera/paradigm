@@ -340,7 +340,7 @@ _principal_to_ijk
   }
 
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid element type %d\n", (int) t_elt);
+    PDM_error("Invalid element type %d", (int) t_elt);
   }
 }
 
@@ -396,7 +396,7 @@ PDM_Mesh_nodal_elt_dim_get
       elt_dim = 3;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", (int) type);
+      PDM_error("Invalid t_elt %d", (int) type);
   }
 
   return elt_dim;
@@ -515,7 +515,7 @@ PDM_Mesh_nodal_n_vtx_elt_get
    return (order + 1) * (order + 2) / 2;
     break;
   default :
-    PDM_error (__FILE__, __LINE__, 0, "Unknown order for Poly2D and Poly3D (type %d)\n", type);
+    PDM_error("Unknown order for Poly2D and Poly3D (type %d)", type);
   }
   return -1;
 }
@@ -551,7 +551,7 @@ PDM_Mesh_nodal_elmt_is_ho
     return 1;
     break;
   default :
-    PDM_error (__FILE__, __LINE__, 0, "Unknown elt type %d\n", (int) type);
+    PDM_error("Unknown elt type %d", (int) type);
   }
   return -1;
 }
@@ -722,7 +722,7 @@ PDM_Mesh_nodal_geom_kind_from_elt_type
     return PDM_GEOMETRY_KIND_VOLUMIC;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", (int) t_elt);
+    PDM_error("Invalid elt type %d", (int) t_elt);
   }
 
   return PDM_GEOMETRY_KIND_MAX;
@@ -769,7 +769,7 @@ PDM_n_face_elt_per_elmt
      break;
    default:
      n_face_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is supported\n");
+     PDM_error("Element type is not supported = %d ", t_elt);
   }
   return n_face_elt;
 }
@@ -830,7 +830,7 @@ PDM_face_vtx_per_elmt
       break;
     }
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_face_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+      PDM_error("Invalid t_elt %d", t_elt);
     }
   }
 
@@ -885,7 +885,7 @@ PDM_n_edge_elt_per_elmt
      break;
    default:
      n_nedge_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_edge_elt_per_elmt : Element type is not supported\n");
+     PDM_error("Element type is not supported");
   }
   return n_nedge_elt;
 }
@@ -940,7 +940,7 @@ PDM_edge_vtx_per_elmt
       break;
     }
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_edge_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+      PDM_error("Invalid t_elt %d", t_elt);
     }
   }
 
@@ -998,7 +998,7 @@ PDM_vtx_vtx_per_elmt
       break;
     }
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_vtx_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+      PDM_error("Invalid t_elt %d", t_elt);
     }
   }
 
@@ -1045,7 +1045,7 @@ PDM_n_sum_vtx_face_per_elmt
      break;
    default:
      n_sum_vtx_face = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_face_per_elmt : Element type is not supported\n");
+     PDM_error("Element type is not supported");
   }
   return n_sum_vtx_face;
 }
@@ -1098,7 +1098,7 @@ PDM_n_sum_vtx_edge_per_elmt
      break;
    default:
      n_sum_vtx_edge = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_edge_per_elmt : Element type is supported\n");
+     PDM_error("Element type is supported");
   }
   return n_sum_vtx_edge;
 }

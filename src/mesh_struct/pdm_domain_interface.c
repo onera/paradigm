@@ -2215,7 +2215,7 @@ void PDM_domain_interface_set
     dom_intrf->interface_dom_face = interface_dom;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Kind of interface not supported\n");
+    PDM_error("Kind of interface not supported");
   }
 
 }
@@ -4007,7 +4007,7 @@ PDM_domain_interface_get
     *interface_ids = dom_intrf->interface_ids_vtx;
     *interface_dom = dom_intrf->interface_dom_vtx;
   } else  {
-    PDM_error(__FILE__, __LINE__, 0, "This kind of entity is not yet supported\n");
+    PDM_error("This kind of entity is not yet supported");
   }
 }
 
@@ -4041,7 +4041,7 @@ PDM_domain_interface_get_as_graph
     interface_ids = dom_intrf->interface_ids_vtx;
     interface_dom = dom_intrf->interface_dom_vtx;
   } else  {
-    PDM_error(__FILE__, __LINE__, 0, "This kind of entity is not yet supported\n");
+    PDM_error("This kind of entity is not yet supported");
   }
 
   int graph_dn = _interface_to_graph(dom_intrf->n_interface,

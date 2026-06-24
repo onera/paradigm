@@ -41,10 +41,10 @@ extern "C" {
 
 #define CHECK_ELT_SIZE(dimension, i_elt, elt_vtx_n) \
   if (dimension==1 && elt_vtx_n != 2) { \
-    PDM_error(__FILE__, __LINE__, 0, "1D elements with more than 2 vertices are not supported, element %d has %d\n", i_elt, elt_vtx_n); \
+    PDM_error("1D elements with more than 2 vertices are not supported, element %d has %d", i_elt, elt_vtx_n); \
   } \
   else if (dimension==2 && elt_vtx_n != 3 && elt_vtx_n != 4) { \
-    PDM_error(__FILE__, __LINE__, 0, "Only 2D elements with 3 or 4 vertices are supported for new, element %d has %d\n", i_elt, elt_vtx_n); \
+    PDM_error("Only 2D elements with 3 or 4 vertices are supported for new, element %d has %d", i_elt, elt_vtx_n); \
   }
 
 /*============================================================================
@@ -994,7 +994,7 @@ PDM_part_geom_cell_center
   }
 
   if (!from_edge && !from_face) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_geom_cell_center: either face->vtx or face->edge connectivity must be provided\n");
+    PDM_error("Either face->vtx or face->edge connectivity must be provided");
   }
 
   double **entity_center;
@@ -1137,7 +1137,7 @@ PDM_part_geom_vtx_normal_compute
   if (pcg_elt->n_part != pcg_vtx->n_part ||
                n_part != pcg_vtx->n_part ||
       pcg_elt->n_part !=          n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "n_part, pcg_elt->n_part and pcg_vtx->n_part are different (%d, %d and %d)\n",
+    PDM_error("n_part, pcg_elt->n_part and pcg_vtx->n_part are different (%d, %d and %d)",
       n_part,
       pcg_elt->n_part,
       pcg_vtx->n_part
@@ -1146,11 +1146,11 @@ PDM_part_geom_vtx_normal_compute
   int is_same_comm = 0;
   PDM_MPI_Comm_compare(pcg_elt->comm, pcg_vtx->comm, &is_same_comm);
   if (is_same_comm != MPI_IDENT) {
-    PDM_error(__FILE__, __LINE__, 0, "pcg_elt and pcg_vtx has different comm\n");
+    PDM_error("pcg_elt and pcg_vtx has different comm");
   }
   PDM_MPI_Comm_compare(comm, pcg_vtx->comm, &is_same_comm);
   if (is_same_comm != MPI_IDENT) {
-    PDM_error(__FILE__, __LINE__, 0, "comm and pcg_vtx->comm are different\n");
+    PDM_error("comm and pcg_vtx->comm are different");
   }
 
   int i_rank;
@@ -1165,7 +1165,7 @@ PDM_part_geom_vtx_normal_compute
     _compute_elt_normal = &_compute_face_normal;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension (expected 1 or 2, got %d)\n", dimension);
+    PDM_error("Invalid dimension (expected 1 or 2, got %d)", dimension);
   }
 
 
@@ -1330,7 +1330,7 @@ PDM_part_geom_vtx_normal_compute
       int i_selected_vtx = all_vtx_to_selected_vtx[i_part][i_vtx];
       if (i_selected_vtx >= 0) {
         if (recv_stride[i_part][idx_vtx] != 1) {
-          PDM_error(__FILE__, __LINE__, 0, "Inconsistent selected_vtx between ranks %d and %d, part %d and %d\n",
+          PDM_error("Inconsistent selected_vtx between ranks %d and %d, part %d and %d",
                      i_rank, graph_vtx[4*idx_vtx+1],
                      i_part, graph_vtx[4*idx_vtx+2]);
         }

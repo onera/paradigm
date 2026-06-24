@@ -167,7 +167,7 @@ PDM_part_comm_graph_entity1_to_entity2
   PDM_MPI_Allreduce(&i_have_nuplet, &have_nuplet, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
   if (i_have_nuplet != have_nuplet) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : inconsistent 'i_have_nuplet'\n");
+    PDM_error("Inconsistent 'i_have_nuplet'");
   }
 
   /* Create transpose graph information - More pratical */
@@ -873,7 +873,7 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
 )
 {
   if (pcg_entity2 == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Part Comm Graph is NULL\n");
+    PDM_error("Part Comm Graph is NULL");
   }
 
   int n_part = pcg_entity2->n_part;
@@ -1148,7 +1148,7 @@ PDM_part_comm_graph_concatenate
     }
     else {
       if (n_part != pcgs[i_pcg]->n_part) {
-        PDM_error(__FILE__, __LINE__, 0, "pcg %d has not same n_part (=%d) as others (=%d)", i_pcg, pcgs[i_pcg]->n_part, n_part);
+        PDM_error("pcg %d has not same n_part (=%d) as others (=%d)", i_pcg, pcgs[i_pcg]->n_part, n_part);
       }
     }
     concat_is_signed   = PDM_MAX(concat_is_signed  , pcgs[i_pcg]->is_signed);
@@ -1318,10 +1318,10 @@ PDM_part_comm_graph_split
     for (int i_entity=0; i_entity<n_entity; ++i_entity) {
       int color = entity_color[i_part][i_entity];
       if (color<0) {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: color[i_part=%d][i_entity=%d] = %d, but should be >0", i_part, i_entity, color);
+        PDM_error("color[i_part=%d][i_entity=%d] = %d, but should be >0", i_part, i_entity, color);
       }
       if (color>=n_color) {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: color[i_part=%d][i_entity=%d] = %d, but should be < n_color (= %d)", i_part, i_entity, color, n_color);
+        PDM_error("color[i_part=%d][i_entity=%d] = %d, but should be < n_color (= %d)", i_part, i_entity, color, n_color);
       }
       int i_write = split_n_entity_graph[color][i_part];
 
