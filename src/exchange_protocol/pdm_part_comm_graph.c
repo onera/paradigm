@@ -2303,7 +2303,7 @@ PDM_part_comm_graph_owner_compute
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET) {
     _compute_owner_gen(pcg, pcg->nuplet_size, _compare_nuplets);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH) {
-    _compute_hash_owner(pcg);
+    _compute_owner_gen(pcg, 0, _compare_nuplets_hash_abs);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) {
     _compute_owner_gen(pcg, pcg->nuplet_size, _compare_nuplets_hash_abs);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED) {
