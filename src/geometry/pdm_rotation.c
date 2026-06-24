@@ -23,10 +23,23 @@
 /*----------------------------------------------------------------------------*/
 
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-void dgemm_(char *transA, char *transB, int *m, int *n, int *k,
-                     double *alpha, double *A, int *lda,
-                     double *B, int *ldb, double *beta,
-                     double *C, int *ldc);
+void
+dgemm_
+(
+  char   *transA,
+  char   *transB,
+  int    *m,
+  int    *n,
+  int    *k,
+  double *alpha,
+  double *A,
+  int    *lda,
+  double *B,
+  int    *ldb,
+  double *beta,
+  double *C,
+  int    *ldc
+);
 #endif
 
 
