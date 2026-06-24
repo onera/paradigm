@@ -31,9 +31,6 @@
  * Definitions des macro
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* Longueur max d'une ligne pour le format Ensight Gold
  * auxquels il faut ajouter le `\n' et le `\0'
@@ -1896,6 +1893,3 @@ PDM_writer_ensight_var_free
     PDM_free(var->var_fmt);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -37,9 +37,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local structure definitions
@@ -3781,6 +3778,3 @@ PDM_isosurface_comm_get
   return isos->comm;
 }
 
-#ifdef  __cplusplus
-}
-#endif

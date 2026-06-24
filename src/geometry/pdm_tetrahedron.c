@@ -17,9 +17,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -491,6 +488,3 @@ PDM_tetrahedron_ngon_to_nodal
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

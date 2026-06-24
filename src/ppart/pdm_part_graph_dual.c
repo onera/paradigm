@@ -24,9 +24,6 @@
 #include "pdm_sort.h"
 #include "pdm_unique.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -1139,6 +1136,3 @@ PDM_transfer_entity1_part_id_to_entity2_part_id
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

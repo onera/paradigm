@@ -28,9 +28,6 @@
 #include "pdm_priv.h"
 #include "pdm.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header

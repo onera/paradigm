@@ -17,9 +17,6 @@
 #include "pdm_mpi.h"
 #include "pdm_order.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -1232,6 +1229,3 @@ PDM_distant_neighbor_free
 
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

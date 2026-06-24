@@ -26,9 +26,6 @@
 #include "pdm_printf.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des types
@@ -2343,6 +2340,3 @@ PDM_MPI_Comm_compare
   return MPI_Comm_compare(comm1, comm2, result);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

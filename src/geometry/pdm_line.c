@@ -19,9 +19,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -667,6 +664,3 @@ PDM_GCC_SUPPRESS_WARNING_POP
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

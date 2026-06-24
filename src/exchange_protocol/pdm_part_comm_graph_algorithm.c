@@ -24,9 +24,6 @@
 #include "pdm_sort.h"
 #include "pdm_unique.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -1375,6 +1372,3 @@ PDM_part_comm_graph_split
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

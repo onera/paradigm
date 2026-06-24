@@ -30,9 +30,6 @@
 #include "pdm_logging.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -1265,6 +1262,3 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

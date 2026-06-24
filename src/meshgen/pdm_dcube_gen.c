@@ -11,9 +11,6 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type definitions
@@ -678,6 +675,3 @@ PDM_dcube_t        *dcube
   PDM_free(dcube);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

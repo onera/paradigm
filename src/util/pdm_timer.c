@@ -292,6 +292,3 @@ void PDM_timer_free(PDM_timer_t *timer)
   PDM_free(timer);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

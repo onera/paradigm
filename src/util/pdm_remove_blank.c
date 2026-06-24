@@ -17,9 +17,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -79,6 +76,3 @@ const char *str1
   return str_without_blank;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

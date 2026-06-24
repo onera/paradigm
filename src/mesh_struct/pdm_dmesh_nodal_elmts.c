@@ -20,9 +20,6 @@
 #include "pdm_printf.h"
 #include "pdm_dmesh_nodal_elmts.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -1201,6 +1198,3 @@ PDM_dmesh_nodal_elmts_have_ho
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

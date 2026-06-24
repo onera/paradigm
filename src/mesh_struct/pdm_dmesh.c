@@ -30,9 +30,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -937,6 +934,3 @@ PDM_dmesh_dimension_get
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

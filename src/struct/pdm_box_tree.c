@@ -40,9 +40,6 @@
 #include "pdm_box_tree_priv.h"
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local Macro and Type definitions
@@ -8399,6 +8396,3 @@ PDM_tree_intersection_point_box
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

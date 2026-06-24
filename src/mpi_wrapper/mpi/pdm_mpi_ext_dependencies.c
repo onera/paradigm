@@ -52,9 +52,6 @@
  * Public function definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 #ifdef PDM_HAVE_PARMETIS
@@ -466,6 +463,3 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

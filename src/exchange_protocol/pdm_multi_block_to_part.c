@@ -17,9 +17,6 @@
 #include "pdm_mem_tool.h"
 #include "pdm_multi_block_to_part_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -575,6 +572,3 @@ PDM_multi_block_to_part_free
   return NULL;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

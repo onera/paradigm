@@ -29,9 +29,6 @@
 #include "pdm_partitioning_nodal_algorithm.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1232,6 +1229,3 @@ PDM_dmesh_extract_free
   PDM_free(dme);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

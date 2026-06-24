@@ -46,9 +46,6 @@
  * Public function definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 #ifdef PDM_HAVE_PARMETIS
@@ -608,6 +605,3 @@ const int  n_part,
 
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

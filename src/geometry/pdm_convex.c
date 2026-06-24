@@ -15,9 +15,6 @@
 #include "pdm_logging.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Static global variables

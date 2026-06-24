@@ -14,9 +14,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -543,6 +540,3 @@ PDM_isosurface_dgroup_get
 #undef CHECK_IS_NOT_PART
 
 
-#ifdef  __cplusplus
-}
-#endif

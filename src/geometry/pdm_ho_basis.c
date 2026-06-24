@@ -16,9 +16,6 @@
 #include "pdm_mesh_nodal.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1354,6 +1351,3 @@ PDM_ho_basis
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

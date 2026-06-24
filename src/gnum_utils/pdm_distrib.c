@@ -16,9 +16,6 @@
 #include "pdm_printf.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 /*============================================================================
@@ -649,6 +646,3 @@ PDM_GCC_SUPPRESS_WARNING_POP
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

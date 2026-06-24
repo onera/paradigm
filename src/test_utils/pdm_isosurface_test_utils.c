@@ -33,9 +33,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local structure definitions
@@ -2018,6 +2015,3 @@ PDM_isosurface_test_utils_isosurface_params_dump
 }
 
 
-#ifdef  __cplusplus
-}
-#endif

@@ -12,9 +12,6 @@
 #include "pdm.h"
 #include "pdm_mem_tool.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -607,8 +604,5 @@ PDM_order_binary_search_int
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 

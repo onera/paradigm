@@ -24,9 +24,6 @@
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -2259,6 +2256,3 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

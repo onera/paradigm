@@ -30,9 +30,6 @@
 #include "pdm_sort.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definition
@@ -2700,6 +2697,3 @@ PDM_part_mesh_nodal_dump_gamma
   PDM_free(gvtx_tag);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

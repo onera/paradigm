@@ -35,9 +35,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -4081,7 +4078,4 @@ void
 
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

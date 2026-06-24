@@ -15183,6 +15183,3 @@ PDM_para_octree_neighbor_get
 
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

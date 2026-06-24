@@ -23,9 +23,6 @@
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -5127,6 +5124,3 @@ PDM_part_to_part_comm_get
   return ptp->comm;
 }
 
-#ifdef __cplusplus
-}
-#endif

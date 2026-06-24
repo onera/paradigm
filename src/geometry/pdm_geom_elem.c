@@ -27,9 +27,6 @@
 #include "pdm_triangle.h"
 #include "pdm_triangulate.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -2794,6 +2791,3 @@ PDM_geom_elem_edge_upwind_and_downwind_2d
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

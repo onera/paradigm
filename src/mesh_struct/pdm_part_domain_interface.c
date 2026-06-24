@@ -33,9 +33,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type definitions
@@ -3266,6 +3263,3 @@ PDM_part_domain_interface_face2vtx
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

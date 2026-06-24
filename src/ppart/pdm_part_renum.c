@@ -30,9 +30,6 @@
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -2042,6 +2039,3 @@ int     *new_to_old_order
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

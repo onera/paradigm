@@ -1688,6 +1688,3 @@ PDM_generate_mesh_from_file
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

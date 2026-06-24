@@ -16,9 +16,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -270,6 +267,3 @@ PDM_plane_get_cartesian_plane
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

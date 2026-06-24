@@ -25,9 +25,6 @@
 #include "pdm_surf_part.h"
 #include "pdm_surf_part_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -388,6 +385,3 @@ PDM_surf_mesh_n_g_face_get
   return mesh->nGFace;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

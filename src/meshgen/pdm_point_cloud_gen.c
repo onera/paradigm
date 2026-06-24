@@ -296,6 +296,3 @@ PDM_dpoint_cloud_gen_cartesian
   *distrib_pts = distrib;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

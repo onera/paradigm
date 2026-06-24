@@ -14,9 +14,6 @@
 #include "pdm.h"
 #include "pdm_printf.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -297,8 +294,5 @@ PDM_search_rank
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 

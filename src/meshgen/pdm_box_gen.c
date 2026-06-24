@@ -200,6 +200,3 @@ PDM_box_gen_cartesian
   *box_ln_to_gn = _box_ln_to_gn;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -23,22 +23,25 @@
 /*----------------------------------------------------------------------------*/
 
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-  void dgemm_(char *transA, char *transB, int *m, int *n, int *k,
-                     double *alpha, double *A, int *lda,
-                     double *B, int *ldb, double *beta,
-                     double *C, int *ldc);
-#ifdef __cplusplus
-}
-#endif
+void
+dgemm_
+(
+  char   *transA,
+  char   *transB,
+  int    *m,
+  int    *n,
+  int    *k,
+  double *alpha,
+  double *A,
+  int    *lda,
+  double *B,
+  int    *ldb,
+  double *beta,
+  double *C,
+  int    *ldc
+);
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -1145,6 +1148,3 @@ PDM_rotation_apply_rotation_matrix_and_rotation_center
     vector_out);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

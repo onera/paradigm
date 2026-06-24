@@ -17,9 +17,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des types locaux
@@ -175,6 +172,3 @@ PDM_file_seq_close
   fclose(fichier->fichier);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

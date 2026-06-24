@@ -34,9 +34,6 @@
 #include "pdm_vtk.h"
 #include "pdm_dmesh_nodal.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -1971,6 +1968,3 @@ PDM_dmesh_nodal_revert_orientation
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

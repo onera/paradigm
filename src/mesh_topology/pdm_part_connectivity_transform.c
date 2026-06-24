@@ -21,9 +21,6 @@
 #include "pdm_priv.h"
 #include "pdm_unique.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 /*============================================================================
@@ -766,6 +763,3 @@ PDM_connectivity_filter
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -17,9 +17,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Private function definitions
@@ -1294,6 +1291,3 @@ PDM_bezier_bounding_boxes
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

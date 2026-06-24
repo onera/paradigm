@@ -13,9 +13,6 @@
 #include "pdm_part_renum.h"
 #include "pdm_writer.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -473,6 +470,3 @@ void
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

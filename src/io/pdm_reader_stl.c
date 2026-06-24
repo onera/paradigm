@@ -24,9 +24,6 @@
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -504,6 +501,3 @@ PDM_reader_stl_dmesh_nodal
   return dmn;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -17,9 +17,6 @@
 #include "pdm_mpi.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1270,6 +1267,3 @@ PDM_poly_vol_gen
   PDM_free(distrib_face_lim);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

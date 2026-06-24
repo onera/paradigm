@@ -15,9 +15,6 @@
 #include "pdm_sort.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -101,6 +98,3 @@ PDM_compare_unsigned_ordered_nuplets_int
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

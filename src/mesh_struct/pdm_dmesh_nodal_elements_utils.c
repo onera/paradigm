@@ -15,9 +15,6 @@
 #include "pdm_dmesh_nodal_elmts_priv.h"
 #include "pdm_error.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -592,7 +589,4 @@ PDM_sections_decompose_edges
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

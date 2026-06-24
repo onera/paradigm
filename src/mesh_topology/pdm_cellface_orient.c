@@ -19,9 +19,6 @@
 #include "pdm_timer.h"
 #include "pdm_cellface_orient.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -578,6 +575,3 @@ const int     *face_vtx
   }
 }
 
-#ifdef	__cplusplus
-}
-#endif

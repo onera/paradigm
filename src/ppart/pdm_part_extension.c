@@ -33,9 +33,6 @@
 #include "pdm_rotation.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -7948,6 +7945,3 @@ PDM_part_extension_group_set
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

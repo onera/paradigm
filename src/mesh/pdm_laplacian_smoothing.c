@@ -23,9 +23,6 @@
 #include "pdm_error.h"
 #include "pdm_laplacian_smoothing.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -497,6 +494,3 @@ PDM_laplacian_smoothing_fields_one_iteration
   return eps;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

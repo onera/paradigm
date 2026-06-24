@@ -13,9 +13,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Private function definitions
@@ -503,6 +500,3 @@ PDM_ho_bezier_basis_derivative
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

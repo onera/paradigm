@@ -19,9 +19,6 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mesh_nodal.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -1199,6 +1196,3 @@ PDM_ho_ordering_id_get
   return id;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

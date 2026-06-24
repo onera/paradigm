@@ -33,9 +33,6 @@
  *  Optional headers
  *----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -3808,6 +3805,3 @@ PDM_part_partial_free
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

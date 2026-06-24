@@ -30,9 +30,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des macros locales
@@ -4488,6 +4485,3 @@ PDM_io_n_data_get
   return t_n_donnees;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -26,9 +26,6 @@
 #include "pdm_unique.h"
 #include "pdm_dconnectivity_transform.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 /*============================================================================
@@ -1359,6 +1356,3 @@ PDM_dconnectivity_dface_vtx_from_face_and_edge
 }
 
 
-#ifdef  __cplusplus
-}
-#endif
