@@ -593,7 +593,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
                                                                        id_section_in_geom_kind);
 
     /* We need to recompute an gnum for only current section */
-    PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3, n_part, PDM_TRUE, 1e-6, pmn->comm, PDM_OWNERSHIP_USER);
+    PDM_gen_gnum_t *gen_gnum_section = PDM_gnum_create(3, n_part, PDM_TRUE, 1e-6, pmn->comm, PDM_OWNERSHIP_USER);
 
     PDM_g_num_t **section_elmt_ln_to_gn = NULL;
     PDM_malloc(section_elmt_ln_to_gn, n_part, PDM_g_num_t *);
@@ -623,7 +623,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
       for(int i = 0; i < n_elmt; ++i) {
         section_elmt_ln_to_gn[i_part][i] = elmt_ln_to_gn[i_part][i+shift_elt[i_part]];
       }
-      PDM_gnum_set_from_parents(gen_gnum,
+      PDM_gnum_set_from_parents(gen_gnum_section,
                                 i_part,
                                 n_elmt,
                                 section_elmt_ln_to_gn[i_part]);
@@ -631,16 +631,16 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
       shift_elt[i_part] += n_elmt;
     } // end loop on partitions
 
-    PDM_gnum_compute(gen_gnum);
+    PDM_gnum_compute(gen_gnum_section);
     for (int i_part=0; i_part<n_part; ++i_part) {
       int _id_section = id_section_in_geom_kind - PDM_BLOCK_ID_BLOCK_STD;
       PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
-      block->_numabs[i_part] = PDM_gnum_get(gen_gnum, i_part);
+      block->_numabs[i_part] = PDM_gnum_get(gen_gnum_section, i_part);
       block->numabs_owner = PDM_OWNERSHIP_KEEP;
       PDM_free(section_elmt_ln_to_gn[i_part]);
     }
     PDM_free(section_elmt_ln_to_gn);
-    PDM_gnum_free(gen_gnum);
+    PDM_gnum_free(gen_gnum_section);
 
   } // end loop on sections
   PDM_free(shift_elt);
@@ -1461,4 +1461,3 @@ PDM_part_mesh_nodal_compute_straddling_entities
   PDM_free(n_vtx);
 
 }
-
