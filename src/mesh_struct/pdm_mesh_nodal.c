@@ -17,9 +17,6 @@
 #include "pdm_ho_ordering.h"
 #include "pdm_mem_tool.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1104,6 +1101,3 @@ PDM_n_sum_vtx_edge_per_elmt
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

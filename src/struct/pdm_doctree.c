@@ -2090,6 +2090,3 @@ PDM_doctree_dump_times
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

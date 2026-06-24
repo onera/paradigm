@@ -5528,6 +5528,3 @@ PDM_mesh_intersection_mesh_dimension_get
   return mi->dim_mesh[i_mesh];
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

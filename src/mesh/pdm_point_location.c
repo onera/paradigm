@@ -35,9 +35,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type definitions
@@ -2577,6 +2574,3 @@ PDM_point_location_compute_uvw
                        init_uvw);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

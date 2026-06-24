@@ -19,9 +19,6 @@
 
 #include "pdm_mesh_check.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -185,6 +182,3 @@ int*         nb_holes
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -18,9 +18,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local Macro definitions
@@ -692,6 +689,3 @@ PDM_cuthill_generate
   PDM_free(dual_graph_tmp);
 }
 
-#ifdef  __cplusplus
-}
-#endif

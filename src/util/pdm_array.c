@@ -20,9 +20,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des types locaux
@@ -401,6 +398,3 @@ void PDM_array_repart_per_col_int
   PDM_free(count);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

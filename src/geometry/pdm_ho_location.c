@@ -28,9 +28,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -6809,6 +6806,3 @@ PDM_ho_location_newton
   return dist2;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

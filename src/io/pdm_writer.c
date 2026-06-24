@@ -28,9 +28,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des macros locales
@@ -2506,6 +2503,3 @@ PDM_writer_geom_get
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

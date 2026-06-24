@@ -18,9 +18,6 @@
 #include "pdm_priv.h"
 #include "pdm_triangle.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definition
@@ -807,6 +804,3 @@ PDM_ho_bezier_triangle_location
 
 #undef ij2idx
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -27,9 +27,6 @@
 #include "pdm_dmesh_to_dmesh_nodal.h"
 #include "pdm_dmesh_to_dmesh_nodal_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -2416,6 +2413,3 @@ PDM_dmesh_to_dmesh_nodal_update_group
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -26,9 +26,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -1298,7 +1295,3 @@ PDM_mean_value_coordinates_polyhedron
 }
 
 
-#ifdef __cplusplus
-
-}
-#endif /* __cplusplus */

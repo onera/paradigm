@@ -17,9 +17,6 @@
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -305,6 +302,3 @@ PDM_unique_long_with_distrib
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

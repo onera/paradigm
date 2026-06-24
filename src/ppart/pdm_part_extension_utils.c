@@ -12,9 +12,6 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -33,7 +30,4 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

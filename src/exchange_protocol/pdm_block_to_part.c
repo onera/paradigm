@@ -24,9 +24,6 @@
 #include "pdm_priv.h"
 #include "pdm_timer.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -1813,6 +1810,3 @@ PDM_block_to_part_n_elt_get
   return btp->n_elt[i_part];
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

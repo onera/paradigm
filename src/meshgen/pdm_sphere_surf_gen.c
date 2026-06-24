@@ -25,9 +25,6 @@
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 /*============================================================================
@@ -896,6 +893,3 @@ PDM_sphere_surf_icosphere_gen_part
 
 #undef ij2idx
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -16,9 +16,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des macros locales
@@ -920,6 +917,3 @@ void PDM_io_array_read_end
 
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

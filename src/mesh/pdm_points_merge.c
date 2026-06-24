@@ -33,9 +33,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1451,6 +1448,3 @@ PDM_points_merge_make_interface
   PDM_free(candidates_desc);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

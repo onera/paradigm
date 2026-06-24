@@ -31,9 +31,6 @@
 #include "pdm_sort.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -7006,7 +7003,4 @@ PDM_part_extension_compute
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

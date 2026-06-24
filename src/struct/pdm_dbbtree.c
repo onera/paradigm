@@ -34,9 +34,6 @@
 #include "pdm_unique.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -8334,6 +8331,3 @@ PDM_dbbtree_box_tree_write_vtk2
 #undef _MIN
 #undef _MAX
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

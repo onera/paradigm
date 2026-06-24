@@ -20,9 +20,6 @@
 #include "pdm_priv.h"
 #include "pdm_surf_part_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -97,6 +94,3 @@ PDM_surf_part_free
   return NULL;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

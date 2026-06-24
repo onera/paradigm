@@ -22,9 +22,6 @@
 #include "pdm_mem_tool.h"
 #include "pdm_logging.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -227,6 +224,3 @@ PDM_part_mesh_nodal_dual_volume_compute
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

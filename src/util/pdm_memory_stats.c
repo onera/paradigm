@@ -19,9 +19,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -233,6 +230,3 @@ PDM_memory_stats_free
 // printf("Top-most, releasable space (bytes)          : %i \n", stat.keepcost);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

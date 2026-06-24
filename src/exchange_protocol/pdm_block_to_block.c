@@ -13,9 +13,6 @@
 #include "pdm_mem_tool.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -323,6 +320,3 @@ PDM_block_to_block_free
   return NULL;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

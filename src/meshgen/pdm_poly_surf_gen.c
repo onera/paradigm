@@ -22,9 +22,6 @@
  * Local macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Private function definitions
@@ -1010,6 +1007,3 @@ PDM_poly_surf_gen
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

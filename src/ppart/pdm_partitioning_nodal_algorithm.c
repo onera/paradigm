@@ -34,9 +34,6 @@
  *  Optional headers
  *----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -1715,6 +1712,3 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
   return extract_dmne;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

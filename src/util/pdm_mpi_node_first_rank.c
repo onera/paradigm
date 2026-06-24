@@ -19,9 +19,6 @@
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Définitions des macro locales
@@ -357,6 +354,3 @@ size_t *hostname_length
   *hostname_ptr = hostname;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

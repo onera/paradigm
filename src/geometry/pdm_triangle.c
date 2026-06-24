@@ -24,9 +24,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Private function definitions
@@ -1067,6 +1064,3 @@ PDM_triangle_inscribed_circle
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

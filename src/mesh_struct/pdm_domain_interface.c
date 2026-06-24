@@ -36,9 +36,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type definitions
@@ -5721,6 +5718,3 @@ PDM_domain_interface_make_flat_view2
 
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

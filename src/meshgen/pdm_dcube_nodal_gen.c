@@ -25,9 +25,6 @@
 #include "pdm_mpi.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type definitions
@@ -3078,6 +3075,3 @@ PDM_dcube_nodal_gen_random_factor_set
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

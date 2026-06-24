@@ -23,9 +23,6 @@
 #include "pdm_part_to_block.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 /*============================================================================
@@ -524,6 +521,3 @@ PDM_multi_block_merge_free
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

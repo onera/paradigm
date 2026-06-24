@@ -28,9 +28,6 @@
 #include "pdm_reader_gamma.h"
 #include "pdm.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -1545,6 +1542,3 @@ PDM_read_gamma_sol_at_vertices
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

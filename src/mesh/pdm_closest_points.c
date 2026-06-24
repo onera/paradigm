@@ -29,10 +29,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
 /*============================================================================
  * Macro definitions
  *============================================================================*/
@@ -942,7 +938,4 @@ PDM_closest_points_reverse_results_disable
   cls->compute_reverse_results = PDM_FALSE;
 }
 
-#ifdef	__cplusplus
-}
-#endif
 #undef NTIMER

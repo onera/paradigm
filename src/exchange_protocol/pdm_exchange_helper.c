@@ -21,9 +21,6 @@
 #include "pdm_mpi.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -958,6 +955,3 @@ PDM_exchange_helper_free
 }
 
 
-#ifdef __cplusplus
-}
-#endif

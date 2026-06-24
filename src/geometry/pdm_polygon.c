@@ -24,9 +24,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -1171,6 +1168,3 @@ PDM_polygon_ray_intersection
   return in_poly;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

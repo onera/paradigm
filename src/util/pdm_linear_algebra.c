@@ -17,9 +17,6 @@
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -1044,8 +1041,5 @@ PDM_sym_tensor_from_eig3
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #undef SIGN
 #undef SQR

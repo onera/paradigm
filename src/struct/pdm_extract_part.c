@@ -43,9 +43,6 @@
 #include "pdm_unique.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -7949,6 +7946,3 @@ PDM_extract_part_part_mesh_get
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

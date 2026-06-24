@@ -31,9 +31,6 @@
 #include "pdm_sort.h"
 #include "pdm_unique.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -7072,7 +7069,4 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

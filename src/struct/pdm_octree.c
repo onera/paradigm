@@ -24,9 +24,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1764,6 +1761,3 @@ double           *closest_octree_pt_dist2
 }
 
 
-#ifdef	__cplusplus
-}
-#endif

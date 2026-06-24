@@ -35,9 +35,6 @@
  *  Optional headers
  *----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -3060,6 +3057,3 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

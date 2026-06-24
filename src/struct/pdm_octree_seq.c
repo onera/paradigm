@@ -18,9 +18,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1780,6 +1777,3 @@ PDM_octree_seq_points_inside_balls
 }
 
 
-#ifdef	__cplusplus
-}
-#endif

@@ -57,9 +57,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 #define CHECK_INSTANCE(multipart) \
@@ -4452,6 +4449,3 @@ PDM_multipart_dn_node_get
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

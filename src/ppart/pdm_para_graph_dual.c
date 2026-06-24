@@ -29,9 +29,6 @@
  *  Optional headers
  *----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -843,6 +840,3 @@ const PDM_MPI_Comm      comm
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

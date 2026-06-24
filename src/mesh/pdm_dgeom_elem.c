@@ -17,9 +17,6 @@
 #include "pdm_priv.h"
 #include "pdm_dgeom_elem.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -306,6 +303,3 @@ PDM_compute_vtx_characteristic_length
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

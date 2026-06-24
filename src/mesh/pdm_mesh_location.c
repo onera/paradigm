@@ -47,9 +47,6 @@
 /*----------------------------------------------------------------------------*/
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -4231,7 +4228,4 @@ PDM_mesh_location_part_to_part_get
   ml->ptp_ownership[icloud] = ownership;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

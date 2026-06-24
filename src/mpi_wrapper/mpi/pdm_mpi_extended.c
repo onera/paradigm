@@ -14,9 +14,6 @@
 #include "pdm_mpi_priv.h"
 #include "pdm_mem_tool.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -884,6 +881,3 @@ PDM_MPI_Alltoallv_l
   return code;
 }
 
-#ifdef __cplusplus
-}
-#endif

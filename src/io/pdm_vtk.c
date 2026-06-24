@@ -27,9 +27,6 @@
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -3193,6 +3190,3 @@ PDM_vtk_write_unstructured_grid
   fclose(f);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

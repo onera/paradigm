@@ -49,9 +49,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -3090,7 +3087,4 @@ PDM_dist_cloud_surf_cloud_dim_get
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

@@ -24,9 +24,6 @@
 #include "pdm_unique.h"
 #include "pdm.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -2101,6 +2098,3 @@ PDM_part_comm_graph_free
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

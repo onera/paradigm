@@ -19,9 +19,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -753,6 +750,3 @@ PDM_quaternion_to_homogeneous_matrix
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

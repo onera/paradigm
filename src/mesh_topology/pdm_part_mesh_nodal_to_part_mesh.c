@@ -29,9 +29,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -1141,7 +1138,4 @@ PDM_part_mesh_nodal_to_part_mesh_free
 
 #undef CHECK_PMN_TO_PM
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

@@ -28,9 +28,6 @@
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 /*=============================================================================
@@ -2750,6 +2747,3 @@ PDM_GCC_SUPPRESS_WARNING_POP
 #undef _hextet_vtx_6
 #undef _hextet_vtx_7
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

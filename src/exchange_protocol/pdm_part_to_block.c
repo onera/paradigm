@@ -33,9 +33,6 @@
 #include "pdm_sort.h"
 #include "pdm_timer.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -4478,6 +4475,3 @@ PDM_part_to_block_n_elt_proc_get
 #undef _MIN
 #undef _MAX
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

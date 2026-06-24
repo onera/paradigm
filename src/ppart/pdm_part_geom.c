@@ -27,9 +27,6 @@
 #include "pdm_sort.h"
 #include "pdm.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -1370,6 +1367,3 @@ PDM_part_geom_vtx_normal_compute
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

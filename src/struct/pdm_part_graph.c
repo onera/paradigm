@@ -23,9 +23,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local Macro definitions
@@ -638,6 +635,3 @@ PDM_part_graph_split_bis
 }
 
 
-#ifdef  __cplusplus
-}
-#endif
