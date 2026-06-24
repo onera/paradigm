@@ -556,7 +556,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
 
   PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
-  if(pmne == NULL) {
+  if (pmne == NULL) {
     return;
   }
 
@@ -574,7 +574,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
   PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3, n_part, PDM_TRUE, 1e-6, pmn->comm, PDM_OWNERSHIP_USER);
   PDM_gnum_set_from_part_comm_graph(gen_gnum,
                                     n_elmt_tot,
-                                    pmn->pcg[geom_kind]);
+                                    pmn->pcg[3-geom_kind]);
   PDM_gnum_compute(gen_gnum);
   for (int i_part=0; i_part<n_part; ++i_part) {
     elmt_ln_to_gn[i_part] = PDM_gnum_get(gen_gnum, i_part);
@@ -600,9 +600,9 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
     for (int i_part=0; i_part<n_part; ++i_part) {
       int n_elmt = PDM_part_mesh_nodal_section_n_elt_get(pmn, id_section, i_part);
 
-      int         *elmt_vtx              = NULL;
-      int         *parent_num            = NULL;
-      PDM_g_num_t *parent_gnum           = NULL;
+      int         *elmt_vtx    = NULL;
+      int         *parent_num  = NULL;
+      PDM_g_num_t *parent_gnum = NULL;
 
       PDM_part_mesh_nodal_elmts_section_std_get(pmne,
                                                 id_section_in_geom_kind,
@@ -632,6 +632,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
     } // end loop on partitions
 
     PDM_gnum_compute(gen_gnum_section);
+
     for (int i_part=0; i_part<n_part; ++i_part) {
       int _id_section = id_section_in_geom_kind - PDM_BLOCK_ID_BLOCK_STD;
       PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
