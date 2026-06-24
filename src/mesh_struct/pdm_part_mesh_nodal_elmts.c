@@ -5429,7 +5429,7 @@ PDM_part_mesh_nodal_elmts_group_to_tag
                                           &n_group_elmt,
                                           &group_elmt,
                                           &group_ln_to_gn,
-                                          PDM_OWNERSHIP_KEEP);
+                                          PDM_OWNERSHIP_BAD_VALUE);
 
       for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
         int i_elt = group_elmt[idx_group]-1;
@@ -5484,7 +5484,7 @@ PDM_part_mesh_nodal_elmts_group_to_tag
                                           &n_group_elmt,
                                           &group_elmt,
                                           &group_ln_to_gn,
-                                          PDM_OWNERSHIP_KEEP);
+                                          PDM_OWNERSHIP_BAD_VALUE);
 
       for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
         int i_elt = group_elmt[idx_group]-1;
