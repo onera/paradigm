@@ -25,14 +25,9 @@
 #include "pdm_part_mesh_nodal_renum.h"
 #include "pdm_part_renum.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 /*============================================================================
  * Macro definition
  *============================================================================*/
-
 
 
 void

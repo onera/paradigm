@@ -17,10 +17,6 @@
  * Macro definition
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 /*============================================================================
  * Types definition
  *============================================================================*/
@@ -91,10 +87,5 @@ PDM_part_mesh_nodal_elmts_reorder_vtx
   PDM_part_mesh_nodal_elmts_t  *pmne,
   const int                   **new_to_old_order_vtx
 );
-
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif /* __PDM_PART_MESH_NODAL_RENUM_H__ */
