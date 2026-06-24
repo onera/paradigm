@@ -658,9 +658,8 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
     PDM_g_num_t **group_ln_to_gn = NULL;
     PDM_malloc(group_ln_to_gn, n_part, PDM_g_num_t *);
     for (int i_part=0; i_part<n_part; ++i_part) {
-
-      int          n_elmt_group   = 0;
-      int         *group_elmt     = NULL;
+      int  n_elmt_group = 0;
+      int *group_elmt   = NULL;
       PDM_part_mesh_nodal_elmts_group_get(pmne,
                                           i_part,
                                           i_group,
@@ -685,6 +684,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
     } // end loop on partitions
 
     PDM_gnum_compute(gen_gnum_group);
+
     for (int i_part=0; i_part<n_part; ++i_part) {
       PDM_free(group_ln_to_gn[i_part]);
       pmne->group_ln_to_gn          [i_part][i_group] = PDM_gnum_get(gen_gnum_group, i_part);
@@ -693,8 +693,6 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
     PDM_free(group_ln_to_gn);
 
     PDM_gnum_free(gen_gnum_group);
-
-    /* Set it and let owner */
 
   } // end loop on groups
 
