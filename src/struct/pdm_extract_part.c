@@ -5448,12 +5448,20 @@ _extract_part_nodal_local
     PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extrp->pmn,
                                                                                       geom_kind);
 
-    if (pmne == NULL) {
+    // tmp (corners and vertices seem to be amalgamated here)
+    if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
       continue;
     }
 
-    // tmp
-    if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
+    if (pmne == NULL) {
+      PDM_mesh_entities_t entity_type = PDM_geometry_kind_to_entity_type(geom_kind);
+
+      PDM_malloc(extrp->pextract_n_entity          [entity_type], extrp->n_part_in, int  );
+      PDM_malloc(extrp->pextract_entity_parent_lnum[entity_type], extrp->n_part_in, int *);
+      for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
+        extrp->pextract_n_entity          [entity_type][i_part] = 0;
+        extrp->pextract_entity_parent_lnum[entity_type][i_part] = NULL;
+      }
       continue;
     }
 
