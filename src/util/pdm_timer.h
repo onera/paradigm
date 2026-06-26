@@ -30,34 +30,32 @@ typedef struct _pdm_timer_t PDM_timer_t;
  * Interfaces des fonctions publiques
  *============================================================================*/
 
+
 /**
- * @brief Initializes and creates a new \struct PDM_timer_t context.
+ * \brief Initializes and creates a new \ref PDM_timer_t context.
  *
- * This function allocates and returns the main structure (\struct PDM_timer_t) used to record, organize, and aggregate event profiling data within a parallel application.
+ * This function allocates and returns the main structure (\ref PDM_timer_t) used to record, organize, and aggregate event profiling data within a parallel application.
  *
  * The timer architecture is based on a **hierarchical timing system** that uses a
  * call stack to capture parent-child relationships between events. This structure
  * allows reports to be visualized in a clear, indented tree format.
  *
- * @par Key Profiling Concepts
+ * \par Key Profiling Concepts
  * The timer records several critical time metrics:
- *
  * - **Inclusive Time (\c T_INCLUSIVE) :**
  * Measures the total elapsed time (Wall-Clock Time, typically from \c PDM_MPI_Wtime())
  * between the start and end of an event. This **includes** the time spent in any
  * child functions (events) it calls.
- *
  * - **Exclusive Time (\c T_EXCLUSIVE) :**
  * Measures the **net time** spent inside the function itself. It is calculated by
  * subtracting the inclusive time of all direct child events from the event's
  * Inclusive Time. This is the key metric for identifying a function's direct computational cost.
- *
  * - **Synchronization-Aware Timing (T_SYNC_ENTRY / T_SYNC_EXIT) :**
  * In addition to inclusive/exclusive times, the timer captures the time spent in
  * synchronization operations (e.g., MPI barriers, waits) immediately **before** * (\c T_SYNC_ENTRY) and **after** (\c T_SYNC_EXIT) the event's main measurement.
  * These metrics are essential for diagnosing **load imbalance** or **waiting latency** * in a parallel context.
  *
- * \param comm The MPI communicator (\c PDM_MPI_Comm) on which the timer operates.
+ * \param [in] comm The MPI communicator (\c PDM_MPI_Comm) on which the timer operates.
  * This communicator will be used for the global aggregation of results.
  *
  * \return A pointer to the newly allocated timer structure (\c PDM_timer_t*).
@@ -72,13 +70,13 @@ PDM_timer_create
 
 
 /**
- * @brief Marks the start of a timed event, pushing it onto the timer's call stack.
+ * \brief Marks the start of a timed event, pushing it onto the timer's call stack.
  *
  * This function initiates the measurement for a named event, establishing its place
  * in the hierarchical structure of the profiling data. It automatically sets up the
  * parent-child relationship with the currently running event (if one exists).
  *
- * @par Hierarchical Event Management
+ * \par Hierarchical Event Management
  * When called, \c PDM_timer_start does the following:
  * 1. **Pushes the Event:** The new event defined by \p name is pushed onto the timer's internal call stack.
  * 2. **Sets Parent:** The event that was previously at the top of the stack (if any) is automatically designated as the **parent**.
@@ -102,20 +100,20 @@ PDM_timer_start
 );
 
 /**
- * @brief Marks the end of a timed event, calculating its duration and removing it from the call stack.
+ * \brief Marks the end of a timed event, calculating its duration and removing it from the call stack.
  *
  * This function concludes the timing for the event identified by \p name, which must match
  * the event currently at the top of the timer's internal call stack. It calculates the
  * event's total Inclusive Time and finalizes all associated metrics before popping it from the stack.
  *
- * @par Event Finalization Process
+ * \par Event Finalization Process
  * When called, \c PDM_timer_end performs the following crucial steps:
  * 1. **Records End Time:** The Wall-Clock Time (\c PDM_MPI_Wtime()) is recorded to mark the end of the event.
  * 2. **Calculates Duration:** The total **Inclusive Time** (\c T_INCLUSIVE) is computed by taking the difference between the end and start times.
  * 3. **Updates Parent:** The newly calculated Inclusive Time is subtracted from the parent event's potential Exclusive Time (by summing it to the parent's children time total).
  * 4. **Pops Event:** The finished event is popped from the call stack, restoring the parent event to the top of the stack.
  *
- * \param[in] timer The timer context structure (\struct PDM_timer_t) created by \c PDM_timer_create.
+ * \param[in] timer The timer context structure (\ref PDM_timer_t) created by \c PDM_timer_create.
  * \param[in] name The name of the event being terminated. This name *must* exactly match the name of the event at the top of the stack. A mismatch indicates a logic error in the application's timer calls.
  * \param[in] force_synchro An integer flag controlling synchronization behavior upon event completion:
  * - If non-zero : The function executes an **MPI Barrier** on the timer's communicator (\c comm) just *after* recording the end time.
@@ -133,9 +131,9 @@ PDM_timer_end
 );
 
 /**
- * @brief Aggregates data and prints the profiling report in current process to the standard output.
+ * \brief Aggregates data and prints the profiling report in current process to the standard output.
  *
- * @par Report Modes
+ * \par Report Modes
  * The report format is controlled by the \p mode parameter:
  * - **mode = 0 (Hierarchical):** The report preserves the call structure, indenting child events
  * under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
@@ -155,9 +153,9 @@ PDM_timer_print
 );
 
 /**
- * @brief Aggregates data and log the profiling report in current process to the paradigm logger
+ * \brief Aggregates data and log the profiling report in current process to the paradigm logger
  *
- * @par Report Modes
+ * \par Report Modes
  * The report format is controlled by the \p mode parameter:
  * - **mode = 0 (Hierarchical):** The report preserves the call structure, indenting child events
  * under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
@@ -177,7 +175,7 @@ PDM_timer_log
 );
 
 /**
- * @brief Exports the **local**, per-process profiling data to a JSON file.
+ * \brief Exports the **local**, per-process profiling data to a JSON file.
  *
  * This function serializes the full hierarchical tree of timed events recorded by
  * the calling process (\c rank) into a specified JSON file. Since no aggregation
@@ -202,7 +200,7 @@ PDM_timer_log
  * the \p filename should usually include the rank ID (e.g., "profiling_0.json",
  * "profiling_1.json").
  *
- * \param[in] timer    The timer context structure (\struct PDM_timer_t*) containing the local event tree.
+ * \param[in] timer    The timer context structure (\ref PDM_timer_t*) containing the local event tree.
  * \param[in] filename The path and name of the JSON file to be created.
  *
  */
@@ -254,8 +252,8 @@ PDM_timer_gather_dump
  * - **t_exclusive_mean:** Global mean for Exclusive Time.
  * - **r_inclusive_min/max:** Rank IDs where the minimum and maximum times occurred.
  *
- * \param timer The timer context structure (\c PDM_timer_t*).
- * \param filename The path and name of the JSON file to be created (e.g., "global_profiling.json").
+ * \param[in] timer    The timer context structure (\c PDM_timer_t*).
+ * \param[in] filename The path and name of the JSON file to be created (e.g., "global_profiling.json").
  *
  */
 void
@@ -275,7 +273,7 @@ PDM_timer_gather_dump_json
  * \note This function should be called **after** all profiling and reporting is complete.
  * **Failure to call this function will result in memory leaks.**
  *
- * \param timer The timer context structure (\c PDM_timer_t*) to be destroyed and freed.
+ * \param[in] timer The timer context structure (\c PDM_timer_t*) to be destroyed and freed.
  */
 void
 PDM_timer_free
@@ -284,18 +282,18 @@ PDM_timer_free
 );
 
 /**
- * @brief Generates and returns the local, per-process profiling report as a dynamically allocated string.
+ * \brief Generates and returns the local, per-process profiling report as a dynamically allocated string.
  *
  * This utility function calls the internal reporting engine to format the local event
  * data into a human-readable text report. This report reflects the exact times and
  * call stack structure observed by the calling process (rank).
  *
- * @par Memory Management
+ * \par Memory Management
  * The function returns a newly allocated C-style string (`char*`). **The caller is
  * responsible for freeing this memory** using the appropriate deallocation function
  * (typically \c PDM_free() or \c free()) to prevent memory leaks.
  *
- * @par Report Modes
+ * \par Report Modes
  * The structure of the generated report is controlled by the \p mode parameter:
  * - \c 0 (Hierarchical): The report displays the event timing data in a hierarchical,
  * indented format, mirroring the call stack of the process.
@@ -303,7 +301,7 @@ PDM_timer_free
  * name, providing a flat view of the function costs.
  *
  * @param[in] timer The timer context structure (\c PDM_timer_t*) containing the local event tree.
- * @param[in] mode An integer specifying the output format:
+ * @param[in] mode  An integer specifying the output format:
  * - \c 0: Hierarchical Report (default)
  * - \c 1: Flat Report (by path name)
  *
@@ -321,4 +319,4 @@ PDM_timer_get_report_string
 }
 #endif /* __cplusplus */
 
-#endif /* __FICHIER_SEQ_H__ */
+#endif /* __PDM_TIMER_H__ */
