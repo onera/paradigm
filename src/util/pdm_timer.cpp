@@ -545,16 +545,13 @@ _timer_gather
       idx_read_path += path.length() + 1;
 
       long ln_call = g_data[idx_read];
-      // double lt1 = g_time[6*idx_read];
       double lt_run_inclusive = g_time[6*idx_read+1];
       double lt_run_exclusive = g_time[6*idx_read+2];
-      // double lt_children_sum  = g_time[6*idx_read+3];
       double lt_sync_entry    = g_time[6*idx_read+4];
       double lt_sync_exit     = g_time[6*idx_read+5];
 
       _pdm_global_stat_t& g_record = gflat_timer[path];
 
-      // g_record.n_call           += ln_call; // All ranks have same execution
       g_record.n_call            = ln_call; // All ranks have same execution
       g_record.t_sum_inclusive  += lt_run_inclusive;
       g_record.t_sum_exclusive  += lt_run_exclusive;
@@ -607,7 +604,6 @@ _timer_gather
 
   // All data is computed, finalize mean
   for (auto& pair : gflat_timer) {
-    // std::cout << "gflat_timer = " << pair.first << " -> " << pair.first.size() << std::endl;
     _pdm_global_stat_t& g_record = pair.second;
     g_record.t_mean_run_inclusive = g_record.t_sum_inclusive  / n_rank;
     g_record.t_mean_run_exclusive = g_record.t_sum_exclusive  / n_rank;
