@@ -82,8 +82,6 @@ struct _pdm_timer_event_t {
   _pdm_timer_event_t& operator=(_pdm_timer_event_t const&) = delete;
 };
 
-  // double t_adim               = 0.;
-
 /**
  * \brief Global statistics
  */
@@ -262,12 +260,12 @@ _format_full_condensed_stat
 std::string
 _format_timer_line_main
 (
-       _pdm_timer_event_t&                        node,
- const std::string&                               indented_name,
-       size_t                                     name_width,
-       int                                        time_width,
-       int                                        ncall_width,
- const std::map<std::string, _pdm_global_stat_t>* global_stats
+        _pdm_timer_event_t&                        node,
+  const std::string&                               indented_name,
+        size_t                                     name_width,
+        int                                        time_width,
+        int                                        ncall_width,
+  const std::map<std::string, _pdm_global_stat_t>* global_stats
 )
 {
   std::stringstream ss;
@@ -478,15 +476,15 @@ _timer_gather
   int *gn_send_data = PDM_array_zeros_int(n_rank);
   int *gn_send_time = PDM_array_zeros_int(n_rank);
   PDM_MPI_Gather(&n_send      , 1, PDM_MPI_INT,
-                  gn_send_data, 1, PDM_MPI_INT,
-                  0,
-                  timer->comm);
+                 gn_send_data, 1, PDM_MPI_INT,
+                 0,
+                 timer->comm);
 
   int *gn_send_path_data = PDM_array_zeros_int(n_rank);
   PDM_MPI_Gather(&n_send_path      , 1, PDM_MPI_INT,
-                  gn_send_path_data, 1, PDM_MPI_INT,
-                  0,
-                  timer->comm);
+                 gn_send_path_data, 1, PDM_MPI_INT,
+                 0,
+                 timer->comm);
 
   int *gn_send_path_data_idx = NULL;
   int *gn_send_data_idx      = NULL;

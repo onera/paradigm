@@ -140,8 +140,8 @@ PDM_timer_end
  * - **mode = 1 (Flat):** The report lists all unique events alphabetically by their full path name
  * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
  *
- * @param timer[in] The timer context structure (\c PDM_timer_t*)
- * @param mode [in] An integer specifying the output format:
+ * \param timer [in] The timer context structure (\c PDM_timer_t*)
+ * \param mode  [in] An integer specifying the output format:
  * - \c 0: Hierarchical Report (default)
  * - \c 1: Flat Report (by path name)
  */
@@ -162,8 +162,8 @@ PDM_timer_print
  * - **mode = 1 (Flat):** The report lists all unique events alphabetically by their full path name
  * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
  *
- * @param timer[in] The timer context structure (\c PDM_timer_t*)
- * @param mode [in] An integer specifying the output format:
+ * \param timer [in] The timer context structure (\c PDM_timer_t*)
+ * \param mode  [in] An integer specifying the output format:
  * - \c 0: Hierarchical Report (default)
  * - \c 1: Flat Report (by path name)
  */
@@ -195,13 +195,13 @@ PDM_timer_log
  * - **t_sync_exit:** Synchronization time recorded at the end.
  * - **children:** An array containing the full JSON objects of child events.
  *
- * @note This function is typically called by **all ranks**, but the output file will
+ * \note This function is typically called by **all ranks**, but the output file will
  * contain only the local data of the calling process. To distinguish reports,
  * the \p filename should usually include the rank ID (e.g., "profiling_0.json",
  * "profiling_1.json").
  *
- * \param[in] timer    The timer context structure (\ref PDM_timer_t*) containing the local event tree.
- * \param[in] filename The path and name of the JSON file to be created.
+ * \param [in] timer    The timer context structure (\ref PDM_timer_t*) containing the local event tree.
+ * \param [in] filename The path and name of the JSON file to be created.
  *
  */
 void
@@ -252,8 +252,8 @@ PDM_timer_gather_dump
  * - **t_exclusive_mean:** Global mean for Exclusive Time.
  * - **r_inclusive_min/max:** Rank IDs where the minimum and maximum times occurred.
  *
- * \param[in] timer    The timer context structure (\c PDM_timer_t*).
- * \param[in] filename The path and name of the JSON file to be created (e.g., "global_profiling.json").
+ * \param [in] timer    The timer context structure (\c PDM_timer_t*).
+ * \param [in] filename The path and name of the JSON file to be created (e.g., "global_profiling.json").
  *
  */
 void
@@ -273,12 +273,12 @@ PDM_timer_gather_dump_json
  * \note This function should be called **after** all profiling and reporting is complete.
  * **Failure to call this function will result in memory leaks.**
  *
- * \param[in] timer The timer context structure (\c PDM_timer_t*) to be destroyed and freed.
+ * \param [in] timer The timer context structure (\c PDM_timer_t*) to be destroyed and freed.
  */
 void
 PDM_timer_free
 (
-        PDM_timer_t *timer
+  PDM_timer_t *timer
 );
 
 /**
@@ -300,19 +300,19 @@ PDM_timer_free
  * - \c 1 (Flat): The report lists all unique events alphabetically by their full path
  * name, providing a flat view of the function costs.
  *
- * @param[in] timer The timer context structure (\c PDM_timer_t*) containing the local event tree.
- * @param[in] mode  An integer specifying the output format:
+ * \param [in] timer The timer context structure (\c PDM_timer_t*) containing the local event tree.
+ * \param [in] mode  An integer specifying the output format:
  * - \c 0: Hierarchical Report (default)
  * - \c 1: Flat Report (by path name)
  *
- * @return A dynamically allocated C-string (\c char*) containing the formatted local report. Returns \c NULL or an empty string on allocation failure.
+ * \return A dynamically allocated C-string (\c char*) containing the formatted local report. Returns \c NULL or an empty string on allocation failure.
  *
  */
 char*
 PDM_timer_get_report_string
 (
-    PDM_timer_t *timer,
-    int          mode
+  PDM_timer_t *timer,
+  int          mode
 );
 
 #ifdef __cplusplus
