@@ -42,24 +42,24 @@ typedef struct _pdm_timer_t PDM_timer_t;
  *
  * \par Key Profiling Concepts
  * The timer records several critical time metrics:
- * - **Inclusive Time (\c T_INCLUSIVE) :**
- * Measures the total elapsed time (Wall-Clock Time, typically from \c PDM_MPI_Wtime())
+ * - **Inclusive Time:**
+ * Measures the total elapsed time (Wall-Clock Time, typically from \ref PDM_MPI_Wtime)
  * between the start and end of an event. This **includes** the time spent in any
  * child functions (events) it calls.
- * - **Exclusive Time (\c T_EXCLUSIVE) :**
+ * - **Exclusive Time:**
  * Measures the **net time** spent inside the function itself. It is calculated by
  * subtracting the inclusive time of all direct child events from the event's
  * Inclusive Time. This is the key metric for identifying a function's direct computational cost.
- * - **Synchronization-Aware Timing (T_SYNC_ENTRY / T_SYNC_EXIT) :**
+ * - **Synchronization-Aware Timing :**
  * In addition to inclusive/exclusive times, the timer captures the time spent in
- * synchronization operations (e.g., MPI barriers, waits) immediately **before** * (\c T_SYNC_ENTRY) and **after** (\c T_SYNC_EXIT) the event's main measurement.
+ * synchronization operations (e.g., MPI barriers, waits) immediately **before** and **after** the event's main measurement.
  * These metrics are essential for diagnosing **load imbalance** or **waiting latency** * in a parallel context.
  *
- * \param [in] comm The MPI communicator (\c PDM_MPI_Comm) on which the timer operates.
+ * \param [in] comm The MPI communicator (\ref PDM_MPI_Comm) on which the timer operates.
  * This communicator will be used for the global aggregation of results.
  *
- * \return A pointer to the newly allocated timer structure (\c PDM_timer_t*).
- * The caller is responsible for freeing this structure using \c PDM_timer_free().
+ * \return A pointer to the newly allocated timer structure (\ref PDM_timer_t*).
+ * The caller is responsible for freeing this structure using \ref PDM_timer_free.
  *
  */
 PDM_timer_t*
@@ -77,17 +77,17 @@ PDM_timer_create
  * parent-child relationship with the currently running event (if one exists).
  *
  * \par Hierarchical Event Management
- * When called, \c PDM_timer_start does the following:
+ * When called, \ref PDM_timer_start does the following:
  * 1. **Pushes the Event:** The new event defined by \p name is pushed onto the timer's internal call stack.
  * 2. **Sets Parent:** The event that was previously at the top of the stack (if any) is automatically designated as the **parent**.
  * 3. **Records Path:** The unique **path name** (e.g., "Main/FunctionA/LoopB") is derived and stored, which is crucial for global aggregation.
- * 4. **Starts Timing:** The Wall-Clock Time (\c PDM_MPI_Wtime()) is recorded to mark the start of the event's **Inclusive Time**.
+ * 4. **Starts Timing:** The Wall-Clock Time (\ref PDM_MPI_Wtime) is recorded to mark the start of the event's **Inclusive Time**.
  *
- * \param[in] timer The timer context structure (\c PDM_timer_t*) created by \c PDM_timer_create.
- * \param[in] name The simple, descriptive name of the event (e.g., "MatrixMultiplication"). This name is appended to the parent's path name.
+ * \param[in] timer The timer context structure (\ref PDM_timer_t*) created by \ref PDM_timer_create.
+ * \param[in] name The simple, descriptive name of the event (e.g., "step 1"). This name is appended to the parent's path name.
  * \param[in] force_synchro An integer flag controlling synchronization behavior at the event start:
- * - If non-zero : The function executes an **MPI Barrier** * on the timer's communicator (\c comm) just before starting the event measurement.
- * The time spent waiting at the barrier is recorded as **\c T_SYNC_ENTRY**.
+ * - If non-zero : The function executes an **MPI Barrier** * on the timer's communicator just before starting the event measurement.
+ * The time spent waiting at the barrier is recorded.
  * This helps isolate the impact of load imbalance on the event's start time.
  * - If zero : No synchronization is performed, and timing starts immediately.
  */
@@ -107,17 +107,17 @@ PDM_timer_start
  * event's total Inclusive Time and finalizes all associated metrics before popping it from the stack.
  *
  * \par Event Finalization Process
- * When called, \c PDM_timer_end performs the following crucial steps:
- * 1. **Records End Time:** The Wall-Clock Time (\c PDM_MPI_Wtime()) is recorded to mark the end of the event.
- * 2. **Calculates Duration:** The total **Inclusive Time** (\c T_INCLUSIVE) is computed by taking the difference between the end and start times.
+ * When called, \ref PDM_timer_end performs the following crucial steps:
+ * 1. **Records End Time:** The Wall-Clock Time (\ref PDM_MPI_Wtime) is recorded to mark the end of the event.
+ * 2. **Calculates Duration:** The total **Inclusive Time**is computed by taking the difference between the end and start times.
  * 3. **Updates Parent:** The newly calculated Inclusive Time is subtracted from the parent event's potential Exclusive Time (by summing it to the parent's children time total).
  * 4. **Pops Event:** The finished event is popped from the call stack, restoring the parent event to the top of the stack.
  *
- * \param[in] timer The timer context structure (\ref PDM_timer_t) created by \c PDM_timer_create.
+ * \param[in] timer The timer context structure (\ref PDM_timer_t) created by \ref PDM_timer_create.
  * \param[in] name The name of the event being terminated. This name *must* exactly match the name of the event at the top of the stack. A mismatch indicates a logic error in the application's timer calls.
  * \param[in] force_synchro An integer flag controlling synchronization behavior upon event completion:
- * - If non-zero : The function executes an **MPI Barrier** on the timer's communicator (\c comm) just *after* recording the end time.
- * The time spent waiting at the barrier is recorded as **\c T_SYNC_EXIT**.
+ * - If non-zero : The function executes an **MPI Barrier** on the timer's communicator just *after* recording the end time.
+ * The time spent waiting at the barrier is recorded.
  * This helps assess the impact of waiting for other ranks to finish the same event.
  * - If zero : No synchronization is performed.
  *
@@ -140,10 +140,10 @@ PDM_timer_end
  * - **mode = 1 (Flat):** The report lists all unique events alphabetically by their full path name
  * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
  *
- * \param timer [in] The timer context structure (\c PDM_timer_t*)
+ * \param timer [in] The timer context structure (\ref PDM_timer_t*)
  * \param mode  [in] An integer specifying the output format:
- * - \c 0: Hierarchical Report (default)
- * - \c 1: Flat Report (by path name)
+ * - 0: Hierarchical Report (default)
+ * - 1: Flat Report (by path name)
  */
 void
 PDM_timer_print
@@ -162,10 +162,10 @@ PDM_timer_print
  * - **mode = 1 (Flat):** The report lists all unique events alphabetically by their full path name
  * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
  *
- * \param timer [in] The timer context structure (\c PDM_timer_t*)
+ * \param timer [in] The timer context structure (\ref PDM_timer_t*)
  * \param mode  [in] An integer specifying the output format:
- * - \c 0: Hierarchical Report (default)
- * - \c 1: Flat Report (by path name)
+ * - 0: Hierarchical Report (default)
+ * - 1: Flat Report (by path name)
  */
 void
 PDM_timer_log
@@ -178,7 +178,7 @@ PDM_timer_log
  * \brief Exports the **local**, per-process profiling data to a JSON file.
  *
  * This function serializes the full hierarchical tree of timed events recorded by
- * the calling process (\c rank) into a specified JSON file. Since no aggregation
+ * the calling process into a specified JSON file. Since no aggregation
  * is performed, this report is crucial for **analyzing the timing behavior of
  * an individual process** and identifying process-specific performance anomalies
  * or load imbalance sources.
@@ -225,7 +225,7 @@ PDM_timer_dump_json
  *
  * \note This function is called **collectively**, but the final file output only occurs on the root rank (rank 0) after aggregation is complete.
  *
- * \param[in] timer    The timer context structure (\c PDM_timer_t*).
+ * \param[in] timer    The timer context structure (\ref PDM_timer_t*).
  * \param[in] filename The path and name of the file to which the global aggregated data will be written (e.g., "pdm_report.txt").
  *
  */
@@ -240,7 +240,7 @@ PDM_timer_gather_dump
  * \brief Aggregates profiling data and exports the **Global Statistics** in a hierarchical JSON format on rank 0.
  *
  * This function first performs the global aggregation (calculating Mean, Min, Max, etc., across all ranks).
- * It then generates a structured JSON file that uses the original event call tree (\c PDM_timer_t hierarchy)
+ * It then generates a structured JSON file that uses the original event call tree (\ref PDM_timer_t hierarchy)
  * but populates the timing fields with the **aggregated global results**.
  *
  * \par JSON Structure and Content
@@ -252,7 +252,7 @@ PDM_timer_gather_dump
  * - **t_exclusive_mean:** Global mean for Exclusive Time.
  * - **r_inclusive_min/max:** Rank IDs where the minimum and maximum times occurred.
  *
- * \param [in] timer    The timer context structure (\c PDM_timer_t*).
+ * \param [in] timer    The timer context structure (\ref PDM_timer_t*).
  * \param [in] filename The path and name of the JSON file to be created (e.g., "global_profiling.json").
  *
  */
@@ -273,7 +273,7 @@ PDM_timer_gather_dump_json
  * \note This function should be called **after** all profiling and reporting is complete.
  * **Failure to call this function will result in memory leaks.**
  *
- * \param [in] timer The timer context structure (\c PDM_timer_t*) to be destroyed and freed.
+ * \param [in] timer The timer context structure (\ref PDM_timer_t*) to be destroyed and freed.
  */
 void
 PDM_timer_free
@@ -290,22 +290,21 @@ PDM_timer_free
  *
  * \par Memory Management
  * The function returns a newly allocated C-style string (`char*`). **The caller is
- * responsible for freeing this memory** using the appropriate deallocation function
- * (typically \c PDM_free() or \c free()) to prevent memory leaks.
+ * responsible for freeing this memory** using the appropriate deallocation function.
  *
  * \par Report Modes
  * The structure of the generated report is controlled by the \p mode parameter:
- * - \c 0 (Hierarchical): The report displays the event timing data in a hierarchical,
+ * - 0 (Hierarchical): The report displays the event timing data in a hierarchical,
  * indented format, mirroring the call stack of the process.
- * - \c 1 (Flat): The report lists all unique events alphabetically by their full path
+ * - 1 (Flat): The report lists all unique events alphabetically by their full path
  * name, providing a flat view of the function costs.
  *
- * \param [in] timer The timer context structure (\c PDM_timer_t*) containing the local event tree.
+ * \param [in] timer The timer context structure (\ref PDM_timer_t*) containing the local event tree.
  * \param [in] mode  An integer specifying the output format:
- * - \c 0: Hierarchical Report (default)
- * - \c 1: Flat Report (by path name)
+ * - 0: Hierarchical Report (default)
+ * - 1: Flat Report (by path name)
  *
- * \return A dynamically allocated C-string (\c char*) containing the formatted local report. Returns \c NULL or an empty string on allocation failure.
+ * \return A dynamically allocated C-string containing the formatted local report. Returns NULL or an empty string on allocation failure.
  *
  */
 char*
