@@ -131,6 +131,23 @@ PDM_timer_end
 );
 
 /**
+ * \brief Get the duration an number of calls of an event
+ *
+ * \param [in]  timer    PDM_timer_t instance
+ * \param [in]  path     Path of the event
+ * \param [out] duration Duration (in seconds) of the event
+ *
+ * \return Number of event calls
+ */
+long
+PDM_timer_get
+(
+        PDM_timer_t *timer,
+  const char        *path,
+        double      *duration
+);
+
+/**
  * \brief Aggregates data and prints the profiling report in current process to the standard output.
  *
  * \par Report Modes

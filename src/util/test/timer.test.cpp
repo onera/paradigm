@@ -7,6 +7,7 @@
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
+#include "pdm_priv.h"
 #include "pdm_timer.h"
 
 
@@ -82,6 +83,54 @@ MPI_TEST_CASE("[pdm_timer] - 2p",2) {
     remove("profiling_gather.log");
     remove("profiling_gather.json");
   }
+
+  PDM_timer_free(timer);
+}
+
+
+MPI_TEST_CASE("[pdm_timer] - get", 1) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  PDM_timer_t *timer = PDM_timer_create(pdm_comm);
+
+  PDM_timer_start(timer, "root", 1);
+  {
+    PDM_timer_start(timer, "left", 1);
+    {
+      PDM_timer_start(timer, "child", 1);
+      sleep(1.);
+      PDM_timer_end  (timer, "child", 1);
+    }
+    {
+      PDM_timer_start(timer, "child", 1);
+      sleep(3.);
+      PDM_timer_end  (timer, "child", 1);
+    }
+    PDM_timer_end(timer, "left", 1);
+  }
+  {
+    PDM_timer_start(timer, "right", 1);
+    {
+      PDM_timer_start(timer, "child", 1);
+      sleep(2.);
+      PDM_timer_end  (timer, "child", 1);
+    }
+    PDM_timer_end(timer, "right", 1);
+  }
+  PDM_timer_end(timer, "root", 1);
+
+
+  long   n_call;
+  double duration;
+
+  n_call = PDM_timer_get(timer, "/root/left/child", &duration);
+  CHECK(n_call == 2);
+  CHECK(PDM_ABS(duration - 4.) < 1e-3);
+
+  n_call = PDM_timer_get(timer, "/root/right/child", &duration);
+  CHECK(n_call == 1);
+  CHECK(PDM_ABS(duration - 2.) < 1e-3);
 
   PDM_timer_free(timer);
 }

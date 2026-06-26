@@ -847,6 +847,29 @@ _dump_global_hierarchical_json
   }
 }
 
+static
+void
+_find_node_at_path
+(
+  _pdm_timer_event_t&  current_node,
+  const std::string&   path,
+  _pdm_timer_event_t **found_node
+)
+{
+  if (current_node.path_name == path) {
+    if (*found_node != NULL) {
+      PDM_error("Already found a node with path '%s'", path.c_str());
+    }
+    *found_node = &current_node;
+  }
+  else {
+    for (auto& child_name : current_node.child_insertion_order) {
+      _pdm_timer_event_t& child_node = *current_node.children.at(child_name);
+      _find_node_at_path(child_node, path, found_node);
+    }
+  }
+}
+
 /*============================================================================
  * Definition des fonctions publiques
  *============================================================================*/
@@ -972,6 +995,30 @@ PDM_timer_end
 
     // Update parent's children sum
     parent_node->t_children_sum += dt;
+  }
+}
+
+
+long
+PDM_timer_get
+(
+        PDM_timer_t *timer,
+  const char        *path,
+        double      *duration
+)
+{
+  // Find node corresponding to the requested event
+  std::string path_name(path);
+  _pdm_timer_event_t *node = NULL;
+  _find_node_at_path(timer->root_event, path_name, &node);
+  if (node == NULL) {
+    // PDM_error("No event with path `%s`", path);
+    *duration = 0.;
+    return 0;
+  }
+  else {
+    *duration = node->t_run_inclusive;
+    return node->n_call;
   }
 }
 
