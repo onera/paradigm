@@ -1,33 +1,27 @@
-/*
- * \file
- */
-
 #ifndef __PDM_TIMER_H__
 #define __PDM_TIMER_H__
 
 /*----------------------------------------------------------------------------*/
+#include "pdm.h"
 #include "pdm_mpi.h"
 
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
- * Definition des types
+ * Type definitions
  *============================================================================*/
 
 /*----------------------------------------------------------------------------
- * Structure de mesure des temps d'execution
+ * Structure for measuring execution times
  *----------------------------------------------------------------------------*/
 
 typedef struct _pdm_timer_t PDM_timer_t;
 
 /*============================================================================
- * Interfaces des fonctions publiques
+ * Public function interfaces
  *============================================================================*/
 
 
@@ -152,21 +146,19 @@ PDM_timer_get
  *
  * \par Report Modes
  * The report format is controlled by the \p mode parameter:
- * - **mode = 0 (Hierarchical):** The report preserves the call structure, indenting child events
+ * - \enum PDM_TIMER_REPORT_HIERARCHICAL: The report preserves the call structure, indenting child events
  * under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
- * - **mode = 1 (Flat):** The report lists all unique events alphabetically by their full path name
+ * - \enum PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name
  * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
  *
  * \param timer [in] The timer context structure (\ref PDM_timer_t*)
- * \param mode  [in] An integer specifying the output format:
- * - 0: Hierarchical Report (default)
- * - 1: Flat Report (by path name)
+ * \param mode  [in] Report mode (\ref PDM_timer_report_t)
  */
 void
 PDM_timer_print
 (
-  PDM_timer_t *timer,
-  int          mode
+  PDM_timer_t        *timer,
+  PDM_timer_report_t  mode
 );
 
 /**
@@ -174,21 +166,19 @@ PDM_timer_print
  *
  * \par Report Modes
  * The report format is controlled by the \p mode parameter:
- * - **mode = 0 (Hierarchical):** The report preserves the call structure, indenting child events
+ * - \enum PDM_TIMER_REPORT_HIERARCHICAL: The report preserves the call structure, indenting child events
  * under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
- * - **mode = 1 (Flat):** The report lists all unique events alphabetically by their full path name
+ * - \enum PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name
  * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
  *
  * \param timer [in] The timer context structure (\ref PDM_timer_t*)
- * \param mode  [in] An integer specifying the output format:
- * - 0: Hierarchical Report (default)
- * - 1: Flat Report (by path name)
+ * \param mode  [in] Report mode (\ref PDM_timer_report_t)
  */
 void
 PDM_timer_log
 (
-  PDM_timer_t *timer,
-  int          mode
+  PDM_timer_t        *timer,
+  PDM_timer_report_t  mode
 );
 
 /**
@@ -311,15 +301,13 @@ PDM_timer_free
  *
  * \par Report Modes
  * The structure of the generated report is controlled by the \p mode parameter:
- * - 0 (Hierarchical): The report displays the event timing data in a hierarchical,
+ * - \enum PDM_TIMER_REPORT_HIERARCHICAL: The report displays the event timing data in a hierarchical,
  * indented format, mirroring the call stack of the process.
- * - 1 (Flat): The report lists all unique events alphabetically by their full path
+ * - \enum PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path
  * name, providing a flat view of the function costs.
  *
  * \param [in] timer The timer context structure (\ref PDM_timer_t*) containing the local event tree.
- * \param [in] mode  An integer specifying the output format:
- * - 0: Hierarchical Report (default)
- * - 1: Flat Report (by path name)
+ * \param [in] mode  Report mode (\ref PDM_timer_report_t)
  *
  * \return A dynamically allocated C-string containing the formatted local report. Returns NULL or an empty string on allocation failure.
  *
@@ -327,8 +315,8 @@ PDM_timer_free
 char*
 PDM_timer_get_report_string
 (
-  PDM_timer_t *timer,
-  int          mode
+  PDM_timer_t        *timer,
+  PDM_timer_report_t  mode
 );
 
 #ifdef __cplusplus

@@ -383,6 +383,12 @@ typedef enum {
 
 } PDM_clustering_kind_t;
 
+typedef enum {
+  PDM_TIMER_REPORT_HIERARCHICAL = 0, /*!< Hierarchical report */
+  PDM_TIMER_REPORT_FLAT         = 1  /*!< Flat report */
+} PDM_timer_report_t;
+
+
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/

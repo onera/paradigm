@@ -1026,8 +1026,8 @@ PDM_timer_get
 char*
 PDM_timer_get_report_string
 (
-  PDM_timer_t *timer,
-  int          mode
+  PDM_timer_t        *timer,
+  PDM_timer_report_t  mode
 )
 {
   int i_rank = -1;
@@ -1047,8 +1047,8 @@ PDM_timer_get_report_string
 void
 PDM_timer_print
 (
-  PDM_timer_t *timer,
-  int          mode
+  PDM_timer_t        *timer,
+  PDM_timer_report_t  mode
 )
 {
   _compute_exclusive_time(timer);
@@ -1061,8 +1061,8 @@ PDM_timer_print
 void
 PDM_timer_log
 (
-  PDM_timer_t *timer,
-  int          mode
+  PDM_timer_t        *timer,
+  PDM_timer_report_t  mode
 )
 {
   _compute_exclusive_time(timer);

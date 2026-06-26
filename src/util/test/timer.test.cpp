@@ -68,12 +68,12 @@ MPI_TEST_CASE("[pdm_timer] - 2p",2) {
 
   if(i_rank == 0) {
     // Print timer - Hierarchical view
-    PDM_timer_print(timer, 0);
+    PDM_timer_print(timer, PDM_TIMER_REPORT_HIERARCHICAL);
     // Print timer - Flat view
-    PDM_timer_print(timer, 1);
+    PDM_timer_print(timer, PDM_TIMER_REPORT_FLAT);
   }
-  // PDM_timer_log(timer, 0);
-  // PDM_timer_log(timer, 1);
+  // PDM_timer_log(timer, PDM_TIMER_REPORT_HIERARCHICAL);
+  // PDM_timer_log(timer, PDM_TIMER_REPORT_FLAT);
 
   PDM_timer_gather_dump_json(timer, "profiling_gather.json");
 
