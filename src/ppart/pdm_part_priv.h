@@ -329,6 +329,7 @@ typedef struct _PDM_part_t {
   PDM_g_num_t *ddual_graph;         /*!< Dual graph  (size = dualGraphIdx[dn_cell]) */
 
   PDM_timer_t *timer;               /*!< Timer */
+  double t_elapsed[4];              /*!< Elapsed times for the main steps (total, build dual graph, split graph, build mesh partition) */
 
   /* Communicator */
   PDM_MPI_Comm      comm;               /*!< Communicator */

@@ -276,6 +276,17 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
+  double *duration;
+  PDM_part_time_get(ppart, &duration, &duration, &duration, &duration);
+
+  if (i_rank == 0) {
+    printf("Elapsed times =\n");
+    printf("  Total                = %f\n", duration[0]);
+    printf("  Build dual graph     = %f\n", duration[1]);
+    printf("  Split graph          = %f\n", duration[2]);
+    printf("  Build mesh partition = %f\n", duration[3]);
+  }
+
   if (time_and_stat && !use_multipart) {
     PDM_part_dump_times(ppart);
   }
