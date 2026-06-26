@@ -559,6 +559,9 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
   if (pmne == NULL) {
     return;
   }
+  if (pmn->pcg[3-geom_kind] == NULL) {
+    PDM_error("PDM_part_comm_graph for geom_kind %d is NULL", geom_kind);
+  }
 
   int  n_section  = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (pmn, geom_kind);
   int *section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn, geom_kind);
@@ -809,8 +812,11 @@ PDM_part_mesh_nodal_complete_part_comm_graph
   if(pmn->pcg[1] == NULL) {
     PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_RIDGE);
   }
-  if(pmn->mesh_dimension == 3 && pmn->pcg[2] == NULL) { // Mostly this graph comm is empty except for non manifold cases
+  if(pmn->pcg[2] == NULL) {
     PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+  }
+  if(pmn->pcg[3] == NULL) {
+    PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
   }
 }
 
