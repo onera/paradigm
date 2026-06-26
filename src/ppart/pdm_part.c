@@ -545,14 +545,16 @@ _dual_graph_from_cell_face
   for (int i = 0; i < n_recv_face; i++) {
     PDM_g_num_t  gface  = face_to_recv[n_data*i  ];         // Get global numbering
     PDM_g_num_t  gcell1 = face_to_recv[n_data*i+1];         // Get global numbering
-    PDM_g_num_t _lface = gface - ppart->dface_proc[i_rank]; // Switch to local numbering
-    int          lface = (int) _lface;
-    PDM_g_num_t gcell2;
+    PDM_g_num_t _lface  = gface - ppart->dface_proc[i_rank]; // Switch to local numbering
+    int          lface  = (int) _lface;
+    PDM_g_num_t  gcell2 = -1;
 
-    if (ppart->dface_cell[2*lface] == gcell1)
-      gcell2 = PDM_ABS (ppart->dface_cell[2*lface + 1]);
-    else if (ppart->dface_cell[2*lface + 1] == gcell1)
-      gcell2 = PDM_ABS (ppart->dface_cell[2*lface]);
+    if (ppart->dface_cell[2*lface] == gcell1) {
+      gcell2 = PDM_ABS(ppart->dface_cell[2*lface + 1]);
+    }
+    else if (ppart->dface_cell[2*lface + 1] == gcell1) {
+      gcell2 = PDM_ABS(ppart->dface_cell[2*lface]);
+    }
     else {
       PDM_error("Problem in dual graph building "
                 PDM_FMT_G_NUM" "
