@@ -34,12 +34,12 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_array.h"
-#include "pdm_logging.h"
-#include "pdm_mpi.h"
-#include "pdm_timer.h"
 #include "pdm_config.h"
 #include "pdm_error.h"
+#include "pdm_logging.h"
 #include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -452,8 +452,8 @@ _timer_gather
 
   std::vector<char> send_buffer_path;
   send_buffer_path.reserve(n_send_path);
-  std::vector<int>    send_buffer_data(    n_send      );
-  std::vector<double> send_buffer_time(6 * n_send      );
+  std::vector<int>    send_buffer_data(    n_send);
+  std::vector<double> send_buffer_time(6 * n_send);
 
   int idx_write = 0;
   for (auto& path_and_timer : lflat_timer) {
@@ -616,11 +616,11 @@ _timer_gather
   }
 
   PDM_free(gn_send_time);
-  PDM_free(gn_send_path_data    );
-  PDM_free(gn_send_data         );
+  PDM_free(gn_send_path_data);
+  PDM_free(gn_send_data);
   PDM_free(gn_send_path_data_idx);
-  PDM_free(gn_send_data_idx     );
-  PDM_free(gn_send_time_idx     );
+  PDM_free(gn_send_data_idx);
+  PDM_free(gn_send_time_idx);
 
   free(gn_send_path_data);
   timer->is_gather = 1;

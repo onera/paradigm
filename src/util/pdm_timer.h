@@ -165,8 +165,8 @@ PDM_timer_get
 void
 PDM_timer_print
 (
-    PDM_timer_t *timer,
-    int          mode
+  PDM_timer_t *timer,
+  int          mode
 );
 
 /**
