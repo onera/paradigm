@@ -1823,6 +1823,7 @@ int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
 {
   const int *weight_in  = MPI_UNWEIGHTED;
   const int *weight_out = MPI_UNWEIGHTED;
+  PDM_GCC_SUPPRESS_WARNING("-Wstringop-overread") // Known bug on gcc14 : https://stackoverflow.com/questions/69583120/how-to-account-for-special-pointers-with-wstringop-overread
   int code = MPI_Dist_graph_create_adjacent(comm_old,
                                             indegree,
                                             sources,
@@ -1833,6 +1834,7 @@ int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
                                             MPI_INFO_NULL,
                                             reorder,
                                             newcomm);
+  PDM_GCC_SUPPRESS_WARNING_POP
   return code;
 }
 

@@ -512,7 +512,7 @@ PDM_file_par_seek
      a chaque acces par fichier->offset */
 
   if (PDM_file_par->acces == FICHIER_PAR_ACCES_IP) {
-    int _whence;
+    int _whence = 0;
     switch(whence) {
     case FICHIER_PAR_SEEK_SET:
       _whence = PDM_MPI_SEEK_SET;

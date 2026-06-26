@@ -185,7 +185,8 @@ void PDM_mesh_intersection_surf_surf_atomic_compute
 
   double *pi, *pj;
 
-  double ai[3], aj[3], bi[3], bj[3];
+  double ai[3] = {0., 0., 0.};
+  double aj[3], bi[3], bj[3];
   double uvi[2], uvj[2], uvk[2];
 
   for (int ia = 0; ia < poly_a->n_edge; ia++) {
@@ -261,7 +262,7 @@ void PDM_mesh_intersection_surf_surf_atomic_compute
       }
 
       double area_uv;
-      double center_uv[2];
+      double center_uv[2] = {0., 0.};
       if (n_comp == 1) {
         _geom_comp(uvi, uvj, &area_uv, center_uv);
       }
