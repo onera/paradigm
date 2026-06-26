@@ -143,12 +143,11 @@ PDM_timer_get
 
 /**
  * \brief Aggregates data and prints the profiling report in current process to the standard output.
- *
  * \par Report Modes
- * The report format is controlled by the \p mode parameter:
- * - \enum PDM_TIMER_REPORT_HIERARCHICAL: The report preserves the call structure, indenting child events
+ * The report format is controlled by the mode parameter:
+ * - \ref PDM_TIMER_REPORT_HIERARCHICAL: The report preserves the call structure, indenting child events
  * under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
- * - \enum PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name
+ * - \ref PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name
  * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
  *
  * \param timer [in] The timer context structure (\ref PDM_timer_t*)
@@ -163,12 +162,11 @@ PDM_timer_print
 
 /**
  * \brief Aggregates data and log the profiling report in current process to the paradigm logger
- *
  * \par Report Modes
- * The report format is controlled by the \p mode parameter:
- * - \enum PDM_TIMER_REPORT_HIERARCHICAL: The report preserves the call structure, indenting child events
- * under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
- * - \enum PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name
+ * The report format is controlled by the mode parameter:
+ * - \ref PDM_TIMER_REPORT_HIERARCHICAL: The report preserves the call structure, indenting child events
+ *         under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
+ * - \ref PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name
  * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
  *
  * \param timer [in] The timer context structure (\ref PDM_timer_t*)
@@ -301,9 +299,9 @@ PDM_timer_free
  *
  * \par Report Modes
  * The structure of the generated report is controlled by the \p mode parameter:
- * - \enum PDM_TIMER_REPORT_HIERARCHICAL: The report displays the event timing data in a hierarchical,
+ * - \ref PDM_TIMER_REPORT_HIERARCHICAL: The report displays the event timing data in a hierarchical,
  * indented format, mirroring the call stack of the process.
- * - \enum PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path
+ * - \ref PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path
  * name, providing a flat view of the function costs.
  *
  * \param [in] timer The timer context structure (\ref PDM_timer_t*) containing the local event tree.
