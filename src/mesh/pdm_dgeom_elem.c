@@ -11,11 +11,10 @@
 
 #include "pdm_block_to_part.h"
 #include "pdm_dconnectivity_transform.h"
+#include "pdm_dgeom_elem.h"
 #include "pdm_distrib.h"
 #include "pdm_mem_tool.h"
-#include "pdm_plane.h"
 #include "pdm_priv.h"
-#include "pdm_dgeom_elem.h"
 
 
 /*=============================================================================
@@ -41,13 +40,13 @@
 void
 PDM_compute_center_from_descending_connectivity
 (
-  const int         *dentity1_entity2_idx,
-  const PDM_g_num_t *dentity1_entity2,
-  const int          dn_entity1,
-  const PDM_g_num_t *dentity2_distrib,
-  double            *dentity1_coord,
-  double            *dentity2_coord,
-  PDM_MPI_Comm       comm
+  const int          *dentity1_entity2_idx,
+  const PDM_g_num_t  *dentity1_entity2,
+  const int           dn_entity1,
+  const PDM_g_num_t  *dentity2_distrib,
+        double       *dentity1_coord,
+        double       *dentity2_coord,
+        PDM_MPI_Comm  comm
 )
 {
   int         *dentity1_entity2_sgn = NULL;
@@ -103,77 +102,18 @@ PDM_compute_center_from_descending_connectivity
 
 }
 
-
-void
-PDM_compute_dface_normal
-(
-  const int         *dface_vtx_idx,
-  const PDM_g_num_t *dface_vtx,
-  const int          dn_face,
-  const PDM_g_num_t *dvtx_distrib,
-  double            *dvtx_coord,
-  double            *dface_normal,
-  PDM_MPI_Comm       comm
-)
-{
-  int         *dface_vtx_sgn = NULL;
-  PDM_g_num_t *dface_vtx_abs = NULL;
-  PDM_malloc(dface_vtx_sgn, dface_vtx_idx[dn_face], int        );
-  PDM_malloc(dface_vtx_abs, dface_vtx_idx[dn_face], PDM_g_num_t);
-  for(int i = 0; i < dface_vtx_idx[dn_face]; ++i) {
-    dface_vtx_sgn[i] = PDM_SIGN(dface_vtx[i]);
-    dface_vtx_abs[i] = PDM_ABS (dface_vtx[i]);
-  }
-  PDM_block_to_part_t *btp_entity1_coord = PDM_block_to_part_create (dvtx_distrib,
-                                              (const PDM_g_num_t **) &dface_vtx_abs,
-                                                                     &dface_vtx_idx[dn_face],
-                                                                     1,
-                                                                     comm);
-  PDM_free(dface_vtx_sgn);
-  PDM_free(dface_vtx_abs);
-
-  int strid_one = 1;
-  double **tmp_face_vtx_coord;
-  PDM_block_to_part_exch (btp_entity1_coord,
-                           3 * sizeof(double),
-                           PDM_STRIDE_CST_INTERLACED,
-                           &strid_one,
-                  (void *) dvtx_coord,
-                           NULL,
-                (void ***) &tmp_face_vtx_coord);
-  double *dface_vtx_coord = tmp_face_vtx_coord[0];
-  PDM_free(tmp_face_vtx_coord);
-  PDM_block_to_part_free(btp_entity1_coord);
-
-  // double* _dface_vtx_ptr = dface_vtx_coord;
-  for(int i_face = 0; i_face < dn_face; ++i_face) {
-
-    dface_normal[3*i_face  ] = i_face;
-    dface_normal[3*i_face+1] = i_face;
-    dface_normal[3*i_face+2] = i_face;
-
-    int n_vtx_per_face = dface_vtx_idx[i_face+1] - dface_vtx_idx[i_face];
-    PDM_plane_normal(n_vtx_per_face, dface_vtx_coord + 3*dface_vtx_idx[i_face], &dface_normal[3*i_face  ]);
-
-    // _dface_vtx_ptr += 3 * n_vtx_per_face;
-
-  }
-  PDM_free(dface_vtx_coord);
-}
-
-
 void
 PDM_compute_vtx_characteristic_length
 (
- PDM_MPI_Comm    comm,
- int             dn_face,
- int             dn_edge,
- int             dn_vtx,
- int            *dface_vtx_idx,
- PDM_g_num_t    *dface_vtx,
- PDM_g_num_t    *dedge_vtx,
- double         *dvtx_coord,
- double        **dchar_length_out
+  PDM_MPI_Comm    comm,
+  int             dn_face,
+  int             dn_edge,
+  int             dn_vtx,
+  int            *dface_vtx_idx,
+  PDM_g_num_t    *dface_vtx,
+  PDM_g_num_t    *dedge_vtx,
+  double         *dvtx_coord,
+  double        **dchar_length_out
 )
 {
   int i_rank;
@@ -266,7 +206,7 @@ PDM_compute_vtx_characteristic_length
   double *pvtx_vtx_coord = tmp_vtx_vtx_coord[0];
   PDM_free(tmp_vtx_vtx_coord);
   PDM_block_to_part_free(btp);
-  PDM_free(dvtx_vtx    );
+  PDM_free(dvtx_vtx);
 
   double *char_length = NULL;
   PDM_malloc(char_length, dn_vtx, double);
