@@ -247,23 +247,6 @@ PDM_transform_to_parent_gnum
        PDM_MPI_Comm  comm
 );
 
-
-/**
- *
- * \brief  transfert _closest_pts var as it seems this static var is not readable
- *          when we switch to the nvcc compiler
- *
- * **??**
- *
- */
-
-PDM_closest_point_t*
-PDM_closest_points_closest_transfert
-(
-  PDM_closest_point_t  *cls
-);
-
-
 /**
  *
  * \brief  Get the number of target points in a partition
