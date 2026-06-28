@@ -216,13 +216,13 @@ PDM_dcompute_cell_center
 void
 PDM_part_entity_geom
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const PDM_g_num_t   dn_entity,
- const double       *dentity_coord,
- const double       *dentity_weight,
-       int          *dentity_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const PDM_g_num_t   dn_entity,
+  const double       *dentity_coord,
+  const double       *dentity_weight,
+        int          *dentity_part
 )
 {
   PDM_UNUSED(method);
@@ -294,19 +294,19 @@ PDM_part_entity_geom
 void
 PDM_part_geom
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const int           dn_cell,
- const int          *dcell_face_idx,
- const PDM_g_num_t  *dcell_face,
- const int          *dcell_weight,
- const int          *dface_vtx_idx,
- const PDM_g_num_t  *dface_vtx,
- const PDM_g_num_t  *distrib_face,
- const double       *dvtx_coord,
- const PDM_g_num_t  *distrib_vtx,
-       int          *dcell_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const int           dn_cell,
+  const int          *dcell_face_idx,
+  const PDM_g_num_t  *dcell_face,
+  const int          *dcell_weight,
+  const int          *dface_vtx_idx,
+  const PDM_g_num_t  *dface_vtx,
+  const PDM_g_num_t  *distrib_face,
+  const double       *dvtx_coord,
+  const PDM_g_num_t  *distrib_vtx,
+        int          *dcell_part
 )
 {
   assert (method == PDM_PART_GEOM_HILBERT);
@@ -353,13 +353,13 @@ PDM_part_geom
 void
 PDM_part_geom_0d
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const int           dn_vtx,
- const double       *dvtx_coord,
- const double       *dvtx_weight,
-       int          *dvtx_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const int           dn_vtx,
+  const double       *dvtx_coord,
+  const double       *dvtx_weight,
+        int          *dvtx_part
 )
 {
   PDM_part_entity_geom(method,
@@ -374,15 +374,15 @@ PDM_part_geom_0d
 void
 PDM_part_geom_1d
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const int           dn_edge,
- const int           dn_vtx,
- const PDM_g_num_t  *dedge_vtx,
- const double       *dvtx_coord,
- const double       *dedge_weight,
-       int          *dedge_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const int           dn_edge,
+  const int           dn_vtx,
+  const PDM_g_num_t  *dedge_vtx,
+  const double       *dvtx_coord,
+  const double       *dedge_weight,
+        int          *dedge_part
 )
 {
   PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution(comm, dn_vtx);
@@ -415,20 +415,20 @@ PDM_part_geom_1d
 void
 PDM_part_geom_2d
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const int           dn_face,
- const int           dn_edge,
- const int           dn_vtx,
- const int          *dface_vtx_idx,
- const PDM_g_num_t  *dface_vtx,
- const int          *dface_edge_idx,
- const PDM_g_num_t  *dface_edge,
- const PDM_g_num_t  *dedge_vtx,
- const double       *dvtx_coord,
- const double       *dface_weight,
-       int          *dface_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const int           dn_face,
+  const int           dn_edge,
+  const int           dn_vtx,
+  const int          *dface_vtx_idx,
+  const PDM_g_num_t  *dface_vtx,
+  const int          *dface_edge_idx,
+  const PDM_g_num_t  *dface_edge,
+  const PDM_g_num_t  *dedge_vtx,
+  const double       *dvtx_coord,
+  const double       *dface_weight,
+        int          *dface_part
 )
 {
 
@@ -485,314 +485,6 @@ PDM_part_geom_2d
 
   PDM_free(distrib_vtx);
   PDM_free(dface_center);
-}
-
-
-void
-PDM_dreorder_from_coords
-(
- PDM_part_geom_t  method,
- int              dim,
- PDM_g_num_t     *distrib_vtx,
- double          *dcoords,
- PDM_g_num_t     *ln_to_gn,
- PDM_MPI_Comm     comm
-)
-{
-  int i_rank;
-  int n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  assert (method == PDM_PART_GEOM_HILBERT);
-
-  int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
-
-  PDM_hilbert_code_t *hilbert_codes;
-  PDM_malloc(hilbert_codes, dn_vtx, PDM_hilbert_code_t);
-
-  /** Initialisation **/
-  double extents[2*dim]; /** DIM x 2**/
-
-  /** Get EXTENTS **/
-  PDM_hilbert_get_coord_extents_par(dim, dn_vtx, dcoords, extents, comm);
-
-  /** Hilbert Coordinates Computation **/
-  PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, dn_vtx, dcoords, hilbert_codes);
-
-  PDM_hilbert_code_t *hilbert_codes_idx;
-  PDM_malloc(hilbert_codes_idx, n_rank+1, PDM_hilbert_code_t);
-
-  double *weight = PDM_array_const_double(dn_vtx, 1.);
-  PDM_hilbert_build_rank_index (dim,
-                                n_rank,
-                                dn_vtx,
-                                hilbert_codes,
-                                weight,
-                                NULL, // No need order
-                                hilbert_codes_idx,
-                                comm);
-  PDM_free(weight);
-
-  /** Remplissage de cell_parts -> en fct des codes Hilbert **/
-  for(int i = 0; i < dn_vtx; ++i) {
-    size_t quantile = PDM_hilbert_quantile_search(n_rank,
-                                                  hilbert_codes[i],
-                                                  hilbert_codes_idx);
-    ln_to_gn [i] = (int) (quantile + 1); // Because ln_to_gn of part_to_block begin at 1
-  }
-
-  // part_to_block avec ln_to_gn 1 2 3 4 .... pdm_assembly_partition
-  // Puis on échange les hilbert_codes, qu'on retrie localement
-
-  PDM_g_num_t *distrib_rank = NULL;
-  PDM_malloc(distrib_rank, n_rank+1, PDM_g_num_t);
-  for(int i = 0; i < n_rank+1; ++i) {
-    distrib_rank[i] = i;
-  }
-
-  /*
-   * Each proc get all the entities affected to its partitions
-   */
-  PDM_part_to_block_t *ptb =
-   PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                             PDM_PART_TO_BLOCK_POST_NOTHING,
-                             1.,
-                             &ln_to_gn,
-                             distrib_rank,
-                             &dn_vtx,
-                             1,
-                             comm);
-  PDM_free(distrib_rank);
-
-  const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
-
-  // log_trace("n_vtx_block = %i | dn_vtx = %i \n", n_vtx_block, dn_vtx);
-
-  double *blk_hilbert_codes = NULL;
-  PDM_part_to_block_exch (ptb,
-                          sizeof(double),
-                          PDM_STRIDE_CST_INTERLACED,
-                          1,
-                          NULL,
-                (void **) &hilbert_codes,
-                          NULL,
-                (void **) &blk_hilbert_codes);
-
-  /* Resend */
-  for(int i = 0; i < dn_vtx; ++i) {
-    ln_to_gn [i] = distrib_vtx[i_rank] + i + 1; // Donc correspond a la numeration absolu initiale
-  }
-
-  PDM_g_num_t* blk_ln_to_gn;
-  PDM_part_to_block_exch (ptb,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          1,
-                          NULL,
-                (void **) &ln_to_gn,
-                          NULL,
-                (void **) &blk_ln_to_gn);
-
-  PDM_free(hilbert_codes_idx);
-  PDM_free(hilbert_codes);
-  PDM_part_to_block_free(ptb);
-
-  /* Reorder locally */
-  assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  int *hilbert_order = NULL;
-  PDM_malloc(hilbert_order, n_vtx_block, int);
-  for (int i = 0; i < n_vtx_block; ++i) {
-    hilbert_order [i] = i;
-  }
-  PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
-  PDM_free(blk_hilbert_codes);
-
-
-  /* Apply order to blk_ln_to_gn */
-  PDM_g_num_t *sorted_blk_ln_to_gn = NULL;
-  PDM_malloc(sorted_blk_ln_to_gn, n_vtx_block, PDM_g_num_t);
-  for(int i = 0; i < n_vtx_block; ++i) {
-    sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
-  }
-  PDM_free(blk_ln_to_gn);
-  PDM_free(hilbert_order);
-
-  PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
-                              (const PDM_g_num_t **)  &ln_to_gn,
-                                                      &dn_vtx,
-                                                      1,
-                                                      comm);
-
-  int stride_one = 1;
-  PDM_block_to_part_exch_in_place(btp,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_CST_INTERLACED,
-                         &stride_one,
-              (void *)   sorted_blk_ln_to_gn,
-                         NULL,
-              (void **) &ln_to_gn);
-  PDM_block_to_part_free(btp);
-  PDM_free(sorted_blk_ln_to_gn);
-  PDM_free(distrib_blk_vtx);
-}
-
-
-void
-PDM_dreorder_from_length
-(
- int              dim,
- PDM_g_num_t     *distrib_in,
- double          *length,
- PDM_g_num_t     *ln_to_gn,
- PDM_MPI_Comm     comm
-)
-{
-  int i_rank;
-  int n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  int dn_length = distrib_in[i_rank+1] - distrib_in[i_rank];
-
-  PDM_hilbert_code_t *tmp_hilbert_codes = NULL;
-  PDM_malloc(tmp_hilbert_codes, dn_length, PDM_hilbert_code_t);
-
-  for (int i = 0; i < dn_length; ++i) {
-    tmp_hilbert_codes [i] = length [i];
-  }
-
-  ///** Calcul des index des codes Hilbert **/
-  int *hilbert_order = NULL;
-  PDM_malloc(hilbert_order, dn_length, int);
-
-  for (int i = 0; i < dn_length; ++i) {
-    hilbert_order [i] = i;
-  }
-
-  assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  PDM_sort_double (tmp_hilbert_codes, hilbert_order, dn_length);
-
-  PDM_free(tmp_hilbert_codes);
-
-  PDM_hilbert_code_t *hilbert_codes_idx = NULL;
-  PDM_malloc(hilbert_codes_idx, n_rank+1, PDM_hilbert_code_t);
-
-  double *weight = PDM_array_const_double(dn_length, 1.);
-  PDM_hilbert_build_rank_index (dim,
-                                n_rank,
-                                dn_length,
-                                length,
-                                weight,
-                                hilbert_order,
-                                hilbert_codes_idx,
-                                comm);
-
-
-  PDM_free(weight);
-
-  /** Remplissage de cell_parts -> en fct des codes Hilbert **/
-  for(int i = 0; i < dn_length; ++i) {
-    size_t quantile = PDM_hilbert_quantile_search(n_rank,
-                                                  length[i],
-                                                  hilbert_codes_idx);
-    ln_to_gn [i] = (int) (quantile + 1); // Because ln_to_gn of part_to_block begin at 1
-  }
-
-  // part_to_block avec ln_to_gn 1 2 3 4 .... pdm_assembly_partition
-  // Puis on échange les hilbert_codes, qu'on retrie localement
-
-  PDM_g_num_t *distrib_rank = NULL;
-  PDM_malloc(distrib_rank, n_rank+1, PDM_g_num_t);
-  for(int i = 0; i < n_rank+1; ++i) {
-    distrib_rank[i] = i;
-  }
-
-  /*
-   * Each proc get all the entities affected to its partitions
-   */
-  PDM_part_to_block_t *ptb =
-   PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                             PDM_PART_TO_BLOCK_POST_NOTHING,
-                             1.,
-                             &ln_to_gn,
-                             distrib_rank,
-                             &dn_length,
-                             1,
-                             comm);
-  PDM_free(distrib_rank);
-
-  const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
-
-  // log_trace("n_vtx_block = %i | dn_length = %i \n", n_vtx_block, dn_length);
-
-  double *blk_hilbert_codes = NULL;
-  PDM_part_to_block_exch (ptb,
-                          sizeof(double),
-                          PDM_STRIDE_CST_INTERLACED,
-                          1,
-                          NULL,
-                (void **) &length,
-                          NULL,
-                (void **) &blk_hilbert_codes);
-
-  /* Resend */
-  for(int i = 0; i < dn_length; ++i) {
-    ln_to_gn [i] = distrib_in[i_rank] + i + 1; // Donc correspond a la numeration absolu initiale
-  }
-
-  PDM_g_num_t* blk_ln_to_gn;
-  PDM_part_to_block_exch (ptb,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          1,
-                          NULL,
-                (void **) &ln_to_gn,
-                          NULL,
-                (void **) &blk_ln_to_gn);
-
-  PDM_free(hilbert_codes_idx);
-  PDM_part_to_block_free(ptb);
-
-  /* Reorder locally */
-  assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  PDM_realloc(hilbert_order ,hilbert_order ,  n_vtx_block ,int);
-  for (int i = 0; i < n_vtx_block; ++i) {
-    hilbert_order [i] = i;
-  }
-  PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
-  //PDM_log_trace_array_double(blk_hilbert_codes, n_vtx_block, "tmp_edge_length : ");
-  PDM_free(blk_hilbert_codes);
-
-
-  /* Apply order to blk_ln_to_gn */
-  PDM_g_num_t *sorted_blk_ln_to_gn = NULL;
-  PDM_malloc(sorted_blk_ln_to_gn, n_vtx_block, PDM_g_num_t);
-  for(int i = 0; i < n_vtx_block; ++i) {
-    sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
-  }
-  PDM_free(blk_ln_to_gn);
-  PDM_free(hilbert_order);
-
-  PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
-                              (const PDM_g_num_t **)  &ln_to_gn,
-                                                      &dn_length,
-                                                      1,
-                                                      comm);
-
-  int stride_one = 1;
-  PDM_block_to_part_exch_in_place(btp,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_CST_INTERLACED,
-                         &stride_one,
-              (void *)   sorted_blk_ln_to_gn,
-                         NULL,
-              (void **) &ln_to_gn);
-  PDM_block_to_part_free(btp);
-  PDM_free(sorted_blk_ln_to_gn);
-  PDM_free(distrib_blk_vtx);
 }
 
 
