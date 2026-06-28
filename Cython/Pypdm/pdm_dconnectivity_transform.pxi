@@ -30,13 +30,6 @@ cdef extern from "pdm_distrib.h":
 
 cdef extern from "pdm_dgeom_elem.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_compute_dface_normal(int          *dface_vtx_idx,
-                                  PDM_g_num_t  *dface_vtx,
-                                  int           dn_face,
-                                  PDM_g_num_t  *dvtx_distrib,
-                                  double       *dvtx_coord,
-                                  double       *dface_normal,
-                                  PDM_MPI_Comm  comm)
     void PDM_compute_vtx_characteristic_length(PDM_MPI_Comm    comm,
                                                int             dn_face,
                                                int             dn_edge,
@@ -47,29 +40,6 @@ cdef extern from "pdm_dgeom_elem.h":
                                                double         *dvtx_coord,
                                                double        **dchar_length_out);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-# ===================================================================================
-def compute_dface_normal(MPI.Comm                                      comm,
-                         NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_idx,
-                         NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_vtx,
-                         int                                           dn_face,
-                         NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dvtx_distrib,
-                         NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord   not None,
-                         NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dface_normal not None):
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    # > Convert mpi4py -> PDM_MPI
-    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    PDM_compute_dface_normal(<int         *> dface_vtx_idx.data,
-                             <PDM_g_num_t *> dface_vtx.data,
-                             dn_face,
-                             <PDM_g_num_t *> dvtx_distrib.data,
-                             <double      *> dvtx_coord.data,
-                             <double      *> dface_normal.data,
-                             PDMC)
 
 # ===================================================================================
 def compute_vtx_characteristic_length(MPI.Comm                                      comm,
