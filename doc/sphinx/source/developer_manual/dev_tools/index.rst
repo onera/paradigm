@@ -27,7 +27,7 @@ Developer tools
   :maxdepth: 1
   :hidden:
 
-  exchange_helper
+  exch_helper
   timer
 
 
