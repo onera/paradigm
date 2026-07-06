@@ -3,6 +3,9 @@
 # ------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 cmake_policy(SET CMP0074 NEW) # force find_package to take <PackageName>_ROOT variables into account
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
+  cmake_policy(SET CMP0144 NEW) # force find_package to take <PACKAGENAME>_ROOT variables into account
+endif()
 
 if (NOT DEFINED PROJECT_ROOT)
   set(PROJECT_ROOT ${CMAKE_SOURCE_DIR} CACHE PATH "Root directory, where the submodules are populated")
