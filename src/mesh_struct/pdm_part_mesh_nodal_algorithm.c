@@ -513,15 +513,35 @@ PDM_part_mesh_nodal_gnum_vtx_compute_from_part_comm_graph
 {
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
 
-  int  pmn_vtx_gnum_empty = 1;
+  int  pmn_vtx_gnum_empty = -1;
   int *n_vtx = NULL;
   PDM_malloc(n_vtx, n_part, int);
   for (int i_part=0; i_part<n_part; ++i_part) {
+
     n_vtx[i_part] = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
     PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_KEEP);
-    if (vtx_gnum != NULL) {
-      pmn_vtx_gnum_empty = 0;
+
+    if (n_vtx[i_part] != 0) { // Empty partition are ignored
+      if (pmn_vtx_gnum_empty==-1) { // Init pmn_vtx_gnum_empty var
+        pmn_vtx_gnum_empty = vtx_gnum == NULL;
+      }
+      else {
+        if (pmn_vtx_gnum_empty != (vtx_gnum == NULL)) { // If incoherence over partition -> error
+          PDM_error("Partition %d has NULL vertex gnum while other have non NULL one.");
+        }
+      }
     }
+  }
+  if (pmn_vtx_gnum_empty == -1) { // if partitions are empty its ok
+    pmn_vtx_gnum_empty = 1;
+  }
+  int g_pmn_vtx_gnum_empty = -1;
+  PDM_MPI_Allreduce(&pmn_vtx_gnum_empty, &g_pmn_vtx_gnum_empty, 1, PDM_MPI_INT, PDM_MPI_MAX, pmn->comm);
+  if (pmn_vtx_gnum_empty != g_pmn_vtx_gnum_empty) {
+    PDM_error("Some ranks have vertex gnum while other not.");
+  }
+  if (pmn_vtx_gnum_empty == -1) { // Mesh is empty
+    return;
   }
 
   /**
@@ -566,6 +586,51 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
   int  n_section  = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (pmn, geom_kind);
   int *section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn, geom_kind);
 
+  int  pmn_elmt_gnum_empty = -1;
+  for(int i_section = 0; i_section < n_section; ++i_section) {
+    int id_section_in_geom_kind = section_id[i_section];
+    int id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(pmn,
+                                                                       geom_kind,
+                                                                       id_section_in_geom_kind);
+    for (int i_part=0; i_part<n_part; ++i_part) {
+      int n_elmt = PDM_part_mesh_nodal_section_n_elt_get(pmn, id_section, i_part);
+
+      int         *elmt_vtx    = NULL;
+      PDM_g_num_t *elmt_gnum   = NULL;
+      int         *parent_num  = NULL;
+      PDM_g_num_t *parent_gnum = NULL;
+      PDM_part_mesh_nodal_elmts_section_std_get(pmne,
+                                                id_section_in_geom_kind,
+                                                i_part,
+                                                &elmt_vtx,
+                                                &elmt_gnum,
+                                                &parent_num,
+                                                &parent_gnum,
+                                                PDM_OWNERSHIP_KEEP);
+      if (n_elmt != 0) { // Empty partition are ignored
+        if (pmn_elmt_gnum_empty==-1) { // Init pmn_elmt_gnum_empty var
+          pmn_elmt_gnum_empty = elmt_gnum == NULL;
+        }
+        else {
+          if (pmn_elmt_gnum_empty != (elmt_gnum == NULL)) { // If incoherence over partition -> error
+            PDM_error("Partition %d has NULL element gnum while other have non NULL one.");
+          }
+        }
+      }
+    }
+  }
+  if (pmn_elmt_gnum_empty == -1) { // if partitions are empty its ok
+    pmn_elmt_gnum_empty = 1;
+  }
+  int g_pmn_elmt_gnum_empty = -1;
+  PDM_MPI_Allreduce(&pmn_elmt_gnum_empty, &g_pmn_elmt_gnum_empty, 1, PDM_MPI_INT, PDM_MPI_MAX, pmn->comm);
+  if (pmn_elmt_gnum_empty != g_pmn_elmt_gnum_empty) {
+    PDM_error("Some ranks have element gnum while other not.");
+  }
+  if (pmn_elmt_gnum_empty == -1) { // Mesh is empty
+    return;
+  }
+
   int *n_elmt_tot = NULL;
   PDM_malloc(n_elmt_tot, n_part, int);
   for (int i_part=0; i_part<n_part; ++i_part) {
@@ -595,7 +660,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
                                                                        geom_kind,
                                                                        id_section_in_geom_kind);
 
-    /* We need to recompute an gnum for only current section */
+    /* We need to recompute global IDs within current section */
     PDM_gen_gnum_t *gen_gnum_section = PDM_gnum_create(3, n_part, PDM_TRUE, 1e-6, pmn->comm, PDM_OWNERSHIP_USER);
 
     PDM_g_num_t **section_elmt_ln_to_gn = NULL;
@@ -615,16 +680,15 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
                                                 &parent_num,
                                                 &parent_gnum,
                                                 PDM_OWNERSHIP_KEEP);
-      /* Dans notre contexte normalement tout est null */
-      if (section_elmt_ln_to_gn[i_part] != NULL ||
-          parent_num                    != NULL ||
-          parent_gnum                   != NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "part_mesh_nodal with defined section_elmt_ln_to_gn, parent_num or parent_gnum are not yet managed\n");
-      }
 
       PDM_malloc(section_elmt_ln_to_gn[i_part], n_elmt, PDM_g_num_t);
       for(int i = 0; i < n_elmt; ++i) {
-        section_elmt_ln_to_gn[i_part][i] = elmt_ln_to_gn[i_part][i+shift_elt[i_part]];
+        if (parent_num!=NULL) {
+          section_elmt_ln_to_gn[i_part][i] = elmt_ln_to_gn[i_part][parent_num[i]];
+        }
+        else {
+          section_elmt_ln_to_gn[i_part][i] = elmt_ln_to_gn[i_part][i+shift_elt[i_part]];
+        }
       }
       PDM_gnum_set_from_parents(gen_gnum_section,
                                 i_part,
