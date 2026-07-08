@@ -870,16 +870,6 @@ PDM_transform_to_parent_gnum
   PDM_free(block_parent);
 }
 
-
-PDM_closest_point_t *
-PDM_closest_points_closest_transfert
-(
-  PDM_closest_point_t  *cls
-)
-{
-  return cls;
-}
-
 int
 PDM_closest_points_n_tgt_get
 (

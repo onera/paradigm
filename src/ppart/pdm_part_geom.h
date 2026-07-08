@@ -82,61 +82,104 @@ PDM_dcompute_cell_center
 void
 PDM_part_entity_geom
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const PDM_g_num_t   dn_entity,
- const double       *dentity_coord,
- const double       *dentity_weight,
-       int          *dentity_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const PDM_g_num_t   dn_entity,
+  const double       *dentity_coord,
+  const double       *dentity_weight,
+        int          *dentity_part
 );
 
-
+/**
+ * \brief  Geometric partitioning of 0D entities (vertices/points) based on their spatial coordinates
+ *
+ * \param [in]  method       Geometric partitioning method/algorithm (\ref PDM_part_geom_t )
+ * \param [in]  n_part       Local number of requested partitions
+ * \param [in]  comm         MPI communicator
+ * \param [in]  dn_vtx       Number of vertices on the current MPI rank
+ * \param [in]  dvtx_coord   Vertices coordinates (size: 3 * dn_vtx)
+ * \param [in]  dvtx_weight  Weights associated with vertices for load-balancing (size: dn_vtx, can be NULL)
+ * \param [out] dvtx_part    Computed partition IDs assigned to each vertex (size: dn_vtx)
+ *
+ */
 void
 PDM_part_geom_0d
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const int           dn_vtx,
- const double       *dvtx_coord,
- const double       *dvtx_weight,
-       int          *dvtx_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const int           dn_vtx,
+  const double       *dvtx_coord,
+  const double       *dvtx_weight,
+        int          *dvtx_part
 );
 
 
+/**
+ * \brief  Geometric partitioning of 1D entities (edges) based on their computed center coordinates
+ *
+ * \param [in]  method        Geometric partitioning method/algorithm (e.g., RCB, RIB, Hilbert)
+ * \param [in]  n_part        Local number of requested partitions
+ * \param [in]  comm          MPI communicator
+ * \param [in]  dn_edge       Number of edges on the current MPI rank
+ * \param [in]  dn_vtx        Number of vertices on the current MPI rank
+ * \param [in]  dedge_vtx     Distributed edge-vertex connectivity array containing global vertex IDs (2 vertices per edge, size: 2 * dn_edge)
+ * \param [in]  dvtx_coord    Vertices coordinates (size: 3 * dn_vtx)
+ * \param [in]  dedge_weight  Weights associated with edges for load-balancing (size: dn_edge, can be NULL)
+ * \param [out] dedge_part    Computed partition IDs assigned to each edge (size: dn_edge, pre-allocated by caller)
+ *
+ */
 void
 PDM_part_geom_1d
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const int           dn_edge,
- const int           dn_vtx,
- const PDM_g_num_t  *dedge_vtx,
- const double       *dvtx_coord,
- const double       *dedge_weight,
-       int          *dedge_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const int           dn_edge,
+  const int           dn_vtx,
+  const PDM_g_num_t  *dedge_vtx,
+  const double       *dvtx_coord,
+  const double       *dedge_weight,
+        int          *dedge_part
 );
 
-
+/**
+ * \brief  Geometric partitioning of 2D entities (faces) based on their computed center coordinates
+ *
+ * \param [in]  method          Geometric partitioning method/algorithm (e.g., RCB, RIB, Hilbert)
+ * \param [in]  n_part          Local number of requested partitions
+ * \param [in]  comm            MPI communicator
+ * \param [in]  dn_face         Number of faces on the current MPI rank
+ * \param [in]  dn_edge         Number of edges on the current MPI rank
+ * \param [in]  dn_vtx          Number of vertices on the current MPI rank
+ * \param [in]  dface_vtx_idx   Index for block-distributed face->vertex connectivity (can be NULL)
+ * \param [in]  dface_vtx       Block-distributed face->vertex connectivity (can be NULL)
+ * \param [in]  dface_edge_idx  Index array of distributed face-edge connectivity (used if dface_vtx_idx is NULL)
+ * \param [in]  dface_edge      Distributed face-edge connectivity array containing global edge IDs (used if dface_vtx_idx is NULL)
+ * \param [in]  dedge_vtx       Distributed edge-vertex connectivity array containing global vertex IDs (2 vertices per edge, used if dface_vtx_idx is NULL)
+ * \param [in]  dvtx_coord      Vertices coordinates (size: 3 * dn_vtx)
+ * \param [in]  dface_weight    Weights associated with faces for load-balancing (size: dn_face, can be NULL)
+ * \param [out] dface_part      Computed partition IDs assigned to each local face (size: dn_face, pre-allocated by caller)
+ *
+ */
 void
 PDM_part_geom_2d
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const int           dn_face,
- const int           dn_edge,
- const int           dn_vtx,
- const int          *dface_vtx_idx,
- const PDM_g_num_t  *dface_vtx,
- const int          *dface_edge_idx,
- const PDM_g_num_t  *dface_edge,
- const PDM_g_num_t  *dedge_vtx,
- const double       *dvtx_coord,
- const double       *dface_weight,
-       int          *dface_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const int           dn_face,
+  const int           dn_edge,
+  const int           dn_vtx,
+  const int          *dface_vtx_idx,
+  const PDM_g_num_t  *dface_vtx,
+  const int          *dface_edge_idx,
+  const PDM_g_num_t  *dface_edge,
+  const PDM_g_num_t  *dedge_vtx,
+  const double       *dvtx_coord,
+  const double       *dface_weight,
+        int          *dface_part
 );
 
 /**
@@ -168,43 +211,20 @@ PDM_part_geom_2d
 void
 PDM_part_geom
 (
- PDM_part_geom_t     method,
- const int           n_part,
- const PDM_MPI_Comm  comm,
- const int           dn_cell,
- const int          *dcell_face_idx,
- const PDM_g_num_t  *dcell_face,
- const int          *dcell_weight,
- const int          *dface_vtx_idx,
- const PDM_g_num_t  *dface_vtx,
- const PDM_g_num_t  *dface_proc,
- const double       *dvtx_coord,
- const PDM_g_num_t  *dvtx_proc,
- int                *dcell_part
+  PDM_part_geom_t     method,
+  const int           n_part,
+  const PDM_MPI_Comm  comm,
+  const int           dn_cell,
+  const int          *dcell_face_idx,
+  const PDM_g_num_t  *dcell_face,
+  const int          *dcell_weight,
+  const int          *dface_vtx_idx,
+  const PDM_g_num_t  *dface_vtx,
+  const PDM_g_num_t  *dface_proc,
+  const double       *dvtx_coord,
+  const PDM_g_num_t  *dvtx_proc,
+  int                *dcell_part
 );
-
-
-void
-PDM_dreorder_from_coords
-(
- PDM_part_geom_t  method,
- int              dim,
- PDM_g_num_t     *distrib_vtx,
- double          *dvtx_coord,
- PDM_g_num_t     *vtx_ln_to_gn,
- PDM_MPI_Comm     comm
-);
-
-void
-PDM_dreorder_from_length
-(
- int              dim,
- PDM_g_num_t     *distrib_in,
- double          *length,
- PDM_g_num_t     *ln_to_gn,
- PDM_MPI_Comm     comm
-);
-
 
 /**
  * \brief Compute edge centers
