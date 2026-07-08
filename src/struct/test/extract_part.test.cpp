@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <vector>
 #include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
@@ -2177,3 +2178,133 @@ if __name__ == "__main__":
   with open("extract_part_unit_test.c", "w") as out:
     out.write(s)
 */
+
+
+
+MPI_TEST_CASE("[pdm_extract_part] - 1p - nodal with empty lower dimension", 1) {
+
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  /* Generate mesh */
+  std::vector<double> vtx_coord = {
+    0., 0., 0.,
+    1., 0., 0.,
+    2., 0., 0.,
+    0., 1., 0.,
+    1., 1., 0.,
+    2., 1., 0.,
+    0., 2., 0.,
+    1., 2., 0.,
+    2., 2., 0.
+  };
+
+  std::vector<PDM_g_num_t> vtx_ln_to_gn = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+  int n_vtx = vtx_ln_to_gn.size();
+
+  std::vector<int> quad_vtx = {
+    1, 2, 5, 4,
+    2, 3, 6, 5,
+    4, 5, 8, 7,
+    5, 6, 9, 8
+  };
+
+  std::vector<PDM_g_num_t> quad_ln_to_gn = {1, 2, 3, 4};
+
+  int n_quad = quad_ln_to_gn.size();
+
+
+
+  /* As Part Mesh Nodal */
+  PDM_part_mesh_nodal_t *pmn = PDM_part_mesh_nodal_create(2, 1, comm);
+
+  PDM_part_mesh_nodal_coord_set(pmn,
+                                0,
+                                n_vtx,
+                                vtx_coord.data(),
+                                PDM_OWNERSHIP_USER);
+
+  PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                   0,
+                                   vtx_ln_to_gn.data(),
+                                   PDM_OWNERSHIP_USER);
+
+
+  int id_quad = PDM_part_mesh_nodal_section_add(pmn, PDM_MESH_NODAL_QUAD4);
+
+  PDM_part_mesh_nodal_section_std_set(pmn,
+                                      id_quad,
+                                      0,
+                                      n_quad,
+                                      quad_vtx.data(),
+                                      quad_ln_to_gn.data(),
+                                      NULL,
+                                      NULL,
+                                      PDM_OWNERSHIP_USER);
+
+
+  /* Extract left column */
+  PDM_extract_part_t *extrp = PDM_extract_part_create(2,
+                                                      1,
+                                                      1,
+                                                      PDM_EXTRACT_PART_KIND_LOCAL,
+                                                      PDM_SPLIT_DUAL_WITH_IMPLICIT,
+                                                      PDM_FALSE,
+                                                      PDM_OWNERSHIP_KEEP,
+                                                      comm);
+
+  PDM_extract_part_part_nodal_set(extrp, pmn);
+
+
+  std::vector<int> extract_lnum = {1, 3};
+  int n_extract = extract_lnum.size();
+
+  PDM_extract_part_selected_lnum_set(extrp,
+                                     0,
+                                     n_extract,
+                                     extract_lnum.data(),
+                                     PDM_OWNERSHIP_USER);
+
+  PDM_extract_part_compute(extrp);
+
+  /* Get extraction and check */
+  int *extract_parent = NULL;
+
+  // Faces
+  int n_extract_face = PDM_extract_part_parent_lnum_get(extrp,
+                                                        0,
+                                                        PDM_MESH_ENTITY_FACE,
+                                                        &extract_parent,
+                                                        PDM_OWNERSHIP_BAD_VALUE);
+
+  CHECK(n_extract_face == n_extract);
+  for (int i = 0; i < n_extract_face; i++) {
+    CHECK(extract_parent[i] == extract_lnum[i]);
+  }
+
+  // Edges
+  int n_extract_edge = PDM_extract_part_parent_lnum_get(extrp,
+                                                        0,
+                                                        PDM_MESH_ENTITY_EDGE,
+                                                        &extract_parent,
+                                                        PDM_OWNERSHIP_BAD_VALUE);
+  CHECK(n_extract_edge == 0);
+  CHECK(extract_parent == NULL);
+
+  // Vertices
+  std::vector<int> exp_extract_vtx = {1, 2, 5, 4, 8, 7};
+  int n_extract_vtx = PDM_extract_part_parent_lnum_get(extrp,
+                                                       0,
+                                                       PDM_MESH_ENTITY_VTX,
+                                                       &extract_parent,
+                                                       PDM_OWNERSHIP_BAD_VALUE);
+
+  CHECK(n_extract_vtx == exp_extract_vtx.size());
+  for (int i = 0; i < n_extract_vtx; i++) {
+    CHECK(extract_parent[i] == exp_extract_vtx[i]);
+  }
+
+  /* Free memory */
+  PDM_extract_part_free(extrp);
+  PDM_part_mesh_nodal_free(pmn);
+}
