@@ -519,7 +519,7 @@ PDM_part_mesh_nodal_gnum_vtx_compute_from_part_comm_graph
   for (int i_part=0; i_part<n_part; ++i_part) {
 
     n_vtx[i_part] = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
-    PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_KEEP);
+    PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
     if (n_vtx[i_part] != 0) { // Empty partition are ignored
       if (pmn_vtx_gnum_empty==-1) { // Init pmn_vtx_gnum_empty var
@@ -540,7 +540,8 @@ PDM_part_mesh_nodal_gnum_vtx_compute_from_part_comm_graph
   if (pmn_vtx_gnum_empty != g_pmn_vtx_gnum_empty) {
     PDM_error("Some ranks have vertex gnum while other not.");
   }
-  if (pmn_vtx_gnum_empty == -1) { // Mesh is empty
+  if (pmn_vtx_gnum_empty != 1) { // Mesh is empty or gnum
+    PDM_free(n_vtx);
     return;
   }
 
@@ -606,7 +607,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
                                                 &elmt_gnum,
                                                 &parent_num,
                                                 &parent_gnum,
-                                                PDM_OWNERSHIP_KEEP);
+                                                PDM_OWNERSHIP_BAD_VALUE);
       if (n_elmt != 0) { // Empty partition are ignored
         if (pmn_elmt_gnum_empty==-1) { // Init pmn_elmt_gnum_empty var
           pmn_elmt_gnum_empty = elmt_gnum == NULL;
@@ -627,7 +628,7 @@ PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph
   if (pmn_elmt_gnum_empty != g_pmn_elmt_gnum_empty) {
     PDM_error("Some ranks have element gnum while other not.");
   }
-  if (pmn_elmt_gnum_empty == -1) { // Mesh is empty
+  if (pmn_elmt_gnum_empty != 1) { // Mesh is empty or gnum
     return;
   }
 
