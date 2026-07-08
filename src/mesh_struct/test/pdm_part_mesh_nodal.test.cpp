@@ -1,6 +1,7 @@
 
 #include <vector>
 #include <stddef.h>
+#include <cstring>
 #include "pdm_doctest.h"
 #include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
@@ -112,7 +113,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts] Constructor",1) {
 
 
 MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner", 2) {
-  
+
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
@@ -135,12 +136,12 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
                                                           1, 1, 1, 1, 0, 1, 1, 0, 0, 0},
                                                          {0, 0, 1, 0, 1, 0, 1, 1, 1, 0,
                                                           1, 1, 0, 0, 1, 1, 0, 1, 1, 1}};
-  std::vector<std::vector<int>> expected_group_entity = {{  4,  6, -1, 2, -1,  8, -1, -1, 10,  1, 
+  std::vector<std::vector<int>> expected_group_entity = {{  4,  6, -1, 2, -1,  8, -1, -1, 10,  1,
                                                            16, 12,  7, 3, -1, 18,  9, -1, -1, -1},
                                                          {-1, -1, 13, -1, 15, -1, 11, 17,  1, -1,
                                                            7,  3, -1, -1, 10,  9, -1, 16, 12, 18}};
 
-  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL; 
+  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL;
   pmne_corner  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_CORNER);
   int n_corner = PDM_part_mesh_nodal_elmts_n_group_get(pmne_corner);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_corner);
@@ -170,7 +171,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
 
 
 MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge", 2) {
-  
+
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
@@ -194,7 +195,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
   std::vector<std::vector<int>> expected_group_entity = {{ 2,  4, -1,  1, -1,  5, -1, -1,  3, -1, -1,  6},
                                                          {-1, -1,  4, -1,  5, -1,  3,  6, -1,  2,  1, -1}};
 
-  PDM_part_mesh_nodal_elmts_t *pmne_ridge = NULL; 
+  PDM_part_mesh_nodal_elmts_t *pmne_ridge = NULL;
   pmne_ridge  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_RIDGE);
   int n_ridge = PDM_part_mesh_nodal_elmts_n_group_get(pmne_ridge);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_ridge);
@@ -224,7 +225,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
 }
 
 MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 2) {
-  
+
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
@@ -248,7 +249,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 
   std::vector<std::vector<int>> expected_group_entity = {{ 1,  3,  7,  9, -1, -1, -1, -1},
                                                          {-1, -1, -1, -1,  10, 12, 16, 18}};
 
-  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL; 
+  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL;
   pmne_corner   = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_CORNER);
   int n_corner  = PDM_part_mesh_nodal_elmts_n_group_get(pmne_corner);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_corner);
@@ -396,6 +397,211 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_complete_part_comm_grap
 
 
   PDM_part_comm_graph_free(pcg_face);
+
+  PDM_part_mesh_nodal_free(pmn);
+}
+
+
+MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph", 2) {
+  /**
+   *
+   *                Rank0     |     Rank1     |   gnums vtx   |   gnums tri
+   *                  ↓       |       ↓       |       ↓       |      ↓
+   *                          |   4 x---x 5   |     5 / 6     |
+   *                  4       |      \2/      |               |      3
+   *                  x       |       x 3     |       4       |
+   *                 /2\      |      /1\      |               |      2
+   *              2 x---x 3   |   1 x---x 2   |     2 / 3     |
+   *                 \1/      |               |               |      1
+   *     y            x       |               |       1       |
+   *     ↑            1       |               |               |
+   *     o → x
+   */
+  int i_rank = -1;
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /**
+   * Create mesh
+   */
+  PDM_part_mesh_nodal_t *pmn = PDM_part_mesh_nodal_create(2, 1, pdm_comm);
+
+  int n_vtx = (i_rank==0) ? 4 : 5;
+  std::vector<std::vector<double>> r_coords = {{0.,0.,0., -1.,1.,0., 1.,1.,0.,  0.,2.,0.},
+                                               {-1.,1.,0., 1.,1.,0.,  0.,2.,0., -1.,2.,0., 1.,2.,0.}};
+  std::vector<std::vector<PDM_g_num_t>> r_vtx_gnum = {{10, 20, 30, 40},
+                                                      {20, 30, 40, 50, 60}};
+  int n_tri = 2;
+  std::vector<std::vector<int>> r_tri_vtx = {{1,2,3, 3,2,4},
+                                             {2,1,3, 3,4,5}};
+  std::vector<std::vector<int>> r_tri_parent_num = {{1,0},
+                                                    {1,0}};
+  std::vector<std::vector<PDM_g_num_t>> r_tri_gnum = {{10, 20},
+                                                      {20, 30}};
+  std::vector<std::vector<PDM_g_num_t>> r_tri_parent_num_gnum = {{20, 10},
+                                                                 {10, 30}};
+  int n_tri_group = (i_rank==0) ? 1 : 2;
+  std::vector<std::vector<int>> r_tri_group = {{2},
+                                               {1,2}};
+  std::vector<std::vector<PDM_g_num_t>> r_tri_group_gnum = {{10},
+                                                            {10, 20}};
+  int n_graph = 3;
+  std::vector<std::vector<int>> r_vtx_graph = {{2, 1, 1, 1,
+                                                3, 1, 1, 2,
+                                                4, 1, 1, 3},
+                                               {1, 0, 1, 2,
+                                                2, 0, 1, 3,
+                                                3, 0, 1, 4}};
+  int *vtx_graph = r_vtx_graph[i_rank].data();
+  PDM_part_comm_graph_t *pcg_vtx = PDM_part_comm_graph_create(1,
+                                                              &n_graph,
+                                                     (int **) &vtx_graph,
+                                                              PDM_OWNERSHIP_USER,
+                                                              pdm_comm);
+  PDM_part_mesh_nodal_coord_set(pmn,
+                                0,
+                                n_vtx,
+                     (double *) r_coords[i_rank].data(),
+                                PDM_OWNERSHIP_USER);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_set(pmn, pcg_vtx, PDM_OWNERSHIP_KEEP);
+
+  int tri_section = PDM_part_mesh_nodal_section_add(pmn, PDM_MESH_NODAL_TRIA3);
+  PDM_part_mesh_nodal_n_group_set(pmn, PDM_GEOMETRY_KIND_SURFACIC, 1);
+  static PDM_g_num_t expected_vtx_gnum_p0[4];
+  static PDM_g_num_t expected_vtx_gnum_p1[5];
+  static PDM_g_num_t expected_tri_gnum_p0[2];
+  static PDM_g_num_t expected_tri_gnum_p1[2];
+  static PDM_g_num_t expected_tri_group_gnum_p0[1];
+  static PDM_g_num_t expected_tri_group_gnum_p1[2];
+
+  SUBCASE("compute vtx gnum - compute tri gnum - no parent_num") {
+
+    PDM_g_num_t tmp1[] = {1, 2, 3, 4};
+    PDM_g_num_t tmp2[] = {2, 3, 4, 5, 6};
+    memcpy(expected_vtx_gnum_p0, tmp1, sizeof(expected_vtx_gnum_p0));
+    memcpy(expected_vtx_gnum_p1, tmp2, sizeof(expected_vtx_gnum_p1));
+
+    PDM_g_num_t tmp3[] = {1, 2};
+    PDM_g_num_t tmp4[] = {2, 3};
+    memcpy(expected_tri_gnum_p0, tmp3, sizeof(expected_tri_gnum_p0));
+    memcpy(expected_tri_gnum_p1, tmp4, sizeof(expected_tri_gnum_p1));
+
+    PDM_g_num_t tmp5[] = {1};
+    PDM_g_num_t tmp6[] = {1, 2};
+    memcpy(expected_tri_group_gnum_p0, tmp5, sizeof(expected_tri_group_gnum_p0));
+    memcpy(expected_tri_group_gnum_p1, tmp6, sizeof(expected_tri_group_gnum_p1));
+
+    PDM_part_mesh_nodal_section_std_set(pmn, tri_section, 0, n_tri,
+                                (int *) r_tri_vtx[i_rank].data(), NULL,
+                                        NULL, NULL,
+                                        PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_group_set(pmn, PDM_GEOMETRY_KIND_SURFACIC,
+                                  0, // i_part
+                                  0, // i_group
+                                  n_tri_group,
+                          (int *) r_tri_group[i_rank].data(),
+                                  NULL, // group gnum
+                                  PDM_OWNERSHIP_USER);
+
+  }
+
+  SUBCASE("compute vtx gnum - compute tri gnum - with parent_num") {
+
+    PDM_g_num_t tmp1[] = {1, 2, 3, 4};
+    PDM_g_num_t tmp2[] = {2, 3, 4, 5, 6};
+    memcpy(expected_vtx_gnum_p0, tmp1, sizeof(expected_vtx_gnum_p0));
+    memcpy(expected_vtx_gnum_p1, tmp2, sizeof(expected_vtx_gnum_p1));
+
+    PDM_g_num_t tmp3[] = {2, 1};
+    PDM_g_num_t tmp4[] = {1, 3};
+    memcpy(expected_tri_gnum_p0, tmp3, sizeof(expected_tri_gnum_p0));
+    memcpy(expected_tri_gnum_p1, tmp4, sizeof(expected_tri_gnum_p1));
+
+    PDM_g_num_t tmp5[] = {2};
+    PDM_g_num_t tmp6[] = {3, 1};
+    memcpy(expected_tri_group_gnum_p0, tmp5, sizeof(expected_tri_group_gnum_p0));
+    memcpy(expected_tri_group_gnum_p1, tmp6, sizeof(expected_tri_group_gnum_p1));
+
+    PDM_part_mesh_nodal_section_std_set(pmn, tri_section, 0, n_tri,
+                                (int *) r_tri_vtx       [i_rank].data(), NULL,
+                                (int *) r_tri_parent_num[i_rank].data(), NULL,
+                                        PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_group_set(pmn, PDM_GEOMETRY_KIND_SURFACIC,
+                                  0, // i_part
+                                  0, // i_group
+                                  n_tri_group,
+                          (int *) r_tri_group[i_rank].data(),
+                                  NULL, // group gnum
+                                  PDM_OWNERSHIP_USER);
+  }
+
+  SUBCASE("vtx gnum given - tri gnum given") {
+
+    PDM_part_mesh_nodal_vtx_gnum_set(pmn, 0,
+                     (PDM_g_num_t *) r_vtx_gnum[i_rank].data(),
+                                     PDM_OWNERSHIP_USER);
+
+    memcpy(expected_vtx_gnum_p0, r_vtx_gnum[0].data(), sizeof(expected_vtx_gnum_p0));
+    memcpy(expected_vtx_gnum_p1, r_vtx_gnum[1].data(), sizeof(expected_vtx_gnum_p1));
+
+    memcpy(expected_tri_gnum_p0, r_tri_gnum[0].data(), sizeof(expected_tri_gnum_p0));
+    memcpy(expected_tri_gnum_p1, r_tri_gnum[1].data(), sizeof(expected_tri_gnum_p1));
+
+    memcpy(expected_tri_group_gnum_p0, r_tri_group_gnum[0].data(), sizeof(expected_tri_group_gnum_p0));
+    memcpy(expected_tri_group_gnum_p1, r_tri_group_gnum[1].data(), sizeof(expected_tri_group_gnum_p1));
+
+    PDM_part_mesh_nodal_section_std_set(pmn, tri_section, 0, n_tri,
+                                (int *) r_tri_vtx            [i_rank].data(),
+                        (PDM_g_num_t *) r_tri_gnum           [i_rank].data(),
+                                (int *) r_tri_parent_num     [i_rank].data(),
+                        (PDM_g_num_t *) r_tri_parent_num_gnum[i_rank].data(),
+                                        // NULL,
+                                        PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_group_set(pmn, PDM_GEOMETRY_KIND_SURFACIC,
+                                  0, // i_part
+                                  0, // i_group
+                                  n_tri_group,
+                          (int *) r_tri_group     [i_rank].data(),
+                  (PDM_g_num_t *) r_tri_group_gnum[i_rank].data(), // group gnum
+                                  PDM_OWNERSHIP_USER);
+
+  }
+
+  /**
+   * Deduce gnums from pmn->pcgs
+   */
+  PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+
+  PDM_part_mesh_nodal_gnum_vtx_compute_from_part_comm_graph(pmn);
+  PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
+
+  PDM_part_mesh_nodal_gnum_compute_from_part_comm_graph(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+  PDM_g_num_t *tri_gnum = PDM_part_mesh_nodal_g_num_get(pmn, tri_section, 0, PDM_OWNERSHIP_BAD_VALUE);
+
+  int          __n_tri_group  = 0;
+  int         *__tri_group    = NULL;
+  PDM_g_num_t *tri_group_gnum = NULL;
+  PDM_part_mesh_nodal_group_get(
+    pmn, PDM_GEOMETRY_KIND_SURFACIC,
+    0, // i_part
+    0, // i_group,
+    &__n_tri_group,
+    &__tri_group,
+    &tri_group_gnum,
+    PDM_OWNERSHIP_BAD_VALUE
+  );
+
+  /**
+   * Check result
+   */
+  MPI_CHECK_EQ_C_ARRAY(0, vtx_gnum, expected_vtx_gnum_p0, n_vtx);
+  MPI_CHECK_EQ_C_ARRAY(1, vtx_gnum, expected_vtx_gnum_p1, n_vtx);
+
+  MPI_CHECK_EQ_C_ARRAY(0, tri_gnum, expected_tri_gnum_p0, n_tri);
+  MPI_CHECK_EQ_C_ARRAY(1, tri_gnum, expected_tri_gnum_p1, n_tri);
+
+  MPI_CHECK_EQ_C_ARRAY(0, tri_group_gnum, expected_tri_group_gnum_p0, n_tri_group);
+  MPI_CHECK_EQ_C_ARRAY(1, tri_group_gnum, expected_tri_group_gnum_p1, n_tri_group);
 
   PDM_part_mesh_nodal_free(pmn);
 }

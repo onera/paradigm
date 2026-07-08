@@ -927,7 +927,7 @@ PDM_part_mesh_nodal_free
 
   if (pmn->vtx != NULL) {
     for (int i_part = 0; i_part < pmn->n_part; i_part++) {
-      _vtx_free (pmn->vtx[i_part]);
+      _vtx_free(pmn->vtx[i_part]);
       PDM_free(pmn->vtx[i_part]);
     }
 
