@@ -5637,7 +5637,7 @@ _argmax
  )
 {
   double amax = -HUGE_VAL;
-  int    imax = -1;
+  int    imax = 0;
   for (int i = 0; i < n; i++) {
     if (a[i] > amax) {
       amax = a[i];
@@ -6535,7 +6535,7 @@ _compute_uvw_ho
           return 1;
         }
 
-        double child_uvw[2];
+        double child_uvw[3];
         _init_uvw(child_elt_type, child_uvw);
         int child_converged = _compute_uvw_ho(child_elt_type,
                                               order,
