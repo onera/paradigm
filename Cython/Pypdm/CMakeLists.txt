@@ -43,7 +43,11 @@ set_target_properties(Pypdm PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT
 
 target_link_libraries(Pypdm PRIVATE pdm_shared)
 
-set (SITE_PACKAGES_PDM "${CMAKE_INSTALL_PREFIX}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/Pypdm")
+if (PYTHON_FLAT_INSTALL)
+  set (SITE_PACKAGES_PDM "${CMAKE_INSTALL_PREFIX}/Pypdm")
+else()
+  set (SITE_PACKAGES_PDM "${CMAKE_INSTALL_PREFIX}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/Pypdm")
+endif()
 
 if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
     (CMAKE_C_COMPILER_ID STREQUAL "Intel") OR
