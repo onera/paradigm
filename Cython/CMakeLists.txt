@@ -31,6 +31,7 @@ if (PDM_ENABLE_EXTENSION_PDMA)
 else ()
   set(PYX_PDM_HAS_PDMA False)
   set(COMMENT_NOT_PDMA "\#")
+  set(COMMENT_NOT_ANISO_AGGLO "\#")
 endif()
 
 set (include_dirs "")
