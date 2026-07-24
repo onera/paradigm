@@ -959,13 +959,11 @@ PDM_timer_end
   // Retrieve the node for the event that just ended (top of the stack)
   if (timer->call_stack.empty()) {
     PDM_error("Tried to end event `%s` but the stack is empty", name);
-    return;
   }
 
   _pdm_timer_event_t* current_node = timer->call_stack.back();
   if (current_node->event_name != current_name) {
     PDM_error("Tried to end event `%s` called but active timer is %s", name, current_node->event_name.c_str());
-    return;
   }
 
   // Pop the finished event from the stack
@@ -1080,7 +1078,6 @@ PDM_timer_dump_json
   FILE *fp = fopen(filename, "w");
   if (!fp) {
     PDM_error("Could not open file %s for JSON dump", filename);
-    return;
   }
 
   fprintf(fp, "{\n");
@@ -1165,7 +1162,6 @@ PDM_timer_gather_dump
       FILE *fp = fopen(filename, "w");
       if (!fp) {
         PDM_error("Could not open file %s for dump", filename);
-        return;
       }
       fprintf(fp, "%s", final_str.c_str());
       fclose(fp);
