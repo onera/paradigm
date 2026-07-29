@@ -2696,4 +2696,3 @@ PDM_part_mesh_nodal_dump_gamma
   PDM_free(gvtx_coord);
   PDM_free(gvtx_tag);
 }
-
