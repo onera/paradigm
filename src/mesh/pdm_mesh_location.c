@@ -1640,7 +1640,7 @@ PDM_mesh_location_compute
    *  -------------------------------------
    */
   PDM_timer_start(ml->timer, "mesh_location:FULL", 0);
-  PDM_timer_start(ml->timer, "mesh_location:BUILD_BOUNDING_BOXES", 0);
+  PDM_timer_start(ml->timer, "build bboxes", 0);
 
   /* Infer geometry kind from part mesh_nodal */
   int mesh_dimension;
@@ -1806,15 +1806,15 @@ PDM_mesh_location_compute
   PDM_MPI_Allreduce(l_mesh_extents+3, g_mesh_extents+3, 3,
                     PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
 
-  PDM_timer_end(ml->timer, "mesh_location:BUILD_BOUNDING_BOXES", 0);
+  PDM_timer_end(ml->timer, "build bboxes", 0);
 
   /*
    *  Store cell vertex connectivity
    *  ------------------------------
    */
-  PDM_timer_start(ml->timer, "mesh_location:STORE_CONNECTIVITY", 0);
+  PDM_timer_start(ml->timer, "store cell_vtx", 0);
   _store_cell_vtx(ml, geom_kind);
-  PDM_timer_end(ml->timer, "mesh_location:STORE_CONNECTIVITY", 0);
+  PDM_timer_end(ml->timer, "store cell_vtx", 0);
 
   PDM_mpi_comm_kind_t comm_kind = PDM_MPI_COMM_KIND_COLLECTIVE;
   int *req_pts_proj_coord = PDM_array_const_int(ml->n_point_cloud, -1);
@@ -1895,7 +1895,7 @@ PDM_mesh_location_compute
     int use_extracted_pts = 0;
     PDM_g_num_t l_n_pts[2] = {0, 0};
 
-    PDM_timer_start(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
+    PDM_timer_start(ml->timer, "extract entities", 0);
 
     if (ml->method != PDM_MESH_LOCATION_LOCATE_ALL_TGT) {
       PDM_malloc(n_select_pts,     pcloud->n_part, int  );
@@ -2018,7 +2018,7 @@ PDM_mesh_location_compute
           PDM_malloc(pcloud->dist2           [ipart], 0, double     );
         }
 
-        PDM_timer_end(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
+        PDM_timer_end(ml->timer, "extract entities", 0);
         continue; // move on the next point cloud
       }
 
@@ -2451,8 +2451,8 @@ PDM_mesh_location_compute
       }
     }
 
-    PDM_timer_end(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
-    PDM_timer_start(ml->timer, "mesh_location:SEARCH_CANDIDATES", 0);
+    PDM_timer_end(ml->timer, "extract entities", 0);
+    PDM_timer_start(ml->timer, "search candidates", 0);
 
     /*
      *  Location : search candidates
@@ -2715,8 +2715,8 @@ PDM_mesh_location_compute
     PDM_free(dpts_coord);
 
 
-    PDM_timer_end(ml->timer, "mesh_location:SEARCH_CANDIDATES", 0);
-    PDM_timer_start(ml->timer, "mesh_location:LOAD_BALANCING", 0);
+    PDM_timer_end(ml->timer, "search candidates", 0);
+    PDM_timer_start(ml->timer, "load balancing", 0);
 
     if (dbg_enabled) {
       log_trace("before compression\n");
@@ -2891,8 +2891,8 @@ PDM_mesh_location_compute
     }
 
 
-    PDM_timer_end(ml->timer, "mesh_location:LOAD_BALANCING", 0);
-    PDM_timer_start(ml->timer, "mesh_location:COMPUTE_ELEMENTARY_LOCATIONS", 0);
+    PDM_timer_end(ml->timer, "load balancing", 0);
+    PDM_timer_start(ml->timer, "elementary location", 0);
 
     /* Perform elementary point locations */
     double **pelt_pts_distance2   = NULL;
@@ -2927,8 +2927,8 @@ PDM_mesh_location_compute
     PDM_extract_part_free(extrp);
     PDM_free(delt_init_location2);
 
-    PDM_timer_end(ml->timer, "mesh_location:COMPUTE_ELEMENTARY_LOCATIONS", 0);
-    PDM_timer_start(ml->timer, "mesh_location:MERGE_LOCATION_DATA", 0);
+    PDM_timer_end(ml->timer, "elementary location", 0);
+    PDM_timer_start(ml->timer, "merge location data", 0);
 
 
     /*
@@ -3230,8 +3230,8 @@ PDM_mesh_location_compute
 
     PDM_block_to_part_free(btp_pts_gnum_geom_to_user);
 
-    PDM_timer_end(ml->timer, "mesh_location:MERGE_LOCATION_DATA", 0);
-    PDM_timer_start(ml->timer, "mesh_location:TRANSFER_TO_INITIAL_PARTITIONS", 0);
+    PDM_timer_end(ml->timer, "merge location data", 0);
+    PDM_timer_start(ml->timer, "transfer to input frame", 0);
 
     /*
      *  Transfer location data from elt (current frame) to elt (user frame)
@@ -3725,7 +3725,7 @@ PDM_mesh_location_compute
       PDM_part_to_part_free(ptp_elt);
     }
 
-    PDM_timer_end(ml->timer, "mesh_location:TRANSFER_TO_INITIAL_PARTITIONS", 0);
+    PDM_timer_end(ml->timer, "transfer to input frame", 0);
 
     /* Free memory */
     PDM_free(final_elt_pts_distance  );
@@ -3801,7 +3801,7 @@ PDM_mesh_location_compute
   }
 
 
-  PDM_timer_start(ml->timer, "mesh_location:FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS", 0);
+  PDM_timer_start(ml->timer, "finalize transfer", 0);
 
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
     if (ml->ptp[icloud] != NULL) {
@@ -3815,7 +3815,7 @@ PDM_mesh_location_compute
     }
   }
 
-  PDM_timer_end(ml->timer, "mesh_location:FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS", 0);
+  PDM_timer_end(ml->timer, "finalize transfer", 0);
 
   PDM_free(req_pts_proj_coord);
   PDM_free(req_pts_dist2);

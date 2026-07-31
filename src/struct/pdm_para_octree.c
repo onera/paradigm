@@ -2444,7 +2444,7 @@ _compute_neighbours
 )
 {
 
-  PDM_timer_start(octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP1", 0);
+  PDM_timer_start(octree->timer, "build local ngb 1", 0);
 
   const int n_direction = (int) PDM_N_DIRECTION;
 
@@ -2543,8 +2543,8 @@ _compute_neighbours
     }
   }
 
-  PDM_timer_end  (octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP1", 0);
-  PDM_timer_start(octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP2", 0);
+  PDM_timer_end  (octree->timer, "build local ngb 1", 0);
+  PDM_timer_start(octree->timer, "build local ngb 2", 0);
 
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j = 0; j < n_direction; j+=2) {
@@ -2590,8 +2590,8 @@ _compute_neighbours
    *************************************************************************/
   _compute_connected_parts (octree, neighbours_tmp);
 
-  PDM_timer_end  (octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP2", 0);
-  PDM_timer_start(octree->timer, "para_octree:BUILD_DISTANT_NEIGHBOURS", 0);
+  PDM_timer_end  (octree->timer, "build local ngb 2", 0);
+  PDM_timer_start(octree->timer, "build remote ngb", 0);
 
   /*************************************************************************
    *
@@ -2956,9 +2956,9 @@ _compute_neighbours
     octree->part_boundary_elt_idx[i+1] += octree->part_boundary_elt_idx[i];
   }
 
-  PDM_timer_end(octree->timer, "para_octree:BUILD_DISTANT_NEIGHBOURS", 0);
+  PDM_timer_end(octree->timer, "build remote ngb", 0);
 
-  PDM_timer_start(octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP3", 0);
+  PDM_timer_start(octree->timer, "build local ngb 3", 0);
 
 
   /*************************************************************************
@@ -3012,7 +3012,7 @@ _compute_neighbours
 
   PDM_free(neighbours_tmp);
 
-  PDM_timer_end(octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP3", 0);
+  PDM_timer_end(octree->timer, "build local ngb 3", 0);
 }
 
 static void
@@ -3023,7 +3023,7 @@ _finalize_neighbours
 )
 {
 
-  PDM_timer_start(octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP1", 0);
+  PDM_timer_start(octree->timer, "build local ngb 1", 0);
 
   const int n_direction = (int) PDM_N_DIRECTION;
 
@@ -3043,8 +3043,8 @@ _finalize_neighbours
   _compute_connected_parts (octree,
                             neighbours_tmp);
 
-  PDM_timer_end  (octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP1", 0);
-  PDM_timer_start(octree->timer, "para_octree:BUILD_DISTANT_NEIGHBOURS"    , 0);
+  PDM_timer_end  (octree->timer, "build local ngb 1", 0);
+  PDM_timer_start(octree->timer, "build remote ngb" , 0);
 
   /*************************************************************************
    *
@@ -3431,8 +3431,8 @@ _finalize_neighbours
     octree->part_boundary_elt_idx[i+1] += octree->part_boundary_elt_idx[i];
   }
 
-  PDM_timer_end  (octree->timer, "para_octree:BUILD_DISTANT_NEIGHBOURS", 0);
-  PDM_timer_start(octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP3", 0);
+  PDM_timer_end  (octree->timer, "build remote ngb",  0);
+  PDM_timer_start(octree->timer, "build local ngb 3", 0);
 
   /*************************************************************************
    *
@@ -3485,7 +3485,7 @@ _finalize_neighbours
 
   PDM_free(neighbours_tmp);
 
-  PDM_timer_end(octree->timer, "para_octree:BUILD_LOCAL_NEIGHBOURS_STEP3", 0);
+  PDM_timer_end(octree->timer, "build local ngb 3", 0);
 }
 
 
@@ -7336,7 +7336,7 @@ PDM_para_octree_build
   PDM_MPI_Comm_rank (_octree->comm, &rank);
 
   PDM_timer_start(_octree->timer, "para_octree:build", 0);
-  PDM_timer_start(_octree->timer, "para_octree:BUILD_ORDER_POINTS", 0);
+  PDM_timer_start(_octree->timer, "order points", 0);
 
   /*
    * Get coord extents
@@ -7532,8 +7532,8 @@ PDM_para_octree_build
                               NULL);
   }
 
-  PDM_timer_end  (_octree->timer, "para_octree:BUILD_ORDER_POINTS", 0);
-  PDM_timer_start(_octree->timer, "para_octree:BUILD_BLOCK_PARTITION", 0);
+  PDM_timer_end  (_octree->timer, "order points", 0);
+  PDM_timer_start(_octree->timer, "block partition", 0);
 
   if (n_ranks > 0) {
 
@@ -7856,8 +7856,8 @@ PDM_para_octree_build
 
   }
 
-  PDM_timer_end  (_octree->timer, "para_octree:BUILD_BLOCK_PARTITION", 0);
-  PDM_timer_start(_octree->timer, "para_octree:BUILD_LOCAL_NODES", 0);
+  PDM_timer_end  (_octree->timer, "block partition", 0);
+  PDM_timer_start(_octree->timer, "local nodes", 0);
 
   /*************************************************************************
    *
@@ -8264,9 +8264,9 @@ PDM_para_octree_build
 
   heap = _heap_free (heap);
 
-  PDM_timer_end(_octree->timer, "para_octree:BUILD_LOCAL_NODES", 0);
+  PDM_timer_end(_octree->timer, "local nodes", 0);
 
-  PDM_timer_start(_octree->timer, "para_octree:BUILD_EXPLICIT_NODES", 0);
+  PDM_timer_start(_octree->timer, "explicit nodes", 0);
 
   /*************************************************************************
    *
@@ -8379,7 +8379,7 @@ PDM_para_octree_build
     // }
   }
   //<<--
-  PDM_timer_end(_octree->timer, "para_octree:BUILD_EXPLICIT_NODES", 0);
+  PDM_timer_end(_octree->timer, "explicit nodes", 0);
 
   PDM_timer_end(_octree->timer, "para_octree:build", 0);
 }
@@ -11460,7 +11460,7 @@ PDM_para_octree_points_inside_boxes_block_frame
 
   if (dbg_enabled) printf("[%d] n_boxes = %d\n", i_rank, n_boxes);
 
-  PDM_timer_start(_octree->timer, "para_octree:pib", 0);
+  PDM_timer_start(_octree->timer, "para_octree:pts in boxes", 0);
 
   PDM_morton_code_t *box_corners = NULL;
   double d[3], s[3];
@@ -11633,7 +11633,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     }
     PDM_free(box_corners);
 
-    PDM_timer_start(_octree->timer, "para_octree:pib_copies", 0);
+    PDM_timer_start(_octree->timer, "copies", 0);
 
     //-->>
     if (0) {
@@ -11746,8 +11746,8 @@ PDM_para_octree_points_inside_boxes_block_frame
     int *copied_count_tmp = PDM_array_zeros_int (_octree->n_copied_ranks);
     n_box_copied = copied_shift[_octree->n_copied_ranks];
 
-    PDM_timer_end  (_octree->timer, "para_octree:pib_copies", 0);
-    PDM_timer_start(_octree->timer, "para_octree:pib_exchange", 0);
+    PDM_timer_end  (_octree->timer, "copies", 0);
+    PDM_timer_start(_octree->timer, "exchange", 0);
 
     /* Exchange new send/recv counts */
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
@@ -11856,7 +11856,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     PDM_free(send_g_num);
     PDM_free(send_extents);
 
-    PDM_timer_end(_octree->timer, "para_octree:pib_exchange", 0);
+    PDM_timer_end(_octree->timer, "exchange", 0);
   }
 
   /* Single proc */
@@ -11871,7 +11871,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     box_extents1 = (double *) box_extents;
   }
 
-  PDM_timer_start(_octree->timer, "para_octree:pib_local", 0);
+  PDM_timer_start(_octree->timer, "local", 0);
 
   /***************************************
    * Intersect redistributed boxes with local octree
@@ -11994,7 +11994,7 @@ PDM_para_octree_points_inside_boxes_block_frame
   PDM_para_octree_free_copies (octree);
 
 
-  PDM_timer_end(_octree->timer, "para_octree:pib_local", 0);
+  PDM_timer_end(_octree->timer, "local", 0);
 
 
   if (0) {//n_rank == 1) {
@@ -12153,7 +12153,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     *dbox_pts_coord = block_pts_in_box_coord;
   }
 
-  PDM_timer_end(_octree->timer, "para_octree:pib", 0);
+  PDM_timer_end(_octree->timer, "para_octree:pts in boxes", 0);
 }
 
 void
