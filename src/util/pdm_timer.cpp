@@ -535,13 +535,13 @@ _timer_gather
 
   int *gn_send_data = PDM_array_zeros_int(n_rank);
   int *gn_send_time = PDM_array_zeros_int(n_rank);
-  PDM_MPI_Gather(&n_send      , 1, PDM_MPI_INT,
+  PDM_MPI_Gather(&n_send,      1, PDM_MPI_INT,
                  gn_send_data, 1, PDM_MPI_INT,
                  0,
                  timer->comm);
 
   int *gn_send_path_data = PDM_array_zeros_int(n_rank);
-  PDM_MPI_Gather(&n_send_path      , 1, PDM_MPI_INT,
+  PDM_MPI_Gather(&n_send_path,      1, PDM_MPI_INT,
                  gn_send_path_data, 1, PDM_MPI_INT,
                  0,
                  timer->comm);
@@ -640,21 +640,21 @@ _timer_gather
 
       // MIN/MAX (t_sync_entry)
       if (lt_sync_entry < g_record.t_min_sync_entry) {
-        g_record.t_min_sync_entry = lt_sync_entry;
+        g_record.t_min_sync_entry    = lt_sync_entry;
         g_record.rank_min_sync_entry = t_rank;
       }
       if (lt_sync_entry > g_record.t_max_sync_entry) {
-        g_record.t_max_sync_entry = lt_sync_entry;
+        g_record.t_max_sync_entry    = lt_sync_entry;
         g_record.rank_max_sync_entry = t_rank;
       }
 
       // MIN/MAX (t_sync_exit)
       if (lt_sync_exit < g_record.t_min_sync_exit) {
-        g_record.t_min_sync_exit = lt_sync_exit;
+        g_record.t_min_sync_exit    = lt_sync_exit;
         g_record.rank_min_sync_exit = t_rank;
       }
       if (lt_sync_exit > g_record.t_max_sync_exit) {
-        g_record.t_max_sync_exit = lt_sync_exit;
+        g_record.t_max_sync_exit    = lt_sync_exit;
         g_record.rank_max_sync_exit = t_rank;
       }
 
@@ -748,7 +748,7 @@ std::stringstream
 _generate_report
 (
         PDM_timer_t*                               timer,
-        int                                        mode,
+        PDM_timer_report_t                         mode,
   const std::map<std::string, _pdm_global_stat_t>* global_stats,
   const std::string&                               report_title
 )
@@ -770,8 +770,14 @@ _generate_report
 
   /* Build header */
   report_stream << "\n" << std::string(TOTAL_WIDTH, '=') << "\n";
-  report_stream << "PDM TIMER REPORT (" << report_title << ", "
-                << (mode == 1 ? "FLAT/RAW MODE" : "HIERARCHICAL MODE") << ")\n";
+  report_stream << "PDM TIMER REPORT (" << report_title << ", ";
+  if (mode == PDM_TIMER_REPORT_HIERARCHICAL) {
+    report_stream << "HIERARCHICAL MODE";
+  }
+  else if (mode == PDM_TIMER_REPORT_FLAT) {
+    report_stream << "FLAT/RAW MODE";
+  }
+  report_stream << ")\n";
   report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
 
   // Column headers
@@ -1215,7 +1221,7 @@ PDM_timer_gather_dump
   PDM_MPI_Comm_rank(timer->comm, &i_rank);
   if (i_rank == 0) {
     std::string title = "AGGREGATED GLOBAL (All Ranks)";
-    std::stringstream report_stream = _generate_report(timer, 0, &timer->gflat_timer, title);
+    std::stringstream report_stream = _generate_report(timer, PDM_TIMER_REPORT_HIERARCHICAL, &timer->gflat_timer, title);
     std::string       final_str     = report_stream.str();
 
     if (filename != NULL) {
