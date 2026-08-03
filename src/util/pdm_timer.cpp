@@ -43,6 +43,8 @@
 
 /*----------------------------------------------------------------------------*/
 
+static const int TIMER_PRECISION = 6;
+
 /*============================================================================
  * Definition of local types
  *============================================================================*/
@@ -217,6 +219,59 @@ _collect_timer
   }
 }
 
+
+static
+int
+_count_digits_before_decimal_point
+(
+  double x
+)
+{
+  int n = 1;
+  long long i = static_cast<long long>(std::abs(x));
+  while (i >= 10) {
+    ++n;
+    i /= 10;
+  }
+  return n;
+}
+
+
+static
+int
+_count_decimals
+(
+  double x,
+  int    precision
+)
+{
+  if (std::abs(x) < 1.0) {
+    return precision - 1;
+  }
+  else {
+    return std::max(0, precision - _count_digits_before_decimal_point(x));
+  }
+}
+
+
+void
+_format_time
+(
+  std::stringstream& ss,
+  double             value,
+  int                precision,
+  int                width=-1
+)
+{
+  if (width >= 0) {
+    ss << std::right << std::setw(width);
+  }
+
+  int prec = _count_decimals(value, precision);
+  ss << std::fixed << std::setprecision(prec) << value;
+}
+
+
 static
 std::string
 _format_condensed_value
@@ -226,12 +281,14 @@ _format_condensed_value
 )
 {
   std::stringstream ss;
-  ss << std::fixed << std::setprecision(4) << time;
+  _format_time(ss, time, TIMER_PRECISION);
+
   if (rank != -1) {
     ss << "[" << rank << "]";
   }
   return ss.str();
 }
+
 
 static
 std::string
@@ -256,6 +313,7 @@ _format_full_condensed_stat
   ss_final << std::right << std::setw(width) << content;
   return ss_final.str();
 }
+
 
 std::string
 _format_timer_line_main
@@ -320,20 +378,24 @@ _format_timer_line_main
     if (t_exclusive_local < 0) t_exclusive_local = 0;
 
     // T_Inclusive
-    ss << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_run_inclusive;
+    _format_time(ss, node.t_run_inclusive, TIMER_PRECISION, time_width);
 
     // T_Exclusive
-    ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << t_exclusive_local;
+    ss << " |";
+    _format_time(ss, t_exclusive_local,    TIMER_PRECISION, time_width);
 
     // T_Sync_Entry
-    ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_sync_entry;
+    ss << " |";
+    _format_time(ss, node.t_sync_entry,    TIMER_PRECISION, time_width);
 
     // T_Sync_Exit
-    ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_sync_exit;
+    ss << " |";
+    _format_time(ss, node.t_sync_exit,     TIMER_PRECISION, time_width);
   }
 
   return ss.str();
 }
+
 
 static
 void
@@ -350,6 +412,7 @@ _collect_all_nodes
     _collect_all_nodes(node->children.at(child_name).get(), all_nodes);
   }
 }
+
 
 static
 void
@@ -373,10 +436,7 @@ _traverse_and_add_lines
   }
 
   // Prepare indentation
-  std::string indent = "";
-  for (int i = 0; i < depth; ++i) {
-    indent += "  ";
-  }
+  std::string indent(depth * 2, ' ');
   std::string indented_name = indent + node.event_name;
 
   // Format and add the single line (Local or Condensed Global): MEAN/MIN[R]/MAX[R])
