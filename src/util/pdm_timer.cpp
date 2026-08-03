@@ -185,7 +185,7 @@ _calculate_max_widths
     return;
   }
 
-  // Indentation uses 3 chars per level ("  |")
+  // Indentation uses two spaces per level
   size_t name_length = node.event_name.length() + (size_t)current_indent_length;
 
   if (name_length > max_name_width) {
@@ -194,7 +194,7 @@ _calculate_max_widths
 
   // Recurse
   for (auto& child_name : node.child_insertion_order) {
-    _calculate_max_widths(*node.children.at(child_name), current_indent_length + 3, max_name_width);
+    _calculate_max_widths(*node.children.at(child_name), current_indent_length + 2, max_name_width);
   }
 }
 
@@ -373,7 +373,7 @@ _traverse_and_add_lines
   }
 
   // Prepare indentation
-  std::string indent = "|";
+  std::string indent = "";
   for (int i = 0; i < depth; ++i) {
     indent += "  ";
   }
