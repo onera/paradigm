@@ -504,8 +504,8 @@ _timer_gather
   std::map<std::string, _pdm_timer_event_t*> lflat_timer;
   _collect_timer(&(timer->root_event), lflat_timer);
 
-  int n_send        = lflat_timer.size();
-  int n_send_path   = 0;
+  int n_send      = lflat_timer.size();
+  int n_send_path = 0;
   for (auto& path_and_timer : lflat_timer) {
     n_send_path += path_and_timer.first.size()+1;
   }
@@ -513,7 +513,7 @@ _timer_gather
   std::vector<char> send_buffer_path;
   send_buffer_path.reserve(n_send_path);
   std::vector<int>    send_buffer_data(    n_send);
-  std::vector<double> send_buffer_time(6 * n_send);
+  std::vector<double> send_buffer_time(4 * n_send);
 
   int idx_write = 0;
   for (auto& path_and_timer : lflat_timer) {
@@ -524,12 +524,10 @@ _timer_gather
 
     auto& event = path_and_timer.second;
     send_buffer_data[  idx_write  ] = event->n_call;
-    send_buffer_time[6*idx_write  ] = event->t1;
-    send_buffer_time[6*idx_write+1] = event->t_run_inclusive;
-    send_buffer_time[6*idx_write+2] = event->t_run_exclusive;
-    send_buffer_time[6*idx_write+3] = event->t_children_sum;
-    send_buffer_time[6*idx_write+4] = event->t_sync_entry;
-    send_buffer_time[6*idx_write+5] = event->t_sync_exit;
+    send_buffer_time[4*idx_write  ] = event->t_run_inclusive;
+    send_buffer_time[4*idx_write+1] = event->t_run_exclusive;
+    send_buffer_time[4*idx_write+2] = event->t_sync_entry;
+    send_buffer_time[4*idx_write+3] = event->t_sync_exit;
     idx_write++;
   }
 
@@ -560,16 +558,16 @@ _timer_gather
     n_g_data_path_recv = gn_send_path_data_idx[n_rank];
 
     for(int i = 0; i < n_rank; ++i) {
-      gn_send_time[i] = gn_send_data[i] * 6;
+      gn_send_time[i] = gn_send_data[i] * 4;
     }
     for(int i = 0; i < n_rank+1; ++i) {
-      gn_send_time_idx[i] *= 6;
+      gn_send_time_idx[i] *= 4;
     }
   }
 
   std::vector<char>   g_path(    n_g_data_path_recv);
   std::vector<int>    g_data(    n_g_data_recv     );
-  std::vector<double> g_time(6 * n_g_data_recv     );
+  std::vector<double> g_time(4 * n_g_data_recv     );
 
   PDM_MPI_Gatherv(send_buffer_path.data(), n_send_path, PDM_MPI_CHAR,
                   g_path          .data(), gn_send_path_data, gn_send_path_data_idx, PDM_MPI_CHAR,
@@ -581,7 +579,7 @@ _timer_gather
                   0,
                   timer->comm);
 
-  PDM_MPI_Gatherv(send_buffer_time.data(), 6 * n_send, PDM_MPI_DOUBLE,
+  PDM_MPI_Gatherv(send_buffer_time.data(), 4 * n_send, PDM_MPI_DOUBLE,
                   g_time          .data(), gn_send_time, gn_send_time_idx, PDM_MPI_DOUBLE,
                   0,
                   timer->comm);
@@ -589,8 +587,8 @@ _timer_gather
   if (0 == 1) {
     printf("n_send_path = %i \n", n_send_path);
     PDM_log_trace_array_int   (g_data.data()          , 1 * n_g_data_recv, "g_data           ::");
-    PDM_log_trace_array_double(g_time.data()          , 6 * n_g_data_recv, "g_time           ::");
-    PDM_log_trace_array_double(send_buffer_time.data(), 6 * n_send       , "send_buffer_time ::");
+    PDM_log_trace_array_double(g_time.data()          , 4 * n_g_data_recv, "g_time           ::");
+    PDM_log_trace_array_double(send_buffer_time.data(), 4 * n_send       , "send_buffer_time ::");
   }
 
   // Create flat profile and reduce all data
@@ -605,10 +603,10 @@ _timer_gather
       idx_read_path += path.length() + 1;
 
       long ln_call = g_data[idx_read];
-      double lt_run_inclusive = g_time[6*idx_read+1];
-      double lt_run_exclusive = g_time[6*idx_read+2];
-      double lt_sync_entry    = g_time[6*idx_read+4];
-      double lt_sync_exit     = g_time[6*idx_read+5];
+      double lt_run_inclusive = g_time[4*idx_read  ];
+      double lt_run_exclusive = g_time[4*idx_read+1];
+      double lt_sync_entry    = g_time[4*idx_read+2];
+      double lt_sync_exit     = g_time[4*idx_read+3];
 
       _pdm_global_stat_t& g_record = gflat_timer[path];
 
