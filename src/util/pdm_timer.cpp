@@ -200,6 +200,41 @@ _calculate_max_widths
   }
 }
 
+
+static
+void
+_calculate_max_n_call
+(
+  _pdm_timer_event_t&                              node,
+  const std::map<std::string, _pdm_global_stat_t>* global_stats,
+  long&                                            max_n_call
+)
+{
+  if (node.event_name == "__ROOT__") {
+    max_n_call = 0;
+    for (auto& child_name : node.child_insertion_order) {
+      _calculate_max_n_call(*node.children.at(child_name), global_stats, max_n_call);
+    }
+    return;
+  }
+
+  long n_call_to_display = node.n_call;
+
+  const _pdm_global_stat_t* g_rec = nullptr;
+  if (global_stats && global_stats->count(node.path_name)) {
+    g_rec = &global_stats->at(node.path_name);
+    n_call_to_display = g_rec->n_call;
+  }
+
+  max_n_call = std::max(max_n_call, n_call_to_display);
+
+  // Recurse
+  for (auto& child_name : node.child_insertion_order) {
+    _calculate_max_n_call(*node.children.at(child_name), global_stats, max_n_call);
+  }
+}
+
+
 static
 void
 _collect_timer
@@ -756,15 +791,25 @@ _generate_report
   /* Determine the context and widths */
   bool is_global_report = (global_stats != nullptr);
 
-  size_t max_name_width = 11;
+  size_t max_name_width = 17;
   _calculate_max_widths(timer->root_event, 0, max_name_width);
   max_name_width = std::min(max_name_width + 2, (size_t)80);
 
-  const int N_CALL_COL_WIDTH = 10;
-  const int TIME_COL_WIDTH   = 35;
-  const int NUM_TIME_COLS    = 4; // T_INC, T_EXC, T_SE, T_SX
+  long max_n_call = 0;
+  _calculate_max_n_call(timer->root_event, global_stats, max_n_call);
 
-  const int TOTAL_WIDTH = max_name_width + N_CALL_COL_WIDTH + (TIME_COL_WIDTH * NUM_TIME_COLS) + (NUM_TIME_COLS * 2) + 2;
+  // Count the number of digits in the maximum number of calls
+  int n_call_col_width = 1;
+  while (max_n_call) {
+    max_n_call /= 10;
+    n_call_col_width++;
+  }
+  n_call_col_width = std::max(n_call_col_width, 5); // at least the width of the word "Calls"
+
+  const int TIME_COL_WIDTH = 35;
+  const int NUM_TIME_COLS  = 4; // T_INC, T_EXC, T_SE, T_SX
+
+  const int TOTAL_WIDTH = max_name_width + n_call_col_width + (TIME_COL_WIDTH * NUM_TIME_COLS) + (NUM_TIME_COLS * 2) + 2;
 
   /* Build header */
   report_stream << "\n" << std::string(TOTAL_WIDTH, '=') << "\n";
@@ -779,8 +824,8 @@ _generate_report
   report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
 
   // Column headers
-  report_stream << std::left << std::setw(max_name_width) << "Event Name (Path)";
-  report_stream << std::right << std::setw(N_CALL_COL_WIDTH) << "Calls";
+  report_stream << std::left  << std::setw(max_name_width)   << "Event Name (Path)";
+  report_stream << std::right << std::setw(n_call_col_width) << "Calls";
 
   // Header for the 4 time metrics
   if (is_global_report) {
@@ -805,7 +850,7 @@ _generate_report
 
   if (mode == 0) { // Hierarchical Mode
     for (auto& child_name : timer->root_event.child_insertion_order) {
-      _traverse_and_add_lines(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH, global_stats, content_lines);
+      _traverse_and_add_lines(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, n_call_col_width, global_stats, content_lines);
     }
   }
   else { // Flat Mode
@@ -813,7 +858,7 @@ _generate_report
     _collect_all_nodes(&timer->root_event, all_nodes);
 
     // The width of the blank space used to align the MIN/MAX stats in "flat" mode
-    const int EMPTY_COL_WIDTH = max_name_width + N_CALL_COL_WIDTH + 2;
+    const int EMPTY_COL_WIDTH = max_name_width + n_call_col_width + 2;
     std::string empty_prefix = std::string(EMPTY_COL_WIDTH, ' ');
 
     for(auto* node : all_nodes) {
@@ -821,7 +866,7 @@ _generate_report
                                                       node->event_name,
                                                       max_name_width,
                                                       TIME_COL_WIDTH,
-                                                      N_CALL_COL_WIDTH,
+                                                      n_call_col_width,
                                                       global_stats));
     }
   }
