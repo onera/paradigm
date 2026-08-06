@@ -11,6 +11,7 @@
 - Remove fake brace for emacs editor & clean all licensing (outdated)
 ### Fixed
 - PDM_mesh_intersection: Fix numerical issues in surface-surface intersection
+- PDM_domain_interface_translate_face2vtx: prevent crash caused by ``n_face_this_edge == 2`` assertion
 ## [2.8.0] - 2026-05-21
 ### Added
 - PDM_isosurface:

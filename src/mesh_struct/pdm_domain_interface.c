@@ -787,15 +787,22 @@ static int _match_internal_edges
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  // 0. Count the number of internal edges
-  int dn_internal_edge = 0;
+  // 0. Count the number of 'solvable' edges
+  /* In all this function we work only on edge connected to 2 faces :
+    - edge having only 1 face give no information on conflict resolution (because key = sum of face id, so
+      a single face would register N times the same key
+    - edge having more than 2 faces are rare and more difficult to treat (variable stride).
+    Doing that we assume there is enought 'solvable' edges to do the matching using them only 
+  */
+  int dn_solvable_edge = 0;
   for(int i_edge = 0; i_edge < dn_edge; ++i_edge) {
-    int n_face_this_edge = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
-    dn_internal_edge += (int) (n_face_this_edge > 1);
+    if (dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge] == 2) {
+      dn_solvable_edge ++;
+    }
   }
   if (0 == 1) {
-    log_trace("dn internal edges is %i \n", dn_internal_edge);
-    log_trace("dn external edges is %i \n", dn_edge - dn_internal_edge);
+    log_trace("dn solvalbe edges is %i \n", dn_solvable_edge);
+    log_trace("dn skipped  edges is %i \n", dn_edge - dn_solvable_edge);
   }
 
   // 1. Build hash keys
@@ -804,33 +811,32 @@ static int _match_internal_edges
   int    *stride_two  = NULL;
   int    *stride_four = NULL;
   double *weight      = NULL;
-  PDM_malloc(key_ln_to_gn, dn_internal_edge, PDM_g_num_t);
-  PDM_malloc(stride_one  , dn_internal_edge, int        );
-  PDM_malloc(stride_two  , dn_internal_edge, int        );
-  PDM_malloc(stride_four , dn_internal_edge, int        );
-  PDM_malloc(weight      , dn_internal_edge, double     );
+  PDM_malloc(key_ln_to_gn, dn_solvable_edge, PDM_g_num_t);
+  PDM_malloc(stride_one  , dn_solvable_edge, int        );
+  PDM_malloc(stride_two  , dn_solvable_edge, int        );
+  PDM_malloc(stride_four , dn_solvable_edge, int        );
+  PDM_malloc(weight      , dn_solvable_edge, double     );
 
   PDM_g_num_t *data_send_connect    = NULL;
   PDM_g_num_t *data_send_edge_g_num = NULL;
   PDM_g_num_t *data_send_group      = NULL;
   PDM_g_num_t *data_send_sens       = NULL;
   PDM_g_num_t *data_send_face_g_num = NULL;
-  PDM_malloc(data_send_connect   , 4 * dn_internal_edge, PDM_g_num_t);
-  PDM_malloc(data_send_edge_g_num,     dn_internal_edge, PDM_g_num_t);
-  PDM_malloc(data_send_group     , 4 * dn_internal_edge, PDM_g_num_t);
-  PDM_malloc(data_send_sens      , 2 * dn_internal_edge, PDM_g_num_t);
-  PDM_malloc(data_send_face_g_num, 2 * dn_internal_edge, PDM_g_num_t);
+  PDM_malloc(data_send_connect   , 4 * dn_solvable_edge, PDM_g_num_t);
+  PDM_malloc(data_send_edge_g_num,     dn_solvable_edge, PDM_g_num_t);
+  PDM_malloc(data_send_group     , 4 * dn_solvable_edge, PDM_g_num_t);
+  PDM_malloc(data_send_sens      , 2 * dn_solvable_edge, PDM_g_num_t);
+  PDM_malloc(data_send_face_g_num, 2 * dn_solvable_edge, PDM_g_num_t);
 
   int i_int_edge = 0;
   int idx_write2 = 0;
   int idx_write4 = 0;
   for(int i_edge = 0; i_edge < dn_edge; ++i_edge) {
 
-    int n_face_this_edge = dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge];
-    if (n_face_this_edge == 1) {
+    if (dedge_face_idx[i_edge+1] - dedge_face_idx[i_edge] != 2) {
+      // Skip not 'solvable' edges
       continue;
     }
-    assert (n_face_this_edge == 2);
 
     stride_one [i_int_edge] = 1;
     stride_two [i_int_edge] = 2;
@@ -855,8 +861,8 @@ static int _match_internal_edges
 
     i_int_edge++;
   }
-  assert(idx_write2 == 2*dn_internal_edge);
-  assert(idx_write4 == 4*dn_internal_edge);
+  assert(idx_write2 == 2*dn_solvable_edge);
+  assert(idx_write4 == 4*dn_solvable_edge);
 
   // 2. Exchange data over hash key
   //Attention, pb d'équilibrage car les clés sont réparties vers la fin ... Un proc risque
@@ -866,7 +872,7 @@ static int _match_internal_edges
                                                       1.,
                                     (PDM_g_num_t **) &key_ln_to_gn,
                                                      &weight,
-                                                     &dn_internal_edge,
+                                                     &dn_solvable_edge,
                                                       1,
                                                       comm);
   // Get protocol data
@@ -933,7 +939,7 @@ static int _match_internal_edges
   assert (exch_size == 4*gnum_n_occurences_tot);
 
   if (0 == 1) {
-    PDM_log_trace_array_long(key_ln_to_gn, dn_internal_edge, "key_ln_to_gn :: ");
+    PDM_log_trace_array_long(key_ln_to_gn, dn_solvable_edge, "key_ln_to_gn :: ");
     PDM_log_trace_array_int(gnum_n_occurences   , blk_size               , "gnum_n_occurences   :: ");
     PDM_log_trace_array_long(blk_edge_g_num     , gnum_n_occurences_tot  , "blk_edge_g_num      :: ");
     //PDM_log_trace_array_long(blk_data_face_g_num, 2*gnum_n_occurences_tot, "blk_data_face_g_num :: ");
@@ -1067,14 +1073,14 @@ static int _match_internal_edges
 
 
   // 4. Send back result on edge distribution
-                       ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_PART_TO_BLOCK_POST_NOTHING,
-                                                       1.,
-                                                      &results_edge,
-                                                       dedge_distrib,
-                                                      &rsvd_gnum_n_occurences_tot,
-                                                       1,
-                                                       comm);
+  ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                              PDM_PART_TO_BLOCK_POST_NOTHING,
+                                              1.,
+                                             &results_edge,
+                                              dedge_distrib,
+                                             &rsvd_gnum_n_occurences_tot,
+                                              1,
+                                              comm);
 
   int resolved_dn_internal_edge = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_malloc(*dedge_gnum, resolved_dn_internal_edge, PDM_g_num_t);
