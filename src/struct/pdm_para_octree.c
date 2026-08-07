@@ -2440,17 +2440,11 @@ _compute_connected_parts
 static void
 _compute_neighbours
 (
- _pdm_para_octree_t *octree,
- double   b_t_elapsed,
- double   b_t_cpu,
- double   b_t_cpu_u,
- double   b_t_cpu_s
- )
+ _pdm_para_octree_t *octree
+)
 {
-  double   e_t_elapsed;
-  double   e_t_cpu;
-  double   e_t_cpu_u;
-  double   e_t_cpu_s;
+
+  PDM_timer_start(octree->timer, "build local ngb 1", 0);
 
   const int n_direction = (int) PDM_N_DIRECTION;
 
@@ -2549,25 +2543,8 @@ _compute_neighbours
     }
   }
 
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP1] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP1]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_s - b_t_cpu_s;
-
-  PDM_timer_resume(octree->timer);
-
-  PDM_timer_hang_on(octree->timer);
-  b_t_elapsed = PDM_timer_elapsed(octree->timer);
-  b_t_cpu     = PDM_timer_cpu(octree->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-  PDM_timer_resume(octree->timer);
+  PDM_timer_end  (octree->timer, "build local ngb 1", 0);
+  PDM_timer_start(octree->timer, "build local ngb 2", 0);
 
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j = 0; j < n_direction; j+=2) {
@@ -2613,26 +2590,8 @@ _compute_neighbours
    *************************************************************************/
   _compute_connected_parts (octree, neighbours_tmp);
 
-
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP2] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP2]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP2]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]   += e_t_cpu_s - b_t_cpu_s;
-
-  PDM_timer_resume(octree->timer);
-
-  PDM_timer_hang_on(octree->timer);
-  b_t_elapsed = PDM_timer_elapsed(octree->timer);
-  b_t_cpu     = PDM_timer_cpu(octree->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-  PDM_timer_resume(octree->timer);
+  PDM_timer_end  (octree->timer, "build local ngb 2", 0);
+  PDM_timer_start(octree->timer, "build remote ngb", 0);
 
   /*************************************************************************
    *
@@ -2997,27 +2956,9 @@ _compute_neighbours
     octree->part_boundary_elt_idx[i+1] += octree->part_boundary_elt_idx[i];
   }
 
+  PDM_timer_end(octree->timer, "build remote ngb", 0);
 
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_DISTANT_NEIGHBOURS]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_DISTANT_NEIGHBOURS]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_DISTANT_NEIGHBOURS]   += e_t_cpu_s - b_t_cpu_s;
-
-  PDM_timer_resume(octree->timer);
-
-  PDM_timer_hang_on(octree->timer);
-  b_t_elapsed = PDM_timer_elapsed(octree->timer);
-  b_t_cpu     = PDM_timer_cpu(octree->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-  PDM_timer_resume(octree->timer);
-
+  PDM_timer_start(octree->timer, "build local ngb 3", 0);
 
 
   /*************************************************************************
@@ -3071,58 +3012,18 @@ _compute_neighbours
 
   PDM_free(neighbours_tmp);
 
-
-
-
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP3] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP3]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP3]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3]   += e_t_cpu_s - b_t_cpu_s;
-
-
-  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS] += octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP1]
-    + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP2]
-    + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP3];
-
-  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP1]
-    + octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP2]
-    + octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP3];
-
-  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]
-    + octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP2]
-    + octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP3];
-
-  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]
-    + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]
-    + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3];
-
-  PDM_timer_resume(octree->timer);
+  PDM_timer_end(octree->timer, "build local ngb 3", 0);
 }
-
-
-
 
 static void
 _finalize_neighbours
 (
- _pdm_para_octree_t          *octree,
- _neighbours_tmp_t **ngb_octree,
- double              b_t_elapsed,
- double              b_t_cpu,
- double              b_t_cpu_u,
- double              b_t_cpu_s
- )
+ _pdm_para_octree_t  *octree,
+ _neighbours_tmp_t  **ngb_octree
+)
 {
-  double   e_t_elapsed;
-  double   e_t_cpu;
-  double   e_t_cpu_u;
-  double   e_t_cpu_s;
+
+  PDM_timer_start(octree->timer, "build local ngb 1", 0);
 
   const int n_direction = (int) PDM_N_DIRECTION;
 
@@ -3142,27 +3043,8 @@ _finalize_neighbours
   _compute_connected_parts (octree,
                             neighbours_tmp);
 
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP1] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP1]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_s - b_t_cpu_s;
-
-  PDM_timer_resume(octree->timer);
-
-
-  PDM_timer_hang_on(octree->timer);
-  b_t_elapsed = PDM_timer_elapsed(octree->timer);
-  b_t_cpu     = PDM_timer_cpu(octree->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-  PDM_timer_resume(octree->timer);
-
+  PDM_timer_end  (octree->timer, "build local ngb 1", 0);
+  PDM_timer_start(octree->timer, "build remote ngb" , 0);
 
   /*************************************************************************
    *
@@ -3549,26 +3431,8 @@ _finalize_neighbours
     octree->part_boundary_elt_idx[i+1] += octree->part_boundary_elt_idx[i];
   }
 
-
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_DISTANT_NEIGHBOURS]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_DISTANT_NEIGHBOURS]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_DISTANT_NEIGHBOURS]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
-  PDM_timer_resume(octree->timer);
-
-
+  PDM_timer_end  (octree->timer, "build remote ngb",  0);
+  PDM_timer_start(octree->timer, "build local ngb 3", 0);
 
   /*************************************************************************
    *
@@ -3621,38 +3485,7 @@ _finalize_neighbours
 
   PDM_free(neighbours_tmp);
 
-
-
-
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP3] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP3]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP3]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3]   += e_t_cpu_s - b_t_cpu_s;
-
-
-  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS] += octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP1]
-    + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP2]
-    + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP3];
-
-  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP1]
-    + octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP2]
-    + octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP3];
-
-  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]
-    + octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP2]
-    + octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP3];
-
-  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]
-    + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]
-    + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3];
-
-  PDM_timer_resume(octree->timer);
+  PDM_timer_end(octree->timer, "build local ngb 3", 0);
 }
 
 
@@ -7280,14 +7113,8 @@ PDM_para_octree_create
   octree->copy_requests.req_pts = NULL;
   octree->copy_requests.req_exp = NULL;
 
-  octree->timer = PDM_timer_create ();
-
-  for (int i = 0; i < PARA_OCTREE_NTIMER; i++) {
-    octree->times_elapsed[i] = 0.;
-    octree->times_cpu    [i] = 0.;
-    octree->times_cpu_u  [i] = 0.;
-    octree->times_cpu_s  [i] = 0.;
-  }
+  octree->timer          = PDM_timer_create(octree->comm);
+  octree->external_timer = 0;
 
   octree->shared_among_nodes = 0;
   octree->n_shm_ranks        = 0;
@@ -7422,7 +7249,9 @@ PDM_para_octree_free
   PDM_para_octree_free_copies (octree);
   PDM_para_octree_free_shm    (octree);
 
-  PDM_timer_free (_octree->timer);
+  if(_octree->external_timer == 0) {
+    PDM_timer_free(_octree->timer);
+  }
 
   PDM_free(_octree);
 }
@@ -7506,26 +7335,8 @@ PDM_para_octree_build
   int rank;
   PDM_MPI_Comm_rank (_octree->comm, &rank);
 
-  double b_t_elapsed;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
-
-  double e_t_elapsed;
-  double e_t_cpu;
-  double e_t_cpu_u;
-  double e_t_cpu_s;
-
-  _octree->times_elapsed[BEGIN] = PDM_timer_elapsed(_octree->timer);
-  _octree->times_cpu[BEGIN]     = PDM_timer_cpu(_octree->timer);
-  _octree->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(_octree->timer);
-  _octree->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(_octree->timer);
-
-  b_t_elapsed = _octree->times_elapsed[BEGIN];
-  b_t_cpu     = _octree->times_cpu[BEGIN];
-  b_t_cpu_u   = _octree->times_cpu_u[BEGIN];
-  b_t_cpu_s   = _octree->times_cpu_s[BEGIN];
-  PDM_timer_resume(_octree->timer);
+  PDM_timer_start(_octree->timer, "para_octree:build", 0);
+  PDM_timer_start(_octree->timer, "order points", 0);
 
   /*
    * Get coord extents
@@ -7721,24 +7532,8 @@ PDM_para_octree_build
                               NULL);
   }
 
-
-  PDM_timer_hang_on(_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(_octree->timer);
-  e_t_cpu     = PDM_timer_cpu(_octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(_octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(_octree->timer);
-
-  _octree->times_elapsed[BUILD_ORDER_POINTS] += e_t_elapsed - b_t_elapsed;
-  _octree->times_cpu[BUILD_ORDER_POINTS]     += e_t_cpu - b_t_cpu;
-  _octree->times_cpu_u[BUILD_ORDER_POINTS]   += e_t_cpu_u - b_t_cpu_u;
-  _octree->times_cpu_s[BUILD_ORDER_POINTS]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
-  PDM_timer_resume(_octree->timer);
+  PDM_timer_end  (_octree->timer, "order points", 0);
+  PDM_timer_start(_octree->timer, "block partition", 0);
 
   if (n_ranks > 0) {
 
@@ -8061,29 +7856,8 @@ PDM_para_octree_build
 
   }
 
-  PDM_timer_hang_on(_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(_octree->timer);
-  e_t_cpu     = PDM_timer_cpu(_octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(_octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(_octree->timer);
-
-  _octree->times_elapsed[BUILD_BLOCK_PARTITION] += e_t_elapsed - b_t_elapsed;
-  _octree->times_cpu[BUILD_BLOCK_PARTITION]     += e_t_cpu - b_t_cpu;
-  _octree->times_cpu_u[BUILD_BLOCK_PARTITION]   += e_t_cpu_u - b_t_cpu_u;
-  _octree->times_cpu_s[BUILD_BLOCK_PARTITION]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
-  PDM_timer_resume(_octree->timer);
-
-  // PDM_MPI_Barrier (_octree->comm);
-  // if (dbg_enabled && rank == 0) {
-  //   printf("BUILD_BLOCK_PARTITION OK\n");
-  //   fflush(stdout);
-  // }
+  PDM_timer_end  (_octree->timer, "block partition", 0);
+  PDM_timer_start(_octree->timer, "local nodes", 0);
 
   /*************************************************************************
    *
@@ -8490,29 +8264,9 @@ PDM_para_octree_build
 
   heap = _heap_free (heap);
 
-  PDM_timer_hang_on(_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(_octree->timer);
-  e_t_cpu     = PDM_timer_cpu(_octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(_octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(_octree->timer);
+  PDM_timer_end(_octree->timer, "local nodes", 0);
 
-  _octree->times_elapsed[BUILD_LOCAL_NODES] += e_t_elapsed - b_t_elapsed;
-  _octree->times_cpu[BUILD_LOCAL_NODES]     += e_t_cpu - b_t_cpu;
-  _octree->times_cpu_u[BUILD_LOCAL_NODES]   += e_t_cpu_u - b_t_cpu_u;
-  _octree->times_cpu_s[BUILD_LOCAL_NODES]   += e_t_cpu_s - b_t_cpu_s;
-  if (dbg_enabled && rank == 0) {
-    printf("build local nodes OK\n");
-    fflush(stdout);
-  }
-
-  PDM_timer_resume(_octree->timer);
-
-  PDM_timer_hang_on(_octree->timer);
-  b_t_elapsed = PDM_timer_elapsed(_octree->timer);
-  b_t_cpu     = PDM_timer_cpu(_octree->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(_octree->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(_octree->timer);
-  PDM_timer_resume(_octree->timer);
+  PDM_timer_start(_octree->timer, "explicit nodes", 0);
 
   /*************************************************************************
    *
@@ -8521,37 +8275,15 @@ PDM_para_octree_build
    *************************************************************************/
   if (_octree->neighboursToBuild) {
     if (NGB_ON_THE_FLY) {
-      _finalize_neighbours (_octree,
-                            &ngb_octree,
-                            b_t_elapsed,
-                            b_t_cpu,
-                            b_t_cpu_u,
-                            b_t_cpu_s);
-    }
-    else {
-      _compute_neighbours (_octree,
-                           b_t_elapsed,
-                           b_t_cpu,
-                           b_t_cpu_u,
-                           b_t_cpu_s);
+      _finalize_neighbours (_octree, &ngb_octree);
+    } else {
+      _compute_neighbours (_octree);
     }
 
     if (1 == 0) {
       _check_neighbours_area (_octree);
     }
   }
-
-  /*PDM_timer_hang_on(_octree->timer);
-  _octree->times_elapsed[BUILD_TOTAL] = PDM_timer_elapsed(_octree->timer);
-  _octree->times_cpu[BUILD_TOTAL]     = PDM_timer_cpu(_octree->timer);
-  _octree->times_cpu_u[BUILD_TOTAL]   = PDM_timer_cpu_user(_octree->timer);
-  _octree->times_cpu_s[BUILD_TOTAL]   = PDM_timer_cpu_sys(_octree->timer);
-  PDM_timer_resume(_octree->timer);
-
-  _octree->times_elapsed[END] = _octree->times_elapsed[BUILD_TOTAL];
-  _octree->times_cpu[END]     = _octree->times_cpu[BUILD_TOTAL];
-  _octree->times_cpu_u[END]   = _octree->times_cpu_u[BUILD_TOTAL];
-  _octree->times_cpu_s[END]   = _octree->times_cpu_s[BUILD_TOTAL];*/
 
   //-->
   if (0) {
@@ -8609,14 +8341,6 @@ PDM_para_octree_build
   }
   //<<--
 
-
-  PDM_timer_hang_on(_octree->timer);
-  b_t_elapsed = PDM_timer_elapsed(_octree->timer);
-  b_t_cpu     = PDM_timer_cpu(_octree->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(_octree->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(_octree->timer);
-  PDM_timer_resume(_octree->timer);
-
   //-->>
   if (_octree->explicit_nodes_to_build) {
     _build_explicit_nodes (_octree);
@@ -8655,32 +8379,9 @@ PDM_para_octree_build
     // }
   }
   //<<--
-  PDM_timer_hang_on(_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(_octree->timer);
-  e_t_cpu     = PDM_timer_cpu(_octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(_octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(_octree->timer);
+  PDM_timer_end(_octree->timer, "explicit nodes", 0);
 
-  _octree->times_elapsed[BUILD_EXPLICIT_NODES] += e_t_elapsed - b_t_elapsed;
-  _octree->times_cpu[BUILD_EXPLICIT_NODES]     += e_t_cpu - b_t_cpu;
-  _octree->times_cpu_u[BUILD_EXPLICIT_NODES]   += e_t_cpu_u - b_t_cpu_u;
-  _octree->times_cpu_s[BUILD_EXPLICIT_NODES]   += e_t_cpu_s - b_t_cpu_s;
-
-  PDM_timer_resume(_octree->timer);
-
-
-
-  PDM_timer_hang_on(_octree->timer);
-  _octree->times_elapsed[BUILD_TOTAL] = PDM_timer_elapsed(_octree->timer);
-  _octree->times_cpu[BUILD_TOTAL]     = PDM_timer_cpu(_octree->timer);
-  _octree->times_cpu_u[BUILD_TOTAL]   = PDM_timer_cpu_user(_octree->timer);
-  _octree->times_cpu_s[BUILD_TOTAL]   = PDM_timer_cpu_sys(_octree->timer);
-  PDM_timer_resume(_octree->timer);
-
-  _octree->times_elapsed[END] = _octree->times_elapsed[BUILD_TOTAL];
-  _octree->times_cpu[END]     = _octree->times_cpu[BUILD_TOTAL];
-  _octree->times_cpu_u[END]   = _octree->times_cpu_u[BUILD_TOTAL];
-  _octree->times_cpu_s[END]   = _octree->times_cpu_s[BUILD_TOTAL];
+  PDM_timer_end(_octree->timer, "para_octree:build", 0);
 }
 
 
@@ -10321,64 +10022,10 @@ PDM_para_octree_single_closest_point_block_frame
     USE_SHARED_OCTREE = (int) atoi(env_var);
   }
 
-  int DETAIL_TIMER = 0;
-  env_var = getenv ("DETAIL_TIMER");
-  if (env_var != NULL) {
-    DETAIL_TIMER = (int) atoi(env_var);
-  }
-
-  const int ntimer=15;
-  PDM_timer_t *timer = NULL; /*!< Timer */
-  if (DETAIL_TIMER) {
-    timer = PDM_timer_create ();
-    PDM_timer_init (timer);
-  }
-  double times_elapsed[ntimer]; /*!< Elapsed time */
-
-  double times_cpu[ntimer];     /*!< CPU time */
-
-  double times_cpu_u[ntimer];  /*!< User CPU time */
-
-  double times_cpu_s[ntimer];  /*!< System CPU time */
-
-  double b_t_elapsed = 0.;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
-
-  double e_t_elapsed;
-  double e_t_cpu;
-  double e_t_cpu_u;
-  double e_t_cpu_s;
-
-  if (DETAIL_TIMER) {
-    for (int i = 0; i < ntimer; i++) {
-      times_elapsed[i] = 0;
-      times_cpu[i]     = 0;
-      times_cpu_u[i]   = 0;
-      times_cpu_s[i]   = 0;
-    }
-
-    //PDM_timer_hang_on(timer);
-    times_elapsed[0] = PDM_timer_elapsed(timer);
-    times_cpu[0]     = PDM_timer_cpu(timer);
-    times_cpu_u[0]   = PDM_timer_cpu_user(timer);
-    times_cpu_s[0]   = PDM_timer_cpu_sys(timer);
-
-    b_t_elapsed = times_elapsed[0];
-    b_t_cpu     = times_cpu[0];
-    b_t_cpu_u   = times_cpu_u[0];
-    b_t_cpu_s   = times_cpu_s[0];
-
-    PDM_timer_resume(timer);
-  }
-
-
   /* Compute rank extents and build shared bounding-box tree */
   if (_octree->used_rank_extents == NULL && !USE_SHARED_OCTREE) {
     _compute_rank_extents (_octree);
   }
-
 
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (_octree->comm, &i_rank);
@@ -10450,29 +10097,6 @@ PDM_para_octree_single_closest_point_block_frame
     PDM_free(gnum_proc);
     PDM_free(init_location_proc);
   }
-
-
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[1] += e_t_elapsed - b_t_elapsed;
-    times_cpu[1]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[1]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[1]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
-
 
   /********************************************
    * Distribute target points
@@ -10796,28 +10420,6 @@ PDM_para_octree_single_closest_point_block_frame
     fflush(stdout);
   }
 
-
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[2] += e_t_elapsed - b_t_elapsed;
-    times_cpu[2]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[2]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[2]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
-
   /********************************************
    * First guess : closest source point in the
    * sense of Morton code
@@ -10988,27 +10590,6 @@ if (_octree->use_win_shared) {
   }
   PDM_free(pts_code);
 
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[3] += e_t_elapsed - b_t_elapsed;
-    times_cpu[3]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[3]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[3]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
-
   /*
    *  Search closest point
    */
@@ -11031,28 +10612,6 @@ if (_octree->use_win_shared) {
                            pts_coord1,
                            _closest_pt_g_num,
                            _closest_pt_dist2);
-  }
-
-
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[4] += e_t_elapsed - b_t_elapsed;
-    times_cpu[4]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[4]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[4]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
   }
 
   for (int i = 0; i < _octree->n_copied_ranks; i++) {
@@ -11084,33 +10643,6 @@ if (_octree->use_win_shared) {
 
   if (dbg_enabled) {
     PDM_log_trace_array_long(_closest_pt_g_num, n_pts1, "_closest_pt_g_num 1 : ");
-  }
-
-  if (0) {//n_rank == 1) {
-    if (DETAIL_TIMER)
-      PDM_timer_free (timer);
-    return;
-  }
-
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[5] += e_t_elapsed - b_t_elapsed;
-    times_cpu[5]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[5]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[5]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
   }
 
   /*
@@ -11179,27 +10711,6 @@ if (_octree->use_win_shared) {
   PDM_free(part_stride);
 
   ptb1 = PDM_part_to_block_free (ptb1);
-
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[6] += e_t_elapsed - b_t_elapsed;
-    times_cpu[6]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[6]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[6]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
 
   /*
    *  Find ranks that may contain closer points
@@ -11294,27 +10805,6 @@ if (_octree->use_win_shared) {
                                    "close_ranks : ");
   }
 
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[7] += e_t_elapsed - b_t_elapsed;
-    times_cpu[7]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[7]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[7]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
-
   PDM_array_reset_int(send_count, n_rank, 0);
 
   for (int i = 0; i < idx_pts1[2]; i++) {
@@ -11368,27 +10858,6 @@ if (_octree->use_win_shared) {
                    &n_recv_pts_copied_ranks,
                    &mean_n_recv_pts);
 
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[8] += e_t_elapsed - b_t_elapsed;
-    times_cpu[8]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[8]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[8]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
-
   if (n_copied_ranks2 > 0) {
     if (dbg_enabled && i_rank == 0) {
       if (n_copied_ranks2 == 1) {
@@ -11422,27 +10891,6 @@ if (_octree->use_win_shared) {
   for (int i = 0; i < _octree->n_copied_ranks; i++) {
     i_copied_rank2[_octree->copied_ranks[i]] = i;
     copied_count[i] = 0;
-  }
-
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[9] += e_t_elapsed - b_t_elapsed;
-    times_cpu[9]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[9]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[9]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
   }
 
   int n_pts_local2 = 0;
@@ -11576,27 +11024,6 @@ if (_octree->use_win_shared) {
     }
   }
 
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[10] += e_t_elapsed - b_t_elapsed;
-    times_cpu[10]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[10]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[10]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
-
   PDM_g_num_t *_pts_g_num1 = pts_g_num1 + idx_pts1[2];
   for (int c = 0; c < n_copied_ranks1; c++) {
     int rank1 = copied_ranks1[c];
@@ -11650,27 +11077,6 @@ if (_octree->use_win_shared) {
         }
       }
     }
-  }
-
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[11] += e_t_elapsed - b_t_elapsed;
-    times_cpu[11]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[11]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[11]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
   }
 
   if (copied_shift1 != NULL) {
@@ -11754,28 +11160,6 @@ if (_octree->use_win_shared) {
                            _closest_pt_dist22);
   }
 
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[12] += e_t_elapsed - b_t_elapsed;
-    times_cpu[12]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[12]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[12]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
-
-
   if (_octree->use_win_shared) {
     //if (i_rank == 0) printf("_finalize_copies_win_shared 2\n");
     _finalize_copies_win_shared (_octree);
@@ -11820,28 +11204,6 @@ if (_octree->use_win_shared) {
     PDM_free(copied_ranks2);
   }
   PDM_free(copied_shift2);
-
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[13] += e_t_elapsed - b_t_elapsed;
-    times_cpu[13]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[13]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[13]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(timer);
-  }
 
   /*
    *  End of phase 2 -- Back to original partitioning
@@ -11951,28 +11313,6 @@ if (_octree->use_win_shared) {
     PDM_box_tree_destroy (&bt_shared);
   }
 
-  if (DETAIL_TIMER) {
-    PDM_MPI_Barrier(_octree->comm);
-    PDM_timer_hang_on(timer);
-    e_t_elapsed = PDM_timer_elapsed(timer);
-    e_t_cpu     = PDM_timer_cpu(timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-
-    times_elapsed[14] += e_t_elapsed - b_t_elapsed;
-    times_cpu[14]     += e_t_cpu - b_t_cpu;
-    times_cpu_u[14]   += e_t_cpu_u - b_t_cpu_u;
-    times_cpu_s[14]   += e_t_cpu_s - b_t_cpu_s;
-
-    if (i_rank == 0) {
-      for (int i = 0; i < ntimer; i++) {
-        printf("timer single point step %d : %12.5e\n",i,times_elapsed[i]);
-
-      }
-    }
-
-    PDM_timer_free(timer);
-  }
 }
 
 
@@ -12046,79 +11386,11 @@ void
 PDM_para_octree_dump_times
 (
  const PDM_para_octree_t *octree
- )
+)
 {
   _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
-
-  double t1 = _octree->times_elapsed[END] - _octree->times_elapsed[BEGIN];
-  double t2 = _octree->times_cpu[END] - _octree->times_cpu[BEGIN];
-
-  double t1max;
-  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  double t2max;
-  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  double t_elaps_max[PARA_OCTREE_NTIMER];
-  PDM_MPI_Allreduce (_octree->times_elapsed, t_elaps_max, PARA_OCTREE_NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  double t_cpu_max[PARA_OCTREE_NTIMER];
-  PDM_MPI_Allreduce (_octree->times_cpu, t_cpu_max, PARA_OCTREE_NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  int rank;
-  PDM_MPI_Comm_rank (_octree->comm, &rank);
-
-  if (rank == 0) {
-
-    PDM_printf( "PDM_para_octree timer : all (elapsed and cpu)                                           :"
-                " %12.5es %12.5es\n",
-                t1max, t2max);
-    PDM_printf( "PDM_para_octree timer : build octree : total (elapsed and cpu)                          :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_TOTAL],
-                t_cpu_max[BUILD_TOTAL]);
-    PDM_printf( "PDM_para_octree timer : build octree : step order points (elapsed and cpu)              :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_ORDER_POINTS],
-                t_cpu_max[BUILD_ORDER_POINTS]);
-    PDM_printf( "PDM_para_octree timer : build octree : step block partition (elapsed and cpu)           :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_BLOCK_PARTITION],
-                t_cpu_max[BUILD_BLOCK_PARTITION]);
-    PDM_printf( "PDM_para_octree timer : build octree : step local nodes (elapsed and cpu)               :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_LOCAL_NODES],
-                t_cpu_max[BUILD_LOCAL_NODES]);
-    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours (elapsed and cpu)          :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_LOCAL_NEIGHBOURS],
-                t_cpu_max[BUILD_LOCAL_NEIGHBOURS]);
-    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 1 (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP1],
-                t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP1]);
-    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 2 (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP2],
-                t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP2]);
-    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 3 (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP3],
-                t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP3]);
-    PDM_printf( "PDM_para_octree timer : build octree : step distant neighbours (elapsed and cpu)        :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_DISTANT_NEIGHBOURS],
-                t_cpu_max[BUILD_DISTANT_NEIGHBOURS]);
-
-    PDM_printf( "PDM_para_octree timer : build octree : build explicit nodes (elapsed and cpu)           :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_EXPLICIT_NODES],
-                t_cpu_max[BUILD_EXPLICIT_NODES]);
-
-  }
-
+  PDM_timer_gather_dump(_octree->timer, NULL);
 }
-
 
 /**
  *
@@ -12133,22 +11405,6 @@ PDM_para_octree_dump_times
  * \param [out]  pts_in_box_coord       Coordinates of points located in boxes
  *
  */
-
-#define NTIMER_PIB 8
-
-typedef enum {
-  PIB_BEGIN,
-  PIB_REDISTRIBUTE,
-  PIB_COPIES,
-  PIB_EXCHANGE,
-  PIB_LOCAL,
-  PIB_PTB,
-  PIB_BTP,
-  PIB_TOTAL
-} _pib_step_t;
-
-#define PIB_TIME_FMT "%f" //"12.5e"
-
 void
 PDM_para_octree_points_inside_boxes_block_frame
 (
@@ -12160,12 +11416,12 @@ PDM_para_octree_points_inside_boxes_block_frame
  int                     **dbox_pts_n,
  PDM_g_num_t             **dbox_pts_g_num,
  double                  **dbox_pts_coord
- )
- {
-  int dbg_enabled = 0;
+)
+{
+  int   dbg_enabled      = 0;
   float f_copy_threshold = 1.05;
-  float f_max_copy = 0.05;
-  int   a_max_copy = 5;
+  float f_max_copy       = 0.05;
+  int   a_max_copy       = 5;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -12204,16 +11460,7 @@ PDM_para_octree_points_inside_boxes_block_frame
 
   if (dbg_enabled) printf("[%d] n_boxes = %d\n", i_rank, n_boxes);
 
-  double times_elapsed[NTIMER_PIB], b_t_elapsed, e_t_elapsed;
-  for (_pib_step_t step = PIB_BEGIN; step <= PIB_TOTAL; step++) {
-    times_elapsed[step] = 0.;
-  }
-
-  PDM_timer_hang_on (_octree->timer);
-  times_elapsed[PIB_BEGIN] = PDM_timer_elapsed (_octree->timer);
-  b_t_elapsed = times_elapsed[PIB_BEGIN];
-  PDM_timer_resume (_octree->timer);
-
+  PDM_timer_start(_octree->timer, "para_octree:pts in boxes", 0);
 
   PDM_morton_code_t *box_corners = NULL;
   double d[3], s[3];
@@ -12386,12 +11633,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     }
     PDM_free(box_corners);
 
-
-    PDM_timer_hang_on (_octree->timer);
-    e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-    times_elapsed[PIB_REDISTRIBUTE] = e_t_elapsed - b_t_elapsed;
-    b_t_elapsed = e_t_elapsed;
-    PDM_timer_resume (_octree->timer);
+    PDM_timer_start(_octree->timer, "copies", 0);
 
     //-->>
     if (0) {
@@ -12504,11 +11746,8 @@ PDM_para_octree_points_inside_boxes_block_frame
     int *copied_count_tmp = PDM_array_zeros_int (_octree->n_copied_ranks);
     n_box_copied = copied_shift[_octree->n_copied_ranks];
 
-    PDM_timer_hang_on (_octree->timer);
-    e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-    times_elapsed[PIB_COPIES] = e_t_elapsed - b_t_elapsed;
-    b_t_elapsed = e_t_elapsed;
-    PDM_timer_resume (_octree->timer);
+    PDM_timer_end  (_octree->timer, "copies", 0);
+    PDM_timer_start(_octree->timer, "exchange", 0);
 
     /* Exchange new send/recv counts */
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
@@ -12617,11 +11856,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     PDM_free(send_g_num);
     PDM_free(send_extents);
 
-    PDM_timer_hang_on (_octree->timer);
-    e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-    times_elapsed[PIB_EXCHANGE] = e_t_elapsed - b_t_elapsed;
-    b_t_elapsed = e_t_elapsed;
-    PDM_timer_resume (_octree->timer);
+    PDM_timer_end(_octree->timer, "exchange", 0);
   }
 
   /* Single proc */
@@ -12636,6 +11871,7 @@ PDM_para_octree_points_inside_boxes_block_frame
     box_extents1 = (double *) box_extents;
   }
 
+  PDM_timer_start(_octree->timer, "local", 0);
 
   /***************************************
    * Intersect redistributed boxes with local octree
@@ -12758,11 +11994,7 @@ PDM_para_octree_points_inside_boxes_block_frame
   PDM_para_octree_free_copies (octree);
 
 
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  times_elapsed[PIB_LOCAL] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
+  PDM_timer_end(_octree->timer, "local", 0);
 
 
   if (0) {//n_rank == 1) {
@@ -12920,11 +12152,9 @@ PDM_para_octree_points_inside_boxes_block_frame
     *dbox_pts_g_num = block_pts_in_box_g_num;
     *dbox_pts_coord = block_pts_in_box_coord;
   }
- }
 
-
-
-
+  PDM_timer_end(_octree->timer, "para_octree:pts in boxes", 0);
+}
 
 void
 PDM_para_octree_points_inside_boxes
@@ -13044,10 +12274,6 @@ PDM_para_octree_copy_ranks
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (_octree->comm, &i_rank);
   PDM_MPI_Comm_size (_octree->comm, &n_rank);
-
-  PDM_timer_hang_on (_octree->timer);
-  double b_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  PDM_timer_resume (_octree->timer);
 
   _octree->n_copied_ranks = n_copied_ranks;
 
@@ -13264,29 +12490,7 @@ PDM_para_octree_copy_ranks
     if (dbuf != NULL)PDM_free(dbuf);
   }
 
-
-  PDM_timer_hang_on (_octree->timer);
-  double e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  if (dbg_enabled && i_rank == 0) {
-    printf("PDM_para_octree_copy_ranks: elapsed = %12.5es\n", e_t_elapsed - b_t_elapsed);
-  }
-  PDM_timer_resume (_octree->timer);
 }
-
-
-
-#define NTIMER_COPY 8
-typedef enum {
-  COPY_BEGIN,
-  COPY_GATHER_S_COPY_DATA_NODE,
-  COPY_GATHER_N_COPIED_RANKS_ALL_NODES,
-  COPY_GATHER_S_COPY_DATA_ALL_NODES,
-  COPY_CREATE_WINDOWS,
-  COPY_COPY_IN_WINDOWS,
-  COPY_BCAST_COPIES,
-  COPY_TOTAL
-} _copy_step_t;
-
 
 /**
  *
@@ -13311,14 +12515,6 @@ PDM_para_octree_copy_ranks_win_shared
   _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
   int dim = _octree->dim;
   const int n_child = 1 << dim;
-
-  double b_t_elapsed, e_t_elapsed;
-  double time[NTIMER_COPY];
-
-  PDM_timer_hang_on (_octree->timer);
-  b_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  time[COPY_BEGIN] = b_t_elapsed;
-  PDM_timer_resume (_octree->timer);
 
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (_octree->comm, &i_rank);
@@ -13381,13 +12577,6 @@ PDM_para_octree_copy_ranks_win_shared
   PDM_MPI_Gather (s_copied_data_in_rank, 3, PDM_MPI_INT,
                   s_copied_data_in_node, 3, PDM_MPI_INT, 0, comm_shared);
 
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  time[COPY_GATHER_S_COPY_DATA_NODE] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
-
-
   if (dbg_enabled && i_rank_in_shm == 0) {
     PDM_log_trace_array_int (s_copied_data_in_node, 3*n_rank_in_shm, "s_copied_data_in_node : ");
   }
@@ -13430,13 +12619,6 @@ PDM_para_octree_copy_ranks_win_shared
   PDM_MPI_Barrier (comm_shared);
   PDM_mpi_win_shared_sync (w_n_copied_ranks);
   PDM_mpi_win_shared_unlock_all (w_n_copied_ranks);
-
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  time[COPY_GATHER_N_COPIED_RANKS_ALL_NODES] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
-
 
   if (dbg_enabled) {
     PDM_log_trace_array_int (n_copied_ranks_in_all_nodes, n_node, "n_copied_ranks_in_all_nodes : ");
@@ -13496,14 +12678,6 @@ PDM_para_octree_copy_ranks_win_shared
                                     n_node,
                                     "s_copied_data_in_all_nodes : ");
   }
-
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  time[COPY_GATHER_S_COPY_DATA_ALL_NODES] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
-
-
 
   /* Create shared windows */
   PDM_malloc(_octree->w_copied_octants  , n_copied_ranks, _w_l_octant_t     *);
@@ -13617,12 +12791,6 @@ PDM_para_octree_copy_ranks_win_shared
     }
   }
 
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  time[COPY_CREATE_WINDOWS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
-
   /* Each copied rank writes in its section of the shared windows */
   if (i_copied_rank >= 0) {
     /* Octants */
@@ -13694,12 +12862,6 @@ PDM_para_octree_copy_ranks_win_shared
   }
 
   PDM_MPI_Barrier (comm_shared);
-
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  time[COPY_COPY_IN_WINDOWS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
 
   if (dbg_enabled) log_trace("copy to local windows OK\n");
 
@@ -13787,50 +12949,9 @@ PDM_para_octree_copy_ranks_win_shared
   PDM_mpi_win_shared_free (w_n_copied_ranks);
   PDM_mpi_win_shared_free (w_s_copied_data);
 
-
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  time[COPY_BCAST_COPIES] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
-
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  time[COPY_TOTAL] = e_t_elapsed - time[COPY_BEGIN];
-  PDM_timer_resume (_octree->timer);
-
-  double time_max[NTIMER_COPY];
-  PDM_MPI_Allreduce (time, time_max, NTIMER_COPY, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  if (dbg_enabled && i_rank == 0) {
-    printf("PDM_para_octree_copy_ranks : total                           : %12.5es\n", time_max[COPY_TOTAL]);
-    printf("PDM_para_octree_copy_ranks : gather s_copied_data node       : %12.5es\n", time_max[COPY_GATHER_S_COPY_DATA_NODE]);
-    printf("PDM_para_octree_copy_ranks : gather n_copied_ranks all nodes : %12.5es\n", time_max[COPY_GATHER_N_COPIED_RANKS_ALL_NODES]);
-    printf("PDM_para_octree_copy_ranks : gather s_copied_data all nodes  : %12.5es\n", time_max[COPY_GATHER_S_COPY_DATA_ALL_NODES]);
-    printf("PDM_para_octree_copy_ranks : create windows                  : %12.5es\n", time_max[COPY_CREATE_WINDOWS]);
-    printf("PDM_para_octree_copy_ranks : copy in windows                 : %12.5es\n", time_max[COPY_COPY_IN_WINDOWS]);
-    printf("PDM_para_octree_copy_ranks : bcast copies                    : %12.5es\n", time_max[COPY_BCAST_COPIES]);
-  }
-
   if (dbg_enabled) log_trace("<< PDM_para_octree_copy_ranks_win_shared\n");
   PDM_MPI_Comm_free(&comm_shared);
 }
-
-
-#define NTIMER_PIB_SHARED 10
-
-typedef enum {
-  PIB_SHARED_BEGIN,
-  PIB_SHARED_REDISTRIBUTE_ENCODE,
-  PIB_SHARED_REDISTRIBUTE_PREPARE_SEND,
-  PIB_SHARED_COPIES,
-  PIB_SHARED_EXCHANGE,
-  PIB_SHARED_LOCAL,
-  PIB_SHARED_PTB,
-  PIB_SHARED_BTP,
-  PIB_SHARED_TOTAL
-} _pib_shared_step_t;
-
 
 void
 PDM_para_octree_points_inside_boxes_shared_block_frame
@@ -13857,16 +12978,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
   PDM_MPI_Comm_size (_octree->comm, &n_rank);
 
   if (dbg_enabled) printf("[%d] n_boxes = %d\n", i_rank, n_boxes);
-
-  double times_elapsed[NTIMER_PIB_SHARED], b_t_elapsed, e_t_elapsed;
-  for (_pib_shared_step_t step = PIB_SHARED_BEGIN; step <= PIB_SHARED_TOTAL; step++) {
-    times_elapsed[step] = 0.;
-  }
-
-  PDM_timer_hang_on (_octree->timer);
-  times_elapsed[PIB_SHARED_BEGIN] = PDM_timer_elapsed (_octree->timer);
-  b_t_elapsed = times_elapsed[PIB_SHARED_BEGIN];
-  PDM_timer_resume (_octree->timer);
 
   PDM_morton_code_t *box_corners = NULL;
   double d[3], s[3];
@@ -13917,12 +13028,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
                              box_corners,
                              d,
                              s);
-
-      PDM_timer_hang_on (_octree->timer);
-      e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-      times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE] = e_t_elapsed - b_t_elapsed;
-      b_t_elapsed = e_t_elapsed;
-      PDM_timer_resume (_octree->timer);
 
       /* Find which ranks possibly intersect each box */
       int tmp_size = 4 * n_boxes;
@@ -14166,12 +13271,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
 
     }
 
-    PDM_timer_hang_on (_octree->timer);
-    e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-    times_elapsed[PIB_SHARED_REDISTRIBUTE_PREPARE_SEND] = e_t_elapsed - b_t_elapsed;
-    b_t_elapsed = e_t_elapsed;
-    PDM_timer_resume (_octree->timer);
-
     // PDM_log_trace_array_int(send_count, n_rank, "send_count ::");
 
 
@@ -14304,12 +13403,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
     if(0 == 1) {
       PDM_log_trace_array_long(shared_recv_gnum, n_tot_recv_shared, "shared_recv_gnum ::");
     }
-
-    PDM_timer_hang_on (_octree->timer);
-    e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-    times_elapsed[PIB_SHARED_EXCHANGE] = e_t_elapsed - b_t_elapsed;
-    b_t_elapsed = e_t_elapsed;
-    PDM_timer_resume (_octree->timer);
 
     /*
      * Repartition de la recherche
@@ -14481,12 +13574,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
     abort(); // Not implement
   }
 
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  times_elapsed[PIB_SHARED_LOCAL] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
-
   // PDM_MPI_Barrier (comm_shared);
   PDM_mpi_win_shared_free (wshared_recv_extents);
 
@@ -14634,12 +13721,6 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
   PDM_free(res_box_pts_coords);
   PDM_free(res_box_pts_gnum  );
 
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  times_elapsed[PIB_SHARED_PTB] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (_octree->timer);
-
   *ptb_out        = ptb;
   *dbox_pts_n     = block_pts_in_box_n;
   *dbox_pts_g_num = block_pts_in_box_g_num;
@@ -14659,13 +13740,7 @@ PDM_para_octree_points_inside_boxes_shared
  double                  **pts_in_box_coord
 )
 {
-  double times_elapsed[NTIMER_PIB_SHARED], b_t_elapsed, e_t_elapsed;
   _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
-
-  PDM_timer_hang_on (_octree->timer);
-  times_elapsed[PIB_SHARED_BEGIN] = PDM_timer_elapsed (_octree->timer);
-  b_t_elapsed = times_elapsed[PIB_SHARED_BEGIN];
-  PDM_timer_resume (_octree->timer);
 
   PDM_part_to_block_t *ptb                    = NULL;
   int                 *block_pts_in_box_n     = NULL;
@@ -14737,38 +13812,6 @@ PDM_para_octree_points_inside_boxes_shared
   PDM_free(tmp_pts_in_box_coord);
 
   PDM_block_to_part_free(btp);
-
-
-  PDM_timer_hang_on (_octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (_octree->timer);
-  times_elapsed[PIB_SHARED_BTP] = e_t_elapsed - b_t_elapsed;
-  times_elapsed[PIB_SHARED_TOTAL] = e_t_elapsed - times_elapsed[PIB_SHARED_BEGIN];
-  PDM_timer_resume (_octree->timer);
-
-
-  // if (1) {
-  //   log_trace ("PiB_SHARED timers \n");
-  //   log_trace ("PIB_SHARED_TOTAL                     : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //              times_elapsed[PIB_SHARED_TOTAL], times_elapsed[PIB_SHARED_TOTAL]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  //   log_trace ("PIB_SHARED_REDISTRIBUTE_ENCODE       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //              times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE], times_elapsed[PIB_SHARED_REDISTRIBUTE_ENCODE]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  //   log_trace ("PIB_SHARED_REDISTRIBUTE_PREPARE_SEND : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //              times_elapsed[PIB_SHARED_REDISTRIBUTE_PREPARE_SEND], times_elapsed[PIB_SHARED_REDISTRIBUTE_PREPARE_SEND]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  //   log_trace ("PIB_SHARED_COPIES                    : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //              times_elapsed[PIB_SHARED_COPIES], times_elapsed[PIB_SHARED_COPIES]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  //   log_trace ("PIB_SHARED_EXCHANGE                  : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //              times_elapsed[PIB_SHARED_EXCHANGE], times_elapsed[PIB_SHARED_EXCHANGE]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  //   log_trace ("PIB_SHARED_LOCAL                     : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //              times_elapsed[PIB_SHARED_LOCAL], times_elapsed[PIB_SHARED_LOCAL]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  //   log_trace ("PIB_SHARED_PTB                       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //              times_elapsed[PIB_SHARED_PTB], times_elapsed[PIB_SHARED_PTB]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  //   log_trace ("PIB_SHARED_BTP                       : "PIB_TIME_FMT" "PIB_TIME_FMT"% \n",
-  //              times_elapsed[PIB_SHARED_BTP], times_elapsed[PIB_SHARED_BTP]/times_elapsed[PIB_SHARED_TOTAL] * 100);
-  // }
-
-  // PDM_MPI_Comm_free(&comm_shared);
-
-
 }
 
 
@@ -15181,5 +14224,27 @@ PDM_para_octree_neighbor_get
   *part_boundary_elt_idx = _octree->part_boundary_elt_idx;
   *part_boundary_elt     = _octree->part_boundary_elt;
 
+}
+
+void
+PDM_para_octree_timer_set
+(
+  const PDM_para_octree_t *octree,
+        PDM_timer_t       *timer
+)
+{
+  _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+  if(_octree->external_timer == 1) {
+    PDM_error(__FILE__, __LINE__, 0, "external_timer already define \n");
+  }
+
+  if(timer == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "timer is NULL \n");
+  }
+
+  // Free the existing timer (internal)
+  PDM_timer_free(_octree->timer);
+  _octree->timer = timer;
+  _octree->external_timer = 1;
 }
 

@@ -64,14 +64,14 @@ typedef enum {
 PDM_multipart_t *
 PDM_multipart_create
 (
- const int              n_domain,
- const int             *n_part,
- const PDM_bool_t       merge_domains,
- const PDM_split_dual_t split_method,
- const PDM_part_size_t  part_size_method,
- const double          *part_fraction,
- const PDM_MPI_Comm     comm,
- const PDM_ownership_t  owner
+  const int              n_domain,
+  const int             *n_part,
+  const PDM_bool_t       merge_domains,
+  const PDM_split_dual_t split_method,
+  const PDM_part_size_t  part_size_method,
+  const double          *part_fraction,
+  const PDM_MPI_Comm     comm,
+  const PDM_ownership_t  owner
 );
 
 
@@ -86,9 +86,9 @@ PDM_multipart_create
 
 void PDM_multipart_dmesh_set
 (
- PDM_multipart_t   *multipart,
- const int          domain_id,
-       PDM_dmesh_t *dmesh
+  PDM_multipart_t   *multipart,
+  const int          domain_id,
+        PDM_dmesh_t *dmesh
 );
 
 /**
@@ -102,9 +102,9 @@ void PDM_multipart_dmesh_set
 
 void PDM_multipart_dmesh_nodal_set
 (
- PDM_multipart_t         *multipart,
- const int                domain_id,
-       PDM_dmesh_nodal_t *dmesh_nodal
+  PDM_multipart_t         *multipart,
+  const int                domain_id,
+        PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 /**
@@ -138,20 +138,20 @@ void PDM_multipart_dmesh_nodal_set
 void
 PDM_multipart_block_set
 (
- PDM_multipart_t             *multipart,
- const int                    i_domain,
- const int                    dn_cell,
- const int                    dn_face,
- const int                    dn_vtx,
- const int                    n_face_group,
- const int                   *dcell_face_idx,
- const PDM_g_num_t           *dcell_face,
- const PDM_g_num_t           *dface_cell,
- const int                   *dface_vtx_idx,
- const PDM_g_num_t           *dface_vtx,
- const double                *dvtx_coord,
- const int                   *dface_group_idx,
- const PDM_g_num_t           *dface_group
+  PDM_multipart_t   *multipart,
+  const int          i_domain,
+  const int          dn_cell,
+  const int          dn_face,
+  const int          dn_vtx,
+  const int          n_face_group,
+  const int         *dcell_face_idx,
+  const PDM_g_num_t *dcell_face,
+  const PDM_g_num_t *dface_cell,
+  const int         *dface_vtx_idx,
+  const PDM_g_num_t *dface_vtx,
+  const double      *dvtx_coord,
+  const int         *dface_group_idx,
+  const PDM_g_num_t *dface_group
 );
 
 /**
@@ -168,11 +168,11 @@ PDM_multipart_block_set
 void
 PDM_multipart_renum_method_set
 (
- PDM_multipart_t     *multipart,
- const int            i_domain,
- PDM_mesh_entities_t  mesh_entity,
- const char          *renum_entity_method,
- const int           *renum_entity_properties
+  PDM_multipart_t     *multipart,
+  const int            i_domain,
+  PDM_mesh_entities_t  mesh_entity,
+  const char          *renum_entity_method,
+  const int           *renum_entity_properties
 );
 
 
@@ -189,11 +189,11 @@ PDM_multipart_renum_method_set
  */
 void PDM_multipart_set_reordering_options
 (
- PDM_multipart_t *multipart,
- const int        i_domain,
- const char      *renum_cell_method,
- const int       *renum_cell_properties,
- const char      *renum_face_method
+  PDM_multipart_t *multipart,
+  const int        i_domain,
+  const char      *renum_cell_method,
+  const int       *renum_cell_properties,
+  const char      *renum_face_method
 );
 
 /**
@@ -208,9 +208,9 @@ void PDM_multipart_set_reordering_options
 
 void PDM_multipart_set_reordering_options_vtx
 (
- PDM_multipart_t *multipart,
- const int        i_domain,
- const char      *renum_vtx_method
+  PDM_multipart_t *multipart,
+  const int        i_domain,
+  const char      *renum_vtx_method
 );
 
 
@@ -259,50 +259,50 @@ PDM_multipart_dpart_id_get
  *
  * \brief Construct the partitioned meshes on all domains
  *
- * \param [in]   multipart             Pointer to \ref PDM_multipart_t instance
+ * \param [in]   multipart Pointer to \ref PDM_multipart_t instance
  */
 void
 PDM_multipart_compute
 (
- PDM_multipart_t *multipart
+  PDM_multipart_t *multipart
 );
 
 
 /**
  * \brief Retrieve the partitioned nodal mesh
  *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
- * \param [in]  i_domain              Id of domain
- * \param [out] pmesh_nodal           Partitioned nodal mesh
- * \param [in]  ownership             Who is responsible to free retrieved data ?
+ * \param [in]  multipart   Pointer to \ref PDM_multipart_t instance
+ * \param [in]  i_domain    Id of domain
+ * \param [out] pmesh_nodal Partitioned nodal mesh
+ * \param [in]  ownership   Who is responsible to free retrieved data ?
  *
  */
 
 void
 PDM_multipart_get_part_mesh_nodal
 (
-      PDM_multipart_t        *multipart,
-const int                     i_domain,
-      PDM_part_mesh_nodal_t **pmesh_nodal,
-      PDM_ownership_t         ownership
+        PDM_multipart_t        *multipart,
+  const int                     i_domain,
+        PDM_part_mesh_nodal_t **pmesh_nodal,
+        PDM_ownership_t         ownership
 );
 
 /**
  * \brief Retrieve the partitioned mesh
  *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
- * \param [in]  i_domain              Id of domain
- * \param [out] pmesh                 Partitioned mesh
- * \param [in]  ownership             Who is responsible to free retrieved data ?
+ * \param [in]  multipart Pointer to \ref PDM_multipart_t instance
+ * \param [in]  i_domain  Id of domain
+ * \param [out] pmesh     Partitioned mesh
+ * \param [in]  ownership Who is responsible to free retrieved data ?
  *
  */
 void
 PDM_multipart_get_part_mesh
 (
-       PDM_multipart_t  *multipart,
- const int               i_domain,
-       PDM_part_mesh_t **pmesh,
-       PDM_ownership_t   ownership
+        PDM_multipart_t  *multipart,
+  const int               i_domain,
+        PDM_part_mesh_t **pmesh,
+        PDM_ownership_t   ownership
 );
 
 /**
@@ -327,19 +327,19 @@ PDM_multipart_domain_interface_shared_set
 void
 PDM_multipart_part_dim_get
 (
-PDM_multipart_t *multipart,
-const int        i_domain,
-const int        i_part,
-      int       *n_cell,
-      int       *n_face,
-      int       *n_face_part_bound,
-      int       *n_vtx,
-      int       *n_proc,
-      int       *n_total_part,
-      int       *s_cell_face,
-      int       *s_face_vtx,
-      int       *s_face_bound,
-      int       *n_bound_groups
+  PDM_multipart_t *multipart,
+  const int        i_domain,
+  const int        i_part,
+        int       *n_cell,
+        int       *n_face,
+        int       *n_face_part_bound,
+        int       *n_vtx,
+        int       *n_proc,
+        int       *n_total_part,
+        int       *s_cell_face,
+        int       *s_face_vtx,
+        int       *s_face_bound,
+        int       *n_bound_groups
 );
 
 
@@ -358,14 +358,14 @@ const int        i_part,
 void
 PDM_multipart_part_graph_comm_get
 (
- PDM_multipart_t      *multipart,
- const int             i_domain,
- const int             i_part,
- PDM_mesh_entities_t   entity_type,
- int                 **ppart_bound_proc_idx,
- int                 **ppart_bound_part_idx,
- int                 **ppart_bound,
- PDM_ownership_t       ownership
+  PDM_multipart_t      *multipart,
+  const int             i_domain,
+  const int             i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                 **ppart_bound_proc_idx,
+  int                 **ppart_bound_part_idx,
+  int                 **ppart_bound,
+  PDM_ownership_t       ownership
 );
 
 /**
@@ -377,24 +377,24 @@ PDM_multipart_part_graph_comm_get
 void
 PDM_multipart_part_val_get
 (
-PDM_multipart_t     *multipart,
-const int            i_domain,
-const int            i_part,
-      int          **cell_face_idx,
-      int          **cell_face,
-      PDM_g_num_t  **cell_ln_to_gn,
-      int          **face_cell,
-      int          **face_vtx_idx,
-      int          **face_vtx,
-      PDM_g_num_t  **face_ln_to_gn,
-      int          **face_part_bound_proc_idx,
-      int          **face_part_bound_part_idx,
-      int          **face_part_bound,
-      double       **vtx,
-      PDM_g_num_t  **vtx_ln_to_gn,
-      int          **face_bound_idx,
-      int          **face_bound,
-      PDM_g_num_t  **face_bound_ln_to_gn
+  PDM_multipart_t    *multipart,
+  const int           i_domain,
+  const int           i_part,
+        int         **cell_face_idx,
+        int         **cell_face,
+        PDM_g_num_t **cell_ln_to_gn,
+        int         **face_cell,
+        int         **face_vtx_idx,
+        int         **face_vtx,
+        PDM_g_num_t **face_ln_to_gn,
+        int         **face_part_bound_proc_idx,
+        int         **face_part_bound_part_idx,
+        int         **face_part_bound,
+        double      **vtx,
+        PDM_g_num_t **vtx_ln_to_gn,
+        int         **face_bound_idx,
+        int         **face_bound,
+        PDM_g_num_t **face_bound_ln_to_gn
 );
 
 
@@ -405,8 +405,8 @@ const int            i_part,
 int
 PDM_multipart_part_tn_part_get
 (
-PDM_multipart_t                *multipart,
-const int                       i_domain
+  PDM_multipart_t *multipart,
+  const int        i_domain
 );
 
 /**
@@ -427,13 +427,13 @@ const int                       i_domain
 int
 PDM_multipart_part_connectivity_get
 (
-PDM_multipart_t                *multipart,
-const int                       i_domain,
-const int                       i_part,
-      PDM_connectivity_type_t   connectivity_type,
-      int                     **connect_idx,
-      int                     **connect,
-      PDM_ownership_t           ownership
+  PDM_multipart_t                *multipart,
+  const int                       i_domain,
+  const int                       i_part,
+        PDM_connectivity_type_t   connectivity_type,
+        int                     **connect_idx,
+        int                     **connect,
+        PDM_ownership_t           ownership
 );
 
 
@@ -449,10 +449,10 @@ const int                       i_part,
 int
 PDM_multipart_part_n_entity_get
 (
-PDM_multipart_t            *multipart,
-const int                   i_domain,
-const int                   i_part,
-      PDM_mesh_entities_t   entity_type
+  PDM_multipart_t            *multipart,
+  const int                   i_domain,
+  const int                   i_part,
+        PDM_mesh_entities_t   entity_type
 );
 
 /**
@@ -470,12 +470,12 @@ const int                   i_part,
 int
 PDM_multipart_part_ln_to_gn_get
 (
-PDM_multipart_t            *multipart,
-const int                   i_domain,
-const int                   i_part,
-      PDM_mesh_entities_t   entity_type,
-      PDM_g_num_t         **entity_ln_to_gn,
-      PDM_ownership_t       ownership
+  PDM_multipart_t            *multipart,
+  const int                   i_domain,
+  const int                   i_part,
+        PDM_mesh_entities_t   entity_type,
+        PDM_g_num_t         **entity_ln_to_gn,
+        PDM_ownership_t       ownership
 );
 
 
@@ -494,12 +494,12 @@ const int                   i_part,
 int
 PDM_multipart_partition_color_get
 (
-PDM_multipart_t            *multipart,
-const int                   i_domain,
-const int                   i_part,
-      PDM_mesh_entities_t   entity_type,
-      int                 **entity_color,
-      PDM_ownership_t       ownership
+  PDM_multipart_t            *multipart,
+  const int                   i_domain,
+  const int                   i_part,
+        PDM_mesh_entities_t   entity_type,
+        int                 **entity_color,
+        PDM_ownership_t       ownership
 );
 
 /**
@@ -514,11 +514,11 @@ const int                   i_part,
 void
 PDM_multipart_part_hyperplane_color_get
 (
-PDM_multipart_t        *multipart,
-const int               i_domain,
-const int               i_part,
-      int             **hyperplane_color,
-      PDM_ownership_t   ownership
+  PDM_multipart_t        *multipart,
+  const int               i_domain,
+  const int               i_part,
+        int             **hyperplane_color,
+        PDM_ownership_t   ownership
 );
 
 /**
@@ -534,11 +534,11 @@ const int               i_part,
 void
 PDM_multipart_part_thread_color_get
 (
-PDM_multipart_t        *multipart,
-const int               i_domain,
-const int               i_part,
-      int             **thread_color,
-      PDM_ownership_t   ownership
+  PDM_multipart_t        *multipart,
+  const int               i_domain,
+  const int               i_part,
+        int             **thread_color,
+        PDM_ownership_t   ownership
 );
 
 
@@ -555,11 +555,11 @@ const int               i_part,
 void
 PDM_multipart_part_ghost_infomation_get
 (
-PDM_multipart_t        *multipart,
-const int               i_domain,
-const int               i_part,
-      int             **vtx_ghost_information,
-      PDM_ownership_t   ownership
+  PDM_multipart_t        *multipart,
+  const int               i_domain,
+  const int               i_part,
+        int             **vtx_ghost_information,
+        PDM_ownership_t   ownership
 );
 
 
@@ -568,23 +568,23 @@ const int               i_part,
  * \brief Return times for a given domain
  * (NOT IMPLEMENTED)
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t instance
- * \param [in]   i_domain       Id of current domain
- * \param [out]  elapsed        Elapsed time
- * \param [out]  cpu            CPU time
- * \param [out]  cpu_user       User CPU time
- * \param [out]  cpu_sys        System CPU time
+ * \param [in]   multipart Pointer to \ref PDM_multipart_t instance
+ * \param [in]   i_domain  Id of current domain
+ * \param [out]  elapsed   Elapsed time
+ * \param [out]  cpu       CPU time
+ * \param [out]  cpu_user  User CPU time
+ * \param [out]  cpu_sys   System CPU time
  *
  */
 void
 PDM_multipart_time_get
 (
- PDM_multipart_t *multipart,
- const int        i_domain,
- double         **elapsed,
- double         **cpu,
- double         **cpu_user,
- double         **cpu_sys
+  PDM_multipart_t *multipart,
+  const int        i_domain,
+  double         **elapsed,
+  double         **cpu,
+  double         **cpu_user,
+  double         **cpu_sys
 );
 
 
@@ -592,23 +592,23 @@ PDM_multipart_time_get
  *
  * \brief Free the structure
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t instance
+ * \param [in] multipart Pointer to \ref PDM_multipart_t instance
  */
 void
 PDM_multipart_free
 (
- PDM_multipart_t *multipart
+  PDM_multipart_t *multipart
 );
 
 /**
  *
  * \brief Get the vertex coordinates on current i_domain, i_part partition and return number of vertices
  *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t instance
- * \param [in]   i_domain       Id of current domain
- * \param [in]   i_part         Id of part
- * \param [out]  vtx_coord      Vertex coordinate (size = 3 * n_vtx)
- * \param [in]   ownership      Ownership for \p vtx_coord
+ * \param [in]   multipart Pointer to \ref PDM_multipart_t instance
+ * \param [in]   i_domain  Id of current domain
+ * \param [in]   i_part    Id of part
+ * \param [out]  vtx_coord Vertex coordinate (size = 3 * n_vtx)
+ * \param [in]   ownership Ownership for \p vtx_coord
  *
  * \return Number of vertices
  *
@@ -616,11 +616,11 @@ PDM_multipart_free
 int
 PDM_multipart_part_vtx_coord_get
 (
-PDM_multipart_t                *multipart,
-const int                       i_domain,
-const int                       i_part,
-      double                  **vtx_coord,
-      PDM_ownership_t           ownership
+  PDM_multipart_t        *multipart,
+  const int               i_domain,
+  const int               i_part,
+        double          **vtx_coord,
+        PDM_ownership_t   ownership
 );
 
 
@@ -641,15 +641,15 @@ const int                       i_part,
  */
 void PDM_multipart_group_get
 (
- PDM_multipart_t      *multipart,
- const int             i_domain,
- const int             i_part,
- PDM_mesh_entities_t   entity_type,
- int                  *n_group_entity,
- int                 **group_entity_idx,
- int                 **group_entity,
- PDM_g_num_t         **group_entity_ln_to_gn,
- PDM_ownership_t       ownership
+  PDM_multipart_t      *multipart,
+  const int             i_domain,
+  const int             i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                  *n_group_entity,
+  int                 **group_entity_idx,
+  int                 **group_entity,
+  PDM_g_num_t         **group_entity_ln_to_gn,
+  PDM_ownership_t       ownership
 );
 
 
@@ -673,19 +673,19 @@ void PDM_multipart_group_get
 void
 PDM_multipart_stat_get
 (
- PDM_multipart_t  *multipart,
- int               i_domain,
- int              *cells_average,
- int              *cells_median,
- double           *cells_std_deviation,
- int              *cells_min,
- int              *cells_max,
- int              *bound_part_faces_average,
- int              *bound_part_faces_median,
- double           *bound_part_faces_std_deviation,
- int              *bound_part_faces_min,
- int              *bound_part_faces_max,
- int              *bound_part_faces_sum
+  PDM_multipart_t *multipart,
+  int              i_domain,
+  int             *cells_average,
+  int             *cells_median,
+  double          *cells_std_deviation,
+  int             *cells_min,
+  int             *cells_max,
+  int             *bound_part_faces_average,
+  int             *bound_part_faces_median,
+  double          *bound_part_faces_std_deviation,
+  int             *bound_part_faces_min,
+  int             *bound_part_faces_max,
+  int             *bound_part_faces_sum
 );
 
 /**

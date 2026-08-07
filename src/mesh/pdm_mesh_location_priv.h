@@ -27,8 +27,6 @@ extern "C" {
  * Type
  *============================================================================*/
 
-#define NTIMER_MESH_LOCATION 11
-
 /**
  * \struct _PDM_Dist_t
  * \brief  Distance to a mesh surface structure
@@ -111,14 +109,6 @@ struct _pdm_mesh_location_t {
   PDM_mesh_location_method_t method;
 
   PDM_timer_t *timer; /*!< Timer */
-
-  double times_elapsed[NTIMER_MESH_LOCATION]; /*!< Elapsed time */
-
-  double times_cpu[NTIMER_MESH_LOCATION];     /*!< CPU time */
-
-  double times_cpu_u[NTIMER_MESH_LOCATION];  /*!< User CPU time */
-
-  double times_cpu_s[NTIMER_MESH_LOCATION];  /*!< System CPU time */
 
   _points_in_element_t *points_in_elements;
 

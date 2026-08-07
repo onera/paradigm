@@ -254,6 +254,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
+
   PDM_part_t *ppart = PDM_part_create(PDM_MPI_COMM_WORLD,
                                       method,
                                       "PDM_PART_RENUM_CELL_NONE",
@@ -283,13 +284,6 @@ int main(int argc, char *argv[])
                                       dface_group);
 
   PDM_free(dcell_part);
-
-  /*PDM_free(dface_cell); */
-  /*PDM_free(dface_vtx_idx); */
-  /*PDM_free(dface_vtx); */
-  /*PDM_free(dvtx_coord); */
-  /*PDM_free(dface_group_idx); */
-  /*PDM_free(dface_group); */
 
   int n_point_cloud = 1;
   PDM_dist_cloud_surf_t* dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
@@ -1063,7 +1057,7 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Finalize();
 
-   if (i_rank == 0) {
+  if (i_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }

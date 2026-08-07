@@ -107,11 +107,6 @@ program testf
   integer (kind = PDM_l_num_s), pointer :: face_group(:)                => null()
   integer (kind = PDM_g_num_s), pointer :: face_group_ln_to_gn(:)       => null()
 
-  double precision                      :: elapsed(4)
-  double precision                      :: cpu(4)
-  double precision                      :: cpu_user(4)
-  double precision                      :: cpu_sys(4)
-
   integer(kind=PDM_l_num_s)             :: cells_average
   integer(kind=PDM_l_num_s)             :: cells_median
   double precision                      :: cells_std_deviation
@@ -222,16 +217,7 @@ program testf
 
   deallocate(dcell_part)
 
-  call pdm_part_time_get(ppart,    &
-                         elapsed,  &
-                         cpu,      &
-                         cpu_user, &
-                         cpu_sys)
-
-  write (*,*) "elapsed  :", elapsed(1:4)
-  write (*,*) "cpu      :", cpu(1:4)
-  write (*,*) "cpu_user :", cpu_user(1:4)
-  write (*,*) "cpu_sys  :", cpu_sys(1:4)
+  call pdm_part_dump_times(ppart)
 
   call pdm_part_stat_get (ppart,                          &
                           cells_average,                  &

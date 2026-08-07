@@ -327,6 +327,19 @@ void PDM_part_coarse_mesh_time_get
 
 /**
  *
+ * \brief Return times
+ *
+ * \param [in]   cm          Pointer to \ref PDM_coarse_mesh
+ *
+ */
+void
+PDM_part_coarse_mesh_dump_times
+(
+ PDM_coarse_mesh_t  *cm
+);
+
+/**
+ *
  * \brief Displays all the arrays of a coarse mesh
  *
  * \param [in]   cm        Pointer to \ref PDM_coarse_mesh

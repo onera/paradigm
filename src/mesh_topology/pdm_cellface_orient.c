@@ -79,9 +79,6 @@ const int     *face_vtx
     return;
   }
 
-  PDM_timer_t *t1 = PDM_timer_create();
-  PDM_timer_resume(t1);
-
   int *_face_cell = NULL;
 
   if (face_cell != NULL) {
@@ -564,14 +561,6 @@ const int     *face_vtx
 
   if (face_cell == NULL) {
     PDM_free(_face_cell);
-  }
-
-  PDM_timer_hang_on (t1);
-  double et1 = PDM_timer_elapsed (t1);
-  PDM_timer_free (t1);
-
-  if (0 == 1) {
-    printf("elapsed time cell_face_orient : %12.5e\n", et1);
   }
 }
 

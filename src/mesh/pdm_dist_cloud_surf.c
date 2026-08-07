@@ -117,24 +117,9 @@ _dist_cloud_surf_compute
   if (idebug && rank == 0) printf("octree_type = %d\n", octree_type);
   //<<<---
 
-  double b_t_elapsed;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
+  PDM_timer_start(dist->timer, "dist_cloud_surf:FULL", 0);
 
-  double e_t_elapsed;
-  double e_t_cpu;
-  double e_t_cpu_u;
-  double e_t_cpu_s;
-
-  //PDM_timer_hang_on(dist->timer);
-  dist->times_elapsed[BEGIN] = PDM_timer_elapsed(dist->timer);
-  dist->times_cpu[BEGIN]     = PDM_timer_cpu(dist->timer);
-  dist->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(dist->timer);
-  dist->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(dist->timer);
-  PDM_timer_resume(dist->timer);
-
-
+  PDM_timer_start(dist->timer, "dist_cloud_surf:BBTREE_CREATE", 0);
 
   const double tolerance = 1e-4;
   // const int depth_max = 35;
@@ -274,13 +259,6 @@ _dist_cloud_surf_compute
    *
    **************************************************************************/
 
-  PDM_timer_hang_on(dist->timer);
-  b_t_elapsed = PDM_timer_elapsed(dist->timer);
-  b_t_cpu     = PDM_timer_cpu(dist->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-  PDM_timer_resume(dist->timer);
-
   PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3, global_extents);
 
   PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
@@ -307,26 +285,7 @@ _dist_cloud_surf_compute
     }
   }
 
-  PDM_timer_hang_on(dist->timer);
-  e_t_elapsed = PDM_timer_elapsed(dist->timer);
-  e_t_cpu     = PDM_timer_cpu(dist->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-  dist->times_elapsed[BBTREE_CREATE] += e_t_elapsed - b_t_elapsed;
-  dist->times_cpu[BBTREE_CREATE]     += e_t_cpu - b_t_cpu;
-  dist->times_cpu_u[BBTREE_CREATE]   += e_t_cpu_u - b_t_cpu_u;
-  dist->times_cpu_s[BBTREE_CREATE]   += e_t_cpu_s - b_t_cpu_s;
-
-  PDM_timer_resume(dist->timer);
-
-  PDM_timer_hang_on(dist->timer);
-  b_t_elapsed = PDM_timer_elapsed(dist->timer);
-  b_t_cpu     = PDM_timer_cpu(dist->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-  PDM_timer_resume(dist->timer);
-
+  PDM_timer_end(dist->timer, "dist_cloud_surf:BBTREE_CREATE", 0);
 
   /*
    * For each cloud
@@ -346,20 +305,12 @@ _dist_cloud_surf_compute
      *
      **************************************************************************/
 
-    PDM_timer_hang_on(dist->timer);
-    b_t_elapsed = PDM_timer_elapsed(dist->timer);
-    b_t_cpu     = PDM_timer_cpu(dist->timer);
-    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-    PDM_timer_resume(dist->timer);
-
+    PDM_timer_start(dist->timer, "dist_cloud_surf:UPPER_BOUND_DIST", 0);
 
     /*
      * Concatenation of the partitions
      */
-
     int n_pts_rank = 0;
-
     for (int i_part = 0; i_part < n_part; i_part++) {
       n_pts_rank += pt_cloud->n_points[i_part];
     }
@@ -418,27 +369,14 @@ _dist_cloud_surf_compute
       }
     }
 
-
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-    dist->times_elapsed[UPPER_BOUND_DIST] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu[UPPER_BOUND_DIST]     += e_t_cpu - b_t_cpu;
-    dist->times_cpu_u[UPPER_BOUND_DIST]   += e_t_cpu_u - b_t_cpu_u;
-    dist->times_cpu_s[UPPER_BOUND_DIST]   += e_t_cpu_s - b_t_cpu_s;
-
-    PDM_timer_resume(dist->timer);
+    PDM_timer_end(dist->timer, "dist_cloud_surf:UPPER_BOUND_DIST", 0);
 
 
-
+    PDM_timer_start(dist->timer, "dist_cloud_surf:CANDIDATE_SELECTION", 0);
 
     /*
      * Find elements closer than closest_vertices_dist2 distance
      */
-
     int         *part_pts_elt_idx;
     PDM_g_num_t *part_pts_elt_g_num;
     PDM_dbbtree_closest_upper_bound_dist_boxes_get (dbbt,
@@ -483,31 +421,13 @@ _dist_cloud_surf_compute
       PDM_box_set_destroy (&surf_mesh_boxes);
     }
 
-
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-    dist->times_elapsed[CANDIDATE_SELECTION] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu[CANDIDATE_SELECTION]     += e_t_cpu - b_t_cpu;
-    dist->times_cpu_u[CANDIDATE_SELECTION]   += e_t_cpu_u - b_t_cpu_u;
-    dist->times_cpu_s[CANDIDATE_SELECTION]   += e_t_cpu_s - b_t_cpu_s;
-
-    PDM_timer_resume(dist->timer);
-
+    PDM_timer_end(dist->timer, "dist_cloud_surf:CANDIDATE_SELECTION", 0);
 
     /*******************************************************************
      *  Adopt SOURCE point-of-view
      *******************************************************************/
 
-    PDM_timer_hang_on(dist->timer);
-    b_t_elapsed = PDM_timer_elapsed(dist->timer);
-    b_t_cpu     = PDM_timer_cpu(dist->timer);
-    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-    PDM_timer_resume(dist->timer);
+    PDM_timer_start(dist->timer, "dist_cloud_surf:COMPUTE_ELEM_DIST", 0);
 
     double *elt_weight  = NULL;
     int    *part_stride = NULL;
@@ -660,13 +580,6 @@ _dist_cloud_surf_compute
      *  Compute element-point distances from SOURCE point-of-view
      *******************************************************************/
 
-    PDM_timer_hang_on(dist->timer);
-    b_t_elapsed = PDM_timer_elapsed(dist->timer);
-    b_t_cpu     = PDM_timer_cpu(dist->timer);
-    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-    PDM_timer_resume(dist->timer);
-
     int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
     PDM_g_num_t *block_elt_g_num = PDM_part_to_block_block_gnum_get (ptb);
     PDM_g_num_t *block_elt_g_num_full = PDM_part_to_block_block_gnum_get (ptb_elt);
@@ -757,31 +670,13 @@ _dist_cloud_surf_compute
     PDM_free(block_elt_pts_coord);
     ptb_elt = PDM_part_to_block_free (ptb_elt);
 
-
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-    dist->times_elapsed[COMPUTE_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu[COMPUTE_ELEM_DIST]     += e_t_cpu - b_t_cpu;
-    dist->times_cpu_u[COMPUTE_ELEM_DIST]   += e_t_cpu_u - b_t_cpu_u;
-    dist->times_cpu_s[COMPUTE_ELEM_DIST]   += e_t_cpu_s - b_t_cpu_s;
-
-    PDM_timer_resume(dist->timer);
-
-
+    PDM_timer_end(dist->timer, "dist_cloud_surf:COMPUTE_ELEM_DIST", 0);
 
     /*******************************************************************
      *  Back to TARGET point-of-view
      *******************************************************************/
-    PDM_timer_hang_on(dist->timer);
-    b_t_elapsed = PDM_timer_elapsed(dist->timer);
-    b_t_cpu     = PDM_timer_cpu(dist->timer);
-    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-    PDM_timer_resume(dist->timer);
+
+    PDM_timer_start(dist->timer, "dist_cloud_surf:RESULT_TRANSMISSION", 0);
 
     double *part_pts_weight = NULL;
     PDM_malloc(part_pts_weight, n_pts_rank, double);
@@ -980,30 +875,14 @@ _dist_cloud_surf_compute
 
     PDM_free(pts_g_num_rank);
 
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-    dist->times_elapsed[RESULT_TRANSMISSION] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu[RESULT_TRANSMISSION]     += e_t_cpu - b_t_cpu;
-    dist->times_cpu_u[RESULT_TRANSMISSION]   += e_t_cpu_u - b_t_cpu_u;
-    dist->times_cpu_s[RESULT_TRANSMISSION]   += e_t_cpu_s - b_t_cpu_s;
-
-    PDM_timer_resume(dist->timer);
+    PDM_timer_end(dist->timer, "dist_cloud_surf:RESULT_TRANSMISSION", 0);
 
   } // End of loop on point clouds
   PDM_free(part_n_elt);
   PDM_free(part_elt_g_num);
   PDM_free(part_elt_extents);
 
-  PDM_timer_hang_on(dist->timer);
-  dist->times_elapsed[END] = PDM_timer_elapsed(dist->timer);
-  dist->times_cpu[END]     = PDM_timer_cpu(dist->timer);
-  dist->times_cpu_u[END]   = PDM_timer_cpu_user(dist->timer);
-  dist->times_cpu_s[END]   = PDM_timer_cpu_sys(dist->timer);
-  PDM_timer_resume(dist->timer);
+  PDM_timer_end(dist->timer, "dist_cloud_surf:FULL", 0);
 
 }
 
@@ -1051,22 +930,8 @@ _dist_cloud_surf_compute_optim
   if (idebug && rank == 0) printf("octree_type = %d\n", octree_type);
   //<<<---
 
-  double b_t_elapsed;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
-
-  double e_t_elapsed;
-  double e_t_cpu;
-  double e_t_cpu_u;
-  double e_t_cpu_s;
-
-  //PDM_timer_hang_on(dist->timer);
-  dist->times_elapsed[BEGIN] = PDM_timer_elapsed(dist->timer);
-  dist->times_cpu[BEGIN]     = PDM_timer_cpu(dist->timer);
-  dist->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(dist->timer);
-  dist->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(dist->timer);
-  PDM_timer_resume(dist->timer);
+  PDM_timer_start(dist->timer, "dist_cloud_surf:FULL", 0);
+  PDM_timer_start(dist->timer, "dist_cloud_surf:BBTREE_CREATE", 0);
 
   const double tolerance          = 1e-4;
   const int    depth_max          = 31;
@@ -1314,12 +1179,6 @@ _dist_cloud_surf_compute_optim
    *
    **************************************************************************/
 
-  PDM_timer_hang_on(dist->timer);
-  b_t_elapsed = PDM_timer_elapsed(dist->timer);
-  b_t_cpu     = PDM_timer_cpu(dist->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-  PDM_timer_resume(dist->timer);
 
   PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3, global_extents);
 
@@ -1347,26 +1206,7 @@ _dist_cloud_surf_compute_optim
     }
   }
 
-  PDM_timer_hang_on(dist->timer);
-  e_t_elapsed = PDM_timer_elapsed(dist->timer);
-  e_t_cpu     = PDM_timer_cpu(dist->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-  dist->times_elapsed[BBTREE_CREATE] += e_t_elapsed - b_t_elapsed;
-  dist->times_cpu[BBTREE_CREATE]     += e_t_cpu - b_t_cpu;
-  dist->times_cpu_u[BBTREE_CREATE]   += e_t_cpu_u - b_t_cpu_u;
-  dist->times_cpu_s[BBTREE_CREATE]   += e_t_cpu_s - b_t_cpu_s;
-
-  PDM_timer_resume(dist->timer);
-
-  PDM_timer_hang_on(dist->timer);
-  b_t_elapsed = PDM_timer_elapsed(dist->timer);
-  b_t_cpu     = PDM_timer_cpu(dist->timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-  PDM_timer_resume(dist->timer);
-
+  PDM_timer_end(dist->timer, "dist_cloud_surf:BBTREE_CREATE", 0);
 
   /*
    * For each cloud
@@ -1386,14 +1226,7 @@ _dist_cloud_surf_compute_optim
      *
      **************************************************************************/
 
-    PDM_timer_hang_on(dist->timer);
-    b_t_elapsed = PDM_timer_elapsed(dist->timer);
-    b_t_cpu     = PDM_timer_cpu(dist->timer);
-    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-    PDM_timer_resume(dist->timer);
-
-
+    PDM_timer_start(dist->timer, "dist_cloud_surf:UPPER_BOUND_DIST", 0);
 
     /*
      * Concatenation of the partitions
@@ -1438,10 +1271,8 @@ _dist_cloud_surf_compute_optim
     double      *closest_vertices_dist2 = NULL;
     PDM_malloc(closest_vertices_gnum , n_pts_rank, PDM_g_num_t);
     PDM_malloc(closest_vertices_dist2, n_pts_rank, double     );
-    // log_trace("n_pts_rank:: %d\n", n_pts_rank);
 
     if (octree_type == PDM_OCTREE_SERIAL) {
-      // log_trace("PDM_OCTREE_SERIAL \n");
       PDM_octree_closest_point (octree,
                                 n_pts_rank,
                                 pts_rank,
@@ -1449,7 +1280,6 @@ _dist_cloud_surf_compute_optim
                                 closest_vertices_gnum,
                                 closest_vertices_dist2);
     } else {
-      // log_trace("PDM_OCTREE_PARALLEL \n");
       PDM_para_octree_single_closest_point (para_octree,
                                             n_pts_rank,
                                             pts_rank,
@@ -1457,8 +1287,6 @@ _dist_cloud_surf_compute_optim
                                             closest_vertices_gnum,
                                             closest_vertices_dist2);
     }
-    // PDM_log_trace_array_long(closest_vertices_gnum, n_pts_rank, "closest_vertices_gnum::");
-    // PDM_log_trace_array_double(closest_vertices_dist2, n_pts_rank, "closest_vertices_dist2::");
     PDM_free(closest_vertices_gnum);
 
     if (i_point_cloud == n_point_cloud -1) { //Octree is not needed anymore
@@ -1469,19 +1297,8 @@ _dist_cloud_surf_compute_optim
       }
     }
 
-
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-    dist->times_elapsed[UPPER_BOUND_DIST] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu[UPPER_BOUND_DIST]     += e_t_cpu - b_t_cpu;
-    dist->times_cpu_u[UPPER_BOUND_DIST]   += e_t_cpu_u - b_t_cpu_u;
-    dist->times_cpu_s[UPPER_BOUND_DIST]   += e_t_cpu_s - b_t_cpu_s;
-
-    PDM_timer_resume(dist->timer);
+    PDM_timer_end(dist->timer, "dist_cloud_surf:UPPER_BOUND_DIST", 0);
+    PDM_timer_start(dist->timer, "dist_cloud_surf:CANDIDATE_SELECTION", 0);
 
     /*
      * Find elements closer than closest_vertices_dist2 distance
@@ -1526,22 +1343,9 @@ _dist_cloud_surf_compute_optim
       PDM_box_set_destroy (&surf_mesh_boxes);
     }
 
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_end(dist->timer, "dist_cloud_surf:CANDIDATE_SELECTION", 0);
 
-    dist->times_elapsed[CANDIDATE_SELECTION] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu    [CANDIDATE_SELECTION] += e_t_cpu     - b_t_cpu;
-    dist->times_cpu_u  [CANDIDATE_SELECTION] += e_t_cpu_u   - b_t_cpu_u;
-    dist->times_cpu_s  [CANDIDATE_SELECTION] += e_t_cpu_s   - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(dist->timer);
+    PDM_timer_start(dist->timer, "dist_cloud_surf:LOAD_BALANCING_ELEM_DIST", 0);
 
     /*
      * Setup almost partition for elementary operation
@@ -2000,22 +1804,8 @@ _dist_cloud_surf_compute_optim
 
     }
 
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-    dist->times_elapsed[LOAD_BALANCING_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu    [LOAD_BALANCING_ELEM_DIST] += e_t_cpu     - b_t_cpu;
-    dist->times_cpu_u  [LOAD_BALANCING_ELEM_DIST] += e_t_cpu_u   - b_t_cpu_u;
-    dist->times_cpu_s  [LOAD_BALANCING_ELEM_DIST] += e_t_cpu_s   - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(dist->timer);
+    PDM_timer_end(dist->timer, "dist_cloud_surf:LOAD_BALANCING_ELEM_DIST", 0);
+    PDM_timer_start(dist->timer, "dist_cloud_surf:COMPUTE_ELEM_DIST", 0);
     // if (1) {
     //   PDM_log_trace_connectivity_int(dbox_pts_idx,
     //                                  box_pts,
@@ -2278,22 +2068,8 @@ _dist_cloud_surf_compute_optim
     PDM_free(box_gnum         );
     PDM_free(dbox_pts_idx     );
 
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-    dist->times_elapsed[COMPUTE_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu    [COMPUTE_ELEM_DIST] += e_t_cpu     - b_t_cpu;
-    dist->times_cpu_u  [COMPUTE_ELEM_DIST] += e_t_cpu_u   - b_t_cpu_u;
-    dist->times_cpu_s  [COMPUTE_ELEM_DIST] += e_t_cpu_s   - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(dist->timer);
+    PDM_timer_end(dist->timer, "dist_cloud_surf:COMPUTE_ELEM_DIST", 0);
+    PDM_timer_start(dist->timer, "dist_cloud_surf:RESULT_TRANSMISSION", 0);
 
     /*
      *  Pass in block frame for points to select closest element
@@ -2435,32 +2211,11 @@ _dist_cloud_surf_compute_optim
 
     PDM_block_to_part_free(btp);
 
-
-    PDM_timer_hang_on(dist->timer);
-    e_t_elapsed = PDM_timer_elapsed(dist->timer);
-    e_t_cpu     = PDM_timer_cpu(dist->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-
-    dist->times_elapsed[RESULT_TRANSMISSION] += e_t_elapsed - b_t_elapsed;
-    dist->times_cpu    [RESULT_TRANSMISSION] += e_t_cpu     - b_t_cpu;
-    dist->times_cpu_u  [RESULT_TRANSMISSION] += e_t_cpu_u   - b_t_cpu_u;
-    dist->times_cpu_s  [RESULT_TRANSMISSION] += e_t_cpu_s   - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(dist->timer);
+    PDM_timer_end(dist->timer, "dist_cloud_surf:RESULT_TRANSMISSION", 0);
 
   }
 
-  PDM_timer_hang_on(dist->timer);
-  dist->times_elapsed[END] = PDM_timer_elapsed(dist->timer);
-  dist->times_cpu[END]     = PDM_timer_cpu(dist->timer);
-  dist->times_cpu_u[END]   = PDM_timer_cpu_user(dist->timer);
-  dist->times_cpu_s[END]   = PDM_timer_cpu_sys(dist->timer);
-  PDM_timer_resume(dist->timer);
+  PDM_timer_end(dist->timer, "dist_cloud_surf:FULL", 0);
 
 }
 
@@ -2515,16 +2270,30 @@ PDM_dist_cloud_surf_create
     dist->points_cloud[i].closest_elt_gnum = NULL;
   }
 
-  dist->timer = PDM_timer_create ();
-
-  for (int i = 0; i < NTIMER; i++) {
-    dist->times_elapsed[i] = 0.;
-    dist->times_cpu    [i] = 0.;
-    dist->times_cpu_u  [i] = 0.;
-    dist->times_cpu_s  [i] = 0.;
-  }
+  dist->timer = PDM_timer_create(dist->comm);
+  dist->external_timer = 0;
 
   return dist;
+}
+
+
+void
+PDM_dist_cloud_surf_timer_set
+(
+  PDM_dist_cloud_surf_t  *dist,
+  PDM_timer_t            *timer
+)
+{
+  if(dist->external_timer == 1) {
+    return;
+  }
+  if(timer == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "timer is NULL \n");
+  }
+  PDM_timer_free(dist->timer);
+
+  dist->timer = timer;
+  dist->external_timer = 1;
 }
 
 
@@ -2951,7 +2720,9 @@ PDM_dist_cloud_surf_free
 
   PDM_free(dist->points_cloud);
 
-  PDM_timer_free(dist->timer);
+  if(dist->external_timer == 0) {
+    PDM_timer_free(dist->timer);
+  }
 
   if (dist->_surf_mesh != NULL) {
     if (dist->surf_mesh != NULL) {
@@ -2961,7 +2732,6 @@ PDM_dist_cloud_surf_free
 
   PDM_free(dist);
 }
-
 
 /**
  *
@@ -2977,65 +2747,7 @@ PDM_dist_cloud_surf_dump_times
  PDM_dist_cloud_surf_t  *dist
 )
 {
-  double t1 = dist->times_elapsed[END] - dist->times_elapsed[BEGIN];
-  double t2 = dist->times_cpu    [END] - dist->times_cpu    [BEGIN];
-
-  double t1max;
-  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-  double t2max;
-  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-  double t_elaps_max[NTIMER];
-  PDM_MPI_Allreduce (dist->times_elapsed, t_elaps_max, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-  double t_cpu_max[NTIMER];
-  PDM_MPI_Allreduce (dist->times_cpu, t_cpu_max, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-  //-->>
-  double t_elaps_min[NTIMER];
-  PDM_MPI_Allreduce (dist->times_elapsed, t_elaps_min, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MIN, dist->comm);
-
-  double t_cpu_min[NTIMER];
-  PDM_MPI_Allreduce (dist->times_cpu, t_cpu_min, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MIN, dist->comm);
-  //<<--
-
-  int rank;
-  PDM_MPI_Comm_rank (dist->comm, &rank);
-
-  if (rank == 0) {
-
-
-    PDM_printf( "distance timer : all                  (elapsed and cpu) : %12.5es %12.5es\n",
-                t1max, t2max);
-    PDM_printf( "distance timer : Upper bound distance (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[UPPER_BOUND_DIST],
-                t_cpu_max[UPPER_BOUND_DIST]);
-    PDM_printf( "distance timer : Bbtree building      (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[BBTREE_CREATE],
-                t_cpu_max[BBTREE_CREATE]);
-    PDM_printf( "distance timer : Candidate selection  (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[CANDIDATE_SELECTION],
-                t_cpu_max[CANDIDATE_SELECTION]);
-    PDM_printf( "distance timer : Load balacing of elementary computations of distance"
-                " from the points to the candidates  (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[LOAD_BALANCING_ELEM_DIST],
-                t_cpu_max[LOAD_BALANCING_ELEM_DIST]);
-    PDM_printf( "distance timer : Computations of the distance"
-                " from the points to the candidates    (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[COMPUTE_ELEM_DIST],
-                t_cpu_max[COMPUTE_ELEM_DIST]);
-    PDM_printf( "distance timer : Results exchange     (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[RESULT_TRANSMISSION],
-                t_cpu_max[RESULT_TRANSMISSION]);
-    PDM_printf_flush();
-  }
+  PDM_timer_gather_dump(dist->timer, NULL);
 }
 
 

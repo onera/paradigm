@@ -12,7 +12,6 @@
 #include "pdm_poly_surf_gen.h"
 #include "pdm_printf.h"
 #include "pdm_priv.h"
-#include "pdm_timer.h"
 #include "pdm_vtk.h"
 
 /**
@@ -233,24 +232,7 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  /* Set up timer */
-
-  PDM_timer_t *timer = PDM_timer_create();
-  PDM_timer_init(timer);
-  PDM_timer_resume(timer);
-
-  double b_t_elapsed;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
-
-  double e_t_elapsed;
-  double e_t_cpu;
-  double e_t_cpu_u;
-  double e_t_cpu_s;
-
   /* Maillage polysurfacique */
-
   double       xmin           = 0;
   double       ymin           = 0;
   double       xmax           = xmin + 1;
@@ -389,25 +371,16 @@ int main(int argc, char *argv[])
   int idx_vtx_ordered_vtx_neighbours  = 0;
 
   int *vtx_ordered_face_neighbours;
-  PDM_malloc(vtx_ordered_face_neighbours,vtx_face_idx[n_vtx] ,int);
   int *vtx_ordered_face_neighbours_idx;
-  PDM_malloc(vtx_ordered_face_neighbours_idx,(n_vtx+1) ,int);
   int *vtx_ordered_vtx_neighbours;
-  PDM_malloc(vtx_ordered_vtx_neighbours,vtx_vtx_idx[n_vtx]*n_vtx ,int); // TO DO mettre taille raisonnable
   int *vtx_ordered_vtx_neighbours_idx;
-  PDM_malloc(vtx_ordered_vtx_neighbours_idx,(n_vtx+1) ,int);
+  PDM_malloc(vtx_ordered_face_neighbours    , vtx_face_idx[n_vtx]     , int);
+  PDM_malloc(vtx_ordered_face_neighbours_idx, n_vtx+1                 , int);
+  PDM_malloc(vtx_ordered_vtx_neighbours     , vtx_vtx_idx[n_vtx]*n_vtx, int); // TO DO mettre taille raisonnable
+  PDM_malloc(vtx_ordered_vtx_neighbours_idx , n_vtx+1                 , int);
 
   vtx_ordered_face_neighbours_idx[0] = idx_vtx_ordered_face_neighbours;
   vtx_ordered_vtx_neighbours_idx[0]  = idx_vtx_ordered_vtx_neighbours;
-
-  /* Begin measure time */
-
-  PDM_timer_hang_on(timer);
-  b_t_elapsed = PDM_timer_elapsed(timer);
-  b_t_cpu     = PDM_timer_cpu(timer);
-  b_t_cpu_u   = PDM_timer_cpu_user(timer);
-  b_t_cpu_s   = PDM_timer_cpu_sys(timer);
-  PDM_timer_resume(timer);
 
   for (int i = 0; i < n_vtx; i++) {
 
@@ -488,24 +461,6 @@ int main(int argc, char *argv[])
 
   } // end loop on faces
 
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
-  PDM_timer_resume(timer);
-
-  double dt_elapsed = e_t_elapsed - b_t_elapsed;
-  double dt_cpu     = e_t_cpu     - b_t_cpu;
-  double dt_cpu_u   = e_t_cpu_u   - b_t_cpu_u;
-  double dt_cpu_s   = e_t_cpu_s   - b_t_cpu_s;
-
-  printf("nb_vtx %d timer %f\n", n_vtx, dt_cpu_u);
-
-  PDM_UNUSED(dt_elapsed);
-  PDM_UNUSED(dt_cpu);
-  PDM_UNUSED(dt_cpu_s);
-
   /* Output */
   if(1 == 0) {
     for (int i = 0; i < n_vtx; i++) {
@@ -546,7 +501,6 @@ int main(int argc, char *argv[])
   }
 
   /* Free memory */
-  PDM_timer_free(timer                );
   PDM_free(face_vtx_idx                   );
   PDM_free(dface_vtx                      );
   PDM_free(vtx_coord                      );

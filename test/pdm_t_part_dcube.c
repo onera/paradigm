@@ -276,50 +276,19 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
+  double *duration;
+  PDM_part_time_get(ppart, &duration, &duration, &duration, &duration);
+
+  if (i_rank == 0) {
+    printf("Elapsed times =\n");
+    printf("  Total                = %f\n", duration[0]);
+    printf("  Build dual graph     = %f\n", duration[1]);
+    printf("  Split graph          = %f\n", duration[2]);
+    printf("  Build mesh partition = %f\n", duration[3]);
+  }
+
   if (time_and_stat && !use_multipart) {
-
-    double  *elapsed  = NULL;
-    double  *cpu      = NULL;
-    double  *cpu_user = NULL;
-    double  *cpu_sys  = NULL;
-
-    PDM_part_time_get(ppart,
-                      &elapsed,
-                      &cpu,
-                      &cpu_user,
-                      &cpu_sys);
-
-    PDM_printf("[%i]   - elapsed total                    : %12.5e\n", i_rank, elapsed[0]);
-    PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", i_rank, elapsed[1]);
-    PDM_printf("[%i]   - elapsed splitting graph          : %12.5e\n", i_rank, elapsed[2]);
-    PDM_printf("[%i]   - elapsed building mesh partitions : %12.5e\n", i_rank, elapsed[3]);
-
-    PDM_printf("[%i]   - cpu total                        : %12.5e\n", i_rank, cpu[0]);
-    PDM_printf("[%i]   - cpu building graph               : %12.5e\n", i_rank, cpu[1]);
-    PDM_printf("[%i]   - cpu splitting graph              : %12.5e\n", i_rank, cpu[2]);
-    PDM_printf("[%i]   - cpu building mesh partitions     : %12.5e\n", i_rank, cpu[3]);
-
-    PDM_printf("[%i]   - cpu_user total                   : %12.5e\n", i_rank, cpu_user[0]);
-    PDM_printf("[%i]   - cpu_user building graph          : %12.5e\n", i_rank, cpu_user[1]);
-    PDM_printf("[%i]   - cpu_user splitting graph         : %12.5e\n", i_rank, cpu_user[2]);
-    PDM_printf("[%i]   - cpu_user building mesh partitions: %12.5e\n", i_rank, cpu_user[3]);
-
-    PDM_printf("[%i]   - cpu_sys total                    : %12.5e\n", i_rank, cpu_sys[0]);
-    PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", i_rank, cpu_sys[1]);
-    PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", i_rank, cpu_sys[2]);
-    PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", i_rank, cpu_sys[3]);
-
-    struct timeval t_elaps_fin;
-    gettimeofday(&t_elaps_fin, NULL);
-
-    long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) -
-                           (t_elaps_debut.tv_usec + 1000000 *
-                            t_elaps_debut.tv_sec);
-    long tranche_elapsed_max = tranche_elapsed;
-    double t_elapsed = (double) tranche_elapsed_max/1000000.;
-
-    PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
-
+    PDM_part_dump_times(ppart);
   }
 
   if (dbg_part_dcube) {

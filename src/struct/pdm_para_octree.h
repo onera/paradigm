@@ -8,6 +8,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_part_to_block.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -468,6 +469,23 @@ PDM_para_octree_neighbor_get
   int               **part_boundary_elt_idx,
   int               **part_boundary_elt
 );
+
+
+/**
+ *
+ * \brief Add external timer
+ *
+ * \param [in]   octree  Pointer to octree structure
+ * \param [in]   timer   Pointer to \ref PDM_timer_t object
+ *
+ */
+void
+PDM_para_octree_timer_set
+(
+  const PDM_para_octree_t *octree,
+        PDM_timer_t       *timer
+);
+
 
 #ifdef	__cplusplus
 }

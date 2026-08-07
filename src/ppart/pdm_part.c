@@ -504,8 +504,8 @@ _dual_graph_from_cell_face
     ppart->dface_cell = PDM_array_const_gnum(2*ppart->dn_face, 0);
 
     for (int i = 0; i < n_recv_face; i++) {
-      PDM_g_num_t  gface = face_to_recv[n_data*i  ];                    // Get global numbering
-      PDM_g_num_t  gcell = face_to_recv[n_data*i+1];                    // Get global numbering
+      PDM_g_num_t  gface = face_to_recv[n_data*i  ];           // Get global numbering
+      PDM_g_num_t  gcell = face_to_recv[n_data*i+1];           // Get global numbering
       PDM_g_num_t  _lface = gface - ppart->dface_proc[i_rank];
       int          lface = (int) _lface; // Switch to local numbering
 
@@ -532,8 +532,7 @@ _dual_graph_from_cell_face
         zf = zf / count;
         printf("Face barycenter = %12.5e  %12.5e  %12.5e %12.5e \n", xf, yf, zf, count);
 
-        PDM_printf("PPART internal error : Face already defined in ppart->dface_cell connectivity\n");
-        exit(1);
+        PDM_error("Face already defined in ppart->dface_cell connectivity");
       }
     }
     ppart->_dface_cell = ppart->dface_cell;
@@ -544,23 +543,24 @@ _dual_graph_from_cell_face
    */
 
   for (int i = 0; i < n_recv_face; i++) {
-    PDM_g_num_t  gface  = face_to_recv[n_data*i  ];                    // Get global numbering
-    PDM_g_num_t  gcell1 = face_to_recv[n_data*i+1];                    // Get global numbering
-    PDM_g_num_t _lface = gface - ppart->dface_proc[i_rank]; // Switch to local numbering
-    int          lface = (int) _lface;
-    PDM_g_num_t gcell2;
+    PDM_g_num_t  gface  = face_to_recv[n_data*i  ];         // Get global numbering
+    PDM_g_num_t  gcell1 = face_to_recv[n_data*i+1];         // Get global numbering
+    PDM_g_num_t _lface  = gface - ppart->dface_proc[i_rank]; // Switch to local numbering
+    int          lface  = (int) _lface;
+    PDM_g_num_t  gcell2 = -1;
 
-    if (ppart->dface_cell[2*lface] == gcell1)
-      gcell2 = PDM_ABS (ppart->dface_cell[2*lface + 1]);
-    else if (ppart->dface_cell[2*lface + 1] == gcell1)
-      gcell2 = PDM_ABS (ppart->dface_cell[2*lface]);
+    if (ppart->dface_cell[2*lface] == gcell1) {
+      gcell2 = PDM_ABS(ppart->dface_cell[2*lface + 1]);
+    }
+    else if (ppart->dface_cell[2*lface + 1] == gcell1) {
+      gcell2 = PDM_ABS(ppart->dface_cell[2*lface]);
+    }
     else {
-      PDM_printf("PPART internal error : Problem in dual grah building "
-              PDM_FMT_G_NUM" "
-              PDM_FMT_G_NUM" "
-              PDM_FMT_G_NUM" \n",
-             ppart->dface_cell[2*lface ], ppart->dface_cell[2*lface + 1], gcell1);
-      exit(1);
+      PDM_error("Problem in dual graph building "
+                PDM_FMT_G_NUM" "
+                PDM_FMT_G_NUM" "
+                PDM_FMT_G_NUM,
+                ppart->dface_cell[2*lface ], ppart->dface_cell[2*lface + 1], gcell1);
     }
 
     cell_to_send[n_data*i    ] = gcell1;
@@ -586,7 +586,7 @@ _dual_graph_from_cell_face
    */
 
   PDM_malloc(ppart->ddual_graph_idx,(1+ppart->dn_cell) ,PDM_g_num_t);
-  int *n_neighbour      = PDM_array_zeros_int(ppart->dn_cell);
+  int *n_neighbour = PDM_array_zeros_int(ppart->dn_cell);
 
   ppart->ddual_graph_idx[0] = 0;
 
@@ -597,10 +597,10 @@ _dual_graph_from_cell_face
    */
 
   for (int i = 0; i < n_recv_pair; i++) {
-    PDM_g_num_t   gcel1  = cell_to_recv[n_data*i];              // global numbering
+    PDM_g_num_t   gcel1  = cell_to_recv[n_data*i];            // global numbering
     PDM_g_num_t  _lcel1  = gcel1 - ppart->dcell_proc[i_rank]; // local numbering
     int           lcel1  = (int) (_lcel1);
-    PDM_g_num_t   gcel2  = cell_to_recv[n_data*i+1];            // global numbering
+    PDM_g_num_t   gcel2  = cell_to_recv[n_data*i+1];          // global numbering
 
     /*
      * Search if cel2 is already stored (To optimize for polyhedra (lot of neighbours) ?)
@@ -609,10 +609,10 @@ _dual_graph_from_cell_face
     if (gcel2 > 0) {
 
       int k;
-      for (k = ppart->_dcell_face_idx[lcel1];
-           k < ppart->_dcell_face_idx[lcel1] + n_neighbour[lcel1]; k++) {
-        if (ppart->ddual_graph[k] == gcel2 - 1)
+      for (k = ppart->_dcell_face_idx[lcel1]; k < ppart->_dcell_face_idx[lcel1] + n_neighbour[lcel1]; k++) {
+        if (ppart->ddual_graph[k] == gcel2 - 1) {
           break;
+        }
       }
 
       if (k == ppart->_dcell_face_idx[lcel1] + n_neighbour[lcel1]) {
@@ -634,16 +634,17 @@ _dual_graph_from_cell_face
       k++;
       k1++;
     }
-    else
+    else {
       k++;
+    }
   }
 
   /*
    * Reallocate to free unused memory
    */
 
-  PDM_realloc(ppart->ddual_graph ,ppart->ddual_graph , k1 ,PDM_g_num_t);
-  PDM_array_idx_from_sizes_gnum(n_neighbour,  ppart->dn_cell, ppart->ddual_graph_idx);
+  PDM_realloc(ppart->ddual_graph, ppart->ddual_graph, k1, PDM_g_num_t);
+  PDM_array_idx_from_sizes_gnum(n_neighbour, ppart->dn_cell, ppart->ddual_graph_idx);
 
   /* Verifier tous les tableaux ..... */
 
@@ -662,7 +663,7 @@ _dual_graph_from_cell_face
  * \brief Splits the graph
  *
  * \param [in]  ppart     ppart object
- * \param [out] cell_part  Cell partitioning (size : dn_cell)
+ * \param [out] cell_part Cell partitioning (size : dn_cell)
  *
  */
 
@@ -739,10 +740,7 @@ _split
       PDM_free(_dcell_proc);
 
 #else
-      if(i_rank == 0) {
-        PDM_printf("PPART error : ParMETIS unavailable\n");
-        exit(1);
-      }
+      PDM_error("ParMETIS unavailable");
 #endif
       break;
     }
@@ -765,10 +763,7 @@ _split
       //PDM_free(dual_graph_n);
 
 #else
-      if(i_rank == 0) {
-        PDM_printf("PPART error : PT-Scotch unavailable\n");
-        exit(1);
-      }
+      PDM_error("PT-Scotch unavailable");
 #endif
       break;
     }
@@ -799,10 +794,7 @@ _split
       break;
     }
   default:
-    if(i_rank == 0) {
-      PDM_printf("PPART error : '%i' unknown partioning choice\n", ppart->split_method);
-      exit(1);
-    }
+    PDM_error("Invalid partioning method %d", ppart->split_method);
   }
 }
 
@@ -2855,7 +2847,7 @@ const  int         i_part,
  * Public function definitions
  *============================================================================*/
 
-PDM_part_t *
+PDM_part_t*
 PDM_part_create
 (
  const PDM_MPI_Comm           comm,
@@ -2893,11 +2885,10 @@ PDM_part_create
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-
   PDM_part_renum_method_load_local();
 
   _PDM_part_t *_ppart;
-  PDM_malloc(_ppart,1,_PDM_part_t);
+  PDM_malloc(_ppart, 1, _PDM_part_t);
 
   char *use_multipart_var;
   _ppart->use_multipart = 0;
@@ -2938,18 +2929,11 @@ PDM_part_create
     /*
      * Build ppart structure
      */
-
-    _ppart->timer = PDM_timer_create();
-    for (int i = 0; i < 4; i++) {
-      _ppart->times_elapsed[i] = 0.;
-      _ppart->times_cpu[i] = 0.;
-      _ppart->times_cpu_u[i] = 0.;
-      _ppart->times_cpu_s[i] = 0.;
-    }
-    PDM_timer_resume(_ppart->timer);
+    _ppart->timer = PDM_timer_create(comm);
+    PDM_timer_start(_ppart->timer, "ppart:total", 0);
+    PDM_timer_start(_ppart->timer, "build dual graph", 0);
 
     /* Local dimensions */
-
     _ppart->dn_vtx       = dn_vtx;
     _ppart->dn_cell      = dn_cell;
     _ppart->dn_face      = dn_face;
@@ -3120,57 +3104,35 @@ PDM_part_create
      * Build dual graph
      */
 
-    if (dcell_face != NULL)
+    if (dcell_face != NULL) {
       _dual_graph_from_cell_face(_ppart);
-    else if (dface_cell != NULL)
+    }
+    else if (dface_cell != NULL) {
       _dual_graph_from_face_cell(_ppart);
+    }
     else {
-      PDM_printf("PDM_part_part_create error : dcell_face and dface_cell are undefined, define one of two\n");
-      exit(1);
+      PDM_error("dcell_face and dface_cell are undefined, define one of the two");
     }
 
-    int itime = 1;
-    PDM_timer_hang_on(_ppart->timer);
-    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
-    itime += 1;
+    PDM_timer_end(_ppart->timer, "build dual graph", 0);
 
     /*
      * Graph partitioning
      */
+    PDM_timer_start(_ppart->timer, "split graph", 0);
 
-    PDM_timer_resume(_ppart->timer);
-
-    int *cell_part;
-
+    int *cell_part = NULL;
     if (have_dcell_part == 0) {
-      PDM_malloc(cell_part,dn_cell ,int);
-      _split(_ppart,
-             cell_part);
+      PDM_malloc(cell_part, dn_cell, int);
+      _split(_ppart, cell_part);
       for (int i = 0; i < dn_cell; i++) {
         dcell_part[i] = cell_part[i];
       }
-    }
-
-    else {
+    } else {
       cell_part = (int *) _ppart->_dcell_part;
     }
 
-    if (1 == 0) {
-      PDM_printf("cell_part : ");
-      for (int i = 0; i <dn_cell; i++)
-        PDM_printf(" %d", cell_part[i]);
-      PDM_printf("\n");
-    }
-
-    PDM_timer_hang_on(_ppart->timer);
-    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
-    itime += 1;
+    PDM_timer_end(_ppart->timer, "split graph", 0);
 
     /*
      * Cell distribution to build local connectivities
@@ -3182,7 +3144,7 @@ PDM_part_create
      *     - face_ln_to_gn  : ok
      */
 
-    PDM_timer_resume(_ppart->timer);
+    PDM_timer_start(_ppart->timer, "build mesh partition", 0);
 
     _distrib_cell(_ppart,
                   cell_part);
@@ -3238,68 +3200,19 @@ PDM_part_create
 
     _distrib_face_groups(_ppart);
 
-    PDM_timer_hang_on(_ppart->timer);
-    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
+    PDM_timer_end(_ppart->timer, "build mesh partition", 0);
 
-    _ppart->times_elapsed[0]     = _ppart->times_elapsed[itime];
-    _ppart->times_cpu[0]         = _ppart->times_cpu[itime];
-    _ppart->times_cpu_u[0]       = _ppart->times_cpu_u[itime];
-    _ppart->times_cpu_s[0]       = _ppart->times_cpu_s[itime];
-
-    for (int i = itime; i > 1; i--) {
-      _ppart->times_elapsed[i] -= _ppart->times_elapsed[i-1];
-      _ppart->times_cpu[i]     -= _ppart->times_cpu[i-1];
-      _ppart->times_cpu_u[i]   -= _ppart->times_cpu_u[i-1];
-      _ppart->times_cpu_s[i]   -= _ppart->times_cpu_s[i-1];
-    }
-
-    if (_ppart->dcell_face_idx != NULL)
-      PDM_free(_ppart->dcell_face_idx);
-    _ppart->dcell_face_idx = NULL;
-
-    if (_ppart->dcell_face != NULL)
-      PDM_free(_ppart->dcell_face);
-    _ppart->dcell_face = NULL;
-
-    if (_ppart->dcell_proc != NULL)
-      PDM_free(_ppart->dcell_proc);
-    _ppart->dcell_proc = NULL;
-
-    if (_ppart->dface_proc != NULL)
-      PDM_free(_ppart->dface_proc);
-    _ppart->dface_proc = NULL;
-
-    if (_ppart->dface_cell != NULL)
-      PDM_free(_ppart->dface_cell);
-    _ppart->dface_cell = NULL;
-
-    if (_ppart->dvtx_proc != NULL)
-      PDM_free(_ppart->dvtx_proc);
-    _ppart->dvtx_proc = NULL;
-
-    // if (_ppart->dpart_proc != NULL)
-    //  PDM_free(_ppart->dpart_proc);
-    // _ppart->dpart_proc = NULL;
-
-    if (_ppart->gpart_to_lproc_part != NULL)
-      PDM_free(_ppart->gpart_to_lproc_part);
-    _ppart->gpart_to_lproc_part = NULL;
-
-    if (_ppart->dpart_bound != NULL)
-      PDM_free(_ppart->dpart_bound);
-    _ppart->dpart_bound = NULL;
-
-    if (_ppart->ddual_graph_idx != NULL)
-      PDM_free(_ppart->ddual_graph_idx);
-    _ppart->ddual_graph_idx = NULL;
-
-    if (_ppart->ddual_graph != NULL)
-      PDM_free(_ppart->ddual_graph);
-    _ppart->ddual_graph = NULL;
-
+    PDM_free(_ppart->dcell_face_idx);
+    PDM_free(_ppart->dcell_face);
+    PDM_free(_ppart->dcell_proc);
+    PDM_free(_ppart->dface_proc);
+    PDM_free(_ppart->dface_cell);
+    PDM_free(_ppart->dvtx_proc);
+    PDM_free(_ppart->gpart_to_lproc_part);
+    PDM_free(_ppart->dpart_bound);
+    PDM_free(_ppart->ddual_graph_idx);
+    PDM_free(_ppart->ddual_graph);
+    PDM_timer_end(_ppart->timer, "ppart:total", 0);
   }
 
   return (PDM_part_t *) _ppart;
@@ -3347,8 +3260,7 @@ const   int  i_part,
       mesh_part  = _ppart->mesh_parts[i_part];
 
     if (mesh_part == NULL) {
-      PDM_printf("PDM_part_part_get error : unknown partition\n");
-      exit(1);
+      PDM_error("Unknown partition");
     }
 
     *n_cell            = mesh_part->n_cell;
@@ -3422,8 +3334,7 @@ const  int      i_part,
       mesh_part  = _ppart->mesh_parts[i_part];
 
     if (mesh_part == NULL) {
-      PDM_printf("PDM_part_part_val_get error : unknown partition\n");
-      exit(1);
+      PDM_error("Unknown partition");
     }
 
     *cell_tag                 = mesh_part->cell_tag;
@@ -3487,12 +3398,12 @@ const  int      i_part,
                                         PDM_OWNERSHIP_KEEP);
   } else {
     _part_t *mesh_part = NULL;
-    if (i_part < _ppart->n_part)
-      mesh_part  = _ppart->mesh_parts[i_part];
+    if (i_part < _ppart->n_part) {
+      mesh_part = _ppart->mesh_parts[i_part];
+    }
 
     if (mesh_part == NULL) {
-      PDM_printf("PDM_part_part_color_get error : unknown partition\n");
-      exit(1);
+      PDM_error("Unknown partition");
     }
 
     *cell_color       = mesh_part->cell_color;
@@ -3513,68 +3424,31 @@ PDM_part_free
 
   if (_ppart->use_multipart) {
 
-    if (ppart->multipart != NULL)
+    if (ppart->multipart != NULL) {
       PDM_multipart_free(ppart->multipart);
-    _ppart->multipart = NULL;
+    }
 
-  } else {
+  }
+  else {
 
-    if (_ppart->dcell_face_idx != NULL)
-      PDM_free(_ppart->dcell_face_idx);
-    _ppart->dcell_face_idx = NULL;
-
-    if (_ppart->dcell_face != NULL)
-      PDM_free(_ppart->dcell_face);
-    _ppart->dcell_face = NULL;
-
-    if (_ppart->dcell_proc != NULL)
-      PDM_free(_ppart->dcell_proc);
-    _ppart->dcell_proc = NULL;
-
-    if (_ppart->dface_proc != NULL)
-      PDM_free(_ppart->dface_proc);
-    _ppart->dface_proc = NULL;
-
-    if (_ppart->dface_cell != NULL)
-      PDM_free(_ppart->dface_cell);
-    _ppart->dface_cell = NULL;
-
-    if (_ppart->dvtx_proc != NULL)
-      PDM_free(_ppart->dvtx_proc);
-    _ppart->dvtx_proc = NULL;
-
-    if (_ppart->dpart_proc != NULL)
-      PDM_free(_ppart->dpart_proc);
-    _ppart->dpart_proc = NULL;
-
-    if (_ppart->gpart_to_lproc_part != NULL)
-      PDM_free(_ppart->gpart_to_lproc_part);
-    _ppart->gpart_to_lproc_part = NULL;
-
-    if (_ppart->dpart_bound != NULL)
-      PDM_free(_ppart->dpart_bound);
-    _ppart->dpart_bound = NULL;
-
-    if (_ppart->ddual_graph_idx != NULL)
-      PDM_free(_ppart->ddual_graph_idx);
-    _ppart->ddual_graph_idx = NULL;
-
-    if (_ppart->ddual_graph != NULL)
-      PDM_free(_ppart->ddual_graph);
-    _ppart->ddual_graph = NULL;
+    PDM_free(_ppart->dcell_face_idx);
+    PDM_free(_ppart->dcell_face);
+    PDM_free(_ppart->dcell_proc);
+    PDM_free(_ppart->dface_proc);
+    PDM_free(_ppart->dface_cell);
+    PDM_free(_ppart->dvtx_proc);
+    PDM_free(_ppart->dpart_proc);
+    PDM_free(_ppart->gpart_to_lproc_part);
+    PDM_free(_ppart->dpart_bound);
+    PDM_free(_ppart->ddual_graph_idx);
+    PDM_free(_ppart->ddual_graph);
 
     for (int i = 0; i < _ppart->n_part; i++) {
       _part_free(_ppart->mesh_parts[i]);
-      _ppart->mesh_parts[i] = NULL;
     }
 
     PDM_timer_free(_ppart->timer);
-    _ppart->timer = NULL;
-
-    if (_ppart->mesh_parts != NULL)
-      PDM_free(_ppart->mesh_parts);
-    _ppart->mesh_parts = NULL;
-
+    PDM_free(_ppart->mesh_parts);
   }
 
   PDM_free(_ppart);
@@ -3585,19 +3459,38 @@ PDM_part_free
 void
 PDM_part_time_get
 (
- PDM_part_t  *ppart,
- double     **elapsed,
- double     **cpu,
- double     **cpu_user,
- double     **cpu_sys
+  PDM_part_t  *ppart,
+  double     **elapsed,
+  double     **cpu,
+  double     **cpu_user,
+  double     **cpu_sys
 )
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
-  *elapsed  = _ppart->times_elapsed;
-  *cpu      = _ppart->times_cpu;
-  *cpu_user = _ppart->times_cpu_u;
-  *cpu_sys  = _ppart->times_cpu_s;
+  PDM_timer_get(_ppart->timer, "/ppart:total",                      &_ppart->t_elapsed[0]);
+  PDM_timer_get(_ppart->timer, "/ppart:total/build dual graph",     &_ppart->t_elapsed[1]);
+  PDM_timer_get(_ppart->timer, "/ppart:total/split graph",          &_ppart->t_elapsed[2]);
+  PDM_timer_get(_ppart->timer, "/ppart:total/build mesh partition", &_ppart->t_elapsed[3]);
+
+  /**
+   * To ensure backward compatibility, we keep all four durations,
+   * but we assign them all the same value (elapsed time) ¯\_(ツ)_/¯
+   */
+  *elapsed  = _ppart->t_elapsed;
+  *cpu      = _ppart->t_elapsed;
+  *cpu_user = _ppart->t_elapsed;
+  *cpu_sys  = _ppart->t_elapsed;
+}
+
+void
+PDM_part_dump_times
+(
+ PDM_part_t  *ppart
+)
+{
+  _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
+  PDM_timer_gather_dump(_ppart->timer, NULL);
 }
 
 

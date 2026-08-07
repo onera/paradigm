@@ -105,73 +105,70 @@ _coarse_mesh_create
  const int           have_cell_weight,
  const int           have_face_weight,
  const int           have_face_group
-
- )
+)
 {
-   PDM_coarse_mesh_t *cm;
-   PDM_malloc(cm, 1, PDM_coarse_mesh_t);
+  PDM_coarse_mesh_t *cm;
+  PDM_malloc(cm, 1, PDM_coarse_mesh_t);
 
-   cm->n_part = n_part;
-   cm->comm  = comm;
+  cm->n_part = n_part;
+  cm->comm  = comm;
 
-   int _method = PDM_coarse_mesh_method_idx_get(method);
+  int _method = PDM_coarse_mesh_method_idx_get(method);
 
    if (_method == -1) {
      PDM_error("'%s' is an unknown coarse mesh method", method);
    }
 
-   cm->method = _method;
+  cm->method = _method;
 
-   /* Reordering */
-   _method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
+  /* Reordering */
+  _method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
 
-   if (_method == -1) {
-     PDM_error("'%s' is an unknown renumbering cell method", renum_cell_method);
-   }
+  if (_method == -1) {
+    PDM_error("'%s' is an unknown renumbering cell method", renum_cell_method);
+  }
 
-   cm->renum_cell_method = _method;
+  cm->renum_cell_method = _method;
 
-   _method = PDM_part_renum_method_face_idx_get(renum_face_method);
+  _method = PDM_part_renum_method_face_idx_get(renum_face_method);
 
-   if (_method == -1) {
-     PDM_error("'%s' is an unknown renumbering face method", renum_face_method);
-   }
-   cm->renum_face_method = _method;
+  if (_method == -1) {
+    PDM_error("'%s' is an unknown renumbering face method", renum_face_method);
+  }
+  cm->renum_face_method = _method;
 
-   cm->n_property_cell        = n_property_cell;
-   cm->renum_properties_cell  = renum_properties_cell;
-   cm->n_property_face        = n_property_face;
-   cm->renum_properties_face  = renum_properties_face;
+  cm->n_property_cell        = n_property_cell;
+  cm->renum_properties_cell  = renum_properties_cell;
+  cm->n_property_face        = n_property_face;
+  cm->renum_properties_face  = renum_properties_face;
 
+  cm->n_total_part = n_total_part;
 
-   cm->n_total_part = n_total_part;
+  cm->n_face_group = n_face_group;
 
-   cm->n_face_group = n_face_group;
+  cm->have_cell_tag    = have_cell_tag;
+  cm->have_face_tag    = have_face_tag;
+  cm->have_vtx_tag     = have_vtx_tag;
+  cm->have_cell_weight = have_cell_weight;
+  cm->have_face_weight = have_face_weight;
+  cm->have_face_group  = have_face_group;
 
-   cm->have_cell_tag    = have_cell_tag;
-   cm->have_face_tag    = have_face_tag;
-   cm->have_vtx_tag     = have_vtx_tag;
-   cm->have_cell_weight = have_cell_weight;
-   cm->have_face_weight = have_face_weight;
-   cm->have_face_group  = have_face_group;
+  PDM_malloc(cm->part_ini, n_part, _part_t *); //On déclare un tableau de partitions
 
-   PDM_malloc(cm->part_ini, n_part, _part_t *); //On déclare un tableau de partitions
+  PDM_malloc(cm->part_res, n_part, _coarse_part_t *);
 
-   PDM_malloc(cm->part_res, n_part, _coarse_part_t *);
+  cm->specific_data = NULL;
+  cm->specific_func = NULL;
 
-   cm->specific_data = NULL;
-   cm->specific_func = NULL;
+  for (int i = 0; i < n_part; i++) {
+   cm->part_ini[i] = _part_create();
+   cm->part_res[i] = _coarse_part_create();
+   cm->part_res[i]->part->n_face_group = cm->n_face_group;
+  }
 
-   for (int i = 0; i < n_part; i++) {
-     cm->part_ini[i] = _part_create();
+  cm->timer = PDM_timer_create(cm->comm);
 
-     cm->part_res[i] = _coarse_part_create();
-
-     cm->part_res[i]->part->n_face_group = cm->n_face_group;
-
-   }
-
-   return cm;
+  return cm;
 }
 
 /**
@@ -1704,42 +1701,19 @@ _coarse_grid_compute
  const int           i_part
 )
 {
-
   _part_t * part_ini = cm->part_ini[i_part];
   _coarse_part_t *part_res = cm->part_res[i_part];
 
 
-
-  cm->timer = PDM_timer_create();
-  for (int i = 0; i < 18; i++) {
-    cm->times_elapsed[i] = 0.;
-    cm->times_cpu[i] = 0.;
-    cm->times_cpu_u[i] = 0.;
-    cm->times_cpu_s[i] = 0.;
-  }
-
-  PDM_timer_resume(cm->timer);
-
-  int *dualGraphIdx = NULL;
-  int *dualGraph    = NULL;
+  int *dual_graph_idx = NULL;
+  int *dual_graph     = NULL;
 
   PDM_part_graph_compute_from_face_cell(part_ini,
-                               (int **) &dualGraphIdx,
-                               (int **) &dualGraph);
-
-  int itime = 1;
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
+                               (int **) &dual_graph_idx,
+                               (int **) &dual_graph);
 
   //Call Metis or Scotch to get the cell_part array
   //cell_part must be allocated before proceeding (the initialization is part of the split method)
-
-  PDM_timer_resume(cm->timer);
-
   int *cell_part = NULL;
 
   int n_coarse_cell_computed;
@@ -1747,18 +1721,9 @@ _coarse_grid_compute
   _split( cm,
           i_part,
          &n_coarse_cell_computed,
-         dualGraphIdx,
-         dualGraph,
+         dual_graph_idx,
+         dual_graph,
          (int **) &cell_part);
-
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
-  PDM_timer_resume(cm->timer);
 
   /* Assign size of multigrid */
   part_res->part->n_cell = n_coarse_cell_computed;
@@ -1774,27 +1739,14 @@ _coarse_grid_compute
                           (int **) &part_cell_idx,
                           (int **) &part_cell);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
   //Check that all partitions are correctly connected
-
-  PDM_timer_resume(cm->timer);
-
   int *cell_coarse_cell = NULL;
-
-  // part_res->part->n_cell = n_coarse_cell_wanted;
-
   _adapt_Connectedness(&(part_res->part->n_cell),
                        part_ini->n_cell,
                        cell_part,
                        (int **) &cell_coarse_cell,
-                       dualGraph,
-                       dualGraphIdx,
+                       dual_graph,
+                       dual_graph_idx,
                        part_cell,
                        part_cell_idx,
                        (int **) &(part_res->coarse_cell_cell),
@@ -1805,16 +1757,7 @@ _coarse_grid_compute
 
   PDM_free(cell_part);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
   //Compress the face_cell array to create the face_coarse_cell array
-
-  PDM_timer_resume(cm->timer);
   int *fine_face_to_coarse_face = NULL;
 
   //Temporary storage of the data of part_ini
@@ -1828,16 +1771,7 @@ _coarse_grid_compute
                         (int **) &fine_face_to_coarse_face,
                         &(part_res->coarse_face_to_fine_face));
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
   //Updates the face_group_idx and face_group arrays
-  PDM_timer_resume(cm->timer);
-
   part_res->part->face_group_idx = NULL;
   part_res->part->face_group = NULL;
   part_res->part->face_group_ln_to_gn = NULL;
@@ -1858,34 +1792,14 @@ _coarse_grid_compute
                    &(part_res->part->face_group_idx),
                    &(part_res->coarse_face_group_to_fine_face_group));
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
   //Compress the cell_face_idx and cell_face arrays
-
-  PDM_timer_resume(cm->timer);
-
   _coarsecell_face_from_face_coarse_cell(part_res->part->n_cell,
                                       part_res->part->n_face,
                                       part_res->part->face_cell,
                                       &(part_res->part->cell_face_idx),
                                       &(part_res->part->cell_face));
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
   //Compress the face_vtx_idx and face_vtx arrays
-
-  PDM_timer_resume(cm->timer);
-
   part_res->part->n_vtx = part_ini->n_vtx;
 
   PDM_malloc(part_res->part->face_vtx_idx, part_ini->n_face + 1, int);
@@ -1910,18 +1824,7 @@ _coarse_grid_compute
                  (int **) &fine_vtx_to_coarse_vtx,
                  (int **) &(part_res->coarse_vtx_to_fine_vtx));
 
-
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
   //  Compress the vtxCoord array
-
-  PDM_timer_resume(cm->timer);
-
   PDM_malloc(part_res->part->vtx, 3 * part_ini->n_vtx, double);
   for (int i = 0; i < 3 * part_ini->n_vtx; i++) {
     part_res->part->vtx[i] = part_ini->vtx[i];
@@ -1932,39 +1835,19 @@ _coarse_grid_compute
              fine_vtx_to_coarse_vtx,
              &(part_res->part->vtx));
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
   //Update the tag arrays
-
-  PDM_timer_resume(cm->timer);
-
   _build_coarsecell_tag(part_res->part->n_cell,
                        part_res->coarse_cell_cell_idx,
                        part_res->coarse_cell_cell,
                        part_ini->cell_tag,
                        &(part_res->part->cell_tag));
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
-  PDM_timer_resume(cm->timer);
-
   if (part_ini->face_tag != NULL) {
     PDM_malloc(part_res->part->face_tag, part_ini->n_face, int);
     for (int i = 0; i < part_ini->n_face; i++) {
       part_res->part->face_tag[i] = part_ini->face_tag[i];
     }
-  }
-  else {
+  } else {
     part_res->part->face_tag = NULL;
   }
 
@@ -1972,21 +1855,12 @@ _coarse_grid_compute
                  part_res->coarse_face_to_fine_face,
                  &(part_res->part->face_tag));
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
-  PDM_timer_resume(cm->timer);
   if (part_ini->vtx_tag != NULL) {
     PDM_malloc(part_res->part->vtx_tag, part_ini->n_vtx, int);
     for (int i = 0; i < part_ini->n_vtx; i++) {
       part_res->part->vtx_tag[i] = part_ini->vtx_tag[i];
     }
-  }
-  else {
+  } else {
     part_res->part->vtx_tag = NULL;
   }
 
@@ -1994,17 +1868,10 @@ _coarse_grid_compute
                 part_res->coarse_vtx_to_fine_vtx,
                 &(part_res->part->vtx_tag));
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
   PDM_free(cell_coarse_cell);
 
-  PDM_free(dualGraphIdx);
-  PDM_free(dualGraph);
+  PDM_free(dual_graph_idx);
+  PDM_free(dual_graph);
 
   PDM_free(fine_face_to_coarse_face);
 
@@ -2032,19 +1899,15 @@ _build_coarsecell_ln_to_gn
     n_cellProc += cm->part_res[i]->part->n_cell;
   }
 
-  //    PDM_printf("\nValeur de n_cellProc : %d \n", n_cellProc);
-
   //Global numbering of the cells
   PDM_g_num_t beg_NumAbs;
-
   PDM_MPI_Scan(&n_cellProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
 
   //Index to position the local cells
   beg_NumAbs -= n_cellProc;
 
-  int idx_write = 0;
-
   //Loop over the partition numbers, i = partition number
+  int idx_write = 0;
   for (int i = 0; i < cm->n_part; i++) {
     _part_t *cmp = cm->part_res[i]->part;
     int n_cell = cm->part_res[i]->part->n_cell;
@@ -2053,17 +1916,6 @@ _build_coarsecell_ln_to_gn
     for (int j = 0; j < n_cell; j++) {
       cmp->cell_ln_to_gn[j] = beg_NumAbs + idx_write + 1;
       idx_write++;
-    }
-
-  }
-
-  if(0 == 1) {
-    for (int i_part = 0; i_part < cm->n_part; i_part++) {
-      PDM_printf("\nContenu de cm->part_res[%d]->part->cell_ln_to_gn\n", i_part);
-      for (int j = 0; j < cm->part_res[i_part]->part->n_cell; j++) {
-        PDM_printf(" "PDM_FMT_G_NUM" ", cm->part_res[i_part]->part->cell_ln_to_gn[j]);
-      }
-      PDM_printf("\n\n");
     }
   }
 }
@@ -2083,24 +1935,13 @@ PDM_coarse_mesh_t * cm
 )
 {
   PDM_g_num_t **face_ln_to_gn_part = NULL;
+  int          *n_facePart = NULL;
   PDM_malloc(face_ln_to_gn_part, cm->n_part, PDM_g_num_t *);
-  int *n_facePart = NULL;
-  PDM_malloc(n_facePart, cm->n_part, int);
+  PDM_malloc(n_facePart        , cm->n_part, int          );
 
   for (int i = 0; i < cm->n_part; i++) {
     face_ln_to_gn_part[i] = cm->part_ini[i]->face_ln_to_gn;
-    n_facePart[i] = cm->part_ini[i]->n_face;
-  }
-
-  if(0 == 1) {
-    PDM_printf("Contenu de face_ln_to_gn_part\n");
-    for (int i = 0; i < cm->n_part; i++) {
-      for (int j = 0; j < n_facePart[i]; j++) {
-         PDM_printf(" "PDM_FMT_G_NUM" ", face_ln_to_gn_part[i][j]);
-      }
-    PDM_printf("\n");
-    }
-
+    n_facePart        [i] = cm->part_ini[i]->n_face;
   }
 
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -2116,7 +1957,6 @@ PDM_coarse_mesh_t * cm
   PDM_malloc(face_ln_to_gnTag, cm->n_part, PDM_g_num_t *);
 
   int idx_write = 0;
-
   for (int i = 0; i < cm->n_part; i++) {
     idx_write = 0;
     //Loop over coarse_face_to_fine_face, i = index of coarse_face_to_fine_face (from 0 to cm->part_res[i_part]->part->n_face)
@@ -2127,16 +1967,6 @@ PDM_coarse_mesh_t * cm
      int k =  cm->part_res[i]->coarse_face_to_fine_face[j] - 1;
      face_ln_to_gnTag[i][k] = 0;
     }
-  }
-
-  if(0 == 1) {
-    PDM_printf("Contenu de face_ln_to_gnTag\n");
-    for (int i = 0; i < cm->n_part; i++) {
-      for (int j = 0; j < cm->part_res[i]->part->n_face; j++) {
-          PDM_printf(" "PDM_FMT_G_NUM" ", face_ln_to_gnTag[i][j]);
-      }
-    }
-    PDM_printf("\n");
   }
 
   PDM_g_num_t *b_tIntersects = NULL;
@@ -2178,11 +2008,9 @@ PDM_coarse_mesh_t * cm
   for (int i = 0; i < size_block; i++) {
     //If the vertex has not been removed
     if(b_tIntersects[i] == 0) {
-        b_tIntersects[i] = beg_NumAbs + (idx_write++) + 1;
-
-    }
-    else {
-        b_tIntersects[i] = -1;
+      b_tIntersects[i] = beg_NumAbs + (idx_write++) + 1;
+    } else {
+      b_tIntersects[i] = -1;
     }
   }
 
@@ -2211,17 +2039,6 @@ PDM_coarse_mesh_t * cm
                           &part_stride,
                           (void **) face_ln_to_gnFine);
 
-  if(0 == 1) {
-    PDM_printf("\nContenu de face_ln_to_gnFine\n");
-    for (int i = 0; i < cm->n_part; i++) {
-      //Loop over the partition faces, j = face number
-      for (int j = 0; j < cm->part_ini[i]->n_face; j++) {
-        PDM_printf(" "PDM_FMT_G_NUM" ", face_ln_to_gnFine[i][j]);
-      }
-    }
-    PDM_printf("\n");
-  }
-
   for (int i = 0; i < cm->n_part; i++) {
     _part_t *cmp = cm->part_res[i]->part;
     int n_face = cm->part_res[i]->part->n_face;
@@ -2229,17 +2046,6 @@ PDM_coarse_mesh_t * cm
     for (int j = 0; j < n_face; j++) {
       cmp->face_ln_to_gn[j] = (PDM_g_num_t) face_ln_to_gnFine[i][cm->part_res[i]->coarse_face_to_fine_face[j] - 1];
     }
-  }
-
-  if(0 == 1) {
-    PDM_printf("\nContenu de face_ln_to_gn de la structure\n");
-    for (int i = 0; i < cm->n_part; i++) {
-      //Loop over the partition vertices, j = vertex number
-      for (int j = 0; j < cm->part_res[i]->part->n_face; j++) {
-        PDM_printf(" "PDM_FMT_G_NUM" ", cm->part_res[i]->part->face_ln_to_gn[j]);
-      }
-    }
-    PDM_printf("\n");
   }
 
   PDM_free(face_ln_to_gn_part);
@@ -2287,20 +2093,6 @@ PDM_coarse_mesh_t * cm
     n_vtxPart[i] = cm->part_ini[i]->n_vtx;
   }
 
-  if(0 == 1) {
-    PDM_printf("Contenu de vtx_ln_to_gn_part\n");
-    for (int i = 0; i < cm->n_part; i++) {
-      PDM_printf(" "PDM_FMT_G_NUM" ", *(vtx_ln_to_gn_part[i]));
-    }
-    PDM_printf("\n");
-
-    PDM_printf("Contenu de n_vtxPart\n");
-    for (int i = 0; i < cm->n_part; i++) {
-      PDM_printf(" %d ", n_vtxPart[i]);
-    }
-    PDM_printf("\n");
-  }
-
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                      1.,
@@ -2314,7 +2106,6 @@ PDM_coarse_mesh_t * cm
   PDM_malloc(vtx_ln_to_gnTag, cm->n_part, PDM_g_num_t *);
 
   int idx_write = 0;
-
   for (int i = 0; i < cm->n_part; i++) {
     int nFine_vtx = cm->part_ini[i]->n_vtx;
     int nCoarseVtx = cm->part_res[i]->part->n_vtx;
@@ -2323,20 +2114,10 @@ PDM_coarse_mesh_t * cm
     vtx_ln_to_gnTag[i] = PDM_array_const_gnum(nFine_vtx, -1);
 
     for (int j = 0; j < nCoarseVtx; j++) {
-        //If the vertex studied is the same as in coarse_vtx_to_fine_vtx, it is to be stored
+      //If the vertex studied is the same as in coarse_vtx_to_fine_vtx, it is to be stored
       int k = cm->part_res[i]->coarse_vtx_to_fine_vtx[j] - 1;
       vtx_ln_to_gnTag[i][k] = 0;
     }
-  }
-
-  if (0 == 1) {
-    PDM_printf("Contenu de vtx_ln_to_gnTag\n");
-    for (int i = 0; i < cm->n_part; i++) {
-      for (int j = 0; j < cm->part_res[i]->part->n_vtx; j++) {
-        PDM_printf(" "PDM_FMT_G_NUM, vtx_ln_to_gnTag[i][j]);
-      }
-    }
-    PDM_printf("\n");
   }
 
   PDM_g_num_t *b_tIntersects = NULL;
@@ -2427,17 +2208,6 @@ PDM_coarse_mesh_t * cm
     for (int j = 0; j < n_vtx; j++) {
       cmp->vtx_ln_to_gn[j] = (PDM_g_num_t) vtx_ln_to_gnFine[i][cm->part_res[i]->coarse_vtx_to_fine_vtx[j] - 1];
     }
-  }
-
-  if(0 == 1) {
-    PDM_printf("\nContenu de vtx_ln_to_gn de la structure\n");
-    for (int i = 0; i < cm->n_part; i++) {
-      //Loop over the partition vertices, j = vertex number
-      for (int j = 0; j < cm->part_res[i]->part->n_vtx; j++) {
-        PDM_printf(" "PDM_FMT_G_NUM" ", cm->part_res[i]->part->vtx_ln_to_gn[j]);
-      }
-    }
-    PDM_printf("\n");
   }
 
   PDM_free(vtx_ln_to_gn_part);
@@ -3535,76 +3305,32 @@ PDM_part_coarse_mesh_compute
  PDM_coarse_mesh_t *cm
  )
 {
-  /* First step : Manage independently coarse grid generation */
+  PDM_timer_start(cm->timer, "coarse_mesh:total", 0);
 
+  PDM_timer_start(cm->timer, "coarse_mesh:coarse_grid_compute", 0);
+  /* First step : Manage independently coarse grid generation */
   for (int i_part = 0; i_part < cm->n_part; i_part++) {
     _coarse_grid_compute(cm, i_part);
   }
+  PDM_timer_end(cm->timer, "coarse_mesh:coarse_grid_compute", 0);
 
-  /* Second step : Manage MPI */
-  int itime = 13;
-
-  //    PDM_part_coarse_mesh_display(cmId);
-  PDM_timer_resume(cm->timer);
-
+  PDM_timer_start(cm->timer, "coarse_mesh:synchro_mpi_cell", 0);
   _build_coarsecell_ln_to_gn(cm);
+  PDM_timer_end  (cm->timer, "coarse_mesh:synchro_mpi_cell", 0);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
-  PDM_timer_resume(cm->timer);
-
+  PDM_timer_start(cm->timer, "coarse_mesh:synchro_mpi_face", 0);
   _build_face_ln_to_gn(cm);
+  PDM_timer_end  (cm->timer, "coarse_mesh:synchro_mpi_face", 0);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
-  PDM_timer_resume(cm->timer);
-
+  PDM_timer_start(cm->timer, "coarse_mesh:synchro_mpi_vtx", 0);
   _build_vtx_ln_to_gn(cm);
+  PDM_timer_end  (cm->timer, "coarse_mesh:synchro_mpi_vtx", 0);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
-  PDM_timer_resume(cm->timer);
-
+  PDM_timer_start(cm->timer, "coarse_mesh:synchro_mpi_face_group", 0);
   _build_faceGroupLNToGN(cm);
+  PDM_timer_end  (cm->timer, "coarse_mesh:synchro_mpi_face_group", 0);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
-  itime += 1;
-
-  PDM_timer_resume(cm->timer);
-
-  // PDM_printf(" ------------------------------------------- \n");
-  // for (int i = 0; i < part->face_group_idx[part->n_face_group]; i++) {
-  //   PDM_printf("part->face_group[%i] = %i  \n", i, part->face_group[i]);
-  //   int iFace = part->face_group[i];
-  //   PDM_printf("part->face_cell = %i/%i  \n", i, part->face_cell[2*iFace],part->face_cell[2*iFace+1] );
-  // }
-  /* Renumbering */
-
-  // Demander a Eric :
-  // Il va manquer le reordering des tableau specific au multigrille ?
-  // coarse_cell_cell, coarse_cell_cell_idx
-  // coarse_cell_cell, coarse_vtx_to_fine_vtx
-  printf("Renumbering Coarse mesh \n");
-
+  PDM_timer_start(cm->timer, "coarse_mesh:renum", 0);
   for (int i_part = 0; i_part < cm->n_part; i_part++) {
 
     /* Cell renumbering */
@@ -3677,23 +3403,9 @@ PDM_part_coarse_mesh_compute
 
   _build_facePartBound(cm);
 
-  PDM_timer_hang_on(cm->timer);
-  cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
-  cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
-  cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
-  cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
+  PDM_timer_end(cm->timer, "coarse_mesh:renum", 0);
 
-  cm->times_elapsed[0]     = cm->times_elapsed[itime];
-  cm->times_cpu[0]         = cm->times_cpu[itime];
-  cm->times_cpu_u[0]       = cm->times_cpu_u[itime];
-  cm->times_cpu_s[0]       = cm->times_cpu_s[itime];
-
-  for (int i = itime; i > 1; i--) {
-    cm->times_elapsed[i] -= cm->times_elapsed[i-1];
-    cm->times_cpu[i]     -= cm->times_cpu[i-1];
-    cm->times_cpu_u[i]   -= cm->times_cpu_u[i-1];
-    cm->times_cpu_s[i]   -= cm->times_cpu_s[i-1];
-  }
+  PDM_timer_end(cm->timer, "coarse_mesh:total", 0);
 }
 
 
@@ -3878,7 +3590,8 @@ PDM_part_coarse_mesh_free
 
 
 
-void PDM_part_coarse_mesh_time_get
+void
+PDM_part_coarse_mesh_time_get
 (
  PDM_coarse_mesh_t  *cm,
  double            **elapsed,
@@ -3887,12 +3600,22 @@ void PDM_part_coarse_mesh_time_get
  double            **cpu_sys
 )
 {
-  *elapsed  = cm->times_elapsed;
-  *cpu      = cm->times_cpu;
-  *cpu_user = cm->times_cpu_u;
-  *cpu_sys  = cm->times_cpu_s;
+  PDM_UNUSED(cm);
+  PDM_UNUSED(elapsed);
+  PDM_UNUSED(cpu);
+  PDM_UNUSED(cpu_user);
+  PDM_UNUSED(cpu_sys);
+  PDM_error(__FILE__, __LINE__, 0, "PDM_part_coarse_mesh_time_get is deprecated, use PDM_part_coarse_mesh_dump_times instead \n");
 }
 
+void
+PDM_part_coarse_mesh_dump_times
+(
+  PDM_coarse_mesh_t  *cm
+)
+{
+  PDM_timer_gather_dump(cm->timer, NULL);
+}
 
 
 void
@@ -4077,5 +3800,4 @@ void
   }
 
 }
-
 
