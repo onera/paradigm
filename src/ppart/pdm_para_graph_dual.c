@@ -818,7 +818,7 @@ const PDM_MPI_Comm      comm
         PDM_printf("PPART error : PT-Scotch unavailable\n");
         exit(1);
       #else
-        int check = 1;
+        int check = 0;
         // printf("PDM_SCOTCH_dpart %d | %d \n", n_part, dn_elmt);
         PDM_SCOTCH_dpart (dn_elmt,
                           dual_graph_idx,
