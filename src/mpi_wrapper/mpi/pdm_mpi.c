@@ -68,16 +68,6 @@ MPI_Comm PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
 }
 
 /*----------------------------------------------------------------------------
- * pdm_mpi_2_mpi_comm
- *----------------------------------------------------------------------------*/
-void *PDM_MPI_free_mpi_comm(void *pt_mpi_comm)
-{
-  MPI_Comm *comm = (MPI_Comm *) pt_mpi_comm;
-  MPI_Comm_free (comm);
-  return NULL;
-}
-
-/*----------------------------------------------------------------------------
  * PDM_MPI_mpi_2_pdm_mpi_comm
  *----------------------------------------------------------------------------*/
 PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_mpi_comm)
@@ -1784,30 +1774,6 @@ int PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_Comm comm, void *attribute_val, int *fl
 {
   int code = MPI_Comm_get_attr(comm, MPI_TAG_UB, attribute_val, flag);
   return code;
-}
-
-/*----------------------------------------------------------------------------
- * PDM_MPI_rand_tag_get
- *----------------------------------------------------------------------------*/
-int PDM_MPI_Rand_tag (PDM_MPI_Comm comm)
-{
-  struct timeval t;
-  gettimeofday(&t, NULL);
-
-  long ltag = t.tv_usec + 1000000 * t.tv_sec;
-
-  MPI_Bcast (&ltag, 1, MPI_LONG, 0, comm);
-
-  void  *max_tag_tmp;
-  int flag;
-
-  // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
-  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &max_tag_tmp, &flag);
-  long max_tag = (long) (*((int *) max_tag_tmp));
-
-  // printf("max_tag = %li | ltag = %li \n", max_tag, ltag);
-
-  return (int) (ltag % max_tag);
 }
 
 /*----------------------------------------------------------------------------

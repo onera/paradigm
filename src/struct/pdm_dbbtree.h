@@ -514,20 +514,12 @@ PDM_dbbtree_volumes_intersect_boxes
 void
 PDM_dbbtree_box_tree_write_vtk
 (
- const char    *filename,
- PDM_dbbtree_t *dbbt,
- const int      i_copied_rank,
- const int      normalized
- );
+ const char          *filename,
+       PDM_dbbtree_t *dbbt,
+ const int            i_copied_rank,
+ const int            normalized
+);
 
-
-void
-PDM_dbbtree_box_tree_write_vtk2
-(
- const char    *filename,
- PDM_dbbtree_t *dbbt,
- const int      i_copied_rank
- );
 
 #ifdef __cplusplus
 }
