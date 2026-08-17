@@ -207,10 +207,6 @@ PDM_block_to_part_create_from_sparse_block_and_distrib
   assert(btp->n_elt_partial_block == 0);
   PDM_malloc(btp->idx_partial, btp->distributed_data_idx[btp->n_rank], int);
 
-
-  // PDM_log_trace_array_int(btp->distributed_data_idx, btp->n_rank+1, "distributed_data_idx : ");
-  // PDM_log_trace_array_int(btp->distributed_data, btp->distributed_data_idx[btp->n_rank], "distributed_data : ");
-
   for (int i = 0; i < btp->distributed_data_idx[btp->n_rank]; i++) {
     int lid = btp->distributed_data[i];
     PDM_g_num_t g_num_send = lid + btp->block_distrib_idx[btp->i_rank] + 1;
@@ -314,13 +310,6 @@ PDM_block_to_part_create
 
   btp->p2p_factor = 0.25;
 
-  char host[1024];
-  gethostname(host, 1023);
-
-  if (!strncmp(host, "sator" , 5)) {
-    btp->p2p_factor = -0.1;
-  }
-
   char *env_var = NULL;
   env_var = getenv ("PDM_BLOCK_TO_PART_P2P_FACTOR");
   if (env_var != NULL) {
@@ -393,22 +382,12 @@ PDM_block_to_part_create
   }
 
   for (int i = 0; i < n_part; i++) {
-
     const PDM_g_num_t *_gnum_elt = gnum_elt[i];
-
-    // printf("n_elt[%i] = %i \n", i, (int) n_elt[i]);
     for (int j = 0; j < n_elt[i]; j++) {
-
-      // int ind = PDM_binary_search_gap_long (_gnum_elt[j] - 1,
-      //                                       block_distrib_idx,
-      //                                       btp->n_rank + 1);
       int ind = btp->ind[i][j];
       int idx = btp->requested_data_idx[ind] + btp->requested_data_n[ind]++;
-
       btp->ind[i][j] = idx;
-
       PDM_g_num_t _requested_data = PDM_ABS(_gnum_elt[j]) - 1 - block_distrib_idx[ind];
-      // printf("requested_data[%i] = %i / size_max = %i and gn_m = %i \n", idx, (int) _requested_data, s_requested_data, (int)_gnum_elt[j]);
       requested_data[idx] = (int) _requested_data;
     }
   }

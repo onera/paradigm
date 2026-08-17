@@ -1418,13 +1418,6 @@ _ptb_create
 
   ptb->p2p_factor = 0.25;
 
-  char host[1024];
-  gethostname(host, 1023);
-
-  if (!strncmp(host, "sator" , 5)) {
-    ptb->p2p_factor = -0.1;
-  }
-
   char *env_var = NULL;
   env_var = getenv ("PDM_PART_TO_BLOCK_P2P_FACTOR");
   if (env_var != NULL) {
@@ -1434,7 +1427,6 @@ _ptb_create
   /*
    * Active ranks definition
    */
-
   _active_ranks (ptb);
 
   return ptb;
