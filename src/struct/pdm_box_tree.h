@@ -705,7 +705,7 @@ PDM_box_tree_extract_node_extents
  int             *node_id,
  double          *node_extents,
  const int        normalized
- );
+);
 
 void
 PDM_box_tree_extract_extents_by_child_ids
@@ -742,30 +742,20 @@ PDM_box_tree_get_box_ids
 int
 PDM_box_tree_box_extents_get
 (
- PDM_box_tree_t  *bt,
- const int        i_copied_rank,
- double         **extents
- );
-
+        PDM_box_tree_t  *bt,
+  const int              i_copied_rank,
+        double         **extents
+);
 
 void
 PDM_tree_intersection_point_box
 (
- PDM_box_tree_t        *btree,
- PDM_point_tree_seq_t  *ptree,
- int                  **box_pts_idx,
- int                  **box_pts
- );
+  PDM_box_tree_t        *btree,
+  PDM_point_tree_seq_t  *ptree,
+  int                  **box_pts_idx,
+  int                  **box_pts
+);
 
-void
-PDM_box_tree_write_vtk2
-(
- const char     *filename,
- PDM_box_tree_t *bt,
- const int       i_copied_rank,
- double *s,
- double *d
- );
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

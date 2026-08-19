@@ -206,13 +206,6 @@ MPI_Comm PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm);
 PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *);
 
 /*----------------------------------------------------------------------------
- * pdm_mpi_2_mpi_comm
- *
- * PDM_MPI_Comm -> MPI_Comm
- *----------------------------------------------------------------------------*/
-void *PDM_MPI_free_mpi_comm(void *mpi_comm);
-
-/*----------------------------------------------------------------------------
  * PDM_MPI_File_open (wrapping de la fonction MPI_File_open)
  *----------------------------------------------------------------------------*/
 int
@@ -926,10 +919,9 @@ int PDM_MPI_Comm_split_type_numa(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm);
 int PDM_MPI_Comm_split_type(PDM_MPI_Comm comm, int split_type, PDM_MPI_Comm *newcomm);
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_rand_tag_get
+ * PDM_MPI_Comm_get_attr_tag_ub
  *----------------------------------------------------------------------------*/
 int PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_Comm comm, void *attribute_val, int *flag);
-int PDM_MPI_Rand_tag            (PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Dist_graph_create_adjacent
