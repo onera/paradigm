@@ -658,6 +658,120 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D - rev
 }
 
 
+MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 2 part - 1p", 1) {
+
+  /**
+   *
+   *    -->      3  x       x  4    <--->    3  x       x  4    <--->    5  x       x  6      <--
+   *            (1) |       | (2)           (1) |       | (2)           (3) |       | (4)
+   *    -->      2  x       x  2    <--->    1  x       x  2    <--->    7  x       x  8      <--
+   *
+   * <nuplet-1>       part1       <nuplet0>       part2       <nuplet0>       part1        <nuplet1>
+   *
+   */
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  std::vector<std::vector<double>> vvtx_coords = {{0., 0., 0.,
+                                                   0., 1., 0.,
+                                                   1., 0., 0.,
+                                                   1., 1., 0.,
+                                                   2., 1., 0.,
+                                                   3., 1., 0.,
+                                                   2., 0., 0.,
+                                                   3., 0., 0.},
+                                                  {1., 0., 0.,
+                                                   2., 0., 0.,
+                                                   1., 1., 0.,
+                                                   2., 1., 0.}};
+
+  std::vector<std::vector<int>> ventity2_entity1_idx = {{0,2,4,6,8},
+                                                        {0,2,4}};
+  std::vector<std::vector<int>> ventity2_entity1 = {{1,3,
+                                                     2,4,
+                                                     5,7,
+                                                     8,6},
+                                                    {1,3,
+                                                     2,4}};
+
+  int n_entity1_graph[2] = {8, 4};
+  int n_entity1      [2] = {8, 4};
+  int n_entity2      [2] = {4, 2};
+  std::vector<std::vector<int>> ventity1_graph = {{1, 0, 1, 8,
+                                                   3, 0, 1, 6,
+                                                   2, 0, 2, 1,
+                                                   4, 0, 2, 3,
+                                                   5, 0, 2, 4,
+                                                   7, 0, 2, 2,
+                                                   6, 0, 1, 3,
+                                                   8, 0, 1, 1},
+                                                  {1, 0, 1, 2,
+                                                   3, 0, 1, 4,
+                                                   4, 0, 1, 5,
+                                                   2, 0, 1, 7}};
+  std::vector<std::vector<int>> ventity1_nuplt = {{-1,-1,0,0,0,0,1,1},
+                                                  {0,0,0,0}};
+
+  int n_part = 2;
+  int *entity1_graph      [2] = {ventity1_graph      [0].data(), ventity1_graph      [1].data()};
+  int *entity1_nuplt      [2] = {ventity1_nuplt      [0].data(), ventity1_nuplt      [1].data()};
+  int *entity2_entity1_idx[2] = {ventity2_entity1_idx[0].data(), ventity2_entity1_idx[1].data()};
+  int *entity2_entity1    [2] = {ventity2_entity1    [0].data(), ventity2_entity1    [1].data()};
+
+  PDM_part_comm_graph_t *pcg_entity1 = PDM_part_comm_graph_with_nuplet_create(
+    n_part,
+    n_entity1,
+    entity1_graph,
+    PDM_OWNERSHIP_USER,
+    1,
+    entity1_nuplt,
+    PDM_OWNERSHIP_USER,
+    PDM_TRUE,
+    pdm_comm
+  );
+
+  PDM_part_comm_graph_t *pcg_entity2 = NULL;
+  PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(
+    pcg_entity1,
+    n_entity1,
+    n_entity2,
+    entity2_entity1_idx,
+    entity2_entity1,
+    &pcg_entity2
+  );
+
+  /**
+   * Check result
+   */
+  static int expected_entity2_graph_p0[] = {4,0,1,1,
+                                            1,0,1,4,
+                                            2,0,2,1,
+                                            3,0,2,-2};
+  static int expected_entity2_graph_p1[] = {1,0,1,2,
+                                            2,0,1,-3};
+  static int expected_entity2_nuplt_p0[] = {1,-1,0,0};
+  static int expected_entity2_nuplt_p1[] = {0,0};
+  int  expected_n_entity2_graph[] = {4,2};
+  int *expected_entity2_graph  [] = {expected_entity2_graph_p0, expected_entity2_graph_p1};
+  int *expected_entity2_nuplt  [] = {expected_entity2_nuplt_p0, expected_entity2_nuplt_p1};
+
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    int *entity2_graph = NULL;
+    int *entity2_nuplt = NULL;
+    int n_entity2_graph = PDM_part_comm_graph_entity_graph_get(pcg_entity2, i_part, &entity2_graph, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_part_comm_graph_entity_nuplet_get(pcg_entity2, i_part, &entity2_nuplt, PDM_OWNERSHIP_BAD_VALUE);
+
+    CHECK(n_entity2_graph == expected_n_entity2_graph[i_part]);
+    CHECK_EQ_C_ARRAY(entity2_graph, expected_entity2_graph[i_part], 4 * n_entity2_graph);
+    CHECK_EQ_C_ARRAY(entity2_nuplt, expected_entity2_nuplt[i_part],     n_entity2_graph);
+  }
+
+  PDM_part_comm_graph_free(pcg_entity1);
+  PDM_part_comm_graph_free(pcg_entity2);
+}
+
+
 MPI_TEST_CASE("[PDM_part_comm_graph] - selected_entity1_to_selected_entity2 - 2p", 2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
