@@ -695,9 +695,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 2 part - 1p", 1) {
                                                     {1,3,
                                                      2,4}};
 
-  int n_entity1_graph[2] = {8, 4};
-  int n_entity1      [2] = {8, 4};
-  int n_entity2      [2] = {4, 2};
+  int n_entity1[2] = {8, 4};
+  int n_entity2[2] = {4, 2};
   std::vector<std::vector<int>> ventity1_graph = {{1, 0, 1, 8,
                                                    3, 0, 1, 6,
                                                    2, 0, 2, 1,
