@@ -2097,5 +2097,3 @@ PDM_part_comm_graph_free
 
   PDM_free(pcg);
 }
-
-

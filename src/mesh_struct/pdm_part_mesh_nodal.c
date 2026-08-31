@@ -970,15 +970,17 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     return;
   }
 
-  PDM_part_comm_graph_t* pcg = NULL;
+  PDM_part_comm_graph_t* pcg_elt = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn,
                                           geom_kind,
-                                          &pcg,
+                                          &pcg_elt,
                                           PDM_OWNERSHIP_BAD_VALUE);
 
-  int have_owner = 0;
-  if(pcg != NULL) {
-    have_owner = 1;
+  int have_owner_elt  = 0;
+  int nuplet_size_elt = 0;
+  if(pcg_elt != NULL) {
+    have_owner_elt  = 1;
+    nuplet_size_elt = PDM_part_comm_graph_nuplet_size(pcg_elt);
   }
 
   PDM_part_comm_graph_t* pcg_vtx = NULL;
@@ -986,9 +988,11 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
                                               &pcg_vtx,
                                               PDM_OWNERSHIP_BAD_VALUE);
 
-  int have_owner_vtx = 0;
+  int have_owner_vtx  = 0;
+  int nuplet_size_vtx = 0;
   if(pcg_vtx != NULL) {
-    have_owner_vtx = 1;
+    have_owner_vtx  = 1;
+    nuplet_size_vtx = PDM_part_comm_graph_nuplet_size(pcg_vtx);
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -1023,27 +1027,47 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     double               *elt_section = NULL;
     double               *elt_entity  = NULL;
     double               *elt_owner   = NULL;
-    PDM_malloc(elt_g_num,   n_elt_tot, PDM_g_num_t         );
-    PDM_malloc(elt_type,    n_elt_tot, PDM_Mesh_nodal_elt_t);
+    double               *elt_nuplt   = NULL;
+    PDM_malloc(elt_g_num  , n_elt_tot, PDM_g_num_t         );
+    PDM_malloc(elt_type   , n_elt_tot, PDM_Mesh_nodal_elt_t);
     PDM_malloc(elt_section, n_elt_tot, double              );
-    PDM_malloc(elt_entity,  n_elt_tot, double              );
-    PDM_malloc(elt_owner ,  n_elt_tot, double              );
+    PDM_malloc(elt_entity , n_elt_tot, double              );
+    PDM_malloc(elt_owner  , n_elt_tot, double              );
+    PDM_malloc(elt_nuplt  , n_elt_tot, double              );
 
-    int _n_elt_field = n_elt_field + 3 + have_owner;
+    int _n_elt_field = n_elt_field + 3 + have_owner_elt;
+    if (nuplet_size_elt>0) {
+      _n_elt_field += 1;
+    }
 
     for(int i_elt = 0; i_elt < n_elt_tot; ++i_elt) {
       elt_owner[i_elt] = -1.;
     }
 
-    if(pcg != NULL) {
-      const int* pcg_owner = PDM_part_comm_graph_owner_get(pcg, i_part);
+    if(pcg_elt != NULL) {
+      const int* pcg_owner = PDM_part_comm_graph_owner_get(pcg_elt, i_part);
       int *entity_graph = NULL;
-      int n_graph_entity = PDM_part_comm_graph_entity_graph_get(pcg,
+      int n_graph_entity = PDM_part_comm_graph_entity_graph_get(pcg_elt,
                                                                 i_part,
                                                                 &entity_graph,
                                                                 PDM_OWNERSHIP_BAD_VALUE);
       for(int idx_graph = 0; idx_graph < n_graph_entity; ++idx_graph) {
         elt_owner[entity_graph[4*idx_graph]-1] = pcg_owner[idx_graph];
+      }
+
+      if (nuplet_size_elt>0) {
+
+        for(int i_elt = 0; i_elt < n_elt_tot; ++i_elt) {
+          elt_nuplt[i_elt] = 0.;
+        }
+        int *entity_nuplt = NULL;
+        PDM_part_comm_graph_entity_nuplet_get(pcg_elt,
+                                              i_part,
+                                              &entity_nuplt,
+                                              PDM_OWNERSHIP_BAD_VALUE);
+        for(int idx_graph = 0; idx_graph < n_graph_entity; ++idx_graph) {
+          elt_nuplt[entity_graph[4*idx_graph]-1] = entity_nuplt[idx_graph];
+        }
       }
     }
 
@@ -1079,7 +1103,7 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
           elt_entity[i_parent] = _elt_to_entity[i_elt];
         }
         else {
-          _n_elt_field = n_elt_field + 2 + have_owner;
+          _n_elt_field = n_elt_field + 2 + have_owner_elt;
         }
         idx++;
       }
@@ -1095,17 +1119,28 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     _elt_field     [n_elt_field  ] = elt_group;
     _elt_field_name[n_elt_field+1] = "section_id";
     _elt_field     [n_elt_field+1] = elt_section;
-    if (_n_elt_field > n_elt_field + 2 + have_owner) {
+    if (_n_elt_field > n_elt_field + 2 + have_owner_elt) {
       _elt_field_name[n_elt_field+2] = "elt_to_entity";
       _elt_field     [n_elt_field+2] = elt_entity;
       _elt_field_name[n_elt_field+3] = "is_owner";
       _elt_field     [n_elt_field+3] = elt_owner;
+      if (nuplet_size_elt>0) {
+        _elt_field_name[n_elt_field+4] = "nuplet";
+        _elt_field     [n_elt_field+4] = elt_nuplt;
+      }
     } else {
       _elt_field_name[n_elt_field+2] = "is_owner";
       _elt_field     [n_elt_field+2] = elt_owner;
+      if (nuplet_size_elt>0) {
+        _elt_field_name[n_elt_field+3] = "nuplet";
+        _elt_field     [n_elt_field+3] = elt_nuplt;
+      }
     }
 
     int _n_vtx_field = n_vtx_field + have_owner_vtx;
+    if (nuplet_size_vtx>0) {
+      _n_vtx_field += 1;
+    }
 
     const char   *_vtx_field_name[_n_vtx_field];
     const double *_vtx_field     [_n_vtx_field];
@@ -1114,8 +1149,10 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
       _vtx_field     [i_field] = vtx_field     [i_field][i_part];
     }
 
-    double *vtx_owner   = NULL;
+    double *vtx_owner = NULL;
+    double *vtx_nuplt = NULL;
     PDM_malloc(vtx_owner, pn_vtx, double);
+    PDM_malloc(vtx_nuplt, pn_vtx, double);
     for(int i_vtx = 0; i_vtx < pn_vtx; ++i_vtx) {
       vtx_owner[i_vtx] = -1.;
     }
@@ -1130,6 +1167,23 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
                                                                 PDM_OWNERSHIP_BAD_VALUE);
       for(int idx_graph = 0; idx_graph < n_graph_entity; ++idx_graph) {
         vtx_owner[entity_graph[4*idx_graph]-1] = pcg_owner[idx_graph];
+      }
+
+      if (nuplet_size_vtx>0) {
+
+        for(int i_vtx = 0; i_vtx < pn_vtx; ++i_vtx) {
+          vtx_nuplt[i_vtx] = 0.;
+        }
+        _vtx_field_name[n_vtx_field+1] = "nuplet";
+        _vtx_field     [n_vtx_field+1] = vtx_nuplt;
+        int *entity_nuplt = NULL;
+        PDM_part_comm_graph_entity_nuplet_get(pcg_vtx,
+                                              i_part,
+                                              &entity_nuplt,
+                                              PDM_OWNERSHIP_BAD_VALUE);
+        for(int idx_graph = 0; idx_graph < n_graph_entity; ++idx_graph) {
+          vtx_nuplt[entity_graph[4*idx_graph]-1] = entity_nuplt[idx_graph];
+        }
       }
     }
 
@@ -1151,6 +1205,7 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
                                     _vtx_field_name,
                                     _vtx_field);
 
+    PDM_free(vtx_nuplt  );
     PDM_free(vtx_owner  );
     PDM_free(elt_group  );
     PDM_free(elt_g_num  );
@@ -1158,6 +1213,7 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     PDM_free(elt_section);
     PDM_free(elt_entity );
     PDM_free(elt_owner  );
+    PDM_free(elt_nuplt  );
     PDM_free(elt_vtx_idx);
     PDM_free(elt_vtx    );
   }
