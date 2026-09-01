@@ -7867,7 +7867,7 @@ PDM_para_octree_build
   const int n_child = 8;
   //const int n_direction = (int) PDM_N_DIRECTION;
 
-  int  size = _octree->depth_max * 8;
+  int  size = _octree->octants->n_nodes + _octree->depth_max * 8;
 
   //long mem = 0;
   _neighbours_tmp_t *ngb_octree = NULL;

@@ -12,6 +12,9 @@
   - Inclusive/Exclusive time and basic information for timer (min/max)
   - Synchronize timer on option
   - Pretty print in stdout / log / string
+### Fixed
+- PDM_part_octree :
+  - Fix wrong heap allocation avoiding heap is full crash
 ### Deprecated
 ### Removed
 - Remove fake brace for emacs editor & clean all licensing (outdated)
