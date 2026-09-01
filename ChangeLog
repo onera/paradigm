@@ -12,15 +12,14 @@
   - Inclusive/Exclusive time and basic information for timer (min/max)
   - Synchronize timer on option
   - Pretty print in stdout / log / string
-### Fixed
-- PDM_part_octree :
-  - Fix wrong heap allocation avoiding heap is full crash
 ### Deprecated
 ### Removed
 - Remove fake brace for emacs editor & clean all licensing (outdated)
 ### Fixed
 - PDM_mesh_intersection: Fix numerical issues in surface-surface intersection
 - PDM_domain_interface_translate_face2vtx: prevent crash caused by ``n_face_this_edge == 2`` assertion
+- PDM_part_octree :
+  - Fix wrong heap allocation avoiding heap is full crash
 ## [2.8.0] - 2026-05-21
 ### Added
 - PDM_isosurface:
