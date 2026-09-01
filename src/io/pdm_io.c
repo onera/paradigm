@@ -1222,7 +1222,7 @@ PDM_io_par_interlaced_read
 
     if (fichier->n_rangs == 1) {
 
-      PDM_timer_start(fichier->timer, "distribtution", synchro_timer);
+      PDM_timer_start(fichier->timer, "distribution", synchro_timer);
 
       int            _n_donnees_buff = 0;
       int            n_octet = 0;
@@ -1265,7 +1265,7 @@ PDM_io_par_interlaced_read
 				PDM_error("Unknown PDM_stride_t");
 			}
 
-      PDM_timer_end(fichier->timer, "distribtution", synchro_timer);
+      PDM_timer_end(fichier->timer, "distribution", synchro_timer);
       PDM_timer_end(fichier->timer, "total",         synchro_timer);
 
       PDM_io_global_read(fichier,
@@ -1274,7 +1274,7 @@ PDM_io_par_interlaced_read
                          buffer);
 
       PDM_timer_start(fichier->timer, "total",         synchro_timer);
-      PDM_timer_start(fichier->timer, "distribtution", synchro_timer);
+      PDM_timer_start(fichier->timer, "distribution", synchro_timer);
 
       if (t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
         int k = 0;
@@ -1298,7 +1298,7 @@ PDM_io_par_interlaced_read
 
       PDM_free(buffer);
 
-      PDM_timer_end(fichier->timer, "distribtution", synchro_timer);
+      PDM_timer_end(fichier->timer, "distribution", synchro_timer);
     }
 
     /* Cas general : Echanges MPI pour prise en compte de
@@ -1307,7 +1307,7 @@ PDM_io_par_interlaced_read
 
     else {
 
-      PDM_timer_start(fichier->timer, "distribtution", synchro_timer);
+      PDM_timer_start(fichier->timer, "distribution", synchro_timer);
 
       /*----------------------------------------------------------
        *  Determination des rangs actifs qui accedent reellement
@@ -1527,7 +1527,7 @@ PDM_io_par_interlaced_read
 
       }
 
-      PDM_timer_end(fichier->timer, "distribtution", synchro_timer);
+      PDM_timer_end(fichier->timer, "distribution", synchro_timer);
 
       /*---------------------------------------------------------
        * Lecture parallele des blocs
@@ -1643,7 +1643,7 @@ PDM_io_par_interlaced_read
        * Distribution suivant l'indirection
        *------------------------------------*/
 
-      PDM_timer_start(fichier->timer, "distribution ", synchro_timer);
+      PDM_timer_start(fichier->timer, "distribution", synchro_timer);
 
       /* Ordonnancement du buffer pour envoi alltoall */
 
