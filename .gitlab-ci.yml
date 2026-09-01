@@ -140,8 +140,12 @@ build:
             - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}_PDMA_${PDMA}
-    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=12 --nodes=1-1 --time=$BUILD_MAX_DURATION"
+    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=12 --ntasks=1 --nodes=1-1 --time=$BUILD_MAX_DURATION"
   stage: build
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
   before_script:
     - module purge
     - echo "compilo = $COMPILER"
@@ -299,6 +303,10 @@ unit_test:
     -   gcovr --gcov-ignore-parse-errors -g -k --xml-pretty --print-summary --root $CUSTOM_CI_DIR --object-directory $CUSTOM_CI_DIR/build$MATRIX_KEY --output $INIT_ORIGINAL_FOLDER/coverage.xml
     - fi
   when: on_success
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
   coverage: /lines:\s*(\d+\.\d+)%/
   artifacts:
     when: always
