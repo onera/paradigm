@@ -430,18 +430,32 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
 
   /* Deterministic context */
 #ifdef SCOTCH_OPTIONNUMDETERMINISTIC
+  int _scotch_deterministic = 1;
+  {
+    char *_env = getenv("PDM_SCOTCH_DETERMINISTIC");
+    if (_env != NULL) {
+      _scotch_deterministic = atoi(_env);
+    }
+  }
 
-  ierr = SCOTCH_contextInit (&context);
-  if (ierr) {
-    PDM_error("Error in SCOTCH_contextInit\n");
+  if (_scotch_deterministic) {
+    PDM_printf("PtSCOTCH: deterministic context active (seed = 0)\n");
+    ierr = SCOTCH_contextInit (&context);
+    if (ierr) {
+      PDM_error("Error in SCOTCH_contextInit\n");
+    }
+    SCOTCH_contextOptionSetNum (&context, SCOTCH_OPTIONNUMDETERMINISTIC, 1);
+    SCOTCH_contextRandomSeed   (&context, 0);
+    ierr = SCOTCH_contextBindDgraph (&context, &graph, &cntgraph);
+    if (ierr) {
+      PDM_error("Error in SCOTCH_contextBindDgraph\n");
+    }
+    actgraph = &cntgraph;
+  } else {
+    PDM_printf("PtSCOTCH: deterministic context disabled (PDM_SCOTCH_DETERMINISTIC=0)\n");
   }
-  SCOTCH_contextOptionSetNum (&context, SCOTCH_OPTIONNUMDETERMINISTIC, 1);
-  SCOTCH_contextRandomSeed   (&context, 0);
-  ierr = SCOTCH_contextBindDgraph (&context, &graph, &cntgraph);
-  if (ierr) {
-    PDM_error("Error in SCOTCH_contextBindDgraph\n");
-  }
-  actgraph = &cntgraph;
+#else
+  PDM_printf("PtSCOTCH: deterministic context not available (Scotch too old)\n");
 #endif
 
   const SCOTCH_Num _n_part = (SCOTCH_Num) n_part;
@@ -453,7 +467,9 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
 
   SCOTCH_stratExit(&strat);
 #ifdef SCOTCH_OPTIONNUMDETERMINISTIC
-  SCOTCH_contextExit(&context);
+  if (_scotch_deterministic) {
+    SCOTCH_contextExit(&context);
+  }
 #endif
   SCOTCH_dgraphExit(&graph);
 
