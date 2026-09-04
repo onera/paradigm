@@ -131,8 +131,8 @@ if (PDM_ENABLE_Fortran)
   if ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h" IS_NEWER_THAN "${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h")
     include (FortranizeFile)
     fortranize ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
-    list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h)
   endif()
+  list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h)
 endif()
 
 #------------------------------------------------------------------------------
