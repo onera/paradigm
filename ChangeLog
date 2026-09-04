@@ -1,6 +1,8 @@
 ## [Development version]
 ### Added
 - PDM_mesh_intersection: Add unit tests for surface-surface intersection
+- Added deterministic context to partitioning using SCOTCH/PtSCOTCH.  
+  - Toggleable at runtime via environment variable `PDM_SCOTCH_DETERMINISTIC` (0=OFF, 1=ON, default: ON).
 ### Changed
 - PDM_part_mesh_nodal :
   - Internal structure organized into arrays indexed by dimension to facilitate better factorization in the future
