@@ -7863,11 +7863,23 @@ PDM_para_octree_build
    *
    * Build local octree
    *
+   * - Start with the current (coarse) nodes
+   * - Split recursively the nodes in a top-down fashion
+   * - Terminate recursion on a branch when either
+   *   - the depth_max is reached
+   *   - or the number of points in all the sibling nodes fall below points_in_leaf_max
+   *
    *************************************************************************/
   const int n_child = 8;
   //const int n_direction = (int) PDM_N_DIRECTION;
 
-  int  size = _octree->depth_max * 8;
+  /**
+   * Allocate a heap (really a stack) to do the recursion manually.
+   * At each step of the recursion, 1 item is popped from the heap,
+   * then (at worst) 8 new items are pushed into the heap (and depth increases by one).
+   * Hence, the size of the heap never exceeds 7*depth_max (+ the initial node count).
+   */
+  int size = _octree->octants->n_nodes + _octree->depth_max * 7;
 
   //long mem = 0;
   _neighbours_tmp_t *ngb_octree = NULL;
