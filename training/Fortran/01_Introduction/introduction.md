@@ -69,7 +69,7 @@ The Python API reinforces the notion of objects, and results are provided in the
 
 ### Extensions
 
-The module ParaDiGMA contains somme advanced functionnalities. These functionnalities are stored into : 
+The module ParaDiGMA contains somme advanced functionalities. These functionalities are stored into : 
 
 - https://gitlab.onera.net/numerics/mesh/paradigma (ONERA users only)
 

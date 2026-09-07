@@ -6,7 +6,7 @@ if(PDM_ENABLE_EXTENSION_PDMA)
   else()
     message(
       FATAL_ERROR
-        "Sources of ParaDiGMA extension are not into the extensions/paradigma directory. Please, donwload them from the git command :
+        "Sources of ParaDiGMA extension are not into the extensions/paradigma directory. Please, download them from the git command :
      git submodule update --init")
   endif()
 endif()

@@ -14,13 +14,13 @@ Schematicaly, the following layers are used in ParaDiGM to perform pointwise dat
 
 1. The exchange protocol structure is in charge of establishing the *communication graph*, which is the list of connected
    processes and the number of data to send (and receive) to (and from) each connected process.
-   This graph is created from input data such as global ids or (rank, part, local_id) adresses.
+   This graph is created from input data such as global ids or (rank, part, local_id) addresses.
    The exchange protocol structure also reorders input data into sending and receiving buffers, to sort it according to destination process,
    and do the opposite operation once data is received.
 2. The **exchange helper** structure provides unified APIs that allow to switch between several MPI exchange modes:
-   blocking or non-blocking, point-to-point or collective or one sided, persistant or oneshot, etc.
+   blocking or non-blocking, point-to-point or collective or one sided, persistent or oneshot, etc.
    It operates once data have been prepared (reordered) by the exchange protocol, using the computed *communication graph*.
-3. Wrapping functions provided by :file:`pdm_mpi_extended.h` file, for exemple ``PDM_MPI_Isends``, which begin N non-blocking
+3. Wrapping functions provided by :file:`pdm_mpi_extended.h` file, for example ``PDM_MPI_Isends``, which begin N non-blocking
    sends from the current process to its connected N target processes. Theses functions are used by the exchange helper to
    shorten the implementation.
 4. Lastly, raw MPI primitives, for exemple ``MPI_Isend``, which begins a non-blocking send from the current process
@@ -30,14 +30,14 @@ Schematicaly, the following layers are used in ParaDiGM to perform pointwise dat
 Exchange modes
 """"""""""""""
 
-Since the exchange helper allows to switch between several MPI primitives, this section briefly recalls the caracteristics
+Since the exchange helper allows to switch between several MPI primitives, this section briefly recalls the characteristics
 of the different modes. Please refer to `MPI documentation <https://www.mpi-forum.org/docs/>`_ for more details.
 
 - **Non-blocking communications** : while blocking communications stop the program until data is fully received,
-  non-blocking communications immediatly return a ``request`` object, allowing the program to continue meanwhile
+  non-blocking communications immediately return a ``request`` object, allowing the program to continue meanwhile
   exchange is performed in the background. The developer is responsible to check if the exchange is completed,
   and eventually to wait for it when the data is actually needed.
-- **Persistent communications** : this mode allows to reuse the same "commmunication channel" more than once, when the
+- **Persistent communications** : this mode allows to reuse the same "communication channel" more than once, when the
   exchanged metadata (target process, datatype, datasize, etc.) remains the same. It typically involves a call to a ``MPI_*_init``
   function, that creates the "communication channel", and then several calls to the ``MPI_Start`` function which triggers
   the exchange with current buffer content.
@@ -125,7 +125,7 @@ API
 
   .. dropdown:: Persistent
 
-    Persistent communication allows to reuse the same "communication chanel" (see above).
+    Persistent communication allows to reuse the same "communication channel" (see above).
     A persistent communication is initialized once with a ``init`` method, then uses several
     times with the ``start`` and ``wait`` methods. When the communication chanel
     is no longer needed, it must be finalized with a ``free`` method.
@@ -157,7 +157,7 @@ API
 .. dropdown:: "Oneway" exchanges
 
   Oneway exchanges is an advanced mode of the exchange helper that decorrelates the send and receive part
-  of the exchange. It allows developpers to finely manage the flow of the exchanges, for example to
+  of the exchange. It allows developers to finely manage the flow of the exchanges, for example to
   initiate several sends before starting to receive data.
   This can be useful for specific applications such as code coupling.
 
