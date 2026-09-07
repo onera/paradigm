@@ -1125,16 +1125,16 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
       _elt_field_name[i_write_fld  ] = (char   *) elt_field_name[i_field];
       _elt_field     [i_write_fld++] = (double *) elt_field     [i_field][i_part];
     }
-    _elt_field_name[i_write_fld  ] = "groud_id";
+    sprintf(_elt_field_name[i_write_fld], "groud_id");
     _elt_field     [i_write_fld++] = elt_group;
-    _elt_field_name[i_write_fld  ] = "section_id";
+    sprintf(_elt_field_name[i_write_fld], "section_id");
     _elt_field     [i_write_fld++] = elt_section;
     if (elt_has_elmt_to_entity) {
-      _elt_field_name[i_write_fld  ] = "elt_to_entity";
+      sprintf(_elt_field_name[i_write_fld], "elt_to_entity");
       _elt_field     [i_write_fld++] = elt_entity;
     }
     if (have_owner_elt) {
-      _elt_field_name[i_write_fld  ] = "is_owner";
+      sprintf(_elt_field_name[i_write_fld], "is_owner");
       _elt_field     [i_write_fld++] = elt_owner;
     }
     for (int i_nuplet = 0; i_nuplet<nuplet_size_elt; ++i_nuplet) {
@@ -1164,7 +1164,7 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
       vtx_owner[i_vtx] = -1.;
     }
     if(pcg_vtx != NULL) {
-      _vtx_field_name[n_vtx_field] = "ownoeud";
+      sprintf(_vtx_field_name[n_vtx_field], "ownoeud");
       _vtx_field     [n_vtx_field] = vtx_owner;
       const int* pcg_owner = PDM_part_comm_graph_owner_get(pcg_vtx, i_part);
       int *entity_graph = NULL;

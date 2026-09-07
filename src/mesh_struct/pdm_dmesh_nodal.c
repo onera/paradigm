@@ -1343,7 +1343,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
   }
 
   // Section
-  _fld_name_elmt[_n_fld_elmt] = "i_section";
+  sprintf(_fld_name_elmt[_n_fld_elmt], "i_section");
   _fld_elmt     [_n_fld_elmt] = cat_elt_section;
   _n_fld_elmt++;
 
@@ -1415,7 +1415,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
     PDM_part_to_part_free(ptp);
 
 
-    _fld_name_elmt[_n_fld_elmt] = "group";
+    sprintf(_fld_name_elmt[_n_fld_elmt], "group");
     _fld_elmt     [_n_fld_elmt] = cat_elt_group;
     _n_fld_elmt++;
   }

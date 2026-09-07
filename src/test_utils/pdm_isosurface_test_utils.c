@@ -1862,13 +1862,15 @@ PDM_isosurface_test_utils_part_vtk
                                                  edge_field_name,
                                                  edge_field_value,
                                                  2,
-                                (const char   *) vtx_field_name,
-                                (const double *) vtx_field_value);
+                                                 vtx_field_name,
+                                                 vtx_field_value);
 
     if (dim==3) {
       sprintf(filename, "iso_face_id_%i_part_%i_rank_%i.vtk", id_iso, i_part, i_rank);
 
-      char   *face_field_name [] = {"i_isovalue", "itp_field"};
+      char   *face_field_name[2];
+      sprintf(face_field_name[0], "i_isovalue");
+      sprintf(face_field_name[1], "itp_field");
       double *face_field_value[] = {face_isovalue_tag, iso_face_fld[i_part]};
 
       int *elt_type = PDM_array_const_int(iso_n_face, PDM_MESH_NODAL_POLY_2D);
@@ -1885,8 +1887,8 @@ PDM_isosurface_test_utils_part_vtk
                                       face_field_name,
                                       face_field_value,
                                       2,
-                                      vtx_field_name,
-                                      vtx_field_value);
+                          (char   **) vtx_field_name,
+                          (double **) vtx_field_value);
       PDM_free(elt_type);
 
     }
