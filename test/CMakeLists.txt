@@ -47,12 +47,10 @@ endif()
 
 if (PARMETIS_FOUND OR PTSCOTCH_FOUND)
   test_c_create (pdm_t_plane_agglo 2  PDM_LIST_TEST PDM_LIST_NRANK)
+  test_c_create (pdm_t_split_graph_with_pcg 1 PDM_LIST_TEST PDM_LIST_NRANK)
   if (PARMETIS_FOUND)
     test_c_create (pdm_t_partitioning_dcube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
     test_c_create (pdm_t_part_dcube_agglo ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
-  endif()
-  if (PTSCOTCH_FOUND)
-    test_c_create (pdm_t_split_graph_with_pcg 1 PDM_LIST_TEST PDM_LIST_NRANK)
   endif()
 endif()
 

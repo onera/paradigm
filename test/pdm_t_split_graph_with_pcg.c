@@ -462,9 +462,20 @@ main
   //   gnode_node[i] -= 1;
   // }
 
+
+#ifdef PDM_HAVE_PTSCOTCH
+  part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+#else
+#ifdef PDM_HAVE_PARMETIS
+  part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+#else
+  PDM_error("This test requires PARMETIS or PTSCOTCH");
+#endif
+#endif
+
   int *node_part_id = NULL;
   PDM_malloc(node_part_id, n_tot_node, int);
-  PDM_para_graph_split(PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+  PDM_para_graph_split(part_method,
                        distrib_node,
                        gnode_node_idx,
                        gnode_node,
