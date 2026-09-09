@@ -830,7 +830,9 @@ PDM_writer_free
  PDM_writer_t *cs
 )
 {
-  CHECK_WRITER(cs)
+  if (cs == NULL) {
+    return;
+  }
 
   PDM_writer_step_end (cs);
 
