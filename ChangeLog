@@ -22,6 +22,7 @@
 - PDM_domain_interface_translate_face2vtx: prevent crash caused by ``n_face_this_edge == 2`` assertion
 - PDM_para_octree :
   - Fix heap allocation, resolving the "heap is full" crash in octree construction
+- PDM_part_mesh_nodal: Fix `parent_to_local` indirection for hybrid 2D meshes
 ## [2.8.0] - 2026-05-21
 ### Added
 - PDM_isosurface:

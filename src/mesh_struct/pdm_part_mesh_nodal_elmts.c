@@ -4014,7 +4014,7 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
         quad_to_parent[i_quad] = i_face;
         quad_ln_to_gn [i_quad] = _face_ln_to_gn[i_face];
         _elt_vtx = &quad_vtx[4*i_quad];
-        _parent_to_local[i_face] = i_quad++;
+        _parent_to_local[i_face] = n_tria + i_quad++;
       }
       else {
         // Polygon
@@ -4022,7 +4022,7 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
         poly_ln_to_gn [i_poly] = _face_ln_to_gn[i_face];
         _elt_vtx = &poly_vtx[poly_vtx_idx[i_poly]];
         poly_vtx_idx[i_poly+1] = poly_vtx_idx[i_poly] + _n_edge;
-        _parent_to_local[i_face] = i_poly++;
+        _parent_to_local[i_face] = n_tria + n_quad + i_poly++;
       }
 
       for (int idx_vtx = 0; idx_vtx < _n_edge; idx_vtx++) {
