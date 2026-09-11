@@ -605,3 +605,150 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_gnum_compute_from_part_
 
   PDM_part_mesh_nodal_free(pmn);
 }
+
+
+
+MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_face2d_faceedge_add", 1) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  // Mesh with 4 TRIA3, 3 QUAD4 and 2 POLY_2D
+  int n_vtx = 14;
+  std::vector<double> vtx_coord {
+    0.0, -1.0, 0.0,
+    1.5, -1.0, 0.0,
+    0.0,  1.0, 0.0,
+    1.5,  1.0, 0.0,
+    0.0,  0.3, 0.0,
+    0.7,  1.0, 0.0,
+    0.5,  0.6, 0.0,
+    1.5,  0.2, 0.0,
+    0.8,  0.3, 0.0,
+    0.4,  0.0, 0.0,
+    0.0, -0.3, 0.0,
+    0.7, -1.0, 0.0,
+    0.7, -0.5, 0.0,
+    1.5, -0.4, 0.0
+  };
+
+  const int n_edge = 22;
+  std::vector<int> edge_vtx {
+    5,  7,
+    7,  6,
+    6,  3,
+    3,  5,
+    4,  6,
+    7,  9,
+    9,  8,
+    8,  4,
+    9,  10,
+    10, 13,
+    13, 14,
+    14, 8,
+    5,  10,
+    11, 10,
+    5,  11,
+    12, 13,
+    13, 1,
+    1,  12,
+    13, 11,
+    11, 1,
+    12, 2,
+    2,  14
+  };
+
+  const int n_face = 9;
+  std::vector<int> face_edge_idx {0, 4, 9, 14, 18, 21, 24, 27, 30, 34};
+  std::vector<int> face_edge {
+    1, 2, 3, 4,
+    5, -2, 6, 7, 8,
+    -7, 9, 10, 11, 12,
+    13, -9, -6, -1,
+    14, -13, 15,
+    16, 17, 18,
+    -17, 19, 20,
+    -19, -10, -14,
+    -11, -16, 21, 22
+  };
+
+  std::vector<PDM_g_num_t> face_g_num {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+
+  /* Create Part Mesh Nodal */
+  PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(2, 1, pdm_comm);
+
+  PDM_part_mesh_nodal_coord_set(pmn,
+                                0,
+                                n_vtx,
+                                vtx_coord.data(),
+                                PDM_OWNERSHIP_USER);
+
+
+  std::vector<int> _face_edge {};
+  SUBCASE ("Signed face_edge") {
+    _face_edge = face_edge;
+  }
+  SUBCASE ("Unsigned face_edge") {
+    _face_edge.reserve(face_edge.size());
+    for (int e : face_edge) {
+      _face_edge.emplace_back(std::abs(e));
+    }
+  }
+
+  PDM_part_mesh_nodal_face2d_faceedge_add(pmn,
+                                          0,
+                                          n_face,
+                                          n_edge,
+                                          edge_vtx     .data(),
+                                          face_edge_idx.data(),
+                                          _face_edge   .data(),
+                                          face_g_num   .data(),
+                                          PDM_OWNERSHIP_KEEP);
+
+  // Check total number of elements
+  int n_elt = PDM_part_mesh_nodal_n_elmts_get(pmn,
+                                              PDM_GEOMETRY_KIND_SURFACIC,
+                                              0);
+  CHECK(n_elt == n_face);
+
+
+  // Check parent_to_local indirection
+  int *parent_to_local = PDM_part_mesh_nodal_num_elmt_parent_to_local_get(pmn,
+                                                                          PDM_GEOMETRY_KIND_SURFACIC,
+                                                                          0);
+
+  const int exp_parent_to_local[] {4, 7, 8, 5, 0, 1, 2, 3, 6};
+  CHECK_EQ_C_ARRAY(parent_to_local, exp_parent_to_local, n_face);
+
+
+  // Check sections
+  const int exp_n_section = 3;
+  const int exp_n_elt_section[] {4, 3, 2};
+  const PDM_Mesh_nodal_elt_t exp_t_elt_section[] {
+    PDM_MESH_NODAL_TRIA3,
+    PDM_MESH_NODAL_QUAD4,
+    PDM_MESH_NODAL_POLY_2D
+  };
+  const std::vector<int> exp_parent_num[] {
+    {4, 5, 6, 7},
+    {0, 3, 8},
+    {1, 2},
+  };
+
+  int n_section = PDM_part_mesh_nodal_n_section_get(pmn);
+
+  CHECK(n_section == exp_n_section);
+
+  for (int i_section = 0; i_section < n_section; i_section++) {
+    PDM_Mesh_nodal_elt_t t_elt_section = PDM_part_mesh_nodal_section_elt_type_get(pmn, i_section);
+    CHECK(t_elt_section == exp_t_elt_section[i_section]);
+
+    int n_elt_section = PDM_part_mesh_nodal_section_n_elt_get(pmn, i_section, 0);
+    CHECK(n_elt_section == exp_n_elt_section[i_section]);
+
+    int* parent_num = PDM_part_mesh_nodal_section_parent_num_get(pmn, i_section, 0, PDM_OWNERSHIP_KEEP);
+    CHECK_EQ_C_ARRAY(parent_num, exp_parent_num[i_section].data(), n_elt_section);
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+}
