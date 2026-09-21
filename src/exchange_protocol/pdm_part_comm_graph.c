@@ -1572,8 +1572,9 @@ PDM_part_comm_graph_reorder
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       int i_entity = pentity_graph[i_part][4*i  ]-1;
-      pentity_graph[i_part][4*i  ] = old_to_new[i_part][i_entity]+1; // On suppose que old_to_new commence a 0
-      pentity_graph[i_part][4*i+3] = recv_new_id[i_part][i]+1; // On suppose que old_to_new commence a 0
+      pentity_graph[i_part][4*i  ] = old_to_new[i_part][i_entity]+1;
+      int sgn = PDM_SIGN(pentity_graph[i_part][4*i+3]);
+      pentity_graph[i_part][4*i+3] = sgn * (recv_new_id[i_part][i]+1); // On suppose que old_to_new commence a 0
     }
   }
 
