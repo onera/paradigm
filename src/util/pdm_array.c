@@ -398,3 +398,33 @@ void PDM_array_repart_per_col_int
   PDM_free(count);
 }
 
+int PDM_array_is_permutation_int(const int *array, const int size) {
+  if (size <= 0) {
+    return 1;
+  }
+  int *is_hit = PDM_array_zeros_int(size);
+  int  is_ok  = 1;
+  for (int i = 0; i < size; i++) {
+    int j = array[i];
+    if (j < 0 || j >= size || is_hit[j]) {
+      is_ok = 0;
+      break;
+    }
+    is_hit[j] = 1;
+  }
+  PDM_free(is_hit);
+  return is_ok;
+}
+
+/*
+ * Allocate and return the inverse permutation : inverse[array[i]] = i
+ * (array must be a permutation of [0, size[)
+ */
+int* PDM_array_new_inverse_permutation_int(const int *array, const int size) {
+  int *inverse = NULL;
+  PDM_malloc(inverse, size, int);
+  for (int i = 0; i < size; i++) {
+    inverse[array[i]] = i;
+  }
+  return inverse;
+}

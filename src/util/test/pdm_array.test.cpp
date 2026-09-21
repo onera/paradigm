@@ -226,3 +226,32 @@ MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_new_arange_int", 1) {
   CHECK_EQ_C_ARRAY(arr3, arr3_expected, 3);
   PDM_free(arr3);
 }
+
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_is_permutation", 1) {
+  int identity[] = {0, 1, 2, 3, 4};
+  int shuffled[] = {3, 0, 4, 1, 2};
+  int repeated[] = {3, 0, 4, 1, 3};
+  int negative[] = {3, 0, -1, 1, 2};
+  int too_big [] = {3, 0, 5, 1, 2};
+  CHECK(PDM_array_is_permutation_int(identity, 5) == 1);
+  CHECK(PDM_array_is_permutation_int(shuffled, 5) == 1);
+  CHECK(PDM_array_is_permutation_int(repeated, 5) == 0);
+  CHECK(PDM_array_is_permutation_int(negative, 5) == 0);
+  CHECK(PDM_array_is_permutation_int(too_big , 5) == 0);
+  CHECK(PDM_array_is_permutation_int(NULL    , 0) == 1);
+}
+
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_new_inverse_permutation", 1) {
+  int new_to_old[] = {2, 0, 3, 1};
+  int *old_to_new = PDM_array_new_inverse_permutation_int(new_to_old, 4);
+  int expected[] = {1, 3, 0, 2};
+  CHECK_EQ_C_ARRAY(old_to_new, expected, 4);
+  CHECK(PDM_array_is_permutation_int(old_to_new, 4) == 1);
+  /* Inverse of the inverse is the initial permutation */
+  int *back = PDM_array_new_inverse_permutation_int(old_to_new, 4);
+  CHECK_EQ_C_ARRAY(back, new_to_old, 4);
+  PDM_free(old_to_new);
+  PDM_free(back);
+  int *empty = PDM_array_new_inverse_permutation_int(NULL, 0);
+  PDM_free(empty);
+}

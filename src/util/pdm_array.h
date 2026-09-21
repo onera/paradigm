@@ -96,6 +96,10 @@ void PDM_array_repart_per_col_int
  int       *ordered
 );
 
+
+int PDM_array_is_permutation_int(const int *array, const int size);
+int* PDM_array_new_inverse_permutation_int(const int *array, const int size);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
