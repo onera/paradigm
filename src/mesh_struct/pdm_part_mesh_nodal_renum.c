@@ -216,30 +216,6 @@ _elmt_location_compute
 
 
 /*
- * Check that new_to_old is a permutation of [0, n[ and return old_to_new
- */
-static
-int *
-_inverse_permutation
-(
-  const int  n,
-  const int *new_to_old,
-  const char *caller
-)
-{
-  int *old_to_new = PDM_array_const_int(n, -1);
-  for (int i_new = 0; i_new < n; i_new++) {
-    int i_old = new_to_old[i_new];
-    if (i_old < 0 || i_old >= n || old_to_new[i_old] != -1) {
-      PDM_error("%s : new_to_old is not a permutation\n", caller);
-    }
-    old_to_new[i_old] = i_new;
-  }
-  return old_to_new;
-}
-
-
-/*
  * Order of the part numbering respecting the sections :
  *   - parent_num != NULL : the order is kept as is (storage stays per section)
  *   - parent_num == NULL : stable partition by section (the part numbering is
@@ -352,8 +328,9 @@ _elmts_rcm_compute
   PDM_free(elmt_elmt);
 
   /* Safety : the result must be a permutation */
-  int *check = _inverse_permutation(n_elmt, new_to_old, "_elmts_rcm_compute");
-  PDM_free(check);
+  if (!PDM_array_is_permutation_int(new_to_old, n_elmt)) {
+    PDM_error("_elmts_rcm_compute : PDM_cuthill_generate did not return a permutation\n");
+  }
 }
 
 
@@ -612,7 +589,10 @@ PDM_part_mesh_nodal_elmts_reorder_elmts
                                                 &elmt_local);
 
     const int *_new_to_old = new_to_old[i_part];
-    int *old_to_new = _inverse_permutation(n_elmt, _new_to_old, __func__);
+    if (!PDM_array_is_permutation_int(_new_to_old, n_elmt)) {
+      PDM_error("PDM_part_mesh_nodal_elmts_reorder_elmts : new_to_old is not a permutation (i_part = %d)\n", i_part);
+    }
+    int *old_to_new = PDM_array_new_inverse_permutation_int(_new_to_old, n_elmt);
 
     /*
      * Walk the new part numbering in increasing order : inside each section the
@@ -823,7 +803,8 @@ PDM_part_mesh_nodal_reorder_elmts
     PDM_malloc(old_to_new, n_part, int *);
     for (int i_part = 0; i_part < n_part; i_part++) {
       int n_elmt = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
-      old_to_new[i_part] = _inverse_permutation(n_elmt, new_to_old[i_part], __func__);
+      /* new_to_old already checked by PDM_part_mesh_nodal_elmts_reorder_elmts */
+      old_to_new[i_part] = PDM_array_new_inverse_permutation_int(new_to_old[i_part], n_elmt);
     }
 
     PDM_part_comm_graph_reorder(pcg, old_to_new);
@@ -849,12 +830,15 @@ PDM_part_mesh_nodal_reorder_vtx
 
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
 
-  /* Inverse permutation (also checks that new_to_old is a permutation) */
+  /* Check and invert the permutation */
   int **old_to_new_order_vtx = NULL;
   PDM_malloc(old_to_new_order_vtx, n_part, int *);
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
-    old_to_new_order_vtx[i_part] = _inverse_permutation(n_vtx, new_to_old_order_vtx[i_part], __func__);
+    if (!PDM_array_is_permutation_int(new_to_old_order_vtx[i_part], n_vtx)) {
+      PDM_error("PDM_part_mesh_nodal_reorder_vtx : new_to_old is not a permutation (i_part = %d)\n", i_part);
+    }
+    old_to_new_order_vtx[i_part] = PDM_array_new_inverse_permutation_int(new_to_old_order_vtx[i_part], n_vtx);
   }
 
   /* Connectivities of all geometry kinds (corners included) */
@@ -1085,4 +1069,3 @@ PDM_part_mesh_nodal_renum
     _elmt_new_to_old_store(pmn, geom_kind, lower_new_to_old, group_new_to_old);
   }
 }
-
