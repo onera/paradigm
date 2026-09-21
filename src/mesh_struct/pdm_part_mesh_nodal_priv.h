@@ -58,6 +58,15 @@ struct _pdm_part_mesh_nodal_t {
   int n_section;
   PDM_geometry_kind_t *section_kind;
   int                 *section_id;
+
+  /* Permutations of the last PDM_part_mesh_nodal_renum (new_to_old, 0-based, NULL if none) */
+  int                              **vtx_new_to_old;                    /*!< [i_part]                */
+  PDM_ownership_t                   *vtx_new_to_old_ownership;          /*!< [i_part]                */
+  int                              **elmt_new_to_old           [4];     /*!< [dim][i_part]           */
+  PDM_ownership_t                   *elmt_new_to_old_ownership [4];     /*!< [dim][i_part]           */
+  int                                n_group_new_to_old        [4];     /*!< [dim]                   */
+  int                             ***group_new_to_old          [4];     /*!< [dim][i_part][i_group]  */
+  PDM_ownership_t                  **group_new_to_old_ownership[4];     /*!< [dim][i_part][i_group]  */
 };
 
 #ifdef __cplusplus
