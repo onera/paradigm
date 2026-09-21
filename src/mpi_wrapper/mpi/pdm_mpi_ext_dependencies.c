@@ -439,7 +439,6 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
   }
 
   if (_scotch_deterministic) {
-    PDM_printf("PtSCOTCH: deterministic context active (seed = 0)\n");
     ierr = SCOTCH_contextInit (&context);
     if (ierr) {
       PDM_error("Error in SCOTCH_contextInit\n");
@@ -451,11 +450,7 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
       PDM_error("Error in SCOTCH_contextBindDgraph\n");
     }
     actgraph = &cntgraph;
-  } else {
-    PDM_printf("PtSCOTCH: deterministic context disabled (PDM_SCOTCH_DETERMINISTIC=0)\n");
   }
-#else
-  PDM_printf("PtSCOTCH: deterministic context not available (Scotch too old)\n");
 #endif
 
   const SCOTCH_Num _n_part = (SCOTCH_Num) n_part;
