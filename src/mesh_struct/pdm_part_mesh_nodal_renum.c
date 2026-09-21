@@ -13,7 +13,6 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
 #include "pdm_array.h"
 #include "pdm_cuthill.h"
 #include "pdm_error.h"
@@ -30,6 +29,8 @@
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_renum.h"
 #include "pdm_part_renum.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 /*============================================================================
  * Macro definitions
@@ -332,111 +333,6 @@ _elmts_rcm_compute
     PDM_error("_elmts_rcm_compute : PDM_cuthill_generate did not return a permutation\n");
   }
 }
-
-
-/*
- * Number the not yet numbered vertices by order of first appearance while
- * traversing the elements in the order given by elmt_order (NULL = identity).
- * elmt_vtx is 1-based.
- */
-static
-void
-_vtx_number_by_appearance
-(
-  const int  n_elmt,
-  const int *elmt_order,
-  const int *elmt_vtx_idx,
-  const int *elmt_vtx,
-  int       *old_to_new_vtx,
-  int       *new_to_old_vtx,
-  int       *n_vtx_new
-)
-{
-  int _n_vtx_new = *n_vtx_new;
-  for (int i = 0; i < n_elmt; i++) {
-    int i_elmt = (elmt_order != NULL) ? elmt_order[i] : i;
-    for (int idx = elmt_vtx_idx[i_elmt]; idx < elmt_vtx_idx[i_elmt+1]; idx++) {
-      int i_vtx = PDM_ABS(elmt_vtx[idx]) - 1;
-      if (old_to_new_vtx[i_vtx] == -1) {
-        old_to_new_vtx[i_vtx]      = _n_vtx_new;
-        new_to_old_vtx[_n_vtx_new] = i_vtx;
-        _n_vtx_new++;
-      }
-    }
-  }
-  *n_vtx_new = _n_vtx_new;
-}
-
-
-static
-void
-_insertion_sort_int
-(
-  const int  n,
-  int       *a
-)
-{
-  for (int i = 1; i < n; i++) {
-    int v = a[i];
-    int j = i - 1;
-    while (j >= 0 && a[j] > v) {
-      a[j+1] = a[j];
-      j--;
-    }
-    a[j+1] = v;
-  }
-}
-
-
-/*
- * Lexicographic order of the elements on their sorted vertex ids
- * (the first key is the smallest vertex id). elmt_vtx is 1-based.
- */
-static
-void
-_elmts_lexicographic_compute
-(
-  const int  n_elmt,
-  const int *elmt_vtx_idx,
-  const int *elmt_vtx,
-  int       *new_to_old
-)
-{
-  if (n_elmt == 0) {
-    return;
-  }
-
-  int stride = 0;
-  for (int i_elmt = 0; i_elmt < n_elmt; i_elmt++) {
-    stride = PDM_MAX(stride, elmt_vtx_idx[i_elmt+1] - elmt_vtx_idx[i_elmt]);
-  }
-
-  if (stride == 0) {
-    for (int i_elmt = 0; i_elmt < n_elmt; i_elmt++) {
-      new_to_old[i_elmt] = i_elmt;
-    }
-    return;
-  }
-
-  int *key = NULL;
-  PDM_malloc(key, stride * n_elmt, int);
-  for (int i_elmt = 0; i_elmt < n_elmt; i_elmt++) {
-    int *_key = key + stride * i_elmt;
-    int  n    = elmt_vtx_idx[i_elmt+1] - elmt_vtx_idx[i_elmt];
-    for (int j = 0; j < n; j++) {
-      _key[j] = PDM_ABS(elmt_vtx[elmt_vtx_idx[i_elmt] + j]);
-    }
-    _insertion_sort_int(n, _key);
-    for (int j = n; j < stride; j++) {
-      _key[j] = INT_MAX;
-    }
-  }
-
-  PDM_order_lnum_s(key, stride, new_to_old, n_elmt);
-
-  PDM_free(key);
-}
-
 
 /*============================================================================
  * Public function definitions
@@ -948,13 +844,13 @@ PDM_part_mesh_nodal_renum
                          elmt_vtx,
                          rcm_new_to_old);
 
-      _vtx_number_by_appearance(n_elmt,
-                                rcm_new_to_old,
-                                elmt_vtx_idx,
-                                elmt_vtx,
-                                vtx_old_to_new[i_part],
-                                vtx_new_to_old[i_part],
-                                &n_vtx_new);
+      PDM_part_renum_by_first_appearance(n_elmt,
+                                         rcm_new_to_old,
+                                         elmt_vtx_idx,
+                                         elmt_vtx,
+                                         vtx_old_to_new[i_part],
+                                         vtx_new_to_old[i_part],
+                                         &n_vtx_new);
 
       /* Sections are never mixed */
       PDM_malloc(elmt_new_to_old[i_part], n_elmt, int);
@@ -980,13 +876,13 @@ PDM_part_mesh_nodal_renum
                                                                   i_part,
                                                                   &elmt_vtx_idx,
                                                                   &elmt_vtx);
-      _vtx_number_by_appearance(n_elmt,
-                                NULL,
-                                elmt_vtx_idx,
-                                elmt_vtx,
-                                vtx_old_to_new[i_part],
-                                vtx_new_to_old[i_part],
-                                &n_vtx_new);
+      PDM_part_renum_by_first_appearance(n_elmt,
+                                         NULL,
+                                         elmt_vtx_idx,
+                                         elmt_vtx,
+                                         vtx_old_to_new[i_part],
+                                         vtx_new_to_old[i_part],
+                                         &n_vtx_new);
       PDM_free(elmt_vtx_idx);
       PDM_free(elmt_vtx);
     }
@@ -1045,10 +941,10 @@ PDM_part_mesh_nodal_renum
                                                                   &elmt_vtx);
       int *lex_new_to_old = NULL;
       PDM_malloc(lex_new_to_old, n_elmt, int);
-      _elmts_lexicographic_compute(n_elmt,
-                                   elmt_vtx_idx,
-                                   elmt_vtx,
-                                   lex_new_to_old);
+      PDM_part_renum_by_lexicographic_order(n_elmt,
+                                            elmt_vtx_idx,
+                                            elmt_vtx,
+                                            lex_new_to_old);
 
       PDM_malloc(lower_new_to_old[i_part], n_elmt, int);
       _section_stable_new_to_old(pmne,
