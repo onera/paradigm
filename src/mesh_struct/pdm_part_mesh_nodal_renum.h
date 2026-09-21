@@ -1,39 +1,204 @@
+/*
+ * \file
+ */
+
 #ifndef __PDM_PART_MESH_NODAL_RENUM_H__
 #define __PDM_PART_MESH_NODAL_RENUM_H__
 
 /*----------------------------------------------------------------------------
- * Standard C library headers
+ *  Standard headers
  *----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------
- *  Header for the current file
+ *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_mpi.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 
-/*----------------------------------------------------------------------------*/
+/*=============================================================================
+ * Macro definitions
+ *============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-/*=============================================================================
- * Macro definition
- *============================================================================*/
-
 /*============================================================================
- * Types definition
+ * Public function prototypes
  *============================================================================*/
 
-/*=============================================================================
- * Global variables
- *============================================================================*/
+/**
+ *
+ * Numbering conventions used by all the functions below
+ * -----------------------------------------------------
+ *
+ *  - "Part numbering" of the elements of a \ref PDM_part_mesh_nodal_elmts_t :
+ *    index in [0, n_elmt[ used by \ref PDM_part_mesh_nodal_elmts_cell_vtx_connect_get,
+ *    the groups (group_elmt, 1-based), the per-part global numbering cache and
+ *    the element \ref PDM_part_comm_graph_t.
+ *      * if parent_num == NULL : concatenation of the sections (in sections_id order)
+ *      * if parent_num != NULL : given by parent_num (0-based)
+ *
+ *  - Storage is always section by section : sections are never mixed.
+ *
+ *  - Permutations are 0-based. new_to_old[i_new] = i_old.
+ *    A field is updated in place with PDM_order_array(n, size, new_to_old, field).
+ *
+ *  - Per-element data that point *outward* (connec, numabs, parent_entity_g_num,
+ *    elt_to_entity, cell_centers) are moved with the element.
+ *    Data that point *to* the elements (groups, comm graph, parent_num values,
+ *    num_elmt_parent_to_local) are remapped. The entries of each group are
+ *    re-sorted by increasing element id (see the group permutation).
+ *
+ *  Only standard (and high-order) sections are supported : POLY_2D / POLY_3D raise an error.
+ *
+ */
 
-/*=============================================================================
- * Public function interfaces
- *============================================================================*/
+
+/**
+ * \brief Permute the elements inside each section of one partition
+ *
+ * All the arrays attached to the elements of each section are moved
+ * (connec, numabs, internal numabs, parent_num, parent_entity_g_num,
+ *  elt_to_entity, cell_centers).
+ * The *values* of parent_num are not modified and nothing outside the
+ * sections is updated : prefer \ref PDM_part_mesh_nodal_elmts_reorder_elmts.
+ *
+ * \param [in]     pmne                   Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]     i_part                 Partition identifier
+ * \param [in]     new_to_old_by_section  Permutation of each section, indexed by the
+ *                                        position of the section in sections_id
+ *                                        (size = n_section, each of size n_elt of the section)
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_reorder_sections_elmts
+(
+  PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                     i_part,
+  int                         **new_to_old_by_section
+);
+
+
+/**
+ * \brief Apply a permutation of the part numbering to the elements
+ *
+ * Sections are re-sorted by increasing new part number and :
+ *  - if parent_num != NULL : parent_num values are remapped (any permutation is allowed)
+ *  - if parent_num == NULL : the permutation must keep the section blocks
+ *                            (error otherwise)
+ * Groups are remapped and their entries re-sorted, the per-part global numbering
+ * cache and num_elmt_parent_to_local are updated.
+ * The comm graph is not known here : see \ref PDM_part_mesh_nodal_reorder_elmts.
+ *
+ * \param [in]     pmne              Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]     new_to_old        Permutation of the part numbering, for each partition
+ * \param [out]    group_new_to_old  Permutation of the entries of each group
+ *                                   ([i_part][i_group], size n_group_elmt), or NULL if not wanted.
+ *                                   The caller owns the arrays.
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_reorder_elmts
+(
+  PDM_part_mesh_nodal_elmts_t  *pmne,
+  int                         **new_to_old,
+  int                       ****group_new_to_old
+);
+
+
+/**
+ * \brief Remap the vertices in the element connectivities
+ *
+ * \param [in]     pmne                  Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]     old_to_new_order_vtx  Vertex permutation (0-based), for each partition
+ *
+ */
+
+void
+PDM_part_mesh_nodal_elmts_reorder_vtx
+(
+  PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                   **old_to_new_order_vtx
+);
+
+
+/**
+ * \brief Apply a permutation to the elements of one geometry kind
+ *
+ * \ref PDM_part_mesh_nodal_elmts_reorder_elmts + update of the element
+ * \ref PDM_part_comm_graph_t of this geometry kind if any.
+ *
+ * \param [in]     pmn               Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]     geom_kind         Geometry kind
+ * \param [in]     new_to_old        Permutation of the part numbering, for each partition
+ * \param [out]    group_new_to_old  Permutation of the entries of each group
+ *                                   ([i_part][i_group]), or NULL if not wanted
+ *
+ */
+
+void
+PDM_part_mesh_nodal_reorder_elmts
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                   **new_to_old,
+  int                 ****group_new_to_old
+);
+
+
+/**
+ * \brief Apply a permutation to the vertices
+ *
+ * Connectivities of all geometry kinds are remapped, coordinates, global numbering
+ * and parent numbering of the vertices are moved, and the vertex
+ * \ref PDM_part_comm_graph_t is updated if any.
+ * The permutation is checked (error if it is not a permutation).
+ *
+ * \param [in]     pmn                   Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]     new_to_old_order_vtx  Vertex permutation (0-based), for each partition
+ *
+ */
+
+void
+PDM_part_mesh_nodal_reorder_vtx
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  int                   **new_to_old_order_vtx
+);
+
+
+/**
+ * \brief Renumber a partitioned nodal mesh
+ *
+ *  1. Elements of the principal dimension : reverse Cuthill-McKee on the
+ *     element graph (elements sharing a vertex). Sections are kept :
+ *     inside each section the elements follow the RCM order.
+ *  2. Vertices : order of first appearance while traversing the principal
+ *     elements in RCM order, then the vertices only reached by lower dimensions,
+ *     then the unreferenced ones.
+ *  3. Lower dimensions : elements sorted lexicographically by their sorted
+ *     new vertex ids, sections kept.
+ *
+ * Global numbers are permuted, not regenerated.
+ * Comm graphs attached to \p pmn are updated.
+ * The permutations are stored in \p pmn and can be retrieved with
+ * \ref PDM_part_mesh_nodal_vtx_new_to_old_get, \ref PDM_part_mesh_nodal_elmts_new_to_old_get
+ * and \ref PDM_part_mesh_nodal_group_new_to_old_get (pdm_part_mesh_nodal.h).
+ * They describe the last call only : a new call replaces them.
+ *
+ * \warning \p renum_entity_method and \p renum_entity_properties are not
+ *          interpreted yet (reserved for the method selection).
+ *
+ * \param [in]     pmn                      Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]     renum_entity_method      Method for vtx, edge, face, cell (reserved)
+ * \param [in]     renum_entity_properties  Properties for vtx, edge, face, cell (reserved)
+ *
+ */
 
 void
 PDM_part_mesh_nodal_renum
@@ -44,58 +209,8 @@ PDM_part_mesh_nodal_renum
 );
 
 
-void
-PDM_part_mesh_nodal_reorder_vtx
-(
-  PDM_part_mesh_nodal_t  *pmn,
-  int                   **old_to_new_order_vtx,
-  int                   **new_to_old_order_vtx
-);
-
-
-/**
- *
- * \brief Compute new order for a \ref PDM_part_mesh_nodal_elmts_t instance
- *
- * \param [in, out] pmn              Pointer to \ref PDM_part_mesh_nodal_elmts_t instance
- * \param [in,out]  new_to_old_order New order for each part (size=n_part)
- *
- */
-void
-PDM_part_mesh_nodal_elmts_renum_elmts
-(
-  PDM_part_mesh_nodal_elmts_t  *pmne,
-  int                         **new_to_old_order
-);
-
-
-/**
- *
- * \brief Perform elmts renumbering from a new order
- *        Actualise all elmts array according to the new numbering
- *        Connectivities
- *
- * \param [in, out] pmn              Pointer to \ref PDM_part_mesh_nodal_elmts_t instance
- * \param [in]      new_to_old_order New order for each part (size=n_part)
- *
- */
-void
-PDM_part_mesh_nodal_elmts_reorder_elmts
-(
-  PDM_part_mesh_nodal_elmts_t  *pmne,
-  int                         **new_to_old_order
-);
-
-
-void
-PDM_part_mesh_nodal_elmts_reorder_vtx
-(
-  PDM_part_mesh_nodal_elmts_t  *pmne,
-  const int                   **new_to_old_order_vtx
-);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_PART_MESH_NODAL_RENUM_H__ */
+#endif  /* __PDM_PART_MESH_NODAL_RENUM_H__ */
