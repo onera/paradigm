@@ -420,6 +420,9 @@ PDM_part_comm_graph_entity1_to_entity2
 
           if(t_proc == i_proc_opp && t_part == i_part_opp && found == 0 && same_nuplet) {
             send_n[i_proc_opp] += 2;
+            if (have_nuplet) {
+              send_n[i_proc_opp] += nuplet_size;
+            }
             found = 1;
           }
         }
@@ -484,6 +487,14 @@ PDM_part_comm_graph_entity1_to_entity2
             send_data[idx_write++] = pentity1_graph[i_part][4*idx_bound  ];
             send_data[idx_write++] = pentity1_graph[i_part][4*idx_bound+3];
             send_n[i_proc_opp] += 2;
+
+            if (have_nuplet) {
+              for (int i = 0; i < nuplet_size; i++) {
+                send_data[idx_write++] = pentity1_nuplet[i_part][nuplet_size*idx_bound+i];
+              }
+              send_n[i_proc_opp] += nuplet_size;
+            }
+
             found = 1;
 
           }
@@ -558,16 +569,31 @@ PDM_part_comm_graph_entity1_to_entity2
   send_data_idx[0] = 0;
   int n_max_connect = 0;
   for(int i = 0; i < n_key_send_tot; ++i) {
+
     int n_connec = send_data[idx_read++];
-    int n_data   = 6+2*n_connec;
+    int n_data   = 6+(2+nuplet_size)*n_connec;
     send_data_idx[i+1] = send_data_idx[i] + n_data;
 
     n_max_connect = PDM_MAX(n_max_connect, n_data);
 
     idx_read++; // Ignore entity2
     send_data_key[i] = 0;
-    for(int i_data = 0; i_data < 4 + 2 * n_connec; ++i_data) {
+    for(int i_data = 0; i_data < 4; ++i_data) {
       send_data_key[i] += send_data[idx_read++];
+    }
+    for(int i_connec = 0; i_connec < n_connec; ++i_connec) {
+      send_data_key[i] += send_data[idx_read++];
+      send_data_key[i] += send_data[idx_read++];
+      if (have_nuplet) {
+        for (int i_nuplet = 0; i_nuplet < nuplet_size; i_nuplet++) {
+          if (send_data[idx_read]>0) {
+            send_data_key[i] += send_data[idx_read++];
+          }
+          else{
+            send_data_key[i] += -send_data[idx_read++];
+          }
+        }
+      }
     }
     send_data_key[i] = send_data_key[i] % pn_entity2_max;
   }
@@ -637,9 +663,24 @@ PDM_part_comm_graph_entity1_to_entity2
     int i_entity2_opp = recv_data[idx_read++];
 
     int key_opp = 0;
-    for(int i_data = 0; i_data < 4 + 2 * n_connec_opp; ++i_data) {
-      key_opp += recv_data[idx_read+i_data];
+    int i_read_key = 0;
+    for(int i_data = 0; i_data < 4; ++i_data) {
+      key_opp += recv_data[idx_read+i_read_key];
+      i_read_key++;
     }
+    for(int i_connec = 0; i_connec < n_connec_opp; ++i_connec) {
+      key_opp += recv_data[idx_read+i_read_key];
+      i_read_key++;
+      key_opp += recv_data[idx_read+i_read_key];
+      i_read_key++;
+      if (have_nuplet) {
+        for (int i_nuplet = 0; i_nuplet < nuplet_size; i_nuplet++) {
+          key_opp += abs(recv_data[idx_read+i_read_key]);
+          i_read_key++;
+        }
+      }
+    }
+
     key_opp = key_opp % pn_entity2_max;
 
     int i_proc_cur = recv_data[idx_read++];
@@ -647,8 +688,15 @@ PDM_part_comm_graph_entity1_to_entity2
     int i_part_cur = recv_data[idx_read++];
     int i_part_opp = recv_data[idx_read++];
 
-    for(int i_data = 0; i_data < 2 * n_connec_opp; ++i_data) {
-      tmp_connec[i_data] = recv_data[idx_read++];
+
+    for(int i_data = 0; i_data < n_connec_opp; ++i_data) {
+      tmp_connec[(2+nuplet_size)*i_data+0] = recv_data[idx_read++];
+      tmp_connec[(2+nuplet_size)*i_data+1] = recv_data[idx_read++];
+      if (have_nuplet) {
+        for (int i = 0; i < nuplet_size; i++) {
+          tmp_connec[(2+nuplet_size)*i_data+2+i] = recv_data[idx_read++];
+        }
+      }
     }
 
     int pos_key = -1;
@@ -694,12 +742,23 @@ PDM_part_comm_graph_entity1_to_entity2
 
         int first_idx = 0;
         for(int idx = 0; idx < n_connec_cur; ++idx) {
-          int t_entity1_cur1 = connect_cur[2*idx  ];
-          int t_entity1_cur2 = connect_cur[2*idx+1];
+          int t_entity1_cur1 = connect_cur[(2+nuplet_size)*idx  ];
+          int t_entity1_cur2 = connect_cur[(2+nuplet_size)*idx+1];
 
           if(t_entity1_cur1 == i_entity1_cur2 && t_entity1_cur2 == i_entity1_cur1 ) {
-            first_idx = idx;
-            break;
+            int same_nuplet = 1;
+            if (have_nuplet) {
+              for (int i = 0; i < nuplet_size; i++) {
+                if (abs(tmp_connec[2+i]) != abs(connect_cur[(2+nuplet_size)*idx+2+i])) {
+                  same_nuplet = 0;
+                  break;
+                }
+              }
+            }
+            if (same_nuplet) {
+              first_idx = idx;
+              break;
+            }
           }
         }
         int first_idx_save = first_idx;
@@ -716,23 +775,39 @@ PDM_part_comm_graph_entity1_to_entity2
           int t1_entity1_cur1 = connect_cur[0];
           int t1_entity1_cur2 = connect_cur[1];
 
-          int c2_entity1_cur1 = tmp_connec[2];
-          int c2_entity1_cur2 = tmp_connec[3];
-          int t2_entity1_cur1 = connect_cur[2];
-          int t2_entity1_cur2 = connect_cur[3];
+          int c2_entity1_cur1 = tmp_connec[2+nuplet_size];
+          int c2_entity1_cur2 = tmp_connec[3+nuplet_size];
+          int t2_entity1_cur1 = connect_cur[2+nuplet_size];
+          int t2_entity1_cur2 = connect_cur[3+nuplet_size];
 
+          int same_nuplet = 1;
+          if (have_nuplet) {
+            for (int i = 0; i < nuplet_size; i++) {
+              if (abs(tmp_connec[2+i]) != abs(connect_cur[2+i])) {
+                same_nuplet = 0;
+                break;
+              }
+            }
+          }
           if(t1_entity1_cur1 == c1_entity1_cur2 &&
              t1_entity1_cur2 == c1_entity1_cur1 &&
              t2_entity1_cur1 == c2_entity1_cur2 &&
-             t2_entity1_cur2 == c2_entity1_cur1) {
-            is_same = 1;
-            sens = 1;
+             t2_entity1_cur2 == c2_entity1_cur1
+              ){
+              if (same_nuplet) {
+                is_same = 1;
+                sens = 1;
+
+              }
           } else if (t1_entity1_cur1 == c2_entity1_cur2 &&
                      t1_entity1_cur2 == c2_entity1_cur1 &&
                      t2_entity1_cur1 == c1_entity1_cur2 &&
-                     t2_entity1_cur2 == c1_entity1_cur1) {
+                     t2_entity1_cur2 == c1_entity1_cur1
+              ){
+              if (same_nuplet) {
             is_same = 1;
             sens    = -1;
+              }
           } else {
             is_same = 0;
           }
@@ -741,13 +816,21 @@ PDM_part_comm_graph_entity1_to_entity2
 
           for(int idx = 0; idx < n_connec_cur; ++idx) {
 
-            i_entity1_cur1 = tmp_connec[2*idx  ];
-            i_entity1_cur2 = tmp_connec[2*idx+1];
-            int t_entity1_cur1 = connect_cur[2*first_idx  ];
-            int t_entity1_cur2 = connect_cur[2*first_idx+1];
-
+            i_entity1_cur1 = tmp_connec[(2+nuplet_size)*idx  ];
+            i_entity1_cur2 = tmp_connec[(2+nuplet_size)*idx+1];
+            int t_entity1_cur1 = connect_cur[(2+nuplet_size)*first_idx  ];
+            int t_entity1_cur2 = connect_cur[(2+nuplet_size)*first_idx+1];
             if(t_entity1_cur1 != i_entity1_cur2 && t_entity1_cur2 != i_entity1_cur1 ) {
               is_same = 0;
+            }
+
+            if (have_nuplet) {
+              for (int i = 0; i < nuplet_size; i++) {
+                if (abs(tmp_connec[(2+nuplet_size)*idx+2+i]) != abs(connect_cur[(2+nuplet_size)*first_idx+2+i])) {
+                  is_same = 0;
+                  break;
+                }
+              }
             }
 
             first_idx++;
@@ -769,6 +852,14 @@ PDM_part_comm_graph_entity1_to_entity2
 
               if(t_entity1_cur1 != i_entity1_cur2 && t_entity1_cur2 != i_entity1_cur1 ) {
                 is_same = 0;
+              }
+              if (have_nuplet) {
+                for (int i = 0; i < nuplet_size; i++) {
+                  if (tmp_connec[(2+nuplet_size)*idx+2+i] != connect_cur[(2+nuplet_size)*first_idx+2+i]) {
+                    is_same = 0;
+                    break;
+                  }
+                }
               }
 
               if(first_idx == 0) {
@@ -795,7 +886,7 @@ PDM_part_comm_graph_entity1_to_entity2
           // Rebuild nuplet
           if (have_nuplet) {
             for (int i = 0; i < nuplet_size; i++) {
-              pentity2_nuplet[i_part_cur2][nuplet_size*pn_entity2_graph[i_part_cur2]+i] = tmp_pentity2_nuplet[i_part_cur2][nuplet_size*idx_decompose_entity1+i];
+              pentity2_nuplet[i_part_cur2][nuplet_size*pn_entity2_graph[i_part_cur2]+i] = connect_cur[(2+nuplet_size)*first_idx+2+i];
             }
           }
 
@@ -1370,5 +1461,3 @@ PDM_part_comm_graph_split
   PDM_free(split_entity_nuplt);
 
 }
-
-

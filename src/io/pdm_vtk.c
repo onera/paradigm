@@ -3074,27 +3074,24 @@ PDM_vtk_read_to_dmesh_nodal
 }
 
 
-
-
-
 void
 PDM_vtk_write_unstructured_grid
 (
- const char                 *filename,
- const int                   n_vtx,
- const double                vtx_coord[],
- const PDM_g_num_t           vtx_g_num[],
- const int                   n_elt,
- const PDM_Mesh_nodal_elt_t  elt_type[],
- const int                   elt_vtx_idx[],
- const int                   elt_vtx[],
- const PDM_g_num_t           elt_g_num[],
- const int                   n_elt_field,
- const char                 *elt_field_name[],
- const double               *elt_field[],
- const int                   n_vtx_field,
- const char                 *vtx_field_name[],
- const double               *vtx_field[]
+  const char                 *filename,
+  const int                   n_vtx,
+  const double                vtx_coord[],
+  const PDM_g_num_t           vtx_g_num[],
+  const int                   n_elt,
+  const PDM_Mesh_nodal_elt_t  elt_type[],
+  const int                   elt_vtx_idx[],
+  const int                   elt_vtx[],
+  const PDM_g_num_t           elt_g_num[],
+  const int                   n_elt_field,
+        char                 *elt_field_name[],
+        double               *elt_field[],
+  const int                   n_vtx_field,
+        char                 *vtx_field_name[],
+        double               *vtx_field[]
 )
 {
   FILE *f = fopen(filename, "w");
@@ -3189,4 +3186,3 @@ PDM_vtk_write_unstructured_grid
 
   fclose(f);
 }
-

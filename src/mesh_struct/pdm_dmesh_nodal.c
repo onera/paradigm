@@ -1335,15 +1335,15 @@ PDM_dmesh_nodal_dump_vtk_with_field
    * Element fields
    */
   int _n_fld_elmt = n_fld_elmt;
-  const char   *_fld_name_elmt[n_fld_elmt+2];
-  const double *_fld_elmt     [n_fld_elmt+2];
+  char   *_fld_name_elmt[n_fld_elmt+2];
+  double *_fld_elmt     [n_fld_elmt+2];
   for (int i_fld = 0; i_fld < n_fld_elmt; i_fld++) {
-    _fld_name_elmt[i_fld] = fld_name_elmt[i_fld];
-    _fld_elmt     [i_fld] = fld_elmt     [i_fld];
+    _fld_name_elmt[i_fld] = (char   *) fld_name_elmt[i_fld];
+    _fld_elmt     [i_fld] = (double *) fld_elmt     [i_fld];
   }
 
   // Section
-  _fld_name_elmt[_n_fld_elmt] = "i_section";
+  sprintf(_fld_name_elmt[_n_fld_elmt], "i_section");
   _fld_elmt     [_n_fld_elmt] = cat_elt_section;
   _n_fld_elmt++;
 
@@ -1415,7 +1415,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
     PDM_part_to_part_free(ptp);
 
 
-    _fld_name_elmt[_n_fld_elmt] = "group";
+    sprintf(_fld_name_elmt[_n_fld_elmt], "group");
     _fld_elmt     [_n_fld_elmt] = cat_elt_group;
     _n_fld_elmt++;
   }
@@ -1439,8 +1439,8 @@ PDM_dmesh_nodal_dump_vtk_with_field
                                   _fld_name_elmt,
                                   _fld_elmt,
                                   n_fld_vtx,
-                                  fld_name_vtx,
-                                  pfield_vtx);
+                       (char  **) fld_name_vtx,
+                       (double**) pfield_vtx);
   for (int i_fld = 0; i_fld < n_fld_vtx; i_fld++) {
     PDM_free(pfield_vtx[i_fld]);
   }
@@ -1966,5 +1966,3 @@ PDM_dmesh_nodal_revert_orientation
     PDM_free(tmp);
   }
 }
-
-
