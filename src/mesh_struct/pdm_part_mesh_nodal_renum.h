@@ -120,10 +120,7 @@ PDM_part_mesh_nodal_elmts_reorder_vtx
 
 
 /**
- * \brief Apply a permutation to the elements of one geometry kind
- *
- * \ref PDM_part_mesh_nodal_elmts_reorder_elmts + update of the element
- * \ref PDM_part_comm_graph_t of this geometry kind if any.
+ * \brief Apply a permutation to the elements on selected geometry kind
  *
  * \param [in]  pmn               Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind         Geometry kind
@@ -144,10 +141,10 @@ PDM_part_mesh_nodal_reorder_elmts
 /**
  * \brief Apply a permutation to the vertices
  *
- * Connectivities of all geometry kinds are remapped, coordinates, global numbering
- * and parent numbering of the vertices are moved, and the vertex
- * \ref PDM_part_comm_graph_t is updated if any.
- * The permutation is checked (error if it is not a permutation).
+ * Elements connectivities for all dimensions are remapped, coordinates, global numbering
+ * and parent numbering of the vertices are also reorder
+ * \note Vertice graph \ref PDM_part_comm_graph_t is updated if any.
+ * \note The permutation is checked (error if it is not a permutation).
  *
  * \param [in] pmn                  Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in] new_to_old_order_vtx Vertex permutation (0-based), for each partition
