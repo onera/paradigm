@@ -96,8 +96,16 @@ void PDM_array_repart_per_col_int
  int       *ordered
 );
 
-
+/*
+ * Return 1 if array is a permutation of [0, size[, 0 otherwise
+ * (an empty array is a permutation : array may be NULL if size <= 0)
+ */
 int PDM_array_is_permutation_int(const int *array, const int size);
+
+/*
+ * Allocate and return the inverse permutation : inverse[array[i]] = i
+ * (array must be a permutation of [0, size[)
+ */
 int* PDM_array_new_inverse_permutation_int(const int *array, const int size);
 
 #ifdef __cplusplus

@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_PART_MESH_NODAL_RENUM_H__
 #define __PDM_PART_MESH_NODAL_RENUM_H__
 
@@ -66,14 +62,13 @@ extern "C" {
  * The *values* of parent_num are not modified and nothing outside the
  * sections is updated : prefer \ref PDM_part_mesh_nodal_elmts_reorder_elmts.
  *
- * \param [in]     pmne                   Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]     i_part                 Partition identifier
- * \param [in]     new_to_old_by_section  Permutation of each section, indexed by the
- *                                        position of the section in sections_id
- *                                        (size = n_section, each of size n_elt of the section)
+ * \param [in] pmne                   Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in] i_part                 Partition identifier
+ * \param [in] new_to_old_by_section  Permutation of each section, indexed by the
+ *                                    position of the section in sections_id
+ *                                    (size = n_section, each of size n_elt of the section)
  *
  */
-
 void
 PDM_part_mesh_nodal_elmts_reorder_sections_elmts
 (
@@ -94,14 +89,12 @@ PDM_part_mesh_nodal_elmts_reorder_sections_elmts
  * cache and num_elmt_parent_to_local are updated.
  * The comm graph is not known here : see \ref PDM_part_mesh_nodal_reorder_elmts.
  *
- * \param [in]     pmne              Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]     new_to_old        Permutation of the part numbering, for each partition
- * \param [out]    group_new_to_old  Permutation of the entries of each group
- *                                   ([i_part][i_group], size n_group_elmt), or NULL if not wanted.
- *                                   The caller owns the arrays.
+ * \param [in]  pmne              Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  new_to_old        Permutation of the part numbering, for each partition
+ * \param [out] group_new_to_old  Permutation of the entries of each group
+ *                                ([i_part][i_group], size n_group_elmt), or NULL if not wanted. The caller owns the arrays.
  *
  */
-
 void
 PDM_part_mesh_nodal_elmts_reorder_elmts
 (
@@ -114,11 +107,10 @@ PDM_part_mesh_nodal_elmts_reorder_elmts
 /**
  * \brief Remap the vertices in the element connectivities
  *
- * \param [in]     pmne                  Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]     old_to_new_order_vtx  Vertex permutation (0-based), for each partition
+ * \param [in] pmne                  Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in] old_to_new_order_vtx  Vertex permutation (0-based), for each partition
  *
  */
-
 void
 PDM_part_mesh_nodal_elmts_reorder_vtx
 (
@@ -133,21 +125,19 @@ PDM_part_mesh_nodal_elmts_reorder_vtx
  * \ref PDM_part_mesh_nodal_elmts_reorder_elmts + update of the element
  * \ref PDM_part_comm_graph_t of this geometry kind if any.
  *
- * \param [in]     pmn               Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]     geom_kind         Geometry kind
- * \param [in]     new_to_old        Permutation of the part numbering, for each partition
- * \param [out]    group_new_to_old  Permutation of the entries of each group
- *                                   ([i_part][i_group]), or NULL if not wanted
+ * \param [in]  pmn               Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind         Geometry kind
+ * \param [in]  new_to_old        Permutation of the part numbering, for each partition
+ * \param [out] group_new_to_old  Permutation of the entries of each group ([i_part][i_group]), or NULL if not wanted
  *
  */
-
 void
 PDM_part_mesh_nodal_reorder_elmts
 (
-  PDM_part_mesh_nodal_t  *pmn,
-  PDM_geometry_kind_t     geom_kind,
-  int                   **new_to_old,
-  int                 ****group_new_to_old
+  PDM_part_mesh_nodal_t    *pmn,
+  PDM_geometry_kind_t       geom_kind,
+  int                     **new_to_old,
+  int                   ****group_new_to_old
 );
 
 
@@ -159,11 +149,10 @@ PDM_part_mesh_nodal_reorder_elmts
  * \ref PDM_part_comm_graph_t is updated if any.
  * The permutation is checked (error if it is not a permutation).
  *
- * \param [in]     pmn                   Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]     new_to_old_order_vtx  Vertex permutation (0-based), for each partition
+ * \param [in] pmn                  Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in] new_to_old_order_vtx Vertex permutation (0-based), for each partition
  *
  */
-
 void
 PDM_part_mesh_nodal_reorder_vtx
 (
@@ -177,10 +166,9 @@ PDM_part_mesh_nodal_reorder_vtx
  *
  *  1. Elements of the principal dimension : reverse Cuthill-McKee on the
  *     element graph (elements sharing a vertex). Sections are kept :
- *     inside each section the elements follow the RCM order.
+ *     inside each section the elements follow the reverse Cuthill-McKee (RCM) order.
  *  2. Vertices : order of first appearance while traversing the principal
- *     elements in RCM order, then the vertices only reached by lower dimensions,
- *     then the unreferenced ones.
+ *     elements in RCM order, then the vertices only reached by lower dimensions
  *  3. Lower dimensions : elements sorted lexicographically by their sorted
  *     new vertex ids, sections kept.
  *
@@ -194,9 +182,9 @@ PDM_part_mesh_nodal_reorder_vtx
  * \warning \p renum_entity_method and \p renum_entity_properties are not
  *          interpreted yet (reserved for the method selection).
  *
- * \param [in]     pmn                      Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]     renum_entity_method      Method for vtx, edge, face, cell (reserved)
- * \param [in]     renum_entity_properties  Properties for vtx, edge, face, cell (reserved)
+ * \param [in] pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in] renum_entity_method     Method for vtx, edge, face, cell (reserved)
+ * \param [in] renum_entity_properties Properties for vtx, edge, face, cell (reserved)
  *
  */
 

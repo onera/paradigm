@@ -416,10 +416,6 @@ int PDM_array_is_permutation_int(const int *array, const int size) {
   return is_ok;
 }
 
-/*
- * Allocate and return the inverse permutation : inverse[array[i]] = i
- * (array must be a permutation of [0, size[)
- */
 int* PDM_array_new_inverse_permutation_int(const int *array, const int size) {
   int *inverse = NULL;
   PDM_malloc(inverse, size, int);

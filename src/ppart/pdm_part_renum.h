@@ -582,12 +582,10 @@ PDM_part_reorder_edge_bound
  * (e.g. principal elements, then lower dimension elements). Entities2 never reached keep -1
  * in \p old_to_new_entity2 and are not in \p new_to_old_entity2.
  *
- * Typical use : number the vertices in the order the elements are traversed.
- *
  * \param [in]     n_entity1            Number of entities1
  * \param [in]     entity1_order        Traversal order of entities1, 0-based (size = \p n_entity1) or NULL
  * \param [in]     entity1_entity2_idx  Index of entity1->entity2 connectivity (size = \p n_entity1 + 1)
- * \param [in]     entity1_entity2      Entity1->entity2 connectivity (1-based, sign ignored)
+ * \param [in]     entity1_entity2      Entity1->entity2 connectivity (1-based, sign ignored) (size = entity_entity2_idx[n_entity1])
  * \param [in,out] old_to_new_entity2   Old to new numbering of entities2 (0-based, -1 if not numbered yet)
  * \param [in,out] new_to_old_entity2   New to old numbering of entities2 (0-based)
  * \param [in,out] n_entity2_new        Number of entities2 already numbered
@@ -615,12 +613,9 @@ PDM_part_renum_by_first_appearance
  * entity2 comes before all the others), and entities1 with the same list keep their
  * initial relative order.
  *
- * Typical use : order faces, edges or elements by their sorted vertices so that entities
- * close in the vertex numbering are close in the new numbering.
- *
  * \param [in]  n_entity1            Number of entities1
  * \param [in]  entity1_entity2_idx  Index of entity1->entity2 connectivity (size = \p n_entity1 + 1)
- * \param [in]  entity1_entity2      Entity1->entity2 connectivity (1-based, sign ignored, not modified)
+ * \param [in]  entity1_entity2      Entity1->entity2 connectivity (1-based, sign ignored)  (size = entity_entity2_idx[n_entity1])
  * \param [out] new_to_old_entity1   New to old numbering of entities1, 0-based
  *                                   (size = \p n_entity1, allocated by the caller)
  *
