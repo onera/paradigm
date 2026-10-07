@@ -84,12 +84,8 @@ _elmt_new_to_old_store
 }
 
 
-/*
- * Only access to private data of the sections : the internal global numbering
- * (numabs_int) and the cell centers have no accessor that is safe when the
- * array is not allocated.
- */
-static inline
+static
+inline
 PDM_Mesh_nodal_block_std_t *
 _block_std_get
 (
@@ -103,10 +99,9 @@ _block_std_get
 
 static
 void
-_check_std_sections
+_check_pmne_have_no_poly
 (
-  PDM_part_mesh_nodal_elmts_t *pmne,
-  const char                  *caller
+  PDM_part_mesh_nodal_elmts_t *pmne
 )
 {
   if (pmne == NULL) {
@@ -121,7 +116,7 @@ _check_std_sections
                                                                             sections_id[i_section]);
     if (t_elt == PDM_MESH_NODAL_POLY_2D ||
         t_elt == PDM_MESH_NODAL_POLY_3D) {
-      PDM_error("%s : POLY_2D and POLY_3D sections are not supported yet\n", caller);
+      PDM_error("POLY_2D and POLY_3D sections are not supported yet\n");
     }
   }
 }
@@ -350,8 +345,6 @@ PDM_part_mesh_nodal_elmts_reorder_sections_elmts
     return;
   }
 
-  _check_std_sections(pmne, __func__);
-
   int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
@@ -431,8 +424,6 @@ PDM_part_mesh_nodal_elmts_reorder_elmts
     }
     return;
   }
-
-  _check_std_sections(pmne, __func__);
 
   int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
@@ -624,8 +615,6 @@ PDM_part_mesh_nodal_elmts_reorder_vtx
     return;
   }
 
-  _check_std_sections(pmne, __func__);
-
   int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
@@ -802,7 +791,8 @@ PDM_part_mesh_nodal_renum
 
   /* Check everything before modifying anything */
   for (PDM_geometry_kind_t geom_kind = principal_geom_kind; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
-    _check_std_sections(PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind), __func__);
+    PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
+    _check_pmne_have_no_poly(pmne);
   }
 
   PDM_part_mesh_nodal_elmts_t *pmne_principal = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn,
