@@ -1831,7 +1831,7 @@ int     *new_to_old_order
   }
 
   if(part->edge_face != NULL && part->edge_face_idx != NULL) {
-    PDM_part_renum_connectivities (part->n_face,
+    PDM_part_renum_connectivities (part->n_edge,
                                    new_to_old_order,
                                    part->edge_face_idx,
                                    part->edge_face);
