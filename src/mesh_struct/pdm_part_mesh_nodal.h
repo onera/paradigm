@@ -1388,7 +1388,7 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_free
 
 
 /**
- * \brief Return the vertex permutation of the last \ref PDM_part_mesh_nodal_renum
+ * \brief Return the vertex permutation
  *
  * The permutation maps the numbering before the renumbering onto the current one :
  * new_field[i] = old_field[new_to_old[i]] (0-based). A field attached to the vertices

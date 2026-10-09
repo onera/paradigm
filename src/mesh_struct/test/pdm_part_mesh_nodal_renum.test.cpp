@@ -40,31 +40,35 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_renum", 1) {
                                                            n_part,
                                                            PDM_SPLIT_DUAL_WITH_PTSCOTCH);
 
-  PDM_part_mesh_nodal_dump_vtk(pmn,
-                               PDM_GEOMETRY_KIND_SURFACIC,
-                               "pmn_in");
+  int visu = 0;
+  if(visu == 1) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "pmn_in");
+  }
 
-  const int renum_properties_face[9] = {100, 0, 1, 64, 2, 1, 1, 1, 1};
-  // Ou on stocke le old_to_new ?
+
   const char *renum_method[4] = {"PDM_PART_RENUM_VTX_NONE",
                                  "PDM_PART_RENUM_EDGE_NONE",
-                                 "PDM_PART_RENUM_FACE_HPC",
+                                 "PDM_PART_RENUM_FACE_NONE",
                                  "PDM_PART_RENUM_CELL_NONE"
                                  };
   const int *renum_properties[4] = {NULL,
                                     NULL,
-                                    renum_properties_face,
+                                    NULL,
                                     NULL};
   PDM_part_mesh_nodal_renum(pmn,
                             renum_method,
                             renum_properties);
 
-  PDM_part_mesh_nodal_dump_vtk(pmn,
-                               PDM_GEOMETRY_KIND_SURFACIC,
-                               "pmn_out");
-  PDM_part_mesh_nodal_dump_vtk(pmn,
-                               PDM_GEOMETRY_KIND_RIDGE,
-                               "pmn_ridge_out");
+  if(visu == 1) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "pmn_out");
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_RIDGE,
+                                 "pmn_ridge_out");
+  }
 
   PDM_part_mesh_nodal_free(pmn);
 }
@@ -82,33 +86,34 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_renum - mixed ", 1) {
                                                                  PDM_SPLIT_DUAL_WITH_HILBERT,
                                                                  PDM_MESH_DIR"mixed_elements_2d.mesh");
 
-  PDM_part_mesh_nodal_dump_vtk(pmn,
-                               PDM_GEOMETRY_KIND_SURFACIC,
-                               "pmn_in");
+  int visu = 0;
+  if(visu == 1) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "pmn_in");
+  }
 
-  const int renum_properties_face[9] = {100, 0, 1, 64, 2, 1, 1, 1, 1};
-  // Ou on stocke le old_to_new ?
   const char *renum_method[4] = {"PDM_PART_RENUM_VTX_NONE",
                                  "PDM_PART_RENUM_EDGE_NONE",
-                                 "PDM_PART_RENUM_FACE_HPC",
+                                 "PDM_PART_RENUM_FACE_NONE",
                                  "PDM_PART_RENUM_CELL_NONE"
                                  };
   const int *renum_properties[4] = {NULL,
                                     NULL,
-                                    renum_properties_face,
+                                    NULL,
                                     NULL};
   PDM_part_mesh_nodal_renum(pmn,
                             renum_method,
                             renum_properties);
 
-  PDM_part_mesh_nodal_dump_vtk(pmn,
-                               PDM_GEOMETRY_KIND_SURFACIC,
-                               "pmn_out");
-  PDM_part_mesh_nodal_dump_vtk(pmn,
-                               PDM_GEOMETRY_KIND_RIDGE,
-                               "pmn_ridge_out");
-
-
+  if(visu == 1) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "pmn_out");
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_RIDGE,
+                                 "pmn_ridge_out");
+  }
 
   PDM_part_mesh_nodal_free(pmn);
 

@@ -42,7 +42,7 @@
 
 static
 PDM_ownership_t *
-_ownership_keep
+_init_array_at_ownership_keep
 (
   const int n
 )
@@ -73,29 +73,15 @@ _elmt_new_to_old_store
   int n_group = PDM_part_mesh_nodal_n_group_get(pmn, geom_kind);
 
   pmn->elmt_new_to_old          [dim] = elmt_new_to_old;
-  pmn->elmt_new_to_old_ownership[dim] = _ownership_keep(pmn->n_part);
+  pmn->elmt_new_to_old_ownership[dim] = _init_array_at_ownership_keep (pmn->n_part);
 
   pmn->n_group_new_to_old        [dim] = n_group;
   pmn->group_new_to_old          [dim] = group_new_to_old;
   PDM_malloc(pmn->group_new_to_old_ownership[dim], pmn->n_part, PDM_ownership_t *);
   for (int i_part = 0; i_part < pmn->n_part; i_part++) {
-    pmn->group_new_to_old_ownership[dim][i_part] = _ownership_keep(n_group);
+    pmn->group_new_to_old_ownership[dim][i_part] = _init_array_at_ownership_keep (n_group);
   }
 }
-
-
-static
-inline
-PDM_Mesh_nodal_block_std_t *
-_block_std_get
-(
-  PDM_part_mesh_nodal_elmts_t *pmne,
-  const int                    id_section
-)
-{
-  return pmne->sections_std[id_section - PDM_BLOCK_ID_BLOCK_STD];
-}
-
 
 static
 void
@@ -399,7 +385,7 @@ PDM_part_mesh_nodal_elmts_reorder_sections_elmts
       PDM_order_array(n_elt, sizeof(int), new_to_old, elt_to_entity);
     }
 
-    PDM_Mesh_nodal_block_std_t *block = _block_std_get(pmne, id_section);
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section - PDM_BLOCK_ID_BLOCK_STD];
     if (block->numabs_int != NULL && block->numabs_int[i_part] != NULL) {
       PDM_order_array(n_elt, sizeof(PDM_g_num_t), new_to_old, block->numabs_int[i_part]);
     }
@@ -903,7 +889,7 @@ PDM_part_mesh_nodal_renum
 
   PDM_part_mesh_nodal_reorder_vtx(pmn, vtx_new_to_old);
   pmn->vtx_new_to_old           = vtx_new_to_old;
-  pmn->vtx_new_to_old_ownership = _ownership_keep(n_part);
+  pmn->vtx_new_to_old_ownership = _init_array_at_ownership_keep (n_part);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_free(vtx_old_to_new[i_part]);

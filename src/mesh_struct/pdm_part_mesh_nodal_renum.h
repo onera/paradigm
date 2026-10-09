@@ -54,7 +54,7 @@ extern "C" {
 
 
 /**
- * \brief Permute the elements inside each section of one partition
+ * \brief Permute the elements inside each section of one partition according to the new_to_old numbering
  *
  * All the arrays attached to the elements of each section are moved
  * (connec, numabs, internal numabs, parent_num, parent_entity_g_num,
