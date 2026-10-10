@@ -15,6 +15,7 @@
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <sstream>
 #include <functional>
 #include <iomanip>
 #include <cstring>
