@@ -712,7 +712,6 @@ _timer_gather
   PDM_free(gn_send_data_idx);
   PDM_free(gn_send_time_idx);
 
-  free(gn_send_path_data);
   timer->is_gather = 1;
   timer->gflat_timer = std::move(gflat_timer);
 }

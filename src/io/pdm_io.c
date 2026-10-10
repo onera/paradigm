@@ -82,7 +82,10 @@ struct _PDM_io_file_t {
  * Variables globales
  *============================================================================*/
 
-static const int synchro_timer = 1;
+/* Pas de barriere dans le timer : de nombreux appels PDM_timer_start/end sont
+ * faits dans des branches executees par une partie des rangs seulement
+ * (rang 0, rangs actifs), ce qui provoquait des interblocages. */
+static const int synchro_timer = 0;
 
 
 /*----------------------------------------------------------------------------
@@ -3561,6 +3564,7 @@ PDM_io_par_block_write
 
           }
 
+          PDM_timer_end(fichier->timer, "file", synchro_timer);
         }
         else if (fichier->rang_actif == 1) {
 
@@ -3593,6 +3597,7 @@ PDM_io_par_block_write
           if (buffer !=_buffer) {
             PDM_free(_buffer);
           }
+          PDM_timer_end(fichier->timer, "file", synchro_timer);
         }
 
         PDM_MPI_Bcast(&etat_ecriture, 1, PDM_MPI_INT, 0, fichier->comm);
@@ -3609,7 +3614,6 @@ PDM_io_par_block_write
 	      break;
       }
 
-      PDM_timer_end(fichier->timer, "file", synchro_timer);
     }
 
     if (buffer != donnees) {
