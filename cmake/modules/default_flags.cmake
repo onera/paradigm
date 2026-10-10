@@ -446,7 +446,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
 
-  set (CMAKE_CXX_FLAGS "-fpic -std=c++11 -acc=host -fortranlibs -Minfo=accel")
+  set (CMAKE_CXX_FLAGS "-fpic -std=c++14 -acc=host -fortranlibs -Minfo=accel")
 
   set (CMAKE_CXX_FLAGS_RELEASE         "-fast -O3")
   set (CMAKE_CXX_FLAGS_DEBUG           "-g -Mbounds")
