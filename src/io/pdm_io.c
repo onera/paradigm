@@ -3495,6 +3495,8 @@ PDM_io_par_block_write
         }
         int etat_ecriture = 1;
 
+        PDM_timer_end(fichier->timer, "file", synchro_timer);
+
         if (fichier->rang == 0) {
           assert(fichier->rang_actif == 1);
 
@@ -3519,6 +3521,8 @@ PDM_io_par_block_write
 
             PDM_timer_end(fichier->timer, "swap endian", synchro_timer);
           }
+
+          PDM_timer_start(fichier->timer, "file", synchro_timer);
 
           PDM_g_num_t donnees_ecrites = PDM_file_seq_write(fichier->PDM_file_seq,
                                                            taille_donnee,
@@ -3580,6 +3584,8 @@ PDM_io_par_block_write
 
             PDM_timer_end(fichier->timer, "swap endian", synchro_timer);
           }
+
+          PDM_timer_start(fichier->timer, "file", synchro_timer);
 
           PDM_MPI_Send(_buffer, l_buffer, PDM_MPI_BYTE, 0,
                         PDM_io_tag, fichier->comm);
