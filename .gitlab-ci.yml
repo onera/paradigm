@@ -17,6 +17,7 @@ variables:
   TESTS_MAX_DURATION: "01:00:00"
   SCHEDULER_PARAMETERS:  "--partition=intel --ntasks=12 --nodes=1-1 --time=00:30:00"
 default:
+  interruptible: true
   tags: #All jobs uses jamacar-slurm executor
     - juno-slurm
   id_tokens:
