@@ -218,6 +218,8 @@ _compute_owner_gen
 
   int stride = 3 + nuplet_size; // nuplet_size is extern to manage with / without nuplet cases for ownership
 
+  int sign = (pcg->is_signed == PDM_TRUE) ? -1 : 1;
+
   /*
    * Compute owner
    */
@@ -254,7 +256,7 @@ _compute_owner_gen
       cur_location[nuplet_size+2] = PDM_ABS(l_entity);
 
       for (int i = 0; i < nuplet_size; i++) {
-        opp_location[i] = - pcg->pentity_nuplet[i_part][nuplet_size*idx_entity+i]; // Forcement l'opposé
+        opp_location[i] = sign * pcg->pentity_nuplet[i_part][nuplet_size*idx_entity+i]; // Forcement l'opposé
       }
       opp_location[nuplet_size+0] = pcg->pentity_graph[i_part][4*idx_entity+1];
       opp_location[nuplet_size+1] = pcg->pentity_graph[i_part][4*idx_entity+2];
@@ -381,7 +383,7 @@ _allocate_recv_strid_cst
   unsigned char **_recv_entity_data = NULL;
   PDM_malloc(_recv_entity_data, pcg->n_part, unsigned char *);
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
-    _recv_entity_data[i_part] = malloc(pcg->n_entity_graph[i_part] * s_data_tot * sizeof(unsigned char));
+    PDM_malloc(_recv_entity_data[i_part], pcg->n_entity_graph[i_part] * s_data_tot, unsigned char);
   }
 
   *recv_entity_data = _recv_entity_data;
@@ -579,7 +581,8 @@ _post_send_strid_and_fill_send_buffer
   }
 
   int send_buff_size = send_data_idx[n_rank] * s_data_tot;
-  unsigned char  *send_buffer       = malloc(send_buff_size * sizeof(unsigned char));
+  unsigned char  *send_buffer = NULL;
+  PDM_malloc(send_buffer, send_buff_size, unsigned char);
   unsigned char **_send_entity_data = (unsigned char **) send_entity_data;
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
@@ -627,7 +630,7 @@ _post_recv_strid_var
   *recv_entity_data   = (void **) _recv_entity_data;
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
-    _recv_entity_stride[i_part] = malloc(pcg->n_entity_graph[i_part] * sizeof(int));
+    PDM_malloc(_recv_entity_stride[i_part], pcg->n_entity_graph[i_part], int);
     int recv_buff_size_part = 0;
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       int idx_read  = pcg->part_to_recv_buffer[i_part][i];
@@ -1204,10 +1207,6 @@ PDM_part_comm_graph_iexch
     s_data_tot = s_data * cst_stride;
   }
 
-  PDM_MPI_Datatype mpi_type;
-  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
-  PDM_MPI_Type_commit(&mpi_type);
-
   int request_id = -1;
 
   if(t_stride == PDM_STRIDE_CST_INTERLACED) {
@@ -1342,8 +1341,6 @@ PDM_part_comm_graph_iexch
   else {
     INVALID_T_STRIDE(t_stride)
   }
-
-  PDM_MPI_Type_free(&mpi_type);
 
   return request_id;
 }
