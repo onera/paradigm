@@ -662,7 +662,7 @@ _create
   PDM_malloc(pcg->part_to_recv_buffer, n_part, int *);
   PDM_malloc(pcg->n_entity_graph     , n_part, int  );
 
-  int stride = 3 + nuplet_size;
+  int stride = 4 + nuplet_size;
 
   PDM_MPI_Datatype mpi_stride_type;
   PDM_MPI_Type_create_contiguous(stride, PDM_MPI_INT, &mpi_stride_type);
@@ -707,8 +707,10 @@ _create
       send_buffer[stride*idx_write  ] = pentity_graph[i_part][4*idx_entity+2]-1;
       send_buffer[stride*idx_write+1] = i_part;
       send_buffer[stride*idx_write+2] = PDM_ABS(pentity_graph[i_part][4*idx_entity+3])-1;
+      send_buffer[stride*idx_write+3] = pentity_graph[i_part][4*idx_entity+0]-1;
+
       for (int i = 0; i < nuplet_size; i++) {
-        send_buffer[stride*idx_write+3+i] = sign * pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+        send_buffer[stride*idx_write+4+i] = sign * pentity_nuplet[i_part][nuplet_size*idx_entity+i];
       }
 
       pcg->part_to_send_buffer[i_part][idx_entity] = idx_write;
@@ -756,7 +758,9 @@ _create
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_entity_graph = pn_entity_graph[i_part];
     PDM_malloc(pcg->part_to_recv_buffer[i_part], n_entity_graph, int);
-
+    for (int i_entity=0; i_entity<n_entity_graph; ++i_entity) {
+      pcg->part_to_recv_buffer[i_part][i_entity] = -18;
+    }
     PDM_malloc(pentity_indices      [i_part], stride * n_entity_graph, int);
     PDM_malloc(pentity_indices_order[i_part],          n_entity_graph, int);
 
@@ -764,8 +768,10 @@ _create
       pentity_indices[i_part][stride*idx_entity  ] = pentity_graph[i_part][4*idx_entity+1];
       pentity_indices[i_part][stride*idx_entity+1] = pentity_graph[i_part][4*idx_entity+2]-1;
       pentity_indices[i_part][stride*idx_entity+2] = pentity_graph[i_part][4*idx_entity]-1; // Indices locaux
+      pentity_indices[i_part][stride*idx_entity+3] = PDM_ABS(pentity_graph[i_part][4*idx_entity+3])-1; // Indices locaux
+
       for (int i = 0; i < nuplet_size; i++) {
-        pentity_indices[i_part][stride*idx_entity+3+i] = pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+        pentity_indices[i_part][stride*idx_entity+4+i] = pentity_nuplet[i_part][nuplet_size*idx_entity+i];
       }
     }
 
@@ -782,22 +788,15 @@ _create
 
   /* Post buffer */
   int *to_find = NULL;
-  PDM_malloc(to_find, stride, int);
 
   for(int t_rank = 0; t_rank < n_rank; ++t_rank) {
     for(int j = recv_idx[t_rank]; j < recv_idx[t_rank+1]; ++j) {
 
-      int lpart   = recv_buffer[stride*j  ];
-      int tpart   = recv_buffer[stride*j+1];
-      int lentity = recv_buffer[stride*j+2];
+      int lpart   = recv_buffer[stride*j];
+      recv_buffer[stride*j] = t_rank;
       int n_entity_graph = pn_entity_graph[lpart];
 
-      to_find[0] = t_rank;
-      to_find[1] = tpart;
-      to_find[2] = lentity;
-      for (int i = 0; i < nuplet_size; i++) {
-        to_find[3+i] = recv_buffer[stride*j+3+i];
-      }
+      to_find = &recv_buffer[stride*j  ];
 
       int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], stride, n_entity_graph);
       if (pos == -1) {
@@ -814,7 +813,6 @@ _create
 
     }
   }
-  PDM_free(to_find);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
