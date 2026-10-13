@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -21,6 +22,7 @@
 #include "pdm_predicate.h"
 #include "pdm_mem_tool.h"
 #include "pdm_logging.h"
+#include "pdm_array.h"
 
 
 /*============================================================================
@@ -136,9 +138,54 @@ PDM_part_mesh_nodal_dual_volume_compute
   double                ***dual_vol
 )
 {
-  int all_simplices = _check_if_all_simplices(pmn);
+  if (pmn->mesh_dimension == 1) {
+    double **_dual_vol = NULL;
+    PDM_malloc(_dual_vol, pmn->n_part, double *);
+    
+    for (int i_part = 0; i_part <pmn->n_part; i_part++) {
+      int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+      _dual_vol[i_part] = PDM_array_zeros_double(n_vtx);
 
-  if (all_simplices) {
+      int *elt_vtx_idx = NULL;
+      int *elt_vtx     = NULL;
+      int n_edge = PDM_part_mesh_nodal_cell_vtx_connect_get(pmn,
+                                                            PDM_GEOMETRY_KIND_RIDGE,
+                                                            i_part,
+                                                            &elt_vtx_idx,
+                                                            &elt_vtx);
+      
+      double *coords = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      
+      for (int i_edge = 0; i_edge < n_edge; ++i_edge) {
+        int vtx1 = elt_vtx[2*i_edge+0] - 1;
+        int vtx2 = elt_vtx[2*i_edge+1] - 1;
+        double edge_length = sqrt(pow(coords[3*vtx1+0] - coords[3*vtx2+0], 2) +
+                                  pow(coords[3*vtx1+1] - coords[3*vtx2+1], 2) +
+                                  pow(coords[3*vtx1+2] - coords[3*vtx2+2], 2));
+        _dual_vol[i_part][vtx1] += 0.5*edge_length;
+        _dual_vol[i_part][vtx2] += 0.5*edge_length;
+      } 
+      
+      PDM_free(elt_vtx_idx);
+      PDM_free(elt_vtx);
+    }
+    
+    if (synchronize) {
+      if(pmn->pcg_vtx == NULL) {
+        PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum(pmn);
+      }
+
+      // Synchro volume :
+      PDM_part_comm_graph_all_reduce(pmn->pcg_vtx,
+                                     PDM_MPI_DOUBLE,
+                                     1,
+                                     PDM_MPI_SUM,
+               (unsigned char **)    _dual_vol);
+    }
+    *dual_vol = _dual_vol;
+  }
+  
+  else if (_check_if_all_simplices(pmn)) {
     PDM_geometry_kind_t geom_kind = (pmn->mesh_dimension == 2) ? PDM_GEOMETRY_KIND_SURFACIC : PDM_GEOMETRY_KIND_VOLUMIC;
 
     int     *n_vtx     = NULL;

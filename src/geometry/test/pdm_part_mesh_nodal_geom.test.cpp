@@ -15,6 +15,80 @@
 #include "pdm_logging.h"
 
 
+MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - BAR_2 - 3p", 3) {
+  int i_rank = -1;
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+  
+  PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(1, 1, pdm_comm);
+
+  // Line of points (0, 0.1, 0.25, 0.4, 0.5, 0.55, 0.8, 1)
+  double coords_p0[9]  = {0,0,0,  0.1,0,0,  0.25,0,0};
+  double coords_p1[12] = {0.25,0,0,  0.4,0,0,  0.5,0,0, 0.55,0,0};
+  double coords_p2[9]  = {0.55,0,0,  0.8,0,0,  1,0,0};
+  PDM_g_num_t vtx_gnum_p0[3] = {1,2,3};
+  PDM_g_num_t vtx_gnum_p1[4] = {3,4,5,6};
+  PDM_g_num_t vtx_gnum_p2[3] = {6,7,8};
+  
+  int elt_vtx_p0[4] = {1,2, 2,3};
+  int elt_vtx_p1[6] = {1,2, 2,3, 3,4};
+  int elt_vtx_p2[4] = {1,2, 2,3};
+  PDM_g_num_t bar_gnum_p0[2] = {1,2};
+  PDM_g_num_t bar_gnum_p1[3] = {3,4,5};
+  PDM_g_num_t bar_gnum_p2[2] = {6,7};
+  
+  int n_vtx;
+  double *coords;
+  int *elt_vtx;
+  PDM_g_num_t* vtx_gnum;
+  PDM_g_num_t* bar_gnum;
+  if (i_rank == 0) {
+    n_vtx = 3;
+    coords = coords_p0;
+    elt_vtx = elt_vtx_p0;
+    vtx_gnum = vtx_gnum_p0;
+    bar_gnum = bar_gnum_p0;
+  }
+  if (i_rank == 1) {
+    n_vtx = 4;
+    coords = coords_p1;
+    elt_vtx = elt_vtx_p1;
+    vtx_gnum = vtx_gnum_p1;
+    bar_gnum = bar_gnum_p1;
+  }
+  if (i_rank == 2) {
+    n_vtx = 3;
+    coords = coords_p2;
+    elt_vtx = elt_vtx_p2;
+    vtx_gnum = vtx_gnum_p2;
+    bar_gnum = bar_gnum_p2;
+  }
+  
+  PDM_part_mesh_nodal_coord_set(pmn, 0, n_vtx, coords, PDM_OWNERSHIP_USER);
+  PDM_part_mesh_nodal_vtx_gnum_set(pmn, 0, vtx_gnum, PDM_OWNERSHIP_USER);
+  
+  int id_bar = PDM_part_mesh_nodal_section_add(pmn, PDM_MESH_NODAL_BAR2); 
+  PDM_part_mesh_nodal_section_std_set(pmn, id_bar, 0, n_vtx-1, elt_vtx, bar_gnum,
+                                      NULL, NULL, PDM_OWNERSHIP_USER);
+
+  double **pdual_volume = NULL;
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, PDM_TRUE, &pdual_volume);
+  
+  double expected_dual_volume_p0[3] = {0.1/2, 0.25/2, 0.3/2};
+  double expected_dual_volume_p1[4] = {0.3/2, 0.25/2, 0.15/2, 0.3/2};
+  double expected_dual_volume_p2[3] = {0.3/2, 0.45/2, 0.2/2};
+  
+  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx ) {
+    MPI_CHECK(0, pdual_volume[0][i_vtx] == doctest::Approx(expected_dual_volume_p0[i_vtx]).epsilon(0.01));
+    MPI_CHECK(1, pdual_volume[0][i_vtx] == doctest::Approx(expected_dual_volume_p1[i_vtx]).epsilon(0.01));
+    MPI_CHECK(2, pdual_volume[0][i_vtx] == doctest::Approx(expected_dual_volume_p2[i_vtx]).epsilon(0.01));
+  }
+  
+  PDM_free(pdual_volume[0]);
+  PDM_free(pdual_volume);
+  PDM_part_mesh_nodal_free(pmn);
+}
+
 MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - TRIA3 - simplices - 1p", 1) {
 
   int i_rank = -1;
