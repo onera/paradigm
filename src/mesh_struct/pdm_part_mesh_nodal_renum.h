@@ -141,8 +141,7 @@ PDM_part_mesh_nodal_reorder_elmts
 /**
  * \brief Apply a permutation to the vertices
  *
- * Elements connectivities for all dimensions are remapped, coordinates, global numbering
- * and parent numbering of the vertices are also reorder
+ * Elements connectivities for all dimensions, coordinates, global numbering, parent numbering of the vertices are remapped
  * \note Vertice graph \ref PDM_part_comm_graph_t is updated if any.
  * \note The permutation is checked (error if it is not a permutation).
  *
@@ -159,7 +158,7 @@ PDM_part_mesh_nodal_reorder_vtx
 
 
 /**
- * \brief Renumber a partitioned nodal mesh
+ * \brief Renumber partitioned nodal mesh entities
  *
  *  1. Elements of the principal dimension : reverse Cuthill-McKee on the
  *     element graph (elements sharing a vertex). Sections are kept :
@@ -184,7 +183,6 @@ PDM_part_mesh_nodal_reorder_vtx
  * \param [in] renum_entity_properties Properties for vtx, edge, face, cell (reserved)
  *
  */
-
 void
 PDM_part_mesh_nodal_renum
 (

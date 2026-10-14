@@ -152,8 +152,7 @@ _elmt_location_compute
       has_parent_num = lhas_parent_num;
     }
     else if (has_parent_num != lhas_parent_num) {
-      PDM_error("_elmt_location_compute : mix of sections with and without parent_num (i_part = %d)\n",
-                   i_part);
+      PDM_error("mix of sections with and without parent_num (i_part = %d)\n", i_part);
     }
   }
   if (has_parent_num == -1) {
@@ -161,8 +160,7 @@ _elmt_location_compute
   }
 
   if (section_elmt_idx[n_section] != n_elmt) {
-    PDM_error("_elmt_location_compute : inconsistent number of elements (%d / %d)\n",
-                 section_elmt_idx[n_section], n_elmt);
+    PDM_error("inconsistent number of elements (%d / %d)\n", section_elmt_idx[n_section], n_elmt);
   }
 
   int *_elmt_section = PDM_array_const_int(n_elmt, -1);
@@ -182,8 +180,7 @@ _elmt_location_compute
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int i_elmt = (parent_num != NULL) ? parent_num[i_elt] : section_elmt_idx[i_section] + i_elt;
       if (i_elmt < 0 || i_elmt >= n_elmt || _elmt_section[i_elmt] != -1) {
-        PDM_error("_elmt_location_compute : parent_num is not a permutation (i_part = %d)\n",
-                     i_part);
+        PDM_error("parent_num is not a permutation (i_part = %d)\n", i_part);
       }
       _elmt_section[i_elmt] = i_section;
       _elmt_local  [i_elmt] = i_elt;
@@ -311,7 +308,7 @@ _elmts_rcm_compute
 
   /* Safety : the result must be a permutation */
   if (!PDM_array_is_permutation_int(new_to_old, n_elmt)) {
-    PDM_error("_elmts_rcm_compute : PDM_cuthill_generate did not return a permutation\n");
+    PDM_error("did not return a permutation\n");
   }
 }
 
@@ -463,7 +460,7 @@ PDM_part_mesh_nodal_elmts_reorder_elmts
 
     const int *_new_to_old = new_to_old[i_part];
     if (!PDM_array_is_permutation_int(_new_to_old, n_elmt)) {
-      PDM_error("PDM_part_mesh_nodal_elmts_reorder_elmts : new_to_old is not a permutation (i_part = %d)\n", i_part);
+      PDM_error("new_to_old is not a permutation (i_part = %d)\n", i_part);
     }
     int *old_to_new = PDM_array_new_inverse_permutation_int(_new_to_old, n_elmt);
 
@@ -492,9 +489,9 @@ PDM_part_mesh_nodal_elmts_reorder_elmts
         int n_elt = section_elmt_idx[i_section+1] - section_elmt_idx[i_section];
         for (int i_elt = 0; i_elt < n_elt; i_elt++) {
           if (new_parent_by_section[i_section][i_elt] != section_elmt_idx[i_section] + i_elt) {
-            PDM_error("PDM_part_mesh_nodal_elmts_reorder_elmts : without parent_num, "
-                         "the permutation must keep the section blocks (i_part = %d, i_section = %d)\n",
-                         i_part, i_section);
+            PDM_error("without parent_num, "
+                      "the permutation must keep the section blocks (i_part = %d, i_section = %d)\n",
+                      i_part, i_section);
           }
         }
       }
@@ -707,7 +704,7 @@ PDM_part_mesh_nodal_reorder_vtx
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
     if (!PDM_array_is_permutation_int(new_to_old_order_vtx[i_part], n_vtx)) {
-      PDM_error("PDM_part_mesh_nodal_reorder_vtx : new_to_old is not a permutation (i_part = %d)\n", i_part);
+      PDM_error("new_to_old is not a permutation (i_part = %d)\n", i_part);
     }
     old_to_new_order_vtx[i_part] = PDM_array_new_inverse_permutation_int(new_to_old_order_vtx[i_part], n_vtx);
   }
