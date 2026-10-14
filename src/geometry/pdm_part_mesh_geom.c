@@ -76,6 +76,37 @@ PDM_compute_entity_center
 }
 
 void
+PDM_compute_dual_volume_ngon_1d
+(
+  int       n_part,
+  int      *n_edge,
+  int      *n_vtx,
+  int     **edge_vtx,
+  double  **vtx_coord,
+  double ***out_vtx_volume
+)
+{
+  double **vtx_volume = NULL;
+  PDM_malloc(vtx_volume, n_part, double *);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_calloc(vtx_volume[i_part], n_vtx[i_part], double);
+
+    for (int i_edge = 0; i_edge < n_edge[i_part]; ++i_edge) {
+      int vtx1 = edge_vtx[i_part][2*i_edge+0] - 1;
+      int vtx2 = edge_vtx[i_part][2*i_edge+1] - 1;
+      double edge_length = sqrt(pow(vtx_coord[i_part][3*vtx1+0] - vtx_coord[i_part][3*vtx2+0], 2) +
+                                pow(vtx_coord[i_part][3*vtx1+1] - vtx_coord[i_part][3*vtx2+1], 2) +
+                                pow(vtx_coord[i_part][3*vtx1+2] - vtx_coord[i_part][3*vtx2+2], 2));
+      vtx_volume[i_part][vtx1] += 0.5*edge_length;
+      vtx_volume[i_part][vtx2] += 0.5*edge_length;
+    }
+  }
+
+*out_vtx_volume = vtx_volume;
+}
+
+void
 PDM_compute_dual_volume_ngon_2d
 (
   int       n_part,
@@ -248,21 +279,24 @@ PDM_part_mesh_dual_volume_compute
 {
 
   /* Compute mesh highest dimension */
-  int mesh_dimension = 2;
-  int tn_cell = 0;
-  if (pm->pn_entity[PDM_MESH_ENTITY_CELL] != NULL) {
+  int loc_mesh_dimension = 0;
+  for (int i_entity = 0; i_entity < PDM_MESH_ENTITY_MAX; ++i_entity) {
+    if (pm->pn_entity[i_entity] == NULL) {
+      continue;
+    }
     for (int i_part = 0; i_part < pm->n_part; i_part++) {
-      tn_cell += pm->pn_entity[PDM_MESH_ENTITY_CELL][i_part];
+      if (pm->pn_entity[i_entity][i_part] > 0) {
+        loc_mesh_dimension = 3 - i_entity;
+        break;
+      }
+    }
+    if (loc_mesh_dimension > 0) {
+      break;
     }
   }
-
-  int max_tn_cell = 0;
-  PDM_MPI_Allreduce(&tn_cell, &max_tn_cell, 1,
-                    PDM_MPI_INT, PDM_MPI_MAX, pm->comm);
-
-  if (max_tn_cell > 0) {
-    mesh_dimension = 3;
-  }
+  
+  int mesh_dimension = -1;
+  PDM_MPI_Allreduce(&loc_mesh_dimension, &mesh_dimension, 1, PDM_MPI_INT, PDM_MPI_MAX, pm->comm);
 
   int     *n_cell        = NULL;
   int     *n_face        = NULL;
@@ -279,12 +313,14 @@ PDM_part_mesh_dual_volume_compute
     PDM_malloc(cell_face_idx, pm->n_part, int *);
     PDM_malloc(cell_face,     pm->n_part, int *);
   }
-  PDM_malloc(n_face       , pm->n_part, int     );
+  if (mesh_dimension >= 2) {
+    PDM_malloc(n_face       , pm->n_part, int     );
+    PDM_malloc(face_edge_idx, pm->n_part, int    *);
+    PDM_malloc(face_edge    , pm->n_part, int    *);
+  }
   PDM_malloc(n_edge       , pm->n_part, int     );
-  PDM_malloc(n_vtx        , pm->n_part, int     );
-  PDM_malloc(face_edge_idx, pm->n_part, int    *);
-  PDM_malloc(face_edge    , pm->n_part, int    *);
   PDM_malloc(edge_vtx     , pm->n_part, int    *);
+  PDM_malloc(n_vtx        , pm->n_part, int     );
   PDM_malloc(vtx_coord    , pm->n_part, double *);
   for (int i_part = 0; i_part < pm->n_part; i_part++) {
     if (mesh_dimension == 3) {
@@ -299,23 +335,17 @@ PDM_part_mesh_dual_volume_compute
                                      PDM_OWNERSHIP_BAD_VALUE);
     }
 
-    n_vtx[i_part] = PDM_part_mesh_n_entity_get(pm,
-                                               i_part,
-                                               PDM_MESH_ENTITY_VTX);
-    PDM_part_mesh_vtx_coord_get(pm,
-                                i_part,
-                                &vtx_coord[i_part],
-                                PDM_OWNERSHIP_BAD_VALUE);
-
-    n_face[i_part] = PDM_part_mesh_n_entity_get(pm,
-                                                i_part,
-                                                PDM_MESH_ENTITY_FACE);
-    PDM_part_mesh_connectivity_get(pm,
-                                   i_part,
-                                   PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                   &face_edge    [i_part],
-                                   &face_edge_idx[i_part],
-                                   PDM_OWNERSHIP_BAD_VALUE);
+    if (mesh_dimension >= 2) {
+      n_face[i_part] = PDM_part_mesh_n_entity_get(pm,
+                                                  i_part,
+                                                  PDM_MESH_ENTITY_FACE);
+      PDM_part_mesh_connectivity_get(pm,
+                                    i_part,
+                                    PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                    &face_edge    [i_part],
+                                    &face_edge_idx[i_part],
+                                    PDM_OWNERSHIP_BAD_VALUE);
+    }
 
     n_edge[i_part] = PDM_part_mesh_n_entity_get(pm,
                                                 i_part,
@@ -327,10 +357,26 @@ PDM_part_mesh_dual_volume_compute
                                    &edge_vtx    [i_part],
                                    &edge_vtx_idx,
                                    PDM_OWNERSHIP_BAD_VALUE);
+
+    n_vtx[i_part] = PDM_part_mesh_n_entity_get(pm,
+                                               i_part,
+                                               PDM_MESH_ENTITY_VTX);
+    PDM_part_mesh_vtx_coord_get(pm,
+                                i_part,
+                                &vtx_coord[i_part],
+                                PDM_OWNERSHIP_BAD_VALUE);
     // PDM_free(edge_vtx_idx);
   }
 
-  if (mesh_dimension == 2) {
+  if (mesh_dimension == 1) {
+    PDM_compute_dual_volume_ngon_1d(pm->n_part,
+                                    n_edge,
+                                    n_vtx,
+                                    edge_vtx,
+                                    vtx_coord,
+                                    out_dual_vol);
+  }
+  else if (mesh_dimension == 2) {
     PDM_compute_dual_volume_ngon_2d(pm->n_part,
                                     n_face,
                                     n_edge,
@@ -360,11 +406,13 @@ PDM_part_mesh_dual_volume_compute
     PDM_free(cell_face_idx);
     PDM_free(cell_face);
   }
-  PDM_free(n_face);
+  if (mesh_dimension >= 2) {
+    PDM_free(n_face);
+    PDM_free(face_edge_idx);
+    PDM_free(face_edge);
+  }
   PDM_free(n_edge);
   PDM_free(n_vtx);
-  PDM_free(face_edge_idx);
-  PDM_free(face_edge);
   PDM_free(edge_vtx);
   PDM_free(vtx_coord);
 

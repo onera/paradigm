@@ -15,7 +15,7 @@
 #include "pdm_logging.h"
 
 
-MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - BAR_2 - 3p", 3) {
+MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 1d - BAR_2 - 3p", 3) {
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);

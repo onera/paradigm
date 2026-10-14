@@ -164,7 +164,7 @@ PDM_part_mesh_nodal_dual_volume_compute
                                   pow(coords[3*vtx1+2] - coords[3*vtx2+2], 2));
         _dual_vol[i_part][vtx1] += 0.5*edge_length;
         _dual_vol[i_part][vtx2] += 0.5*edge_length;
-      } 
+      }
       
       PDM_free(elt_vtx_idx);
       PDM_free(elt_vtx);
