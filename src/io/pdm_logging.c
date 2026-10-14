@@ -8,8 +8,6 @@
 #include "pdm_logging.h"
 #include "pdm_mpi.h"
 #include "pdm_priv.h"
-#include "pdm_part_comm_graph.h"
-
 
 /*-----------------------------------------------------------------------------*/
 
@@ -326,41 +324,4 @@ PDM_log_trace_connectivity_int2
     }
     log_trace("\n");
   }
-}
-
-
-void
-PDM_log_trace_part_comm_graph
-(
-  PDM_part_comm_graph_t *pcg,
-  const char*            header
-)
-{
-  int n_part = PDM_part_comm_graph_n_part_get(pcg);
-
-  log_trace("%s (%p)\n", header, (void *) pcg);
-
-  for (int i_part=0; i_part<n_part; ++i_part) {
-
-    log_trace("i_part = %d / %d\n", i_part, n_part);
-
-    int *pcg_graph = NULL;
-    int *pcg_nuplt = NULL;
-    int graph_n_vtx = PDM_part_comm_graph_entity_graph_get(pcg, i_part, &pcg_graph, PDM_OWNERSHIP_BAD_VALUE);
-    PDM_part_comm_graph_entity_nuplet_get(pcg, i_part, &pcg_nuplt, PDM_OWNERSHIP_BAD_VALUE);
-    const int *pcg_owner = PDM_part_comm_graph_owner_get(pcg, i_part);
-    for (int i_entity=0; i_entity<graph_n_vtx; ++i_entity) {
-      log_trace("%d %d %d %d",
-        pcg_graph[4*i_entity+0],
-        pcg_graph[4*i_entity+1],
-        pcg_graph[4*i_entity+2],
-        pcg_graph[4*i_entity+3]
-      );
-      if (pcg_nuplt!=NULL) {
-        log_trace(" (%d)", pcg_nuplt[i_entity]);
-      }
-      log_trace(" | owner = %d\n", pcg_owner[  i_entity  ]);
-    }
-  }
-
 }

@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 #include "pdm.h"
-#include "pdm_part_comm_graph.h"
 
 /*-----------------------------------------------------------------------------*/
 
@@ -222,20 +221,6 @@ PDM_log_trace_graph_nuplet_int
  const int          strid,
  const int          larray,
  const char*        header
-);
-
-
-/**
- * \brief Dump part comm graph data
- *
- * \param [in] pcg    \ref PDM_part_comm_graph_t instance
- * \param [in] header First line of log
- */
-void
-PDM_log_trace_part_comm_graph
-(
-  PDM_part_comm_graph_t *pcg,
-  const char*            header
 );
 
 #ifdef __cplusplus

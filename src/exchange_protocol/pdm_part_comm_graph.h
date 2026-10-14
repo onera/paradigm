@@ -642,6 +642,19 @@ PDM_part_comm_graph_comm_get
   PDM_part_comm_graph_t  *pcg
 );
 
+/**
+ * \brief Dump part comm graph data into ParaDiGM's log file
+ *
+ * \param [in] pcg    \ref PDM_part_comm_graph_t instance
+ * \param [in] header First line of log
+ */
+void
+PDM_part_comm_graph_log_trace
+(
+  PDM_part_comm_graph_t *pcg,
+  const char*            header
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
