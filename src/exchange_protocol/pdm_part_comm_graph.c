@@ -758,9 +758,7 @@ _create
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_entity_graph = pn_entity_graph[i_part];
     PDM_malloc(pcg->part_to_recv_buffer[i_part], n_entity_graph, int);
-    for (int i_entity=0; i_entity<n_entity_graph; ++i_entity) {
-      pcg->part_to_recv_buffer[i_part][i_entity] = -18;
-    }
+
     PDM_malloc(pentity_indices      [i_part], stride * n_entity_graph, int);
     PDM_malloc(pentity_indices_order[i_part],          n_entity_graph, int);
 
