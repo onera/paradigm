@@ -103,7 +103,7 @@ PDM_compute_dual_volume_ngon_1d
     }
   }
 
-*out_vtx_volume = vtx_volume;
+  *out_vtx_volume = vtx_volume;
 }
 
 void
@@ -280,13 +280,14 @@ PDM_part_mesh_dual_volume_compute
 
   /* Compute mesh highest dimension */
   int loc_mesh_dimension = 0;
-  for (int i_entity = 0; i_entity < PDM_MESH_ENTITY_MAX; ++i_entity) {
-    if (pm->pn_entity[i_entity] == NULL) {
+  for (int dim = 3; dim >= 0; dim--) {
+    PDM_mesh_entities_t entity_type = PDM_dimension_to_entity_type(dim);
+    if (pm->pn_entity[entity_type] == NULL) {
       continue;
     }
     for (int i_part = 0; i_part < pm->n_part; i_part++) {
-      if (pm->pn_entity[i_entity][i_part] > 0) {
-        loc_mesh_dimension = 3 - i_entity;
+      if (pm->pn_entity[entity_type][i_part] > 0) {
+        loc_mesh_dimension = dim;
         break;
       }
     }
@@ -294,7 +295,7 @@ PDM_part_mesh_dual_volume_compute
       break;
     }
   }
-  
+
   int mesh_dimension = -1;
   PDM_MPI_Allreduce(&loc_mesh_dimension, &mesh_dimension, 1, PDM_MPI_INT, PDM_MPI_MAX, pm->comm);
 
@@ -365,7 +366,6 @@ PDM_part_mesh_dual_volume_compute
                                 i_part,
                                 &vtx_coord[i_part],
                                 PDM_OWNERSHIP_BAD_VALUE);
-    // PDM_free(edge_vtx_idx);
   }
 
   if (mesh_dimension == 1) {
@@ -430,6 +430,3 @@ PDM_part_mesh_dual_volume_compute
   }
 
 }
-
-
-
