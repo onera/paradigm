@@ -1132,7 +1132,7 @@ PDM_part_comm_graph_with_nuplet_create
   }
 
   if(min_nuplet_size < 0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_create_with_nuplet : nuplet_size should be > 0 \n");
+    PDM_error("PDM_part_comm_graph_create_with_nuplet : nuplet_size should be > 0 \n");
   }
 
   return _create(n_part,
