@@ -2113,7 +2113,7 @@ PDM_part_comm_graph_log_trace
     int *pcg_graph = NULL;
     int *pcg_nuplt = NULL;
     int graph_n_vtx = PDM_part_comm_graph_entity_graph_get(pcg, i_part, &pcg_graph, PDM_OWNERSHIP_BAD_VALUE);
-    PDM_part_comm_graph_entity_nuplet_get(pcg, i_part, &pcg_nuplt, PDM_OWNERSHIP_BAD_VALUE);
+    int nuplet_size = PDM_part_comm_graph_entity_nuplet_get(pcg, i_part, &pcg_nuplt, PDM_OWNERSHIP_BAD_VALUE);
     const int *pcg_owner = PDM_part_comm_graph_owner_get(pcg, i_part);
     for (int i_entity=0; i_entity<graph_n_vtx; ++i_entity) {
       log_trace("%d %d %d %d",
@@ -2123,7 +2123,11 @@ PDM_part_comm_graph_log_trace
         pcg_graph[4*i_entity+3]
       );
       if (pcg_nuplt!=NULL) {
-        log_trace(" (%d)", pcg_nuplt[i_entity]);
+        log_trace(" (");
+        for (int i_nuplt=0; i_nuplt<nuplet_size; ++i_nuplt) {
+          log_trace("%d", pcg_nuplt[nuplet_size*i_entity+i_nuplt]);
+        }
+        log_trace(")");
       }
       log_trace(" | owner = %d\n", pcg_owner[  i_entity  ]);
     } // end loop on graph entities
