@@ -167,20 +167,10 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_renum_cuthill - mixed
                                            &ridge_new_to_old,
                                            PDM_OWNERSHIP_BAD_VALUE);
 
-  int n_corner_elmts = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_CORNER, 0);
-
-  int *corner_new_to_old = NULL;
-  PDM_part_mesh_nodal_elmts_new_to_old_get(pmn,
-                                           PDM_GEOMETRY_KIND_CORNER,
-                                           0,
-                                           &corner_new_to_old,
-                                           PDM_OWNERSHIP_BAD_VALUE);
-
   if(0 == 1) {
     PDM_log_trace_array_int(vtx_new_to_old   , n_vtx         , "vtx_new_to_old    :: ");
     PDM_log_trace_array_int(surf_new_to_old  , n_surf_elmts  , "surf_new_to_old   :: ");
     PDM_log_trace_array_int(ridge_new_to_old , n_ridge_elmts , "ridge_new_to_old  :: ");
-    PDM_log_trace_array_int(corner_new_to_old, n_corner_elmts, "corner_new_to_old :: ");
   }
 
   int expected_vtx_new_to_old  [121] = {6, 36, 0, 41, 7, 35, 45, 8, 42, 34, 49, 9, 46, 43, 33, 53, 10, 50, 47, 44, 4, 57, 11, 61, 12, 65, 13, 69, 14, 73, 1, 37, 54, 51, 48, 32, 85, 84, 86, 83, 87, 82, 88, 81, 23, 2, 58, 62, 66, 70, 74, 38, 55, 52, 31, 89, 90, 91, 92, 22, 59, 63, 67, 71, 75, 39, 56, 30, 93, 94, 95, 96, 21, 60, 64, 68, 72, 76, 40, 29, 97, 98, 99, 100, 20, 28, 27, 26, 25, 24, 5, 101, 102, 103, 104, 19, 105, 109, 113, 77, 117, 106, 107, 108, 18, 110, 114, 78, 118, 111, 112, 17, 115, 79, 119, 116, 16, 120, 80, 15, 3};
@@ -288,7 +278,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_reorder_vtx", 2) {
 
 
 
-MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_renum_cuthill - mixed - 3d ", 1) {
+MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_renum_cuthill - mixed - 3d ", 2) {
 
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
