@@ -203,3 +203,85 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_renum_cuthill - mixed
   PDM_part_mesh_nodal_free(pmn);
 
 }
+
+
+MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_reorder_vtx", 2) {
+
+  int i_rank = -1;
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  int n_vtx_seg = 4;
+  int n_part    = 1;
+  PDM_part_mesh_nodal_t* pmn = PDM_generate_mesh_rectangle(pdm_comm,
+                                                           PDM_MESH_NODAL_TRIA3,
+                                                           1,
+                                                           NULL,
+                                                           -1,
+                                                           -1,
+                                                           0,
+                                                           2,
+                                                           2,
+                                                           n_vtx_seg,
+                                                           n_vtx_seg,
+                                                           n_part,
+                                                           PDM_SPLIT_DUAL_WITH_HILBERT);
+
+  int visu = 0;
+  if(visu == 1) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "pmn_in");
+  }
+
+  int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, 0);
+  PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
+
+  std::vector<std::vector<int>> new_to_old = {{5, 6, 7, 8, 9, 4, 1, 2, 3, 0, 10},
+                                              {1, 0, 5, 3, 4, 2, 6, 7, 9, 8, 10}};
+  int *perm[1] = {new_to_old[i_rank].data()};
+  PDM_part_mesh_nodal_reorder_vtx(pmn, perm);
+
+  /* Some check */
+  if(0 == 1) {
+    PDM_log_trace_array_long(vtx_gnum, n_vtx, "vtx_gnum ::");
+  }
+
+  PDM_g_num_t expected_vtx_gnum_p0[11] = {6, 7, 8, 9, 10, 5, 2, 3, 4, 1, 11};
+  PDM_g_num_t expected_vtx_gnum_p1[11] = {7, 6, 11, 9, 10, 8, 12, 13, 15, 14, 16};
+
+  MPI_CHECK_EQ_C_ARRAY(0, vtx_gnum, expected_vtx_gnum_p0, n_vtx);
+  MPI_CHECK_EQ_C_ARRAY(1, vtx_gnum, expected_vtx_gnum_p1, n_vtx);
+
+  PDM_part_comm_graph_t* pcg_vtx = NULL;
+  PDM_part_mesh_nodal_part_comm_graph_vtx_get(pmn,
+                                              &pcg_vtx,
+                                              PDM_OWNERSHIP_BAD_VALUE);
+
+  int *vtx_graph = NULL;
+  int n_vtx_graph = PDM_part_comm_graph_entity_graph_get(pcg_vtx,
+                                                         0,
+                                                         &vtx_graph,
+                                                         PDM_OWNERSHIP_BAD_VALUE);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(vtx_graph, 4 * n_vtx_graph, "vtx_graph ::");
+  }
+
+  int expected_vtx_graph_p0[24] = {1, 1, 1, 2, 2, 1, 1, 1, 3, 1, 1, 6, 4, 1, 1, 4, 5, 1, 1, 5, 11, 1, 1, 3};
+  int expected_vtx_graph_p1[24] = {2, 0, 1, 1, 1, 0, 1, 2, 6, 0, 1, 3, 4, 0, 1, 4, 5, 0, 1, 5, 3, 0, 1, 11};
+
+  MPI_CHECK_EQ_C_ARRAY(0, vtx_graph, expected_vtx_graph_p0, 4 * n_vtx_graph);
+  MPI_CHECK_EQ_C_ARRAY(1, vtx_graph, expected_vtx_graph_p1, 4 * n_vtx_graph);
+
+  if(visu == 1) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "pmn_out");
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_RIDGE,
+                                 "pmn_ridge_out");
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+}
