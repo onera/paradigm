@@ -750,17 +750,13 @@ PDM_part_mesh_nodal_reorder_vtx
 }
 
 
+
 void
-PDM_part_mesh_nodal_renum
+PDM_part_mesh_nodal_renum_cuthill
 (
-  PDM_part_mesh_nodal_t *pmn,
-  const char            *renum_entity_method    [4],
-  const int             *renum_entity_properties[4]
+  PDM_part_mesh_nodal_t *pmn
 )
 {
-  PDM_UNUSED(renum_entity_method);
-  PDM_UNUSED(renum_entity_properties);
-
   if (pmn == NULL) {
     return;
   }

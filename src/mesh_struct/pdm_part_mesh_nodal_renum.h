@@ -160,35 +160,43 @@ PDM_part_mesh_nodal_reorder_vtx
 /**
  * \brief Renumber partitioned nodal mesh entities
  *
- *  1. Elements of the principal dimension : reverse Cuthill-McKee on the
+ *  1. Elements of the principal dimension : reverse Cuthill-McKee (RCM) on the
  *     element graph (elements sharing a vertex). Sections are kept :
- *     inside each section the elements follow the reverse Cuthill-McKee (RCM) order.
+ *     inside each section the elements follow the RCM order.
  *  2. Vertices : order of first appearance while traversing the principal
- *     elements in RCM order, then the vertices only reached by lower dimensions
+ *     elements in RCM order, then the vertices only reached by the lower
+ *     dimensions.
  *  3. Lower dimensions : elements sorted lexicographically by their sorted
  *     new vertex ids, sections kept.
  *
- * Global numbers are permuted, not regenerated.
- * Comm graphs attached to \p pmn are updated.
- * The permutations are stored in \p pmn and can be retrieved with
- * \ref PDM_part_mesh_nodal_vtx_new_to_old_get, \ref PDM_part_mesh_nodal_elmts_new_to_old_get
- * and \ref PDM_part_mesh_nodal_group_new_to_old_get (pdm_part_mesh_nodal.h).
- * They describe the last call only : a new call replaces them.
+ * What this function guarantees :
+ *    - global numbers are permuted, not regenerated (renumbering them is a
+ *      separate service)
+ *    - the vertex permutation covers all the vertices of the partition : a
+ *      vertex referenced by no element at all (which a well-formed mesh does
+ *      not have) is left at the end, in its initial order
+ *    - the \ref PDM_part_comm_graph_t attached to \p pmn are updated
+ *    - the permutations are stored in \p pmn and can be retrieved with
+ *      \ref PDM_part_mesh_nodal_vtx_new_to_old_get,
+ *      \ref PDM_part_mesh_nodal_elmts_new_to_old_get and
+ *      \ref PDM_part_mesh_nodal_group_new_to_old_get (pdm_part_mesh_nodal.h)
  *
- * \warning \p renum_entity_method and \p renum_entity_properties are not
- *          interpreted yet (reserved for the method selection).
+ * \note The stored permutations describe the last call only : a new call to
+ *       this function replaces them.
  *
- * \param [in] pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in] renum_entity_method     Method for vtx, edge, face, cell (reserved)
- * \param [in] renum_entity_properties Properties for vtx, edge, face, cell (reserved)
+ * \note This is the only renumbering method available so far. A general entry
+ *       point taking a method name per entity (as
+ *       \ref PDM_multipart_set_reordering_options does for \ref PDM_multipart_t)
+ *       is left for when a second method exists.
+ *
+ * \param [in]     pmn  Pointer to \ref PDM_part_mesh_nodal_t object
  *
  */
+
 void
-PDM_part_mesh_nodal_renum
+PDM_part_mesh_nodal_renum_cuthill
 (
-  PDM_part_mesh_nodal_t *pmn,
-  const char            *renum_entity_method    [4],
-  const int             *renum_entity_properties[4]
+  PDM_part_mesh_nodal_t *pmn
 );
 
 

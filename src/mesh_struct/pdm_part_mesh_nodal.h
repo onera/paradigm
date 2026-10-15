@@ -1388,82 +1388,78 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_free
 
 
 /**
- * \brief Return the vertex permutation
+ * \brief Get the vertex permutation
  *
- * The permutation maps the numbering before the renumbering onto the current one :
- * new_field[i] = old_field[new_to_old[i]] (0-based). A field attached to the vertices
- * can be updated in place with PDM_order_array(n_vtx, sizeof(value), new_to_old, field).
+ * new_field[i] = old_field[vtx_new_to_old[i]] (0-based)
  *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]  i_part     Partition identifier
- * \param [in]  ownership  PDM_OWNERSHIP_KEEP (default) : freed with \p pmn or by the next renumbering,
- *                         PDM_OWNERSHIP_USER : the caller frees the array,
- *                         PDM_OWNERSHIP_BAD_VALUE : ownership unchanged
- *
- * \return  new_to_old (size = n_vtx), NULL if no renumbering was done
- *
+ * \param [in]   pmn             Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   i_part          Partition identifier
+ * \param [out]  vtx_new_to_old  Vertex permutation (size = number of vertices of the partition), NULL if no renumbering was done
+ * \param [in]   ownership       Choice of ownership of the resulting array \ref PDM_ownership_t
+ *                               (PDM_OWNERSHIP_USER to take it, PDM_OWNERSHIP_KEEP (default) to
+ *                                let \p pmn free it, PDM_OWNERSHIP_BAD_VALUE to leave it unchanged)
  */
-int *
+void
 PDM_part_mesh_nodal_vtx_new_to_old_get
 (
-  PDM_part_mesh_nodal_t *pmn,
-  int                    i_part,
-  PDM_ownership_t        ownership
+  PDM_part_mesh_nodal_t  *pmn,
+  int                     i_part,
+  int                   **vtx_new_to_old,
+  PDM_ownership_t         ownership
 );
 
-
 /**
- * \brief Return the element permutation of the last \ref PDM_part_mesh_nodal_renum for a geometry kind
+ * \brief Get the element permutation (part numbering)
  *
- * The permutation is expressed in the partition numbering of the elements of \p geom_kind
- * (numbering of \ref PDM_part_mesh_nodal_cell_vtx_connect_get and of the groups, which follows
- * parent_num when it is defined, the concatenation of the sections otherwise) :
- * new_field[i] = old_field[new_to_old[i]] (0-based).
+ * new_field[i] = old_field[elmt_new_to_old[i]] (0-based)
  *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
- * \param [in]  i_part     Partition identifier
- * \param [in]  ownership  Ownership (see \ref PDM_part_mesh_nodal_vtx_new_to_old_get)
- *
- * \return  new_to_old (size = number of elements of \p geom_kind), NULL if no renumbering was done
- *          or if there is no element of this geometry kind
- *
+ * \param [in]   pmn              Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   geom_kind        Geometry kind (corner, ridge, surface or volume)
+ * \param [in]   i_part           Partition identifier
+ * \param [out]  elmt_new_to_old  Element permutation (size = number of elements of
+ *                                \p geom_kind), NULL if no renumbering was done or if
+ *                                there is no element of this geometry kind
+ * \param [in]   ownership       Choice of ownership of the resulting array \ref PDM_ownership_t
+ *                               (PDM_OWNERSHIP_USER to take it, PDM_OWNERSHIP_KEEP (default) to
+ *                                let \p pmn free it, PDM_OWNERSHIP_BAD_VALUE to leave it unchanged)
  */
-int *
+void
 PDM_part_mesh_nodal_elmts_new_to_old_get
 (
-  PDM_part_mesh_nodal_t *pmn,
-  PDM_geometry_kind_t    geom_kind,
-  int                    i_part,
-  PDM_ownership_t        ownership
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     i_part,
+  int                   **elmt_new_to_old,
+  PDM_ownership_t         ownership
 );
 
 
 /**
- * \brief Return the permutation of the entries of a group of the last \ref PDM_part_mesh_nodal_renum
+ * \brief Get the permutation of the entries of a group
  *
- * The entries of each group are sorted by increasing element number during the renumbering.
- * A field attached to the entries of the group is updated with
- * new_group_field[j] = old_group_field[new_to_old[j]] (0-based).
+ * new_group_field[j] = old_group_field[group_new_to_old[j]] (0-based)
  *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
- * \param [in]  i_part     Partition identifier
- * \param [in]  i_group    Group identifier
- * \param [in]  ownership  Ownership (see \ref PDM_part_mesh_nodal_vtx_new_to_old_get)
- *
- * \return  new_to_old (size = n_group_elmt), NULL if no renumbering was done
- *          or if there is no element of this geometry kind
- *
+ * \param [in]   pmn               Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   geom_kind         Geometry kind (corner, ridge, surface or volume)
+ * \param [in]   i_part            Partition identifier
+ * \param [in]   i_group           Group identifier
+ * \param [out]  group_new_to_old  Permutation of the entries of the group (size = number of
+ *                                 elements in the group), NULL if no renumbering was done
+ *                                 or if there is no element of this geometry kind
+ * \param [in]   ownership       Choice of ownership of the resulting array \ref PDM_ownership_t
+ *                               (PDM_OWNERSHIP_USER to take it, PDM_OWNERSHIP_KEEP (default) to
+ *                                let \p pmn free it, PDM_OWNERSHIP_BAD_VALUE to leave it unchanged)
  */
-int *
+
+void
 PDM_part_mesh_nodal_group_new_to_old_get
 (
-  PDM_part_mesh_nodal_t *pmn,
-  PDM_geometry_kind_t    geom_kind,
-  int                    i_part,
-  int                    i_group,
-  PDM_ownership_t        ownership
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     i_part,
+  int                     i_group,
+  int                   **group_new_to_old,
+  PDM_ownership_t         ownership
 );
 
 

@@ -2813,71 +2813,63 @@ PDM_part_mesh_nodal_dump_gamma
   PDM_free(gvtx_tag);
 }
 
-int *
+void
 PDM_part_mesh_nodal_vtx_new_to_old_get
 (
-  PDM_part_mesh_nodal_t *pmn,
-  int                    i_part,
-  PDM_ownership_t        ownership
+  PDM_part_mesh_nodal_t  *pmn,
+  int                     i_part,
+  int                   **vtx_new_to_old,
+  PDM_ownership_t         ownership
 )
 {
   CHECK_PMN   (pmn)
   CHECK_I_PART(pmn, i_part)
-
-  if (pmn->vtx_new_to_old == NULL) {
-    return NULL;
-  }
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
     pmn->vtx_new_to_old_ownership[i_part] = ownership;
   }
 
-  return pmn->vtx_new_to_old[i_part];
+  *vtx_new_to_old = pmn->vtx_new_to_old[i_part];
 }
 
 
-int *
+void
 PDM_part_mesh_nodal_elmts_new_to_old_get
 (
-  PDM_part_mesh_nodal_t *pmn,
-  PDM_geometry_kind_t    geom_kind,
-  int                    i_part,
-  PDM_ownership_t        ownership
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     i_part,
+  int                   **elmt_new_to_old,
+  PDM_ownership_t         ownership
 )
 {
   CHECK_PMN   (pmn)
   CHECK_I_PART(pmn, i_part)
 
   int dim = PDM_geometry_kind_to_dimension(geom_kind);
-  if (pmn->elmt_new_to_old[dim] == NULL) {
-    return NULL;
-  }
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
     pmn->elmt_new_to_old_ownership[dim][i_part] = ownership;
   }
 
-  return pmn->elmt_new_to_old[dim][i_part];
+  *elmt_new_to_old = pmn->elmt_new_to_old[dim][i_part];
 }
 
-
-int *
+void
 PDM_part_mesh_nodal_group_new_to_old_get
 (
-  PDM_part_mesh_nodal_t *pmn,
-  PDM_geometry_kind_t    geom_kind,
-  int                    i_part,
-  int                    i_group,
-  PDM_ownership_t        ownership
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     i_part,
+  int                     i_group,
+  int                   **group_new_to_old,
+  PDM_ownership_t         ownership
 )
 {
   CHECK_PMN   (pmn)
   CHECK_I_PART(pmn, i_part)
 
   int dim = PDM_geometry_kind_to_dimension(geom_kind);
-  if (pmn->group_new_to_old[dim] == NULL) {
-    return NULL;
-  }
 
   if (i_group < 0 || i_group >= pmn->n_group_new_to_old[dim]) {
     PDM_error("Invalid i_group (%d / %d)", i_group, pmn->n_group_new_to_old[dim]);
@@ -2887,7 +2879,7 @@ PDM_part_mesh_nodal_group_new_to_old_get
     pmn->group_new_to_old_ownership[dim][i_part][i_group] = ownership;
   }
 
-  return pmn->group_new_to_old[dim][i_part][i_group];
+  *group_new_to_old = pmn->group_new_to_old[dim][i_part][i_group];
 }
 
 
