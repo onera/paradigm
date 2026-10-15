@@ -285,3 +285,38 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_reorder_vtx", 2) {
 
   PDM_part_mesh_nodal_free(pmn);
 }
+
+
+
+MPI_TEST_CASE("[pdm_part_mesh_nodal] - PDM_part_mesh_nodal_renum_cuthill - mixed - 3d ", 1) {
+
+  int i_rank = -1;
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  PDM_part_mesh_nodal_t* pmn = PDM_generate_mesh_nodal_from_file(pdm_comm,
+                                                                 1,
+                                                                 PDM_SPLIT_DUAL_WITH_HILBERT,
+                                                                 PDM_MESH_DIR"mixed_elements_3d.mesh");
+
+  int visu = 0;
+  if(visu == 1) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_VOLUMIC,
+                                 "pmn_in");
+  }
+
+  PDM_part_mesh_nodal_renum_cuthill(pmn);
+
+  if(visu == 1) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "pmn_out");
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_RIDGE,
+                                 "pmn_ridge_out");
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+
+}
