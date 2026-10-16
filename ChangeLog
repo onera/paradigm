@@ -19,6 +19,7 @@
   - Synchronize timer on option
   - Pretty print in stdout / log / string
 ### Deprecated
+- PDM_part_coarse_mesh: PDM_part_coarse_mesh_time_get is replaced by PDM_part_coarse_mesh_dump_times and PDM_part_coarse_mesh_timer_get (new PDM_timer )
 ### Removed
 - Remove fake brace for emacs editor & clean all licensing (outdated)
 ### Fixed

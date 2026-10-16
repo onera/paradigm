@@ -8,15 +8,16 @@
 #include <string.h>
 #include <fenv.h>
 
-#include "pdm.h"
 #include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_part.h"
 #include "pdm_dcube_gen.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_part_coarse_mesh.h"
+#include "pdm_part.h"
+#include "pdm_printf.h"
+#include "pdm_timer.h"
+#include "pdm.h"
 
 /*============================================================================
  * Type definitions
@@ -449,10 +450,25 @@ int main(int argc, char *argv[])
   // PDM_part_coarse_mesh_add_option_anisotropic(cm, option_aniso);
 
 
-  PDM_part_coarse_mesh_compute (cm);
+  PDM_part_coarse_mesh_compute(cm);
+
+  PDM_part_coarse_mesh_dump_times(cm);
+
+  double *times;
+  PDM_part_coarse_mesh_time_get(cm, &times, &times, &times, &times);
+  if (i_rank == 0) {
+    for (int i = 0; i < 18; i++) {
+      printf("time #%2d : %f\n", i, times[i]);
+    }
+  }
+
+  // Get timer just to check memory ownership if properly handled
+  PDM_timer_t *timer = NULL;
+  PDM_part_coarse_mesh_timer_get(cm, &timer, PDM_OWNERSHIP_USER);
 
 
   PDM_part_coarse_mesh_free(cm);
+  PDM_timer_free(timer);
 
 
   if (dbg_part_dcube) {

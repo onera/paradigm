@@ -17,6 +17,9 @@
 extern "C" {
 #endif
 
+
+#define PDM_PART_COARSE_MESH_TIMER_N_STEPS 18
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -100,6 +103,12 @@ struct _coarse_mesh_t {
 
   //TIMER
   PDM_timer_t *timer;             /*!< Timer */
+  PDM_ownership_t owner_timer;
+  double times_elapsed[PDM_PART_COARSE_MESH_TIMER_N_STEPS];
+  double times_cpu    [PDM_PART_COARSE_MESH_TIMER_N_STEPS];
+  double times_cpu_u  [PDM_PART_COARSE_MESH_TIMER_N_STEPS];
+  double times_cpu_s  [PDM_PART_COARSE_MESH_TIMER_N_STEPS];
+
 
   /* Communicator */
   PDM_MPI_Comm  comm;   /*!< Communicator */
