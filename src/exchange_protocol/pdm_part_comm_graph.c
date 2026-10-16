@@ -1132,7 +1132,7 @@ PDM_part_comm_graph_with_nuplet_create
   }
 
   if(min_nuplet_size < 0) {
-    PDM_error("PDM_part_comm_graph_create_with_nuplet : nuplet_size should be > 0 \n");
+    PDM_error("nuplet_size should be > 0 \n");
   }
 
   return _create(n_part,
@@ -2313,7 +2313,7 @@ PDM_part_comm_graph_owner_compute
       }
     }
   } else {
-    PDM_error("Not implemented for %i", owner_kind);
+    PDM_error("Not implemented for owner_kind = %i", owner_kind);
   }
 
   PDM_part_comm_graph_owner_check(pcg);
@@ -2356,7 +2356,7 @@ PDM_part_comm_graph_owner_check
 
       if(pcg->bound_owner[i_part][i] == 1) {
         if(is_same == 0 && owner_opp[i_part][i] == 1) {
-          PDM_error("PDM_part_comm_graph_owner_check : 2 owner for same entity : i_rank=%i/i_part=%i/i=%i", i_rank, i_part, i);
+          PDM_error("2 owner for same entity : i_rank=%i/i_part=%i/i=%i", i_rank, i_part, i);
         }
       }
     }

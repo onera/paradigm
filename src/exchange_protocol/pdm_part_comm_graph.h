@@ -645,7 +645,7 @@ PDM_part_comm_graph_entity_nuplet_get
  *
  * \brief Get internal communicator
  *
- * \param [in]  pcg  Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in] pcg  Pointer to \ref PDM_part_comm_graph_t instance
  *
  * \return MPI Communicator
  */
@@ -689,7 +689,7 @@ PDM_part_comm_graph_owner_compute
  *
  * \brief Check owner validity (only one owner among all partition / procs)
  *
- * \param [in]  pcg Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
  */
 void
 PDM_part_comm_graph_owner_check
