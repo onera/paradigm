@@ -673,7 +673,7 @@ PDM_part_comm_graph_log_trace
  *
  * \param [in] pcg        Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in] owner_kind Owner kind
- * \param [in] user_owner Array of user owner (only if owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) else NULL, the array is copy
+ * \param [in] user_owner Array of user owner (only if owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) else NULL, the array is copied
  *
  */
 void
@@ -697,19 +697,48 @@ PDM_part_comm_graph_owner_check
   PDM_part_comm_graph_t *pcg
 );
 
-
 /**
  *
- * \brief Print statistics for the current \ref PDM_part_comm_graph_t :
- *           - Min/Max number of processor connected by the graphs
- *           - Min/Max/Mean number of owner (in percent of total graphe) : to have an idea of the repartition of owner
+ * \brief Compute statistics about the current \ref PDM_part_comm_graph_t :
+ *           - Min/Max number of processors connected by the graph
+ *           - Min/Max/Mean/Median ratio of owned entities (relative to the local
+ *             size of the graph) : to have an idea of the repartition of owners
  *
- * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
+ * All the returned values are global and identical on every rank.
+ *
+ * Ratios are expressed in [0, 1] (multiply by 100 to display a percentage).
+ * On a given rank, the local ratio is the number of entities owned by this rank
+ * divided by the total number of entries of its communication graph. A rank
+ * whose graph is empty contributes a null ratio and still counts in the mean.
+ *
+ * Any output pointer may be NULL if the corresponding value is not needed.
+ *
+ * \warning This function is collective : it must be called by every rank of the
+ *          communicator of \p pcg, whatever the output pointers passed.
+ *
+ * \param [in]  pcg                     Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [out] min_ratio_owner         Minimum over the ranks of the ratio of owned entities (or NULL)
+ * \param [out] max_ratio_owner         Maximum over the ranks of the ratio of owned entities (or NULL)
+ * \param [out] mean_ratio_owner        Mean over the ranks of the ratio of owned entities (or NULL)
+ * \param [out] median_ratio_owner      Median over the ranks of the ratio of owned entities (or NULL)
+ * \param [out] min_n_active_rank_send  Minimum over the ranks of the number of ranks sent to (or NULL)
+ * \param [out] max_n_active_rank_send  Maximum over the ranks of the number of ranks sent to (or NULL)
+ * \param [out] min_n_active_rank_recv  Minimum over the ranks of the number of ranks received from (or NULL)
+ * \param [out] max_n_active_rank_recv  Maximum over the ranks of the number of ranks received from (or NULL)
+ *
  */
 void
-PDM_part_comm_graph_owner_statistics
+PDM_part_comm_graph_owner_statistics_get
 (
-  PDM_part_comm_graph_t *pcg
+  PDM_part_comm_graph_t *pcg,
+  double                *min_ratio_owner,
+  double                *max_ratio_owner,
+  double                *mean_ratio_owner,
+  double                *median_ratio_owner,
+  int                   *min_n_active_rank_send,
+  int                   *max_n_active_rank_send,
+  int                   *min_n_active_rank_recv,
+  int                   *max_n_active_rank_recv
 );
 
 #ifdef __cplusplus

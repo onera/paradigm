@@ -2366,27 +2366,41 @@ PDM_part_comm_graph_owner_check
   PDM_free(owner_opp);
 
 }
-
 void
-PDM_part_comm_graph_owner_statistics
+PDM_part_comm_graph_owner_statistics_get
 (
-  PDM_part_comm_graph_t             *pcg
+  PDM_part_comm_graph_t *pcg,
+  double                *min_ratio_owner,
+  double                *max_ratio_owner,
+  double                *mean_ratio_owner,
+  double                *median_ratio_owner,
+  int                   *min_n_active_rank_send,
+  int                   *max_n_active_rank_send,
+  int                   *min_n_active_rank_recv,
+  int                   *max_n_active_rank_recv
 )
 {
+  CHECK_INSTANCE(pcg)
+
   int n_rank = -1;
   int i_rank = -1;
   PDM_MPI_Comm_size(pcg->comm, &n_rank);
   PDM_MPI_Comm_rank(pcg->comm, &i_rank);
 
-  int n_g_max_active_rank_send = -1;
-  int n_g_min_active_rank_send = n_rank+1;
-  int n_g_max_active_rank_recv = -1;
-  int n_g_min_active_rank_recv = n_rank+1;
-  PDM_MPI_Allreduce(&pcg->n_active_rank_send, &n_g_max_active_rank_send, 1, PDM_MPI_INT, PDM_MPI_MAX, pcg->comm);
-  PDM_MPI_Allreduce(&pcg->n_active_rank_send, &n_g_min_active_rank_send, 1, PDM_MPI_INT, PDM_MPI_MIN, pcg->comm);
-  PDM_MPI_Allreduce(&pcg->n_active_rank_recv, &n_g_max_active_rank_recv, 1, PDM_MPI_INT, PDM_MPI_MAX, pcg->comm);
-  PDM_MPI_Allreduce(&pcg->n_active_rank_recv, &n_g_min_active_rank_recv, 1, PDM_MPI_INT, PDM_MPI_MIN, pcg->comm);
+  /* Connectivity of the graph */
+  int l_n_send = pcg->n_active_rank_send;
+  int l_n_recv = pcg->n_active_rank_recv;
 
+  int g_min_send = 0;
+  int g_max_send = 0;
+  int g_min_recv = 0;
+  int g_max_recv = 0;
+  PDM_MPI_Allreduce(&l_n_send, &g_min_send, 1, PDM_MPI_INT, PDM_MPI_MIN, pcg->comm);
+  PDM_MPI_Allreduce(&l_n_send, &g_max_send, 1, PDM_MPI_INT, PDM_MPI_MAX, pcg->comm);
+  PDM_MPI_Allreduce(&l_n_recv, &g_min_recv, 1, PDM_MPI_INT, PDM_MPI_MIN, pcg->comm);
+  PDM_MPI_Allreduce(&l_n_recv, &g_max_recv, 1, PDM_MPI_INT, PDM_MPI_MAX, pcg->comm);
+
+  /* Local ownership ratio */
   int n_owner      = 0;
   int n_tot_entity = 0;
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
@@ -2396,20 +2410,25 @@ PDM_part_comm_graph_owner_statistics
     }
   }
 
-  double local_ratio = 0.0;
+  double local_ratio = 0.;
   if (n_tot_entity > 0) {
     local_ratio = (double) n_owner / (double) n_tot_entity;
   }
 
-  double g_max_ratio  = -1;
-  double g_min_ratio  = INT_MAX;
-  double g_mean_ratio = 0;
+  /* Ratios live in [0, 1]; these are overwritten by the Allreduce anyway */
+  double g_max_ratio  = 0.;
+  double g_min_ratio  = 1.;
+  double g_mean_ratio = 0.;
   PDM_MPI_Allreduce(&local_ratio, &g_max_ratio , 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, pcg->comm);
   PDM_MPI_Allreduce(&local_ratio, &g_min_ratio , 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, pcg->comm);
   PDM_MPI_Allreduce(&local_ratio, &g_mean_ratio, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, pcg->comm);
 
+  /* NB: ranks with an empty graph contribute 0 to this mean */
   g_mean_ratio = g_mean_ratio / n_rank;
 
+  /*
+   * Median : gathered and sorted on rank 0, then broadcast so that every rank returns the same value.
+   */
   double *all_ratios = NULL;
   if(i_rank == 0) {
     PDM_malloc(all_ratios, n_rank, double);
@@ -2424,25 +2443,30 @@ PDM_part_comm_graph_owner_statistics
                  0,
                  pcg->comm);
 
+  double g_median_ratio = 0.;
   if(i_rank == 0) {
 
     PDM_sort_double(all_ratios, NULL, n_rank);
 
-    double median_ratio = 0;
     if (n_rank % 2 == 1) {                     /* odd number of ranks */
-      median_ratio = all_ratios[n_rank / 2];
-    } else {                                   /* even ? average of the two middle values */
+      g_median_ratio = all_ratios[n_rank / 2];
+    } else {                                   /* even : average of the two middle values */
       int i_mid = n_rank / 2;
-      median_ratio = 0.5 * (all_ratios[i_mid - 1] + all_ratios[i_mid]);
+      g_median_ratio = 0.5 * (all_ratios[i_mid - 1] + all_ratios[i_mid]);
     }
-
-    printf("PDM_part_comm_graph_owner_statistics : max_ratio    = %6.1f%% \n", g_max_ratio  * 100);
-    printf("PDM_part_comm_graph_owner_statistics : min_ratio    = %6.1f%% \n", g_min_ratio  * 100);
-    printf("PDM_part_comm_graph_owner_statistics : mean_ratio   = %6.1f%% \n", g_mean_ratio * 100);
-    printf("PDM_part_comm_graph_owner_statistics : median_ratio = %6.1f%% \n", median_ratio * 100);
-    printf("PDM_part_comm_graph_owner_statistics : min_send/max_send = %i/%i \n", n_g_min_active_rank_send, n_g_max_active_rank_send);
-    printf("PDM_part_comm_graph_owner_statistics : min_recv/max_recv = %i/%i \n", n_g_min_active_rank_recv, n_g_max_active_rank_recv);
   }
-  PDM_free(all_ratios);
-}
 
+  PDM_MPI_Bcast(&g_median_ratio, 1, PDM_MPI_DOUBLE, 0, pcg->comm);
+
+  PDM_free(all_ratios);
+  all_ratios = NULL;
+
+  if (min_ratio_owner        != NULL) { *min_ratio_owner        = g_min_ratio;    }
+  if (max_ratio_owner        != NULL) { *max_ratio_owner        = g_max_ratio;    }
+  if (mean_ratio_owner       != NULL) { *mean_ratio_owner       = g_mean_ratio;   }
+  if (median_ratio_owner     != NULL) { *median_ratio_owner     = g_median_ratio; }
+  if (min_n_active_rank_send != NULL) { *min_n_active_rank_send = g_min_send;     }
+  if (max_n_active_rank_send != NULL) { *max_n_active_rank_send = g_max_send;     }
+  if (min_n_active_rank_recv != NULL) { *min_n_active_rank_recv = g_min_recv;     }
+  if (max_n_active_rank_recv != NULL) { *max_n_active_rank_recv = g_max_recv;     }
+}

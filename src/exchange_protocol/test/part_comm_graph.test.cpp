@@ -1030,9 +1030,20 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
                                                     PDM_PART_COMM_GRAPH_OWNER_KIND_HASH,
                                                     PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED};
 
-  static int lowner_bound_expected_p0[3][6] = {{1, 1, 1, 1, 1, 1   }, {0, 0, 0, 0, 1, 0   }, {0, 0, 0, 0, 1, 0   }};
-  static int lowner_bound_expected_p1[3][7] = {{0, 0, 0, 0, 1, 1, 1}, {1, 1, 1, 1, 1, 0, 0}, {1, 1, 1, 1, 1, 0, 0}};
-  static int lowner_bound_expected_p2[3][7] = {{0, 0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 1, 0, 1}, {1, 0, 0, 0, 1, 0, 1}};
+  static int lowner_bound_expected_p0[3][6] = {{1, 1, 1, 1, 1, 1   }, {1, 1, 1, 1, 0, 1   }, {0, 0, 0, 0, 1, 0   }};
+  static int lowner_bound_expected_p1[3][7] = {{0, 0, 0, 0, 1, 1, 1}, {0, 0, 0, 0, 0, 1, 1}, {1, 1, 1, 1, 1, 0, 0}};
+  static int lowner_bound_expected_p2[3][7] = {{0, 0, 0, 0, 0, 0, 0}, {0, 1, 0, 1, 0, 0, 0}, {1, 0, 0, 0, 1, 0, 1}};
+
+  /* Ratios attendus, :
+   *   LEXICOGRAPHIC : 6/6, 3/7, 0/7
+   *   HASH          : 1/6, 5/7, 3/7
+   *   USER_DEFINED  : idem HASH (on reinjecte les owners du HASH)
+   */
+  static double expected_min_ratio   [3] = { 0.0,       2.0/  7.0,  1.0/  6.0};
+  static double expected_max_ratio   [3] = { 1.0,       5.0/  6.0,  5.0/  7.0};
+  static double expected_mean_ratio  [3] = {10.0/21.0, 59.0/126.0, 55.0/126.0};
+  static double expected_median_ratio[3] = { 3.0/ 7.0,  2.0/  7.0,  3.0/  7.0};
+
 
   for(int i_owner = 0; i_owner < n_owner_kind; ++i_owner) {
 
@@ -1060,6 +1071,37 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
     MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0[i_owner], n_entity_bound);
     MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1[i_owner], n_entity_bound);
     MPI_CHECK_EQ_C_ARRAY(2, lowner_bound, lowner_bound_expected_p2[i_owner], n_entity_bound);
+
+    double min_ratio    = -1.;
+    double max_ratio    = -1.;
+    double mean_ratio   = -1.;
+    double median_ratio = -1.;
+    int    min_send     = -1;
+    int    max_send     = -1;
+    int    min_recv     = -1;
+    int    max_recv     = -1;
+
+    PDM_part_comm_graph_owner_statistics_get(pcg,
+                                             &min_ratio,
+                                             &max_ratio,
+                                             &mean_ratio,
+                                             &median_ratio,
+                                             &min_send,
+                                             &max_send,
+                                             &min_recv,
+                                             &max_recv);
+
+    CHECK(min_ratio    == doctest::Approx(expected_min_ratio   [i_owner]).epsilon(1e-12));
+    CHECK(max_ratio    == doctest::Approx(expected_max_ratio   [i_owner]).epsilon(1e-12));
+    CHECK(mean_ratio   == doctest::Approx(expected_mean_ratio  [i_owner]).epsilon(1e-12));
+    /* n_rank impair -> valeur mediane exacte */
+    CHECK(median_ratio == doctest::Approx(expected_median_ratio[i_owner]).epsilon(1e-12));
+
+    /* chaque rang communique avec les deux autres */
+    CHECK(min_send == 2);
+    CHECK(max_send == 2);
+    CHECK(min_recv == 2);
+    CHECK(max_recv == 2);
 
     PDM_part_comm_graph_free(pcg);
   }
