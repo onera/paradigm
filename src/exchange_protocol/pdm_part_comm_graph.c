@@ -75,9 +75,9 @@
 /**
  * \brief Compare lexicographically two nuplets of the same size using absolute values.
  *
- * \param[in] size   Number of elements in each nuplet.
- * \param[in] a      First nuplet to compare.
- * \param[in] b      Second nuplet to compare.
+ * \param[in] size Number of elements in each nuplet.
+ * \param[in] a    First nuplet to compare.
+ * \param[in] b    Second nuplet to compare.
  *
  * \return -1 if |a| > |b|, 0 if |a| == |b|, 1 if |a| < |b|
  */
@@ -105,9 +105,9 @@ _compare_nuplets_abs
 /**
  * \brief Compare lexicographically two nuplets of the same size.
  *
- * \param[in] size   Number of elements in each nuplet.
- * \param[in] a      First nuplet to compare.
- * \param[in] b      Second nuplet to compare.
+ * \param[in] size Number of elements in each nuplet.
+ * \param[in] a    First nuplet to compare.
+ * \param[in] b    Second nuplet to compare.
  *
  * \return -1 if a > b, 0 if a == b, 1 if a < b
  */
@@ -139,8 +139,8 @@ _compare_nuplets
  * uniform distribution and minimize collisions, even for large input arrays.
  * The hash is computed using the absolute values of the input to ensure symmetry.
  *
- * \param[in] n       Number of elements in the array.
- * \param[in] values  Array of integers to hash.
+ * \param[in] n      Number of elements in the array.
+ * \param[in] values Array of integers to hash.
  *
  * \return A positive 31-bit integer hash.
  */
@@ -171,9 +171,9 @@ _pdm_hash_any_size(const int n, const int values[])
  * homogenize the distribution of owners across the MPI communicator. In case
  * of hash collision, a lexicographical tie-breaker using absolute values is used.
  *
- * \param[in] size   Number of elements in each nuplet.
- * \param[in] a      First nuplet to compare.
- * \param[in] b      Second nuplet to compare.
+ * \param[in] size Number of elements in each nuplet.
+ * \param[in] a    First nuplet to compare.
+ * \param[in] b    Second nuplet to compare.
  *
  * \return 1 if hash(a) > hash(b), -1 if hash(a) > hash(b).
  * If hashes are equal, follows \ref _compare_nuplets_abs return rules.
