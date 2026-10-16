@@ -3548,14 +3548,14 @@ PDM_part_coarse_mesh_time_get
   if (i_rank == 0) {
     printf("\n"
       "\033[33;01m/!\\ WARNING : %s is DEPRECATED and will be removed in the next major release\n\033[00m"
-      "\033[33;01m/!\\           Users are advised to switch to PDM_part_coarse_mesh_dump_times\n"
-      "\033[33;01m/!\\           or to use the PDM_timer_t instance retrieved with PDM_part_coarse_mesh_timer_get\n"
+      "\033[33;01m/!\\           Users are advised to switch to \033[32;01mPDM_part_coarse_mesh_dump_times\033[00m\n"
+      "\033[33;01m/!\\           or to use the PDM_timer_t instance retrieved with \033[32;01mPDM_part_coarse_mesh_timer_get\n"
       "\033[00m\n", __func__);
     fflush(stdout);
   }
 
   const char *steps[PDM_PART_COARSE_MESH_TIMER_N_STEPS] = {
-    "",                                        // 0
+    "",                                         // 0
     "/coarse_grid_compute/dual graph",          // 1
     "/coarse_grid_compute/split",               // 2
     "/coarse_grid_compute/part cell",           // 3
