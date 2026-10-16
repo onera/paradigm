@@ -8,6 +8,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -307,6 +308,9 @@ PDM_part_coarse_mesh_free
  *
  * \brief Return times
  *
+ * \warning This function is deprecated since version 2.9.0
+ *          and will be removed in a future release
+ *
  * \param [in]   cm          Pointer to \ref PDM_coarse_mesh
  * \param [out]  elapsed     Elapsed times (size = 18)
  * \param [out]  cpu         Cpu times (size = 18)
@@ -327,15 +331,31 @@ void PDM_part_coarse_mesh_time_get
 
 /**
  *
- * \brief Return times
+ * \brief Dump times in the console
  *
- * \param [in]   cm          Pointer to \ref PDM_coarse_mesh
+ * \param [in] cm Pointer to \ref PDM_coarse_mesh
  *
  */
 void
 PDM_part_coarse_mesh_dump_times
 (
  PDM_coarse_mesh_t  *cm
+);
+
+
+/**
+ * \brief Get the internal \ref PDM_timer_t instance
+ *
+ * \param [in]  cm    Pointer to \ref PDM_coarse_mesh
+ * \param [out] timer Pointer to \ref PDM_timer_t
+ * \param [in]  owner Ownership of \p timer
+ */
+void
+PDM_part_coarse_mesh_timer_get
+(
+  PDM_coarse_mesh_t  *cm,
+  PDM_timer_t       **timer,
+  PDM_ownership_t     owner
 );
 
 /**
