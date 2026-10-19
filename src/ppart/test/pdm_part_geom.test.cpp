@@ -454,3 +454,290 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edge normal", 1) {
   PDM_part_comm_graph_free(pcg_edge);
   PDM_part_comm_graph_free(pcg_vtx);
 }
+
+
+MPI_TEST_CASE("[pdm_part_geom] edge center", 1) {
+
+  /**
+   *          3 x (2,2)
+   *            |
+   *            | (2)
+   *            |
+   *  1 x-------x 2
+   *   (0,0) (1) (2,0)
+   */
+
+  int n_part = 1;
+  int n_edge = 2;
+
+  std::vector<int>    vedge_vtx = {1,2, 2,3};
+  std::vector<double> vcoord    = {0.,0.,0.,
+                                   2.,0.,0.,
+                                   2.,2.,0.};
+  int    *edge_vtx = vedge_vtx.data();
+  double *coord    = vcoord   .data();
+
+  double **edge_center = NULL;
+  PDM_part_geom_edge_center(n_part,
+                           &n_edge,
+                            NULL,          /* no extract */
+                           &edge_vtx,
+                           &coord,
+                           &edge_center);
+
+  std::vector<double> expected_center = {1.,0.,0.,    /* middle of edge 1 */
+                                         2.,1.,0.};   /* middle of edge 2 */
+
+  for (int i = 0; i < 3*n_edge; ++i) {
+    CHECK(edge_center[0][i] == doctest::Approx(expected_center[i]).epsilon(1e-12));
+  }
+
+  PDM_free(edge_center[0]);
+  PDM_free(edge_center);
+}
+
+
+
+MPI_TEST_CASE("[pdm_part_geom] edge center - extract_lnum", 1) {
+
+  /**
+   *          3 x (2,2)
+   *            |
+   *            | (2)    <- selected
+   *            |
+   *  1 x-------x 2
+   *   (0,0) (1) (2,0)
+   */
+  int n_part    = 1;
+  int n_extract = 1;
+
+  std::vector<int>    vedge_vtx     = {1,2, 2,3};
+  std::vector<int>    vextract_lnum = {2};
+  std::vector<double> vcoord        = {0.,0.,0.,
+                                       2.,0.,0.,
+                                       2.,2.,0.};
+  int    *edge_vtx     = vedge_vtx    .data();
+  int    *extract_lnum = vextract_lnum.data();
+  double *coord        = vcoord       .data();
+
+  double **edge_center = NULL;
+  PDM_part_geom_edge_center(n_part,
+                           &n_extract,
+                           &extract_lnum,
+                           &edge_vtx,
+                           &coord,
+                           &edge_center);
+
+  /* The output is indexed by the SELECTION, not by the edge number: size 3*n_extract,
+   * edge 2 lands at position 0. */
+  std::vector<double> expected_center = {2.,1.,0.};
+
+  for (int i = 0; i < 3*n_extract; ++i) {
+    CHECK(edge_center[0][i] == doctest::Approx(expected_center[i]).epsilon(1e-12));
+  }
+
+  PDM_free(edge_center[0]);
+  PDM_free(edge_center);
+}
+
+
+
+MPI_TEST_CASE("[pdm_part_geom] face center from vtx", 1) {
+
+  /**
+   *   3 x (0,3)                       7 x-------x 6
+   *     | \                             |       |
+   *     |   \     (1)              (2)  |       |
+   *     |     \                         |       |
+   *   1 x-------x 2                    4 x-------x 5
+   *    (0,0)   (3,0)                   (10,0)   (12,0)   top at y = 2
+   *
+   *  A triangle and a quadrangle: the face counts differ, so an index mixed up
+   *  between the two shows up in the normalization.
+   */
+
+
+  int n_part = 1;
+  int n_face = 2;
+
+  std::vector<int>    vface_vtx_idx = {0,3,7};
+  std::vector<int>    vface_vtx     = {1,2,3, 4,5,6,7};
+  std::vector<double> vcoord        = { 0.,0.,0.,
+                                        3.,0.,0.,
+                                        0.,3.,0.,
+                                       10.,0.,0.,
+                                       12.,0.,0.,
+                                       12.,2.,0.,
+                                       10.,2.,0.};
+  int    *face_vtx_idx = vface_vtx_idx.data();
+  int    *face_vtx     = vface_vtx    .data();
+  double *coord        = vcoord       .data();
+
+  double **face_center = NULL;
+  PDM_part_geom_face_center_from_vtx(n_part,
+                                    &n_face,
+                                     NULL,          /* no extract */
+                                    &face_vtx_idx,
+                                    &face_vtx,
+                                    &coord,
+                                    &face_center);
+
+  std::vector<double> expected_center = { 1.,1.,0.,    /* triangle   */
+                                         11.,1.,0.};   /* quadrangle */
+
+  for (int i = 0; i < 3*n_face; ++i) {
+    CHECK(face_center[0][i] == doctest::Approx(expected_center[i]).epsilon(1e-12));
+  }
+
+  PDM_free(face_center[0]);
+  PDM_free(face_center);
+}
+
+
+
+MPI_TEST_CASE("[pdm_part_geom] face center from vtx - extract_lnum", 1) {
+
+  /**
+   *  Same two faces, selected in REVERSE order: extract_lnum = {2,1}
+   */
+  int n_part    = 1;
+  int n_extract = 2;
+
+  std::vector<int>    vface_vtx_idx = {0,3,7};
+  std::vector<int>    vface_vtx     = {1,2,3, 4,5,6,7};
+  std::vector<int>    vextract_lnum = {2,1};
+  std::vector<double> vcoord        = { 0.,0.,0.,
+                                        3.,0.,0.,
+                                        0.,3.,0.,
+                                       10.,0.,0.,
+                                       12.,0.,0.,
+                                       12.,2.,0.,
+                                       10.,2.,0.};
+  int    *face_vtx_idx = vface_vtx_idx.data();
+  int    *face_vtx     = vface_vtx    .data();
+  int    *extract_lnum = vextract_lnum.data();
+  double *coord        = vcoord       .data();
+
+  double **face_center = NULL;
+  PDM_part_geom_face_center_from_vtx(n_part,
+                                    &n_extract,
+                                    &extract_lnum,
+                                    &face_vtx_idx,
+                                    &face_vtx,
+                                    &coord,
+                                    &face_center);
+
+  /* Selection order, not face order: the quadrangle comes first.
+   *
+   * This is the convention _mesh_repart_2d gets wrong on its HILBERT path, where it
+   * compacts the result a second time with a full-mesh index. */
+  std::vector<double> expected_center = {11.,1.,0.,    /* face 2 */
+                                          1.,1.,0.};   /* face 1 */
+
+  for (int i = 0; i < 3*n_extract; ++i) {
+    CHECK(face_center[0][i] == doctest::Approx(expected_center[i]).epsilon(1e-12));
+  }
+
+  PDM_free(face_center[0]);
+  PDM_free(face_center);
+}
+
+
+MPI_TEST_CASE("[pdm_part_geom] face center from edge", 1) {
+
+  /**
+   *  The same two faces as the from_vtx case, described through their edges, so the
+   *  expected values are the same ones. On a closed face each vertex belongs to
+   *  exactly two edges, so the mean of the edge midpoints equals the mean of the
+   *  vertices -- the two functions cannot legitimately disagree.
+   *
+   *  Edges:  1 = (1,2)  2 = (2,3)  3 = (3,1)
+   *          4 = (4,5)  5 = (5,6)  6 = (6,7)  7 = (7,4)
+   *
+   *  Signs are scattered in face_edge: the function takes PDM_ABS.
+   */
+  int n_part = 1;
+  int n_face = 2;
+
+  std::vector<int>    vface_edge_idx = {0,3,7};
+  std::vector<int>    vface_edge     = {1,2,-3, 4,5,-6,-7};
+  std::vector<int>    vedge_vtx      = {1,2, 2,3, 3,1, 4,5, 5,6, 6,7, 7,4};
+  std::vector<double> vcoord         = { 0.,0.,0.,
+                                         3.,0.,0.,
+                                         0.,3.,0.,
+                                        10.,0.,0.,
+                                        12.,0.,0.,
+                                        12.,2.,0.,
+                                        10.,2.,0.};
+  int    *face_edge_idx = vface_edge_idx.data();
+  int    *face_edge     = vface_edge    .data();
+  int    *edge_vtx      = vedge_vtx     .data();
+  double *coord         = vcoord        .data();
+
+  double **face_center = NULL;
+  PDM_part_geom_face_center_from_edge(n_part,
+                                     &n_face,
+                                      NULL,          /* no extract */
+                                     &face_edge_idx,
+                                     &face_edge,
+                                     &edge_vtx,
+                                     &coord,
+                                     &face_center);
+
+  std::vector<double> expected_center = { 1.,1.,0.,    /* triangle   */
+                                         11.,1.,0.};   /* quadrangle */
+
+  for (int i = 0; i < 3*n_face; ++i) {
+    CHECK(face_center[0][i] == doctest::Approx(expected_center[i]).epsilon(1e-12));
+  }
+
+  PDM_free(face_center[0]);
+  PDM_free(face_center);
+}
+
+
+MPI_TEST_CASE("[pdm_part_geom] face center from edge - extract_lnum", 1) {
+
+  /**
+   *  Same two faces, selected in REVERSE order: extract_lnum = {2,1}
+   */
+  int n_part    = 1;
+  int n_extract = 2;
+
+  std::vector<int>    vface_edge_idx = {0,3,7};
+  std::vector<int>    vface_edge     = {1,2,-3, 4,5,-6,-7};
+  std::vector<int>    vedge_vtx      = {1,2, 2,3, 3,1, 4,5, 5,6, 6,7, 7,4};
+  std::vector<int>    vextract_lnum  = {2,1};
+  std::vector<double> vcoord         = { 0.,0.,0.,
+                                         3.,0.,0.,
+                                         0.,3.,0.,
+                                        10.,0.,0.,
+                                        12.,0.,0.,
+                                        12.,2.,0.,
+                                        10.,2.,0.};
+  int    *face_edge_idx = vface_edge_idx.data();
+  int    *face_edge     = vface_edge    .data();
+  int    *edge_vtx      = vedge_vtx     .data();
+  int    *extract_lnum  = vextract_lnum .data();
+  double *coord         = vcoord        .data();
+
+  double **face_center = NULL;
+  PDM_part_geom_face_center_from_edge(n_part,
+                                     &n_extract,
+                                     &extract_lnum,
+                                     &face_edge_idx,
+                                     &face_edge,
+                                     &edge_vtx,
+                                     &coord,
+                                     &face_center);
+
+  std::vector<double> expected_center = {11.,1.,0.,    /* face 2 */
+                                          1.,1.,0.};   /* face 1 */
+
+  for (int i = 0; i < 3*n_extract; ++i) {
+    CHECK(face_center[0][i] == doctest::Approx(expected_center[i]).epsilon(1e-12));
+  }
+
+  PDM_free(face_center[0]);
+  PDM_free(face_center);
+}
