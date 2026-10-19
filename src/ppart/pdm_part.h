@@ -1,22 +1,15 @@
-/*
- * \file
- */
-
 #ifndef __PDM_PART_H__
 #define __PDM_PART_H__
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
 
-
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -276,7 +269,7 @@ PDM_part_t  *ppart
 
 /**
  *
- * \brief Return times
+ * \brief Return times (Deprecated, use PDM_part_dump_times instead)
  *
  * \param [in]   ppart       Pointer to \ref PDM_part object
  * \param [out]  elapsed     Elapsed times (size = 4)
@@ -285,7 +278,6 @@ PDM_part_t  *ppart
  * \param [out]  cpu_sys     System cpu times (size = 4)
  *
  */
-
 void
 PDM_part_time_get
 (
@@ -294,7 +286,21 @@ PDM_part_time_get
  double     **cpu,
  double     **cpu_user,
  double     **cpu_sys
- );
+);
+
+
+/**
+ *
+ * \brief  Dump elapsed an CPU time
+ *
+ * \param [in]  ppart     Pointer to \ref PDM_part object
+ *
+ */
+void
+PDM_part_dump_times
+(
+  PDM_part_t *ppart
+);
 
 
 /**

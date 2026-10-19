@@ -14,9 +14,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation csback to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*=============================================================================
@@ -65,7 +62,8 @@ struct _pdm_part_mesh_nodal_elmts_t {
   PDM_g_num_t                        **numabs;                    /*!< Global numbering per elmts per partition */
 
   /* Ownerships */
-  PDM_ownership_t                    **ownership_group;          /*!< group_elmt, group_ln_to_gn */
+  PDM_ownership_t                    **ownership_group;          /*!< group_elmt */
+  PDM_ownership_t                    **ownership_group_ln_to_gn; /*!< group_ln_to_gn */
   PDM_ownership_t                      ownership_numabs;         /*!< numabs */
 };
 

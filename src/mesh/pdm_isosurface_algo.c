@@ -30,12 +30,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 
 /*=============================================================================
@@ -2083,7 +2077,7 @@ _trace_isopolygon_in_cell
   while (n_used_edge < cell_edge_n) {
     safeguard1++;
     if (safeguard1 > cell_edge_n) {
-      PDM_error(__FILE__, __LINE__, 0, "Failed to use all cell edges\n");
+      PDM_error("Failed to use all cell edges.");
     }
     // Start a new isopolygon
     if (*iso_n_face >= *tmp_iso_n_face) {
@@ -2121,7 +2115,7 @@ _trace_isopolygon_in_cell
     while (!is_complete) {
       safeguard2++;
       if (safeguard2 > cell_edge_n) {
-        PDM_error(__FILE__, __LINE__, 0, "Failed to complete isopolygon\n");
+        PDM_error("Failed to complete isopolygon.");
       }
       // Get face for which current edge's isovtx is "key"
       int i_face = cell_edge_face[2*current_cell_edge];
@@ -2221,7 +2215,7 @@ _trace_isopolygon_in_cell
                                      vtx_field,
                                      isovalue);
                   }
-                  PDM_error(__FILE__, __LINE__, 0, "Edge %d : (%d %d) already used\n",
+                  PDM_error("Edge %d : (%d %d) already used.",
                             i_wrong_edge,
                             edge_vtx[2*i_wrong_edge  ],
                             edge_vtx[2*i_wrong_edge+1]);
@@ -4250,8 +4244,4 @@ PDM_isosurface_ngon_algo
   }
 
 }
-
-#ifdef  __cplusplus
-}
-#endif
 

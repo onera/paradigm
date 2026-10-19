@@ -76,21 +76,11 @@ for i in range(n_iter):
                         [part_ln_to_gn],
                         n_part)
 
-  # Output communication graph
-  if args.write:
-    if i == 0:
-      btp.comm_graph_dump(filename)
-
   # Exchange
   part_stride, part_data = btp.exchange_field(block_data)
 
   # MPI Barrier
   comm.Barrier()
-
-# Output timings
-if args.write:
-  PDM.btp_time_per_step_dump(comm,
-                             filename)
 
 if i_rank == 0:
   print("End :)")

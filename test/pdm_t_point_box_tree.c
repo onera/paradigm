@@ -223,7 +223,7 @@ _read_and_split_distributed_mesh
   }
 
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Unknown mesh format %s\n", file_extension);
+    PDM_error("Unknown mesh format %s", file_extension);
   }
 
   PDM_multipart_t *mpart = NULL;

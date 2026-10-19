@@ -1,40 +1,3 @@
-/*
-  This file is part of the ParaDiGM library.
-
-  Copyright (C) 2017       ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-/*============================================================================
- * Main structure for an I/O numbering scheme associated with mesh entities
- * (such as cells, faces, and vertices);
- *
- * In parallel mode, such a scheme is important so as to redistribute
- * locally numbered entities on n processes to files written by p
- * processes, with p <= n.
- *
- * Only the case where p = 1 is presently implemented, so the numbering
- * scheme is simply based on entity's global labels.
- *
- * For p > 1, it would probably be necessary to extend the numbering
- * schemes so as to account for the fact that a given entity may have
- * a main index on its main associated domain, but may be present
- * as a ghost entity with another index on neighboring domains.
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -68,12 +31,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -98,28 +55,6 @@ extern "C" {
  *  \param[in, out] order      <-> ordering array base on Morton encoding, or
  *                                 lexicographical coordinate ordering for ties
  */
-
-/*
-  This function comes from "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2004-2009  EDF
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 inline static void
 _reorder_coords_lexicographic
 (
@@ -195,28 +130,6 @@ PDM_l_num_t        order[]
  *                              lexicographical coordinate ordering for ties
  *
  */
-
-/*
-  This function comes from "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2004-2009  EDF
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 static void
 _check_morton_ordering
 (
@@ -265,28 +178,6 @@ PDM_l_num_t              order[]
  * \param [in]   _gnum          Current _pdm_gen_gnum_t structure
  *
  */
-
-/*
-  This function comes from "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2004-2009  EDF
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 static void
 _gnum_from_coords_compute
 (
@@ -1491,7 +1382,7 @@ _gnum_from_parent_compute_nuplet
   PDM_MPI_Allreduce(&nuplet, &min_nuplet, 1, PDM_MPI_INT, PDM_MPI_MIN, gen_gnum->comm);
   PDM_MPI_Allreduce(&nuplet, &max_nuplet, 1, PDM_MPI_INT, PDM_MPI_MAX, gen_gnum->comm);
   if (min_nuplet != nuplet && max_nuplet != nuplet) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : nuplet mismatch (min = %d, max = %d)\n", min_nuplet, max_nuplet);
+    PDM_error("Nuplet mismatch (min = %d, max = %d)", min_nuplet, max_nuplet);
   }
   PDM_MPI_Type_create_contiguous(nuplet, PDM__PDM_MPI_G_NUM, &mpi_entity_type);
   PDM_MPI_Type_commit(&mpi_entity_type);
@@ -2070,7 +1961,7 @@ PDM_gnum_compute
   } else if (from_graph_g != 0 || from_pcg_g != 0) {
 
     if (from_parent_nuplet_g != 0) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_gnum_compute, nuplet with part_graph_comm is not possible \n");
+      PDM_error("Nuplet with part_graph_comm is not possible");
     }
 
     int build_pcg = 0;
@@ -2142,6 +2033,3 @@ PDM_gnum_n_elt_get
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

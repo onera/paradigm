@@ -1,12 +1,5 @@
-/*
- * \file
- * \author equemera
- *
- * \date November 16, 2016, 1:49 PM
- */
-
-#ifndef PDM_MPI_EXT_DEPENDENCIES_H
-#define	PDM_MPI_EXT_DEPENDENCIES_H
+#ifndef __PDM_MPI_EXT_DEPENDENCIES_H__
+#define __PDM_MPI_EXT_DEPENDENCIES_H__
 
 /*----------------------------------------------------------------------------
  *  System headers
@@ -27,9 +20,9 @@
  *  Optional headers
  *----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 #ifdef PDM_HAVE_PARMETIS
 
@@ -72,31 +65,9 @@ int *part
 
 #endif
 
-void
-PDM_kaffpaE
-(
-int* n,
-int* vwgt,
-int* xadj,
-int* adjcwgt,
-int* adjncy,
-int* n_parts,
-double* inbalance,
-int time_limit,
-int seed,
-int mode,
-PDM_MPI_Comm communicator,
-int* edgecut,
-double* balance,
-int* part
-);
-
-
-
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif	/* PDM_MPI_EXT_DEPENDENCIES_H */
+#endif /* __PDM_MPI_EXT_DEPENDENCIES_H__ */
 

@@ -1,24 +1,15 @@
-/*
- * File:   pdm_block_to_part_priv.h
- * Author: equemera
- *
- * Created on April 14, 2016, 8:16 AM
- */
-
-#ifndef PDM_BLOCK_TO_BLOCK_PRIV_H
-#define	PDM_BLOCK_TO_BLOCK_PRIV_H
+#ifndef __PDM_BLOCK_TO_BLOCK_PRIV_H__
+#define	__PDM_BLOCK_TO_BLOCK_PRIV_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-// #include "pdm_block_to_block_priv.h"
 
 /*=============================================================================
  * Macro definitions
@@ -31,7 +22,6 @@ extern "C" {
 /*============================================================================
  * Type
  *============================================================================*/
-
 
 /**
  * \struct _PDM_block_to_block_t
@@ -67,5 +57,5 @@ typedef struct {
 }
 #endif
 
-#endif	/* PDM_BLOCK_TO_BLOCK_PRIV_H */
+#endif	/* __PDM_BLOCK_TO_BLOCK_PRIV_H__ */
 

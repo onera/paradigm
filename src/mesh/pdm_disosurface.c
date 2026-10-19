@@ -1,23 +1,3 @@
-/*
-  This file is part of the ParaDiGM library.
-
-  Copyright (C) 2023       ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
@@ -34,12 +14,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -50,7 +24,7 @@ extern "C" {
     (isos)->entry_is_part=0; \
   } \
   else if ((isos)->entry_is_part==1) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t already set as partitioned.\n", __func__); \
+    PDM_error("PDM_isosurface_t already set as partitioned."); \
   }
 
 /*=============================================================================
@@ -100,7 +74,7 @@ PDM_isosurface_dconnectivity_set
       isos->dedge_vtx     = dconnect;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid connectivity_type (%d) for isosurface.\n", connectivity_type);
+      PDM_error("Invalid connectivity_type (%d) for isosurface.", connectivity_type);
       break;
   }
 }
@@ -145,7 +119,7 @@ PDM_isosurface_distrib_set
       isos->distrib_vtx  = distrib;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface.\n", entity_type);
+      PDM_error("Invalid entity_type (%d) for isosurface.", entity_type);
       break;
   }
 }
@@ -177,7 +151,7 @@ PDM_isosurface_dgroup_set
     //   isos->dgroup_vtx      = dgroup_entity;
     //   break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
+      PDM_error("Invalid entity_type (%d) for isosurface boundary.", entity_type);
       break;
   }
 }
@@ -216,7 +190,7 @@ PDM_isosurface_dmesh_set
   // Cells
   if (isos->entry_mesh_dim == 3) {
     if (isos->distrib_cell == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : distrib_cell is NULL\n");
+      PDM_error("Error : PDM_isosurface_dmesh_set : distrib_cell is NULL");
     }
 
     int         *dcell_face_idx = NULL;
@@ -227,7 +201,7 @@ PDM_isosurface_dmesh_set
                                &dcell_face_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
     if (dcell_face_idx == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dcell_face_idx is NULL\n");
+      PDM_error("Error : dcell_face_idx is NULL");
     }
     PDM_isosurface_dconnectivity_set(isos,
                                      PDM_CONNECTIVITY_TYPE_CELL_FACE,
@@ -237,7 +211,7 @@ PDM_isosurface_dmesh_set
 
   // Faces
   if (isos->distrib_face == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : distrib_face is NULL\n");
+    PDM_error("Error : distrib_face is NULL.");
   }
 
   int         *dface_edge_idx = NULL;
@@ -265,7 +239,7 @@ PDM_isosurface_dmesh_set
                                    dface_vtx);
 
   if (dface_edge_idx == NULL && dface_vtx_idx == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dface_edge_idx and dface_vtx_idx are both NULL\n");
+    PDM_error("Error : dface_edge_idx and dface_vtx_idx are both NULL.");
   }
 
   // Edges
@@ -283,22 +257,22 @@ PDM_isosurface_dmesh_set
                                    dedge_vtx);
   if (dface_edge_idx != NULL) {
     if (isos->distrib_edge == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : distrib_edge is NULL\n");
+      PDM_error("Error : distrib_edge is NULL.");
     }
     if (dedge_vtx == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dedge_vtx is NULL\n");
+      PDM_error("Error : dedge_vtx is NULL.");
     }
   }
 
   // Vertices
   if (isos->distrib_vtx == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : distrib_vtx is NULL\n");
+    PDM_error("Error : distrib_vtx is NULL.");
   }
 
   double *dvtx_coord = NULL;
   PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
   if (dvtx_coord == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dvtx_coord is NULL\n");
+    PDM_error("Error : dvtx_coord is NULL.");
   }
   PDM_isosurface_dvtx_coord_set(isos, dvtx_coord);
 
@@ -318,7 +292,7 @@ PDM_isosurface_dmesh_set
 
   if (n_surface != 0) {
     if (dsurface_face_idx == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dsurface_face_idx is NULL\n");
+      PDM_error("Error : dsurface_face_idx is NULL");
     }
     PDM_isosurface_dgroup_set(isos,
                               PDM_MESH_ENTITY_FACE,
@@ -339,7 +313,7 @@ PDM_isosurface_dmesh_nodal_set
   
   /* Check that entry dmesh_nodal contains all required data */
   if (dmn == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_nodal_set : dmn is NULL\n");
+    PDM_error("Error : dmn is NULL.");
   }
 
   // Sections of highest dimension
@@ -353,7 +327,7 @@ PDM_isosurface_dmesh_nodal_set
 
   int n_section = PDM_DMesh_nodal_n_section_get(dmn, geom_kind);
   if (n_section == 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_nodal_set : dmn does not contain any section of dimension %d\n", isos->entry_mesh_dim);
+    PDM_error("Error : dmn does not contain any section of dimension %d.", isos->entry_mesh_dim);
   }
 
   /* Set dmesh_nodal */
@@ -433,7 +407,7 @@ PDM_isosurface_dconnectivity_get
     *dconnect     = _iso->iso_dconnec    [connectivity_type];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no connectivity of type %d.\n", connectivity_type);
+    PDM_error("PDM_isosurface_t : has no connectivity of type %d.", connectivity_type);
   }
 
   return n_entity;
@@ -556,7 +530,7 @@ PDM_isosurface_dgroup_get
     *dgroup_entity     = _iso->iso_dedge_group_gnum;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no group for entity_type %d.\n", entity_type);
+    PDM_error("PDM_isosurface_t: has no group for entity_type %d.", entity_type);
   }
 
   return n_group;
@@ -566,6 +540,3 @@ PDM_isosurface_dgroup_get
 #undef CHECK_IS_NOT_PART
 
 
-#ifdef  __cplusplus
-}
-#endif

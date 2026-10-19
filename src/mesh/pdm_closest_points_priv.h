@@ -25,8 +25,6 @@ extern "C" {
  * Type
  *============================================================================*/
 
-#define NTIMER 2
-
 /**
  * \struct _tgt_point_cloud_t
  * \brief  Target point cloud structure
@@ -91,23 +89,11 @@ struct _pdm_closest_point_t {
 
   PDM_timer_t *timer;                           /*!< Timer */
 
-  double times_elapsed[NTIMER];                 /*!< Elapsed time */
-
-  double times_cpu[NTIMER];                     /*!< CPU time */
-
-  double times_cpu_u[NTIMER];                   /*!< User CPU time */
-
-  double times_cpu_s[NTIMER];                   /*!< System CPU time */
-
-
   PDM_part_to_part_t *ptp; /*!< To exchange data between src and tgt point clouds (both in user frame) */
   PDM_ownership_t     ptp_ownership;
+};
 
 
-} ;
-
-
-#undef NTIMER
 #ifdef  __cplusplus
 }
 #endif

@@ -162,7 +162,7 @@ _read_back_mesh
     }
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Wrong elt_dim %d\n", elt_dim);
+    PDM_error("Wrong elt_dim %d", elt_dim);
   }
 
 
@@ -230,9 +230,7 @@ _build_edge_edge_connectivity
 
         edge_edge[stride*iedge + i] = jedge + 1;
         if (edge_edge[stride*jedge + j] != 0) {
-          PDM_error(__FILE__, __LINE__, 0,
-                    "Vertex %d shared by more than two edges\n",
-                    id_vtx+1);
+          PDM_error("Vertex %d shared by more than two edges", id_vtx+1);
         }
         edge_edge[stride*jedge + j] = iedge + 1;
       }
@@ -324,9 +322,7 @@ _build_face_face_connectivity
           found = 1;
           face_face[stride*iface + i    ] = jface + 1;
           if (face_face[stride*jface + jedge] != 0) {
-            PDM_error(__FILE__, __LINE__, 0,
-                      "Edge %d %d shared by more than two faces\n",
-                      fvi[0]+1, fvi[1]+1);
+            PDM_error("Edge %d %d shared by more than two faces", fvi[0]+1, fvi[1]+1);
           }
           face_face[stride*jface + jedge] = iface + 1;
           break;
@@ -537,7 +533,7 @@ _projection_on_background_mesh_get2
 
 
     else {
-      PDM_error(__FILE__, __LINE__, 0, "Projection not yet implemented for type %d\n", (int) back_elt_type);
+      PDM_error("Projection not yet implemented for type %d", (int) back_elt_type);
     }
 
     if (vb) {
@@ -645,8 +641,7 @@ _bezier_to_lagrange
 
   if (elt_type != PDM_MESH_NODAL_BARHO_BEZIER &&
       elt_type != PDM_MESH_NODAL_TRIAHO_BEZIER) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Béizer -> Lagrange not yet implemented for type %d\n", (int) elt_type);
+    PDM_error("Bézier -> Lagrange not yet implemented for type %d", (int) elt_type);
   }
 
   PDM_ho_location_uvw_nodes(elt_type,

@@ -509,7 +509,7 @@ _create_split_mesh
     if (block_numabs[i] != block_numabs2[i]) {
       PDM_printf("-- diff %d : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" \n",
              i, block_numabs2[i], block_numabs[i]);
-      PDM_error (__FILE__, __LINE__, 0, "Error in the generated numbering\n");
+      PDM_error("Error in the generated numbering");
     }
   }
 

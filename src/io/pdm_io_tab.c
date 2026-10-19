@@ -1,7 +1,3 @@
-/*============================================================================
- * Traitement des entrees/sorties binaires sequentielles et paralleles
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -20,12 +16,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des macros locales
@@ -132,9 +122,7 @@ static void _ajout_donnees
  )
 {
   if (PDM_io_tabs == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _ajout_donnees :"
-            "La phase d'acces n'a pas été initialisée\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Access step are not initialized");
   }
 
   int _num_var_cedre = num_var_cedre - 1;
@@ -143,17 +131,13 @@ static void _ajout_donnees
   /* Au premier appel : création du tableau lié à la variable CEDRE num_var_cedre */
 
   if (tab == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _ajout_donnees :"
-            "La variable n'a pas ete initialisee\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Variable are not initialized");
   }
 
   int _i_part = i_part - 1;
 
   if (tab->partitions_locales[_i_part] != NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _ajout_donnees : "
-            "partition '%i' déjà traitée\n", i_part);
-    exit(EXIT_FAILURE);
+    PDM_error("partition '%i' already treated", i_part);
   }
 
   /* Mise à jour de la structure par prise en compte de la partition */
@@ -197,9 +181,7 @@ static void _def_var
  )
 {
   if (PDM_io_tabs == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _def_var : "
-            "La phase d'acces n'a pas été initialisée\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Access step are not initialized");
   }
 
   int _num_var_cedre = num_var_cedre - 1;
@@ -248,9 +230,7 @@ PDM_io_array_write_beg
   }
 
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_array_write_beg :"
-            "Une phase de lecture ou d'écriture est déjà en cours\n");
-    exit(EXIT_FAILURE);
+    PDM_error("A read or write operation is already in progress");
   }
 }
 
@@ -601,9 +581,7 @@ PDM_io_array_read_beg
   }
 
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_array_read_beg :"
-            "Une phase de lecture ou d'écriture est déjà en cours\n");
-    exit(EXIT_FAILURE);
+    PDM_error("A read or write operation is already in progress");
   }
 }
 
@@ -657,9 +635,7 @@ void PDM_io_array_read_end
 )
 {
   if (PDM_io_tabs == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_array_read_end :"
-            "La phase de lecture n'a pas été initialisée\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Read phase has not been initialized");
   }
 
   /* Definition des tableaux temporaires de concatenation */
@@ -941,6 +917,3 @@ void PDM_io_array_read_end
 
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

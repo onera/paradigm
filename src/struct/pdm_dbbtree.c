@@ -34,12 +34,6 @@
 #include "pdm_unique.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -8316,27 +8310,6 @@ PDM_dbbtree_box_tree_write_vtk
 }
 
 
-void
-PDM_dbbtree_box_tree_write_vtk2
-(
- const char    *filename,
- PDM_dbbtree_t *dbbt,
- const int      i_copied_rank
- )
-{
-  assert (dbbt != NULL);
-  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
-
-  PDM_box_tree_write_vtk2(filename,
-                          _dbbt->btLoc,
-                          i_copied_rank,
-                          _dbbt->s,
-                          _dbbt->d);
-}
-
 #undef _MIN
 #undef _MAX
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

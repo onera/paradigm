@@ -92,21 +92,11 @@ for i in range(n_iter):
                         t_post=0,
                         userDistribution=block_distribution)
 
-  # Output communication graph
-  if args.write:
-    if i == 0:
-      ptb.comm_graph_dump(filename)
-
   # Exchange
   block_stride, block_data = ptb.exchange_field([part_data])
 
   # MPI Barrier
   comm.Barrier()
-
-# Output timings
-if args.write:
-  PDM.ptb_time_per_step_dump(comm,
-                             filename)
 
 if i_rank == 0:
   print("End :)")

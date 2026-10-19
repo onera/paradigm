@@ -1,10 +1,3 @@
-/*
- * \file
- * \author jmagnene
- *
- * \date July 8, 2016, 9:29 AM
- */
-
 #ifndef PDM_PART_COARSE_MESH_H
 #define	PDM_PART_COARSE_MESH_H
 
@@ -15,12 +8,11 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_timer.h"
 
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
-
+#endif /* __cplusplus */
 
 typedef struct _coarse_mesh_t PDM_coarse_mesh_t;
 
@@ -316,6 +308,9 @@ PDM_part_coarse_mesh_free
  *
  * \brief Return times
  *
+ * \warning This function is deprecated since version 2.9.0
+ *          and will be removed in a future release
+ *
  * \param [in]   cm          Pointer to \ref PDM_coarse_mesh
  * \param [out]  elapsed     Elapsed times (size = 18)
  * \param [out]  cpu         Cpu times (size = 18)
@@ -336,6 +331,35 @@ void PDM_part_coarse_mesh_time_get
 
 /**
  *
+ * \brief Dump times in the console
+ *
+ * \param [in] cm Pointer to \ref PDM_coarse_mesh
+ *
+ */
+void
+PDM_part_coarse_mesh_dump_times
+(
+ PDM_coarse_mesh_t  *cm
+);
+
+
+/**
+ * \brief Get the internal \ref PDM_timer_t instance
+ *
+ * \param [in]  cm    Pointer to \ref PDM_coarse_mesh
+ * \param [out] timer Pointer to \ref PDM_timer_t
+ * \param [in]  owner Ownership of \p timer
+ */
+void
+PDM_part_coarse_mesh_timer_get
+(
+  PDM_coarse_mesh_t  *cm,
+  PDM_timer_t       **timer,
+  PDM_ownership_t     owner
+);
+
+/**
+ *
  * \brief Displays all the arrays of a coarse mesh
  *
  * \param [in]   cm        Pointer to \ref PDM_coarse_mesh
@@ -350,9 +374,9 @@ PDM_part_coarse_mesh_display
 
 
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif	/* PDM_PART_COARSE_MESH_H */
 

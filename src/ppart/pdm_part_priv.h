@@ -325,42 +325,16 @@ typedef struct _PDM_part_t {
                                            or -1 size = 6 * dn_face  */
 
   /* Dual graph */
-
   PDM_g_num_t *ddual_graph_idx;     /*!< Dual graph index (size = dn_cell + 1)      */
   PDM_g_num_t *ddual_graph;         /*!< Dual graph  (size = dualGraphIdx[dn_cell]) */
 
-  PDM_timer_t *timer;             /*!< Timer */
-
-  double times_elapsed [4];          /*!< Elapsed times :
-                                      - Total,
-                                      - build dualgraph,
-                                      - split graph
-                                      - build meshes partition */
-
-  double times_cpu[4];             /*!< CPU times :
-                                      - Total,
-                                      - build dualgraph,
-                                      - split graph
-                                      - build meshes partition */
-
-  double times_cpu_u[4];           /*!< User CPU times :
-                                      - Total,
-                                      - build dualgraph,
-                                      - split graph
-                                      - build meshes partition */
-
-  double times_cpu_s[4];          /*!< Systeme CPU times :
-                                      - Total,
-                                      - build dualgraph,
-                                      - split graph
-                                      - build meshes partition */
+  PDM_timer_t *timer;               /*!< Timer */
+  double t_elapsed[4];              /*!< Elapsed times for the main steps (total, build dual graph, split graph, build mesh partition) */
 
   /* Communicator */
-
   PDM_MPI_Comm      comm;               /*!< Communicator */
 
   /* Partitions */
-
   PDM_part_split_t split_method;             /*!< Partitioning method */
 
   int renum_cell_method;                     /*!< Renumbering cell method */

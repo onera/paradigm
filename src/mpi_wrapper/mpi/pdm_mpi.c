@@ -1,11 +1,6 @@
-/*============================================================================
- * Encapsulation de MPI
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
-
 
 #include <assert.h>
 #include <limits.h>
@@ -31,12 +26,6 @@
 #include "pdm_printf.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des types
@@ -76,16 +65,6 @@ int PDM_MPI_Finalize (void)
 MPI_Comm PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
 {
   return pdm_mpi_comm;
-}
-
-/*----------------------------------------------------------------------------
- * pdm_mpi_2_mpi_comm
- *----------------------------------------------------------------------------*/
-void *PDM_MPI_free_mpi_comm(void *pt_mpi_comm)
-{
-  MPI_Comm *comm = (MPI_Comm *) pt_mpi_comm;
-  MPI_Comm_free (comm);
-  return NULL;
 }
 
 /*----------------------------------------------------------------------------
@@ -162,7 +141,7 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -180,7 +159,7 @@ int PDM_MPI_File_close(PDM_MPI_File *fh)
     char buffer[MPI_MAX_ERROR_STRING];
     int  buffer_len;
     MPI_Error_string(code, buffer, &buffer_len);
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
     abort();
   }
   return code;
@@ -283,7 +262,7 @@ int PDM_MPI_File_read_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -315,7 +294,7 @@ int PDM_MPI_File_read_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -348,7 +327,7 @@ int PDM_MPI_File_write_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -380,7 +359,7 @@ int PDM_MPI_File_write_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -411,7 +390,7 @@ int PDM_MPI_File_read(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -442,7 +421,7 @@ int PDM_MPI_File_read_all(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -472,7 +451,7 @@ int PDM_MPI_File_write(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -503,7 +482,7 @@ int PDM_MPI_File_write_all(PDM_MPI_File fh, void *buf, int count,
 
     MPI_Error_string(code, buffer, &buffer_len);
 
-    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
+    PDM_error("%s", buffer);
 
     abort();
   }
@@ -1370,7 +1349,7 @@ PDM_MPI_Alltoallv_init
   PDM_UNUSED(recvtype);
   PDM_UNUSED(comm);
   PDM_UNUSED(request);
-  PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Alltoallv_Init : Persistent collective communication not available !");
+  PDM_error("Persistent collective communication not available.");
   return -1;
 #endif
 }
@@ -1416,7 +1395,7 @@ PDM_MPI_Neighbor_alltoallv_init
   PDM_UNUSED(recvtype);
   PDM_UNUSED(comm);
   PDM_UNUSED(request);
-  PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Neighbor_alltoallv_init : Persistent collective communication not available !");
+  PDM_error("Persistent collective communication not available.");
   return -1;
 #endif
 }
@@ -1565,8 +1544,7 @@ int PDM_MPI_Topo_test(PDM_MPI_Comm comm, int *status) {
   } else if(_status == PDM_MPI_GRAPH) {
     *status = PDM_MPI_GRAPH;
   } else {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Topo_test :"
-            " _status '%d' non valide\n", _status);
+    PDM_error("status '%d' non valide", _status);
   }
 
   return code;
@@ -1687,9 +1665,7 @@ int PDM_MPI_Comm_split_type(PDM_MPI_Comm comm, int split_type, PDM_MPI_Comm *new
   } else if(split_type == PDM_MPI_SPLIT_NUMA) {
     PDM_MPI_Comm_split_type_numa(comm, newcomm);
   } else {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_MPI_Comm_split_type :"
-            " split_type '%d' non valide\n", split_type);
-    abort();
+    PDM_error("split_type '%d' non valide", split_type);
   }
   return code;
 }
@@ -1801,30 +1777,6 @@ int PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_Comm comm, void *attribute_val, int *fl
 }
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_rand_tag_get
- *----------------------------------------------------------------------------*/
-int PDM_MPI_Rand_tag (PDM_MPI_Comm comm)
-{
-  struct timeval t;
-  gettimeofday(&t, NULL);
-
-  long ltag = t.tv_usec + 1000000 * t.tv_sec;
-
-  MPI_Bcast (&ltag, 1, MPI_LONG, 0, comm);
-
-  void  *max_tag_tmp;
-  int flag;
-
-  // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
-  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &max_tag_tmp, &flag);
-  long max_tag = (long) (*((int *) max_tag_tmp));
-
-  // printf("max_tag = %li | ltag = %li \n", max_tag, ltag);
-
-  return (int) (ltag % max_tag);
-}
-
-/*----------------------------------------------------------------------------
  * PDM_MPI_Dist_graph_create_adjacent
  *----------------------------------------------------------------------------*/
 int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
@@ -1837,6 +1789,7 @@ int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
 {
   const int *weight_in  = MPI_UNWEIGHTED;
   const int *weight_out = MPI_UNWEIGHTED;
+  PDM_GCC_SUPPRESS_WARNING("-Wstringop-overread") // Known bug on gcc14 : https://stackoverflow.com/questions/69583120/how-to-account-for-special-pointers-with-wstringop-overread
   int code = MPI_Dist_graph_create_adjacent(comm_old,
                                             indegree,
                                             sources,
@@ -1847,6 +1800,7 @@ int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
                                             MPI_INFO_NULL,
                                             reorder,
                                             newcomm);
+  PDM_GCC_SUPPRESS_WARNING_POP
   return code;
 }
 
@@ -2354,6 +2308,3 @@ PDM_MPI_Comm_compare
   return MPI_Comm_compare(comm1, comm2, result);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

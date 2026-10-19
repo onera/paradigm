@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_PART_CONNECTIVITY_TRANSFORM_H_
-#define PDM_PART_CONNECTIVITY_TRANSFORM_H_
+#ifndef __PDM_PART_CONNECTIVITY_TRANSFORM_H__
+#define __PDM_PART_CONNECTIVITY_TRANSFORM_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -20,9 +16,9 @@
  * Macro definition
  *============================================================================*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Types definition
@@ -351,8 +347,8 @@ PDM_connectivity_filter
   int **sub_entity1_to_entity2
 );
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif  /* PDM_PART_CONNECTIVITY_TRANSFORM_H_ */
+#endif  /* __PDM_PART_CONNECTIVITY_TRANSFORM_H__ */

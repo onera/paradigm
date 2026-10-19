@@ -188,7 +188,7 @@ _generate_mesh
                                                   part_method);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d (must be 2 or 3)\n", mesh_dimension);
+      PDM_error("Invalid mesh_dimension %d (must be 2 or 3)", mesh_dimension);
     }
   }
 }
@@ -316,7 +316,7 @@ main
   }
 
   const char    *vtx_field_name[] = {"field"};
-  const double **vtx_field     [] = {(const double **) pvtx_field};
+  const double **vtx_field     [] = {(const double **) (void *) pvtx_field};
 
   if (visu) {
     PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,

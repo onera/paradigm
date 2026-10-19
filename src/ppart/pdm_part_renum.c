@@ -30,12 +30,6 @@
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -1837,7 +1831,7 @@ int     *new_to_old_order
   }
 
   if(part->edge_face != NULL && part->edge_face_idx != NULL) {
-    PDM_part_renum_connectivities (part->n_face,
+    PDM_part_renum_connectivities (part->n_edge,
                                    new_to_old_order,
                                    part->edge_face_idx,
                                    part->edge_face);
@@ -2045,6 +2039,3 @@ int     *new_to_old_order
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

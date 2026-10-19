@@ -19,12 +19,6 @@
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Définitions des macro locales
@@ -327,9 +321,8 @@ size_t *hostname_length
     PDM_malloc(hostname, nHostname, char);
 
     if (hostname == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "allocating %lu bytes of memory for hostname failed: %s.\n",
+      PDM_error("Allocating %lu bytes of memory for hostname failed: %s.",
               sizeof(char) * nHostname, strerror(errno));
-      abort();
     }
 
     int error;
@@ -345,8 +338,7 @@ size_t *hostname_length
         PDM_free(hostname);
         hostname = NULL;
 
-        PDM_error(__FILE__, __LINE__, 0, "gethostname failed with error %d: %s.\n", errno, strerror(errno));
-        abort();
+        PDM_error("gethostname failed with error %d: %s.", errno, strerror(errno));
       }
 
     }
@@ -362,6 +354,3 @@ size_t *hostname_length
   *hostname_ptr = hostname;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

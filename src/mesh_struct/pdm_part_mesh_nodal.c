@@ -30,35 +30,29 @@
 #include "pdm_sort.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definition
  *============================================================================*/
 
-#define CHECK_PMNE(pmne)                                                            \
-  if ((pmne) == NULL) {                                                             \
-    PDM_error(__FILE__, __LINE__, 0, "Undefined Part Mesh Nodal Elmts instance\n"); \
+#define CHECK_PMNE(pmne)                                   \
+  if ((pmne) == NULL) {                                    \
+    PDM_error("Undefined Part Mesh Nodal Elmts instance"); \
   }
 
-#define CHECK_PMN(pmn)                                                        \
-  if ((pmn) == NULL) {                                                        \
-    PDM_error(__FILE__, __LINE__, 0, "Undefined Part Mesh Nodal instance\n"); \
+#define CHECK_PMN(pmn)                               \
+  if ((pmn) == NULL) {                               \
+    PDM_error("Undefined Part Mesh Nodal instance"); \
   }
 
-#define CHECK_GEOM_KIND(geom_kind, expected)                                                                   \
-  if ((geom_kind) != (expected)) {                                                                             \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind (expected %d but got %d)\n", (expected), (geom_kind)); \
+#define CHECK_GEOM_KIND(geom_kind, expected)                                          \
+  if ((geom_kind) != (expected)) {                                                    \
+    PDM_error("Invalid geom_kind (expected %d but got %d)", (expected), (geom_kind)); \
   }
 
-#define CHECK_I_PART(pmn, i_part)                                                          \
-  if ((i_part) < 0 || (i_part) >= (pmn)->n_part) {                                         \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)", (i_part), (pmn)->n_part); \
+#define CHECK_I_PART(pmn, i_part)                                   \
+  if ((i_part) < 0 || (i_part) >= (pmn)->n_part) {                  \
+    PDM_error("Invalid i_part (%d / %d)", (i_part), (pmn)->n_part); \
   }
 
 /*============================================================================
@@ -116,24 +110,24 @@ _get_from_geometry_kind
   PDM_geometry_kind_t principal_geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn);
 
   if (principal_geom_kind > geom_kind) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind (expected >= %d but got %d)\n", principal_geom_kind, geom_kind);
+    PDM_error("Invalid geom_kind (expected >= %d but got %d)", principal_geom_kind, geom_kind);
   }
 
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
   if (geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
-    pmne = pmn->volumic;
+    pmne = pmn->pmne[3];
   }
   else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-    pmne = pmn->surfacic;
+    pmne = pmn->pmne[2];
   }
   else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-    pmne = pmn->ridge;
+    pmne = pmn->pmne[1];
   }
   else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-    pmne = pmn->corner;
+    pmne = pmn->pmne[0];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+    PDM_error("Invalid geom_kind %d", geom_kind);
   }
   return pmne;
 }
@@ -224,7 +218,7 @@ PDM_part_mesh_nodal_coord_set
 
   if ((vtx->_coords != NULL) ||
       (vtx->_numabs != NULL)) {
-    PDM_error(__FILE__, __LINE__, 0, "these partition vertices are already defined\n");
+    PDM_error("Partition vertices are already defined");
   }
 
   /* Mapping memoire */
@@ -250,7 +244,7 @@ PDM_part_mesh_nodal_vtx_gnum_set
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
   if ((vtx->_numabs != NULL)) {
-    PDM_error(__FILE__, __LINE__, 0, "these partition vertices are already defined\n");
+    PDM_error("Partition vertices are already defined");
   }
 
   vtx->_numabs      = (PDM_g_num_t*) numabs;
@@ -279,7 +273,7 @@ PDM_part_mesh_nodal_coord_from_parent_set
 
   if ((vtx->_coords != NULL) ||
       (vtx->_numabs != NULL)) {
-    PDM_error(__FILE__, __LINE__, 0, "Vertices are already defined\n");
+    PDM_error("Vertices are already defined");
   }
 
   PDM_malloc(vtx->parent,1,PDM_Mesh_nodal_vtx_t);
@@ -327,32 +321,32 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
   }
 
   if (pmn->n_part != pmne->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "pmn and pmne must have the same number of parts (%d / %d)\n", pmn->n_part, pmne->n_part);
+    PDM_error("pmn and pmne must have the same number of parts (%d / %d)", pmn->n_part, pmne->n_part);
   }
 
   if (pmne->mesh_dimension > pmn->mesh_dimension) {
-    PDM_error(__FILE__, __LINE__, 0, "pmne dimension (%d) must be <= pmn dimension (%d)\n", pmne->mesh_dimension, pmn->mesh_dimension);
+    PDM_error("pmne dimension (%d) must be <= pmn dimension (%d)", pmne->mesh_dimension, pmn->mesh_dimension);
   }
 
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   if(pmne->mesh_dimension == 3) {
-    pmn->volumic = pmne;
+    pmn->pmne[3] = pmne;
     geom_kind    = PDM_GEOMETRY_KIND_VOLUMIC;
   }
   else if(pmne->mesh_dimension == 2){
-    pmn->surfacic = pmne;
+    pmn->pmne[2] = pmne;
     geom_kind     = PDM_GEOMETRY_KIND_SURFACIC;
   }
   else if(pmne->mesh_dimension == 1){
-    pmn->ridge = pmne;
+    pmn->pmne[1] = pmne;
     geom_kind  = PDM_GEOMETRY_KIND_RIDGE;
   }
   else if(pmne->mesh_dimension == 0){
-    pmn->corner = pmne;
+    pmn->pmne[0] = pmne;
     geom_kind   = PDM_GEOMETRY_KIND_CORNER;
   }
   else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension\n");
+    PDM_error("PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension");
   }
 
   // update pmn->n_section, pmn->section_kind, pmn->section_id
@@ -384,9 +378,10 @@ PDM_part_mesh_nodal_part_comm_graph_set
 {
   CHECK_PMN(pmn)
 
-  pmn->pcg[geom_kind] = pcg;
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
+  pmn->pcg[dim] = pcg;
   if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
-    pmn->pcg_ownership[geom_kind] = ownership;
+    pmn->pcg_ownership[dim] = ownership;
   }
 }
 
@@ -401,9 +396,10 @@ PDM_part_mesh_nodal_part_comm_graph_get
 )
 {
   CHECK_PMN(pmn)
-  *pcg = pmn->pcg[geom_kind];
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
+  *pcg = pmn->pcg[dim];
   if (ownership!=PDM_OWNERSHIP_BAD_VALUE) {
-    pmn->pcg_ownership[geom_kind] = ownership;
+    pmn->pcg_ownership[dim] = ownership;
   }
 }
 
@@ -416,6 +412,7 @@ PDM_part_mesh_nodal_part_comm_graph_free
 )
 {
   CHECK_PMN(pmn)
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
   if (geom_kind==PDM_GEOMETRY_KIND_MAX) {
     for (int i_geom_kind=PDM_GEOMETRY_KIND_VOLUMIC;
              i_geom_kind<PDM_GEOMETRY_KIND_MAX; i_geom_kind++) {
@@ -427,11 +424,11 @@ PDM_part_mesh_nodal_part_comm_graph_free
     }
   }
   else {
-    if (pmn->pcg_ownership[geom_kind] == PDM_OWNERSHIP_KEEP) {
-      PDM_part_comm_graph_free(pmn->pcg[geom_kind]);
+    if (pmn->pcg_ownership[dim] == PDM_OWNERSHIP_KEEP) {
+      PDM_part_comm_graph_free(pmn->pcg[dim]);
     }
-    pmn->pcg          [geom_kind] = NULL;
-    pmn->pcg_ownership[geom_kind] = PDM_OWNERSHIP_BAD_VALUE;
+    pmn->pcg          [dim] = NULL;
+    pmn->pcg_ownership[dim] = PDM_OWNERSHIP_BAD_VALUE;
   }
 }
 
@@ -651,22 +648,22 @@ PDM_part_mesh_nodal_section_add
 
   if( _get_from_geometry_kind(pmn, geom_kind) == NULL) {
     if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
-      pmn->volumic = PDM_part_mesh_nodal_elmts_create(3,
+      pmn->pmne[3] = PDM_part_mesh_nodal_elmts_create(3,
                                                       pmn->n_part,
                                                       pmn->comm);
     }
     else if( geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-      pmn->surfacic = PDM_part_mesh_nodal_elmts_create(2,
+      pmn->pmne[2] = PDM_part_mesh_nodal_elmts_create(2,
                                                        pmn->n_part,
                                                        pmn->comm);
     }
     else if( geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-      pmn->ridge = PDM_part_mesh_nodal_elmts_create(1,
+      pmn->pmne[1] = PDM_part_mesh_nodal_elmts_create(1,
                                                     pmn->n_part,
                                                     pmn->comm);
     }
     else if( geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-      pmn->corner = PDM_part_mesh_nodal_elmts_create(0,
+      pmn->pmne[0] = PDM_part_mesh_nodal_elmts_create(0,
                                                      pmn->n_part,
                                                      pmn->comm);
     }
@@ -917,20 +914,20 @@ PDM_part_mesh_nodal_free
   }
 
   // volumic
-  PDM_part_mesh_nodal_elmts_free(pmn->volumic);
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[3]);
 
   // surfacic
-  PDM_part_mesh_nodal_elmts_free(pmn->surfacic);
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[2]);
 
   // ridge
-  PDM_part_mesh_nodal_elmts_free(pmn->ridge);
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[1]);
 
   // corner
-  PDM_part_mesh_nodal_elmts_free(pmn->corner);
+  PDM_part_mesh_nodal_elmts_free(pmn->pmne[0]);
 
   if (pmn->vtx != NULL) {
     for (int i_part = 0; i_part < pmn->n_part; i_part++) {
-      _vtx_free (pmn->vtx[i_part]);
+      _vtx_free(pmn->vtx[i_part]);
       PDM_free(pmn->vtx[i_part]);
     }
 
@@ -973,15 +970,17 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     return;
   }
 
-  PDM_part_comm_graph_t* pcg = NULL;
+  PDM_part_comm_graph_t* pcg_elt = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn,
                                           geom_kind,
-                                          &pcg,
+                                          &pcg_elt,
                                           PDM_OWNERSHIP_BAD_VALUE);
 
-  int have_owner = 0;
-  if(pcg != NULL) {
-    have_owner = 1;
+  int have_owner_elt  = 0;
+  int nuplet_size_elt = 0;
+  if(pcg_elt != NULL) {
+    have_owner_elt  = 1;
+    nuplet_size_elt = PDM_part_comm_graph_nuplet_size(pcg_elt);
   }
 
   PDM_part_comm_graph_t* pcg_vtx = NULL;
@@ -989,9 +988,11 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
                                               &pcg_vtx,
                                               PDM_OWNERSHIP_BAD_VALUE);
 
-  int have_owner_vtx = 0;
+  int have_owner_vtx  = 0;
+  int nuplet_size_vtx = 0;
   if(pcg_vtx != NULL) {
-    have_owner_vtx = 1;
+    have_owner_vtx  = 1;
+    nuplet_size_vtx = PDM_part_comm_graph_nuplet_size(pcg_vtx);
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -1004,7 +1005,7 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     int *section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn, geom_kind);
 
     /* Export group also */
-    int n_group = pmne->n_group;
+    int n_group   = pmne->n_group;
     int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
     double *elt_group = PDM_array_const_double(n_elt_tot, -1);
     for(int i_group = 0; i_group < n_group; ++i_group) {
@@ -1021,36 +1022,60 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
                                                    &elt_vtx_idx,
                                                    &elt_vtx);
 
-    PDM_g_num_t          *elt_g_num   = NULL;
-    PDM_Mesh_nodal_elt_t *elt_type    = NULL;
-    double               *elt_section = NULL;
-    double               *elt_entity  = NULL;
-    double               *elt_owner   = NULL;
-    PDM_malloc(elt_g_num,   n_elt_tot, PDM_g_num_t         );
-    PDM_malloc(elt_type,    n_elt_tot, PDM_Mesh_nodal_elt_t);
-    PDM_malloc(elt_section, n_elt_tot, double              );
-    PDM_malloc(elt_entity,  n_elt_tot, double              );
-    PDM_malloc(elt_owner ,  n_elt_tot, double              );
-
-    int _n_elt_field = n_elt_field + 3 + have_owner;
-
-    for(int i_elt = 0; i_elt < n_elt_tot; ++i_elt) {
-      elt_owner[i_elt] = -1.;
+    PDM_g_num_t           *elt_g_num   = NULL;
+    PDM_Mesh_nodal_elt_t  *elt_type    = NULL;
+    double                *elt_section = NULL;
+    double                *elt_entity  = NULL;
+    double                *elt_owner   = NULL;
+    double               **elt_nuplt   = NULL;
+    PDM_malloc(elt_g_num  , n_elt_tot      , PDM_g_num_t         );
+    PDM_malloc(elt_type   , n_elt_tot      , PDM_Mesh_nodal_elt_t);
+    PDM_malloc(elt_section, n_elt_tot      , double              );
+    PDM_malloc(elt_entity , n_elt_tot      , double              );
+    PDM_malloc(elt_owner  , n_elt_tot      , double              );
+    PDM_malloc(elt_nuplt  , nuplet_size_elt, double             *);
+    for (int i_nuplet = 0; i_nuplet < nuplet_size_elt; ++i_nuplet) {
+      PDM_malloc(elt_nuplt[i_nuplet], n_elt_tot, double);
     }
 
-    if(pcg != NULL) {
-      const int* pcg_owner = PDM_part_comm_graph_owner_get(pcg, i_part);
+    for(int i_elt = 0; i_elt < n_elt_tot; ++i_elt) {
+      elt_owner [i_elt] = -1.;
+      elt_entity[i_elt] = -1.;
+    }
+
+    if(pcg_elt != NULL) {
+      const int* pcg_owner = PDM_part_comm_graph_owner_get(pcg_elt, i_part);
       int *entity_graph = NULL;
-      int n_graph_entity = PDM_part_comm_graph_entity_graph_get(pcg,
+      int n_graph_entity = PDM_part_comm_graph_entity_graph_get(pcg_elt,
                                                                 i_part,
                                                                 &entity_graph,
                                                                 PDM_OWNERSHIP_BAD_VALUE);
       for(int idx_graph = 0; idx_graph < n_graph_entity; ++idx_graph) {
         elt_owner[entity_graph[4*idx_graph]-1] = pcg_owner[idx_graph];
       }
+
+      if (nuplet_size_elt > 0) {
+
+        for(int i_elt = 0; i_elt < n_elt_tot; ++i_elt) {
+          for (int i_nuplet = 0; i_nuplet < nuplet_size_elt; ++i_nuplet) {
+            elt_nuplt[i_nuplet][i_elt] = 0.;
+          }
+        }
+        int *entity_nuplt = NULL;
+        PDM_part_comm_graph_entity_nuplet_get(pcg_elt,
+                                              i_part,
+                                              &entity_nuplt,
+                                              PDM_OWNERSHIP_BAD_VALUE);
+        for(int idx_graph = 0; idx_graph < n_graph_entity; ++idx_graph) {
+          for (int i_nuplet = 0; i_nuplet < nuplet_size_elt; ++i_nuplet) {
+            elt_nuplt[i_nuplet][entity_graph[4*idx_graph]-1] = entity_nuplt[nuplet_size_elt*idx_graph+i_nuplet];
+          }
+        }
+      }
     }
 
     int idx = 0;
+    int elt_has_elmt_to_entity = 0;
     for (int i_section = 0; i_section < n_section; ++i_section) {
       int id_section = section_id[i_section];
       int                  n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
@@ -1061,6 +1086,10 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
       int *_elt_to_entity = PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
       int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
+      if (_elt_to_entity != NULL) {
+        elt_has_elmt_to_entity = 1;
+      }
 
       for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
@@ -1081,50 +1110,84 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
         if (_elt_to_entity != NULL) {
           elt_entity[i_parent] = _elt_to_entity[i_elt];
         }
-        else {
-          _n_elt_field = n_elt_field + 2 + have_owner;
-        }
         idx++;
       }
     }
 
-    const char   *_elt_field_name[n_elt_field+3+1];
-    const double *_elt_field     [n_elt_field+3+1];
+    int _n_elt_field = n_elt_field
+                     + 2                       /* groud_id + section_id */
+                     + elt_has_elmt_to_entity
+                     + have_owner_elt
+                     + nuplet_size_elt;
+
+    char   **_elt_field_name = NULL;
+    double **_elt_field      = NULL;
+    PDM_malloc(_elt_field_name, _n_elt_field, char   *);
+    PDM_malloc(_elt_field     , _n_elt_field, double *);
+
+    int i_write_fld = 0;
     for (int i_field = 0; i_field < n_elt_field; i_field++) {
-      _elt_field_name[i_field] = elt_field_name[i_field];
-      _elt_field     [i_field] = elt_field     [i_field][i_part];
-    }
-    _elt_field_name[n_elt_field  ] = "groud_id";
-    _elt_field     [n_elt_field  ] = elt_group;
-    _elt_field_name[n_elt_field+1] = "section_id";
-    _elt_field     [n_elt_field+1] = elt_section;
-    if (_n_elt_field > n_elt_field + 2 + have_owner) {
-      _elt_field_name[n_elt_field+2] = "elt_to_entity";
-      _elt_field     [n_elt_field+2] = elt_entity;
-      _elt_field_name[n_elt_field+3] = "is_owner";
-      _elt_field     [n_elt_field+3] = elt_owner;
-    } else {
-      _elt_field_name[n_elt_field+2] = "is_owner";
-      _elt_field     [n_elt_field+2] = elt_owner;
+      _elt_field_name[i_write_fld  ] = (char   *) elt_field_name[i_field];
+      _elt_field     [i_write_fld++] = (double *) elt_field     [i_field][i_part];
     }
 
-    int _n_vtx_field = n_vtx_field + have_owner_vtx;
+    _elt_field_name[i_write_fld  ] = (char *) "groud_id";
+    _elt_field     [i_write_fld++] = elt_group;
 
-    const char   *_vtx_field_name[_n_vtx_field];
-    const double *_vtx_field     [_n_vtx_field];
+    _elt_field_name[i_write_fld  ] = (char *) "section_id";
+    _elt_field     [i_write_fld++] = elt_section;
+
+    if (elt_has_elmt_to_entity) {
+      _elt_field_name[i_write_fld  ] = (char *) "elt_to_entity";
+      _elt_field     [i_write_fld++] = elt_entity;
+    }
+    if (have_owner_elt) {
+      _elt_field_name[i_write_fld  ] = (char *) "is_owner";
+      _elt_field     [i_write_fld++] = elt_owner;
+    }
+
+    /* Noms construits : ceux-la seuls demandent un buffer */
+    int idx_elt_nuplet_name0 = i_write_fld;
+    for (int i_nuplet = 0; i_nuplet < nuplet_size_elt; ++i_nuplet) {
+      PDM_malloc(_elt_field_name[i_write_fld], 32, char);
+      snprintf(_elt_field_name[i_write_fld], 32, "elt_nuplet_%d", i_nuplet);
+      _elt_field[i_write_fld++] = elt_nuplt[i_nuplet];
+    }
+
+    assert(i_write_fld == _n_elt_field);
+
+    /*
+     * Vertices fields
+     */
+    int _n_vtx_field = n_vtx_field + have_owner_vtx + nuplet_size_vtx;
+    char   **_vtx_field_name = NULL;
+    double **_vtx_field      = NULL;
+    PDM_malloc(_vtx_field_name, _n_vtx_field, char   *);
+    PDM_malloc(_vtx_field     , _n_vtx_field, double *);
+
+    int i_write_vtx_fld = 0;
     for (int i_field = 0; i_field < n_vtx_field; i_field++) {
-      _vtx_field_name[i_field] = vtx_field_name[i_field];
-      _vtx_field     [i_field] = vtx_field     [i_field][i_part];
+      _vtx_field_name[i_write_vtx_fld  ] = (char   *) vtx_field_name[i_field];
+      _vtx_field     [i_write_vtx_fld++] = (double *) vtx_field     [i_field][i_part];
     }
 
-    double *vtx_owner   = NULL;
-    PDM_malloc(vtx_owner, pn_vtx, double);
+    double  *vtx_owner = NULL;
+    double **vtx_nuplt = NULL;
+    PDM_malloc(vtx_owner, pn_vtx         , double  );
+    PDM_malloc(vtx_nuplt, nuplet_size_vtx, double *);
+    for (int i_nuplet = 0; i_nuplet < nuplet_size_vtx; ++i_nuplet) {
+      PDM_malloc(vtx_nuplt[i_nuplet], pn_vtx, double);
+    }
     for(int i_vtx = 0; i_vtx < pn_vtx; ++i_vtx) {
       vtx_owner[i_vtx] = -1.;
     }
+
+    int idx_vtx_nuplet_name0 = -1;
     if(pcg_vtx != NULL) {
-      _vtx_field_name[n_vtx_field] = "ownoeud";
-      _vtx_field     [n_vtx_field] = vtx_owner;
+
+      _vtx_field_name[i_write_vtx_fld  ] = (char *) "ownoeud";
+      _vtx_field     [i_write_vtx_fld++] = vtx_owner;
+
       const int* pcg_owner = PDM_part_comm_graph_owner_get(pcg_vtx, i_part);
       int *entity_graph = NULL;
       int n_graph_entity = PDM_part_comm_graph_entity_graph_get(pcg_vtx,
@@ -1134,10 +1197,39 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
       for(int idx_graph = 0; idx_graph < n_graph_entity; ++idx_graph) {
         vtx_owner[entity_graph[4*idx_graph]-1] = pcg_owner[idx_graph];
       }
+
+      if (nuplet_size_vtx > 0) {
+
+        for(int i_vtx = 0; i_vtx < pn_vtx; ++i_vtx) {
+          for (int i_nuplet = 0; i_nuplet < nuplet_size_vtx; ++i_nuplet) {
+            vtx_nuplt[i_nuplet][i_vtx] = 0.;
+          }
+        }
+
+        idx_vtx_nuplet_name0 = i_write_vtx_fld;
+        for (int i_nuplet = 0; i_nuplet < nuplet_size_vtx; ++i_nuplet) {
+          PDM_malloc(_vtx_field_name[i_write_vtx_fld], 32, char);
+          snprintf(_vtx_field_name[i_write_vtx_fld], 32, "vtx_nuplet_%d", i_nuplet);
+          _vtx_field[i_write_vtx_fld++] = vtx_nuplt[i_nuplet];
+        }
+
+        int *entity_nuplt = NULL;
+        PDM_part_comm_graph_entity_nuplet_get(pcg_vtx,
+                                              i_part,
+                                              &entity_nuplt,
+                                              PDM_OWNERSHIP_BAD_VALUE);
+        for(int idx_graph = 0; idx_graph < n_graph_entity; ++idx_graph) {
+          for (int i_nuplet = 0; i_nuplet < nuplet_size_vtx; ++i_nuplet) {
+            vtx_nuplt[i_nuplet][entity_graph[4*idx_graph]-1] = entity_nuplt[nuplet_size_vtx*idx_graph+i_nuplet];
+          }
+        }
+      }
     }
 
+    assert(i_write_vtx_fld == _n_vtx_field);
+
     char filename[999];
-    sprintf(filename, "%s_%d_%d.vtk", filename_pattern, i_rank, i_part);
+    snprintf(filename, sizeof(filename), "%s_%d_%d.vtk", filename_pattern, i_rank, i_part);
     PDM_vtk_write_unstructured_grid(filename,
                                     pn_vtx,
                                     pvtx_coord,
@@ -1154,7 +1246,21 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
                                     _vtx_field_name,
                                     _vtx_field);
 
-    PDM_free(vtx_owner  );
+    for (int i_nuplet = 0; i_nuplet < nuplet_size_vtx; ++i_nuplet) {
+      PDM_free(vtx_nuplt[i_nuplet]);
+      if(idx_vtx_nuplet_name0 >= 0) {
+        PDM_free(_vtx_field_name[idx_vtx_nuplet_name0 + i_nuplet]);
+      }
+    }
+    PDM_free(vtx_nuplt);
+    PDM_free(vtx_owner);
+
+    for (int i_nuplet = 0; i_nuplet < nuplet_size_elt; ++i_nuplet) {
+      PDM_free(elt_nuplt[i_nuplet]);
+      PDM_free(_elt_field_name[idx_elt_nuplet_name0 + i_nuplet]);
+    }
+    PDM_free(elt_nuplt);
+
     PDM_free(elt_group  );
     PDM_free(elt_g_num  );
     PDM_free(elt_type   );
@@ -1163,6 +1269,11 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     PDM_free(elt_owner  );
     PDM_free(elt_vtx_idx);
     PDM_free(elt_vtx    );
+
+    PDM_free(_elt_field_name);
+    PDM_free(_elt_field     );
+    PDM_free(_vtx_field_name);
+    PDM_free(_vtx_field     );
   }
 }
 
@@ -1785,7 +1896,7 @@ PDM_part_mesh_nodal_vertices_g_num_parent_get
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
   if (vtx->parent == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Undefined parent vertices\n");
+    PDM_error("Undefined parent vertices");
   }
 
   return vtx->parent->_numabs;
@@ -2031,7 +2142,7 @@ PDM_part_mesh_nodal_section_id_and_geom_kind_get
   CHECK_PMN(pmn)
 
   if (i_section >= pmn->n_section) {
-    PDM_error(__FILE__, __LINE__, 0, "i_section (%d) > n_section (%d)\n", i_section, pmn->n_section);
+    PDM_error("i_section (%d) > n_section (%d)", i_section, pmn->n_section);
   }
 
   *geom_kind               = pmn->section_kind[i_section];
@@ -2196,7 +2307,7 @@ PDM_part_mesh_nodal_principal_geom_kind_get
     return PDM_GEOMETRY_KIND_CORNER;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", pmn->mesh_dimension);
+    PDM_error("Invalid mesh_dimension %d", pmn->mesh_dimension);
   }
 
   return PDM_GEOMETRY_KIND_MAX;
@@ -2340,7 +2451,7 @@ PDM_part_mesh_nodal_dump_gamma
             pvtx_tag[i_part][i_vtx] = i_group + 1;
           }
           else {
-            PDM_error(__FILE__, __LINE__, 0, "Vertex referenced by more than one corners\n");
+            PDM_error("Vertex referenced by more than one corners");
           }
         }
       } // End loop on groups
@@ -2699,7 +2810,3 @@ PDM_part_mesh_nodal_dump_gamma
   PDM_free(gvtx_coord);
   PDM_free(gvtx_tag);
 }
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

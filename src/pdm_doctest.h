@@ -13,4 +13,4 @@
     for(int i = 0; i < (size); ++i){ CHECK((array)[i] == (array_expected)[i]); } \
   }
 
-#endif  /* __PDM_H__ */
+#endif  /* __PDM_DOCTEST_H__ */

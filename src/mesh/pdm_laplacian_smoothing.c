@@ -23,12 +23,6 @@
 #include "pdm_error.h"
 #include "pdm_laplacian_smoothing.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -128,7 +122,7 @@ static double _compute_laplacian_smoothing
   // Check pointers
   if (p_n_vtx_frozen != NULL) {
     if (p_vtx_frozen == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "p_vtx_frozen is NULL\n");
+      PDM_error("p_vtx_frozen is NULL.");
     }
   }
 
@@ -500,6 +494,3 @@ PDM_laplacian_smoothing_fields_one_iteration
   return eps;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

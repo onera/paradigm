@@ -21,12 +21,6 @@
 #include "pdm_priv.h"
 #include "pdm_unique.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 
 /*============================================================================
@@ -550,7 +544,7 @@ PDM_compute_face_vtx_from_face_and_edge
 
         if (edge_vtx[2*iedge] == _face_vtx[i-1]) {
           if (_face_edge[j] <= 0) {
-            PDM_error(__FILE__, __LINE__, 0, "Incoherence between face->edge and edge->vtx (for face %d, j = %d, got edge %d, but expected > 0)\n", iface, j, _face_edge[j]);
+            PDM_error("Incoherence between face->edge and edge->vtx (for face %d, j = %d, got edge %d, but expected > 0)", iface, j, _face_edge[j]);
           }
           _face_vtx[i] = edge_vtx[2*iedge+1];
           edge_tag[iedge] = 1;
@@ -558,7 +552,7 @@ PDM_compute_face_vtx_from_face_and_edge
         }
         else if (edge_vtx[2*iedge+1] == _face_vtx[i-1]) {
           if (_face_edge[j] >= 0) {
-            PDM_error(__FILE__, __LINE__, 0, "Incoherence between face->edge and edge->vtx (for face %d, j = %d, got edge %d, but expected < 0)\n", iface, j, _face_edge[j]);
+            PDM_error("Incoherence between face->edge and edge->vtx (for face %d, j = %d, got edge %d, but expected < 0)", iface, j, _face_edge[j]);
           }
           _face_vtx[i] = edge_vtx[2*iedge];
           edge_tag[iedge] = 1;
@@ -769,6 +763,3 @@ PDM_connectivity_filter
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

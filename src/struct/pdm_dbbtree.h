@@ -1,14 +1,9 @@
-/*
- * \file
- */
-
 #ifndef __PDM_DBBTREE_H__
 #define __PDM_DBBTREE_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -21,9 +16,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*=============================================================================
@@ -522,20 +514,12 @@ PDM_dbbtree_volumes_intersect_boxes
 void
 PDM_dbbtree_box_tree_write_vtk
 (
- const char    *filename,
- PDM_dbbtree_t *dbbt,
- const int      i_copied_rank,
- const int      normalized
- );
+ const char          *filename,
+       PDM_dbbtree_t *dbbt,
+ const int            i_copied_rank,
+ const int            normalized
+);
 
-
-void
-PDM_dbbtree_box_tree_write_vtk2
-(
- const char    *filename,
- PDM_dbbtree_t *dbbt,
- const int      i_copied_rank
- );
 
 #ifdef __cplusplus
 }

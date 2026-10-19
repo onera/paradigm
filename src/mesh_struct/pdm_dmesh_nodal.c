@@ -34,12 +34,6 @@
 #include "pdm_vtk.h"
 #include "pdm_dmesh_nodal.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -135,7 +129,7 @@ _get_from_geometry_kind
   } else if( geom_kind == PDM_GEOMETRY_KIND_CORNER){
     dmne = dmesh_nodal->corner;
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom_kind in _get_from_geometry_kind \n");
+    PDM_error("Bad geom_kind in _get_from_geometry_kind");
   }
   return dmne;
 }
@@ -260,13 +254,13 @@ PDM_DMesh_nodal_coord_set
 {
 
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
 
   if (vtx->_coords != NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Vertices are already defined\n");
+    PDM_error("Vertices are already defined");
   }
 
   /* Mapping memoire */
@@ -302,13 +296,13 @@ PDM_DMesh_nodal_vtx_tag_set
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
 
   if (vtx->dvtx_tag != NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "dvtx_tag are already defined\n");
+    PDM_error("dvtx_tag are already defined");
   }
   vtx->owner_tag   = owner;
 
@@ -324,13 +318,13 @@ PDM_DMesh_nodal_vtx_parent_gnum_set
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error ("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
 
   if (vtx->dvtx_parent_g_num != NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "dvtx_tag are already defined\n");
+    PDM_error("dvtx_tag are already defined");
   }
 
   vtx->owner_parent   = owner;
@@ -364,7 +358,7 @@ PDM_DMesh_nodal_n_vtx_get
 {
 
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
@@ -382,7 +376,7 @@ PDM_DMesh_nodal_vtx_get
 {
 
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
@@ -403,7 +397,7 @@ PDM_DMesh_nodal_vtx_tag_get
 {
 
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
@@ -425,7 +419,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal,
 {
 
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
@@ -446,7 +440,7 @@ PDM_DMesh_nodal_n_section_get
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   if(dmne){
@@ -465,7 +459,7 @@ PDM_DMesh_nodal_sections_id_get
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   return dmne->sections_id;
@@ -498,7 +492,7 @@ const int                  id_section
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
 
@@ -511,7 +505,7 @@ const int                  id_section
     PDM_DMesh_nodal_section_std_t *section = dmne->sections_std[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");
+      PDM_error("Bad section identifier");
     }
 
     t_elt = section->t_elt;
@@ -678,7 +672,7 @@ const char                    **ho_ordering,
 )
 {
   if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
@@ -689,7 +683,7 @@ const char                    **ho_ordering,
   *ho_ordering = dmn_elts->sections_std[_id_section]->ho_ordering;
 
   if (section == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    PDM_error("Bad standard section identifier");
   }
 
   if(owner != PDM_OWNERSHIP_BAD_VALUE) {
@@ -729,7 +723,7 @@ const int                      id_section
     PDM_DMesh_nodal_section_poly3d_t *section = dmn_elts->sections_poly3d[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+      PDM_error("Bad standard section identifier");
     }
 
     return section->n_elt;
@@ -742,7 +736,7 @@ const int                      id_section
     PDM_DMesh_nodal_section_poly2d_t *section = dmn_elts->sections_poly2d[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad polygon section identifier\n");
+      PDM_error("Bad polygon section identifier");
     }
 
     return section->n_elt;
@@ -755,7 +749,7 @@ const int                      id_section
     PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
+      PDM_error("Bad polyhedron section identifier");
     }
 
     return section->n_elt;
@@ -820,7 +814,7 @@ const PDM_l_num_t          n_face,
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   PDM_DMesh_nodal_elmts_section_poly3d_set(dmne, id_section, n_elt, n_face, facvtx_idx, facvtx, cellfac_idx, cellfac, owner);
@@ -843,7 +837,7 @@ const int                   id_section,
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   PDM_DMesh_nodal_elmts_section_poly3d_get(dmne, id_section, n_face, facvtx_idx, facvtx, cellfac_idx, cellfac, owner);
@@ -859,7 +853,7 @@ PDM_dmesh_nodal_total_n_elmt_get
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   return PDM_DMesh_nodal_elmts_total_n_elmt_get(dmne);
@@ -905,7 +899,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
@@ -982,7 +976,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
@@ -1001,7 +995,7 @@ const int                  id_section
 )
 {
   if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   return PDM_DMesh_nodal_elmts_distrib_section_get(dmne, id_section);
@@ -1205,7 +1199,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
       s_connec += dconnec_idx[n_elt];
     }
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_dmesh_nodal_dump_vtk_with_field : POLY_3D are not supported\n");
+      PDM_error("POLY_3D are not supported");
     }
     else {
       int order;
@@ -1257,7 +1251,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
       }
     }
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_dmesh_nodal_dump_vtk_with_field : POLY_3D are not supported\n");
+      PDM_error("POLY_3D are not supported");
     }
     else {
       int order = -1;
@@ -1341,15 +1335,15 @@ PDM_dmesh_nodal_dump_vtk_with_field
    * Element fields
    */
   int _n_fld_elmt = n_fld_elmt;
-  const char   *_fld_name_elmt[n_fld_elmt+2];
-  const double *_fld_elmt     [n_fld_elmt+2];
+  char   *_fld_name_elmt[n_fld_elmt+2];
+  double *_fld_elmt     [n_fld_elmt+2];
   for (int i_fld = 0; i_fld < n_fld_elmt; i_fld++) {
-    _fld_name_elmt[i_fld] = fld_name_elmt[i_fld];
-    _fld_elmt     [i_fld] = fld_elmt     [i_fld];
+    _fld_name_elmt[i_fld] = (char   *) fld_name_elmt[i_fld];
+    _fld_elmt     [i_fld] = (double *) fld_elmt     [i_fld];
   }
 
   // Section
-  _fld_name_elmt[_n_fld_elmt] = "i_section";
+  sprintf(_fld_name_elmt[_n_fld_elmt], "i_section");
   _fld_elmt     [_n_fld_elmt] = cat_elt_section;
   _n_fld_elmt++;
 
@@ -1421,7 +1415,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
     PDM_part_to_part_free(ptp);
 
 
-    _fld_name_elmt[_n_fld_elmt] = "group";
+    sprintf(_fld_name_elmt[_n_fld_elmt], "group");
     _fld_elmt     [_n_fld_elmt] = cat_elt_group;
     _n_fld_elmt++;
   }
@@ -1445,8 +1439,8 @@ PDM_dmesh_nodal_dump_vtk_with_field
                                   _fld_name_elmt,
                                   _fld_elmt,
                                   n_fld_vtx,
-                                  fld_name_vtx,
-                                  pfield_vtx);
+                       (char  **) fld_name_vtx,
+                       (double**) pfield_vtx);
   for (int i_fld = 0; i_fld < n_fld_vtx; i_fld++) {
     PDM_free(pfield_vtx[i_fld]);
   }
@@ -1972,8 +1966,3 @@ PDM_dmesh_nodal_revert_orientation
     PDM_free(tmp);
   }
 }
-
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

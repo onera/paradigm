@@ -11,12 +11,6 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type definitions
@@ -681,6 +675,3 @@ PDM_dcube_t        *dcube
   PDM_free(dcube);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -1,8 +1,3 @@
-
-/*============================================================================
- * Parallel partitioning
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
@@ -34,12 +29,6 @@
  *  Optional headers
  *----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -829,7 +818,7 @@ const PDM_MPI_Comm      comm
         PDM_printf("PPART error : PT-Scotch unavailable\n");
         exit(1);
       #else
-        int check = 1;
+        int check = 0;
         // printf("PDM_SCOTCH_dpart %d | %d \n", n_part, dn_elmt);
         PDM_SCOTCH_dpart (dn_elmt,
                           dual_graph_idx,
@@ -851,6 +840,3 @@ const PDM_MPI_Comm      comm
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

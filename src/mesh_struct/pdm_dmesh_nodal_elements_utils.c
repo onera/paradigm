@@ -15,12 +15,6 @@
 #include "pdm_dmesh_nodal_elmts_priv.h"
 #include "pdm_error.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -328,7 +322,7 @@ PDM_poly3d_decomposes_faces
   PDM_UNUSED(elmt_cell_face);
   PDM_UNUSED(parent_elmt_position);
 
-  PDM_error(__FILE__, __LINE__, 0, "PDM_poly3d_decomposes_faces : Not yet implemented\n");
+  PDM_error("Not yet implemented");
 }
 
 /**
@@ -366,7 +360,7 @@ PDM_poly3d_decomposes_edges
   PDM_UNUSED(elmt_cell_edge_idx);
   PDM_UNUSED(elmt_cell_edge);
   PDM_UNUSED(parent_elmt_position);
-  PDM_error(__FILE__, __LINE__, 0, "PDM_poly3d_decomposes_edges : Not yet implemented\n");
+  PDM_error("Not yet implemented");
 }
 
 
@@ -441,7 +435,7 @@ PDM_sections_decompose_faces
 
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
       /* Polyhedra */
-      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : POLY_3D not yet supported\n");
+      PDM_error("POLY_3D not yet supported");
     }
 
     else {
@@ -553,7 +547,7 @@ PDM_sections_decompose_edges
 
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
       /* Polyhedra */
-      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : POLY_3D not yet supported\n");
+      PDM_error("POLY_3D not yet supported");
     }
 
     else {
@@ -595,7 +589,4 @@ PDM_sections_decompose_edges
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

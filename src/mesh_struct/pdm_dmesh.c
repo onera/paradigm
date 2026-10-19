@@ -1,27 +1,3 @@
-/*
-  This file is part of the ParaDiGM library.
-
-  Copyright (C) 2017       ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-/*============================================================================
- * Interface structure to represent a distributed mesh
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -54,12 +30,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -240,7 +210,7 @@ PDM_dmesh_vtx_coord_set
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
   }
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+    PDM_error("Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s", ownership);
   }
   dmesh->owner_vtx_coord = ownership;
 }
@@ -265,7 +235,7 @@ PDM_dmesh_connectivity_set
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
   }
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+    PDM_error("Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s", ownership);
   }
   dmesh->owner_connectivity[connectivity_type] = ownership;
 }
@@ -384,7 +354,7 @@ PDM_dmesh_distrib_get
      *distrib = dmesh->vtx_distrib;
      break;
    default:
-    PDM_error(__FILE__, __LINE__, 0, "PDM_dmesh_distrib_get invalid entity_type %d\n", entity_type);
+    PDM_error("PDM_dmesh_distrib_get invalid entity_type %d", entity_type);
     break;
    }
    int n_rank;
@@ -490,7 +460,7 @@ PDM_dmesh_bound_set
   }
 
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+    PDM_error("Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s", ownership);
   }
   dmesh->owner_bound[bound_type] = ownership;
 }
@@ -938,7 +908,7 @@ PDM_dmesh_dimension_get
 )
 {
   if (dmesh == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dmesh\n");
+    PDM_error("Invalid dmesh");
   }
 
   int dim = -1;
@@ -964,6 +934,3 @@ PDM_dmesh_dimension_get
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

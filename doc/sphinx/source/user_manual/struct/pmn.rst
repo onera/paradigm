@@ -150,6 +150,7 @@ API
 
           .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_sections_from_cell_face
           .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_sections_from_face_edge
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_sections_from_elt_vtx
 
         .. ifconfig:: enable_python_doc == 'OFF'
 

@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_PART_COMM_GRAPH_H__
 #define __PDM_PART_COMM_GRAPH_H__
 

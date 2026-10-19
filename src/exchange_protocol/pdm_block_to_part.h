@@ -1,12 +1,5 @@
-/*
- * \file
- * \author equemera
- *
- * \date April 14, 2016, 7:56 AM
- */
-
-#ifndef PDM_BLOCK_TO_PART_H
-#define	PDM_BLOCK_TO_PART_H
+#ifndef __PDM_BLOCK_TO_PART_H__
+#define	__PDM_BLOCK_TO_PART_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -49,99 +42,6 @@ typedef struct _pdm_block_to_part_t PDM_block_to_part_t;
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
-
-/**
- *
- * \brief Reset global block-to-part statistics
- *
- */
-
-void
-PDM_block_to_part_global_statistic_reset
-(
- void
-);
-
-
-/**
- *
- * \brief Get global block-to-part statistics
- *
- * \param [in]   comm                 MPI communicator
- * \param [out]  min_exch_rank_send   Global min part of ranks used to send 
- * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive 
- * \param [out]  max_exch_rank_send   Global max part of ranks used to send 
- * \param [out]  max_exch_rank_recv   Global max part of ranks used to receive
- * \param [out]  min_exch_data_send   Global min sent data for a rank 
- * \param [out]  min_exch_data_recv   Global min received data for a rank
- * \param [out]  max_exch_data_send   Global max sent data for a rank
- * \param [out]  max_exch_data_recv   Global max received data for a rank
- * 
- */
-
-void
-PDM_block_to_part_global_statistic_get
-(
- PDM_MPI_Comm comm,
- int *min_exch_rank_send,
- int *min_exch_rank_recv,
- int *max_exch_rank_send,
- int *max_exch_rank_recv,
- unsigned long long *min_exch_data_send,
- unsigned long long *min_exch_data_recv,
- unsigned long long *max_exch_data_send,
- unsigned long long *max_exch_data_recv
-);
-
-/**
- *
- * \brief Get global block-to-part timer
- *
- * \param [in]   comm              MPI communicator
- * \param [out]  min_elaps         Min elapsed time
- * \param [out]  max_elaps         Max elapsed time
- * \param [out]  min_cpu           Min cpu time
- * \param [out]  max_cpu           Max cpu time
- * \param [out]  min_elaps_create  Global min elapsed for create function
- * \param [out]  max_elaps_create  Global max elapsed for create function
- * \param [out]  min_cpu_create    Global min cpu for create function
- * \param [out]  max_cpu_create    Global max cpu for create function
- * \param [out]  min_elaps_exch    Global min elapsed for exch function
- * \param [out]  max_elaps_exch    Global max elapsed for exch function
- * \param [out]  min_cpu_exch      Global min cpu for exch function
- * \param [out]  max_cpu_exch      Global max cpu for exch function
- * 
- */
-
-void
-PDM_block_to_part_global_timer_get
-(
- PDM_MPI_Comm comm,
- double       *min_elaps_create,
- double       *max_elaps_create,
- double       *min_cpu_create,
- double       *max_cpu_create,
- double       *min_elaps_exch,
- double       *max_elaps_exch,
- double       *min_cpu_exch,
- double       *max_cpu_exch
-);
-
-/**
- *
- * \brief Global write block-to-part step timer
- *
- * \param [in]  comm            MPI communicator
- * \param [in]  filename        File name
- *
- */
-
-void
-PDM_block_to_part_time_per_step_dump
-(
- PDM_MPI_Comm  comm,
- const char   *filename
-);
 
 /**
  *
@@ -364,4 +264,4 @@ PDM_block_to_part_n_elt_get
 }
 #endif
 
-#endif	/* PDM_BLOCK_TO_PART_H */
+#endif	/* __PDM_BLOCK_TO_PART_H__ */

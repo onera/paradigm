@@ -74,7 +74,10 @@ def parse_markdown(file_in):
     if line.startswith("## "):
       # Start new version
       str_version = line[line.find("[")+1:line.find("]")]
-      date        = line[line.find(" - ")+3:].split("-")
+      if line.find(" - ") < 0:
+        date = None
+      else:
+        date = line[line.find(" - ")+3:].split("-")
 
       assert(str_version not in changelog)
       changelog[str_version] = dict()
@@ -137,8 +140,12 @@ def render_rst(changelog, ignore_empty_sections=False, ignore_before_version=Non
       if v < str(ignore_before_version):
         continue
 
-    year, month, day = [int(x) for x in changelog[v]["date"]]
-    heading = f"Version {v} ({calendar.month_name[month]} {year})"
+    date = changelog[v]["date"]
+    if date is None: # Version without a date (development version)
+      heading = v
+    else: # Version with a date
+      year, month, day = [int(x) for x in date]
+      heading = f"Version {v} ({calendar.month_name[month]} {year})"
     txt_out.append("")
     if i_version == 0:
       txt_out.append(heading)

@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_PART_RENUM_H__
 #define	__PDM_PART_RENUM_H__
 
@@ -19,9 +15,9 @@
 
 #include "pdm_part.h"
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro and type definitions
@@ -580,9 +576,9 @@ part_t  *part,
 int     *new_to_old_order
 );
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif	/* PDM_PART_RENUM_H */
 

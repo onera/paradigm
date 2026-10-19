@@ -34,12 +34,6 @@
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh_nodal_to_dmesh_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -2883,11 +2877,8 @@ PDM_dmesh_nodal_to_dmesh_get_missing
     *dmissing_parent_g_num = dmn_to_dm->link[i_mesh]->dmissing_surface_parent_g_num;
   }
   else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_dmesh_nodal_to_dmesh_get_missing : invalid geom_kind %d\n", geom_kind);
+    PDM_error("Invalid geom_kind %d", geom_kind);
   }
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

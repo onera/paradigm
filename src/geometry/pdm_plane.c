@@ -16,12 +16,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -234,7 +228,7 @@ PDM_plane_get_cartesian_plane
 )
 {
   if (tolerance < 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid tolerance %f (must be >= 0)\n", tolerance);
+    PDM_error("Invalid tolerance %f (must be >= 0)", tolerance);
   }
 
   double l_min[3] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL};
@@ -273,6 +267,3 @@ PDM_plane_get_cartesian_plane
   }
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

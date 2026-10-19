@@ -141,3 +141,88 @@ MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_repart_per_col", 1) {
   CHECK_EQ_C_ARRAY(ordered, expected_ordered, 15);
 }
 
+
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_copy_if_gnum", 1) {
+  int size_in = 5;
+
+  PDM_g_num_t array_in[] = {10, 20, 30, 40, 50};
+  int mask[]             = {1,  0,  1,  0,  1};
+
+  int expected_size_out = 3;
+  PDM_g_num_t expected_array_out[] = {10, 30, 50};
+
+  PDM_g_num_t* array_out = NULL;
+  int actual_size_out = PDM_array_copy_if_gnum(size_in, array_in, mask, &array_out);
+
+  CHECK_EQ(actual_size_out, expected_size_out);
+
+  CHECK_EQ_C_ARRAY(array_out, expected_array_out, expected_size_out);
+
+  PDM_free(array_out);
+}
+
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_max_gnum", 1) {
+
+  PDM_g_num_t arr1[] = {10, 20, 50, 30, 40};
+  CHECK_EQ(PDM_array_max_gnum(arr1, 5), 50);
+
+  PDM_g_num_t arr2[] = {100, 20, 30, 40};
+  CHECK_EQ(PDM_array_max_gnum(arr2, 4), 100);
+
+  PDM_g_num_t arr3[] = {10, 20, 30, 200};
+  CHECK_EQ(PDM_array_max_gnum(arr3, 4), 200);
+}
+
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_max_int", 1) {
+
+  int arr1[] = {-10, -5, 42, 0, 15};
+  CHECK_EQ(PDM_array_max_int(arr1, 5), 42);
+
+  int arr2[] = {100, 20, 30};
+  CHECK_EQ(PDM_array_max_int(arr2, 3), 100);
+
+  int arr3[] = {-5, -2, -1};
+  CHECK_EQ(PDM_array_max_int(arr3, 3), -1);
+}
+
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_min_gnum", 1) {
+
+  PDM_g_num_t arr1[] = {50, 40, 10, 20, 30};
+  CHECK_EQ(PDM_array_min_gnum(arr1, 5), 10);
+
+  PDM_g_num_t arr2[] = {5, 20, 30, 40};
+  CHECK_EQ(PDM_array_min_gnum(arr2, 4), 5);
+
+  PDM_g_num_t arr3[] = {10, 20, 30, 2};
+  CHECK_EQ(PDM_array_min_gnum(arr3, 4), 2);
+}
+
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_min_int", 1) {
+
+  int arr1[] = {15, 0, -42, 10, -5};
+  CHECK_EQ(PDM_array_min_int(arr1, 5), -42);
+
+  int arr2[] = {-100, 20, 30};
+  CHECK_EQ(PDM_array_min_int(arr2, 3), -100);
+
+  int arr3[] = {10, 5, 2};
+  CHECK_EQ(PDM_array_min_int(arr3, 3), 2);
+}
+
+MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_new_arange_int", 1) {
+
+  int *arr1 = PDM_array_new_arange_int(0, 6, 2);
+  int arr1_expected[] = {0, 2, 4, 6};
+  CHECK_EQ_C_ARRAY(arr1, arr1_expected, 4);
+  PDM_free(arr1);
+
+  int *arr2 = PDM_array_new_arange_int(0, 5, 2);
+  int arr2_expected[] = {0, 2, 4};
+  CHECK_EQ_C_ARRAY(arr2, arr2_expected, 3);
+  PDM_free(arr2);
+
+  int *arr3 = PDM_array_new_arange_int(5, 1, -2);
+  int arr3_expected[] = {5, 3, 1};
+  CHECK_EQ_C_ARRAY(arr3, arr3_expected, 3);
+  PDM_free(arr3);
+}

@@ -31,12 +31,6 @@
 #include "pdm_sort.h"
 #include "pdm_unique.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -7075,7 +7069,4 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 

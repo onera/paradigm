@@ -1,7 +1,3 @@
-/*============================================================================
- * Mesure des temps CPU et elapsed
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -23,12 +19,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -240,6 +230,3 @@ PDM_memory_stats_free
 // printf("Top-most, releasable space (bytes)          : %i \n", stat.keepcost);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

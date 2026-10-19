@@ -24,12 +24,6 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Private function definitions
@@ -1016,7 +1010,6 @@ PDM_triangle_ngon_to_nodal
           if (fe[i] < 0) log_trace("%6d %6d\n", edge_vtx[2*(-fe[i]-1)+1], edge_vtx[2*(-fe[i]-1)  ]);
           else           log_trace("%6d %6d\n", edge_vtx[2*( fe[i]-1)  ], edge_vtx[2*( fe[i]-1)+1]);
         }
-        // PDM_error(__FILE__, __LINE__, 0, "PDM_triangle_ngon_to_nodal failed, see paradigm_*.log\n");
         printf("PDM_triangle_ngon_to_nodal failed (see paradigm_*.log) !\n");
         fflush(stdout);
         return iface+1;
@@ -1071,6 +1064,3 @@ PDM_triangle_inscribed_circle
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

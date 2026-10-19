@@ -24,12 +24,6 @@
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -673,7 +667,7 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
 
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-        PDM_error(__FILE__, __LINE__, 0, "TODO\n");
+        PDM_error("PDM_MESH_NODAL_POLY_2D Not implemented");
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
         int i_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -726,7 +720,7 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
                                                               i_part);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-        PDM_error(__FILE__, __LINE__, 0, "TODO\n");
+        PDM_error("PDM_MESH_NODAL_POLY_2D Not implemented");
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
         int i_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -792,7 +786,7 @@ PDM_part_mesh_nodal_elmts_decompose_faces_get_size
             break;
           }
           default:
-            PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", (int) t_elt);
+            PDM_error("Invalid elt type %d", (int) t_elt);
         }
 
         for (int i = 0; i < n_elt; i++) {
@@ -1233,7 +1227,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
                                                          parent_elmt_position[i_part]);
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error(__FILE__, __LINE__, 0, "Poly3d not handled yet\n");
+        PDM_error("Poly3d not handled yet");
       }
       else {
 
@@ -1393,10 +1387,10 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
                                                                  PDM_OWNERSHIP_BAD_VALUE);
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-        PDM_error(__FILE__, __LINE__, 0, "Poly2d not handled yet\n");
+        PDM_error("Poly2d not handled yet");
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error(__FILE__, __LINE__, 0, "Poly3d not handled yet\n");
+        PDM_error("Poly3d not handled yet");
       }
       else {
 
@@ -1771,7 +1765,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
       else {
         int _have_parent_num = parent_num != NULL;
         if (_have_parent_num != have_parent_num) {
-          PDM_error(__FILE__, __LINE__, 0, "Either all sections or none must have parent_num != NULL\n");
+          PDM_error("Either all sections or none must have parent_num != NULL");
         }
       }
 
@@ -1950,7 +1944,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
         break;
       }
       default : {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid child_entity_type %d\n", child_entity_type);
+        PDM_error("Invalid child_entity_type %d", child_entity_type);
       }
     }
   }
@@ -1959,13 +1953,13 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
   }
 
   if (dim_parent <= dim_child) {
-    PDM_error(__FILE__, __LINE__, 0, "Parent dimension must be greater than child dimension\n");
+    PDM_error("Parent dimension must be greater than child dimension");
   }
 
   int n_part = pmne_parent->n_part;
   if (pmne_child != NULL) {
     if (pmne_child->n_part != n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Parent and child pmne must have same n_part\n");
+      PDM_error("Parent and child pmne must have same n_part");
     }
   }
 
@@ -2008,7 +2002,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
       break;
     }
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid dim_child %d\n", dim_child);
+      PDM_error("Invalid dim_child %d", dim_child);
     }
   }
 
@@ -2168,7 +2162,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
       else {
         int _have_parent_num = parent_num != NULL;
         if (_have_parent_num != have_parent_num) {
-          PDM_error(__FILE__, __LINE__, 0, "Either all sections or none must have parent_num != NULL\n");
+          PDM_error("Either all sections or none must have parent_num != NULL");
         }
       }
     }
@@ -2262,6 +2256,3 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

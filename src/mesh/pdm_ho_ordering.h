@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_HO_ORDERING_H_
 #define __PDM_HO_ORDERING_H_
 
@@ -22,9 +18,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================

@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_MESH_LOCATION_H
-#define PDM_MESH_LOCATION_H
+#ifndef __PDM_MESH_LOCATION_H__
+#define __PDM_MESH_LOCATION_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -14,9 +10,9 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_to_part.h"
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -621,10 +617,11 @@ PDM_mesh_location_part_to_part_get
  const int                   i_point_cloud,
        PDM_part_to_part_t  **ptp,
        PDM_ownership_t       ownership
- );
+);
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif // PDM_MESH_LOCATION_H
+
+#endif // __PDM_MESH_LOCATION_H__

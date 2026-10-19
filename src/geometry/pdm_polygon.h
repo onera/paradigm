@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_POLYGON_H__
 #define __PDM_POLYGON_H__
 
@@ -21,9 +17,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -316,4 +309,4 @@ PDM_polygon_ray_intersection
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_SURF_MESH_H__ */
+#endif /* __PDM_POLYGON_H__ */

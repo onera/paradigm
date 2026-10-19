@@ -5,7 +5,6 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
@@ -19,9 +18,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -142,4 +138,4 @@ PDM_read_gamma_sol_at_vertices
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif  /* __PDM_READER_GAMMA_H__ */

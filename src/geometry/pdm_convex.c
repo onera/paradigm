@@ -15,12 +15,6 @@
 #include "pdm_logging.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Static global variables
@@ -56,7 +50,7 @@ PDM_points_inside_convex_hull
   * If such hyperplane does not exist then tgt_coord is inside the convex hull.
   */
   if (dim > 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dim %d (must be <= 3)\n", dim);
+    PDM_error("Invalid dim %d (must be <= 3)", dim);
   }
 
   // Setup LP arrays

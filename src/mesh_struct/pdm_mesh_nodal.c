@@ -17,13 +17,6 @@
 #include "pdm_ho_ordering.h"
 #include "pdm_mem_tool.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
-
 
 /*============================================================================
  * Local macro definitions
@@ -213,80 +206,80 @@ static const int hexa_face_vtx[] = {
 static inline int
 ij2idx_tria
 (
- const int i,
- const int j,
- const int order
- )
+  const int i,
+  const int j,
+  const int order
+)
 {
-    return i + j*(order+1) - (j-1)*j/2;
+  return i + j*(order+1) - (j-1)*j/2;
 }
 
 static inline int
 ij2idx_quad
 (
- const int i,
- const int j,
- const int order
- )
+  const int i,
+  const int j,
+  const int order
+)
 {
-    return i + j*(order+1);
+  return i + j*(order+1);
 }
 
 static inline int
 ijk2idx_tetra
 (
- const int i,
- const int j,
- const int k,
- const int order
- )
+  const int i,
+  const int j,
+  const int k,
+  const int order
+)
 {
-    return i + j*(order + 1 - k) - j*(j-1)/2 + (k*(k*(k - 3*order - 6) + 3*order*(order + 4) + 11)) / 6;
+  return i + j*(order + 1 - k) - j*(j-1)/2 + (k*(k*(k - 3*order - 6) + 3*order*(order + 4) + 11)) / 6;
 }
 
 static inline int
 ijk2idx_pyramid
 (
- const int i,
- const int j,
- const int k,
- const int order
- )
+  const int i,
+  const int j,
+  const int k,
+  const int order
+)
 {
-    return i + j*(order+1-k) + (k*(k*(2*k - 6*order - 9) + 6*order*(order + 3) + 13)) / 6;
+  return i + j*(order+1-k) + (k*(k*(2*k - 6*order - 9) + 6*order*(order + 3) + 13)) / 6;
 }
 
 static inline int
 ijk2idx_prism
 (
- const int i,
- const int j,
- const int k,
- const int order
- )
+  const int i,
+  const int j,
+  const int k,
+  const int order
+)
 {
-    return i + j*(order+1) - j*(j-1)/2 + k*(order+1)*(order+2)/2;
+  return i + j*(order+1) - j*(j-1)/2 + k*(order+1)*(order+2)/2;
 }
 
 static inline int
 ijk2idx_hexa
 (
- const int i,
- const int j,
- const int k,
- const int order
- )
+  const int i,
+  const int j,
+  const int k,
+  const int order
+)
 {
-    return i + (order+1)*(j + (order+1)*k);
+  return i + (order+1)*(j + (order+1)*k);
 }
 
 static void
 _principal_to_ijk
 (
- const PDM_Mesh_nodal_elt_t  t_elt,
- const int                   order,
- int                        *principal
- )
+  const PDM_Mesh_nodal_elt_t  t_elt,
+  const int                   order,
+        int                  *principal
+)
 {
   if (t_elt == PDM_MESH_NODAL_BARHO ||
       t_elt == PDM_MESH_NODAL_BARHO_BEZIER) {
@@ -344,7 +337,7 @@ _principal_to_ijk
   }
 
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid element type %d\n", (int) t_elt);
+    PDM_error("Invalid element type %d", (int) t_elt);
   }
 }
 
@@ -366,8 +359,8 @@ _principal_to_ijk
 int
 PDM_Mesh_nodal_elt_dim_get
 (
- PDM_Mesh_nodal_elt_t type
- )
+  PDM_Mesh_nodal_elt_t type
+)
 {
   int elt_dim = -1;
 
@@ -400,52 +393,11 @@ PDM_Mesh_nodal_elt_dim_get
       elt_dim = 3;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", (int) type);
+      PDM_error("Invalid t_elt %d", (int) type);
   }
 
   return elt_dim;
 }
-
-
-/**
- *
- * \brief Check if an element is two-dimensional
- *
- * \param [in]  type     Element type
- *
- * \return    1 if the element is 2D, 0 else
- *
- */
-
-int
-PDM_Mesh_nodal_is_2D_element
-(
-  PDM_Mesh_nodal_elt_t type
-)
-{
-  return (PDM_Mesh_nodal_elt_dim_get(type) == 2);
-}
-
-
-/**
- *
- * \brief Check if an element is three-dimensional
- *
- * \param [in]  type     Element type
- *
- * \return    1 if the element is 3D, 0 else
- *
- */
-
-int
-PDM_Mesh_nodal_is_3D_element
-(
-  PDM_Mesh_nodal_elt_t type
-)
-{
-  return (PDM_Mesh_nodal_elt_dim_get(type) == 3);
-}
-
 
 /**
  * \brief Get the number of vertices of an element type
@@ -460,8 +412,8 @@ PDM_Mesh_nodal_is_3D_element
 int
 PDM_Mesh_nodal_n_vtx_elt_get
 (
-  PDM_Mesh_nodal_elt_t type,
-  const int            order
+        PDM_Mesh_nodal_elt_t type,
+  const int                  order
 )
 {
   switch (type) {
@@ -519,7 +471,7 @@ PDM_Mesh_nodal_n_vtx_elt_get
    return (order + 1) * (order + 2) / 2;
     break;
   default :
-    PDM_error (__FILE__, __LINE__, 0, "Unknown order for Poly2D and Poly3D (type %d)\n", type);
+    PDM_error("Unknown order for Poly2D and Poly3D (type %d)", type);
   }
   return -1;
 }
@@ -555,7 +507,7 @@ PDM_Mesh_nodal_elmt_is_ho
     return 1;
     break;
   default :
-    PDM_error (__FILE__, __LINE__, 0, "Unknown elt type %d\n", (int) type);
+    PDM_error("Unknown elt type %d", (int) type);
   }
   return -1;
 }
@@ -709,8 +661,8 @@ PDM_Mesh_nodal_reorder_elt_vtx
 PDM_geometry_kind_t
 PDM_Mesh_nodal_geom_kind_from_elt_type
 (
- PDM_Mesh_nodal_elt_t t_elt
- )
+  PDM_Mesh_nodal_elt_t t_elt
+)
 {
   switch (PDM_Mesh_nodal_elt_dim_get(t_elt)) {
   case 0:
@@ -726,7 +678,7 @@ PDM_Mesh_nodal_geom_kind_from_elt_type
     return PDM_GEOMETRY_KIND_VOLUMIC;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid elt type %d\n", (int) t_elt);
+    PDM_error("Invalid elt type %d", (int) t_elt);
   }
 
   return PDM_GEOMETRY_KIND_MAX;
@@ -773,7 +725,7 @@ PDM_n_face_elt_per_elmt
      break;
    default:
      n_face_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is supported\n");
+     PDM_error("Element type is not supported = %d ", t_elt);
   }
   return n_face_elt;
 }
@@ -834,7 +786,7 @@ PDM_face_vtx_per_elmt
       break;
     }
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_face_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+      PDM_error("Invalid t_elt %d", t_elt);
     }
   }
 
@@ -889,7 +841,7 @@ PDM_n_edge_elt_per_elmt
      break;
    default:
      n_nedge_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_edge_elt_per_elmt : Element type is not supported\n");
+     PDM_error("Element type is not supported");
   }
   return n_nedge_elt;
 }
@@ -897,8 +849,8 @@ PDM_n_edge_elt_per_elmt
 int
 PDM_edge_vtx_per_elmt
 (
-  PDM_Mesh_nodal_elt_t   t_elt,
-  const int            **edge_vtx
+        PDM_Mesh_nodal_elt_t   t_elt,
+  const int                  **edge_vtx
 )
 {
   switch (t_elt) {
@@ -944,7 +896,7 @@ PDM_edge_vtx_per_elmt
       break;
     }
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_edge_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+      PDM_error("Invalid t_elt %d", t_elt);
     }
   }
 
@@ -955,8 +907,8 @@ PDM_edge_vtx_per_elmt
 int
 PDM_vtx_vtx_per_elmt
 (
-  PDM_Mesh_nodal_elt_t   t_elt,
-  const int            **vtx_vtx
+        PDM_Mesh_nodal_elt_t   t_elt,
+  const int                  **vtx_vtx
 )
 {
   switch (t_elt) {
@@ -1002,7 +954,7 @@ PDM_vtx_vtx_per_elmt
       break;
     }
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_vtx_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+      PDM_error("Invalid t_elt %d", t_elt);
     }
   }
 
@@ -1049,7 +1001,7 @@ PDM_n_sum_vtx_face_per_elmt
      break;
    default:
      n_sum_vtx_face = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_face_per_elmt : Element type is not supported\n");
+     PDM_error("Element type is not supported");
   }
   return n_sum_vtx_face;
 }
@@ -1102,12 +1054,9 @@ PDM_n_sum_vtx_edge_per_elmt
      break;
    default:
      n_sum_vtx_edge = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_edge_per_elmt : Element type is supported\n");
+     PDM_error("Element type is supported");
   }
   return n_sum_vtx_edge;
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

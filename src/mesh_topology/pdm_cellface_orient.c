@@ -19,12 +19,6 @@
 #include "pdm_timer.h"
 #include "pdm_cellface_orient.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -84,9 +78,6 @@ const int     *face_vtx
   if (n_cell == 0) {
     return;
   }
-
-  PDM_timer_t *t1 = PDM_timer_create();
-  PDM_timer_resume(t1);
 
   int *_face_cell = NULL;
 
@@ -309,7 +300,7 @@ const int     *face_vtx
       }
 
       if (n_processed_face == 0) {
-        PDM_error (__FILE__, __LINE__, 0, "Error reorient : no processed face found\n");
+        PDM_error("Error during reorient : no processed face found");
       }
 
       for (int iface = 0; iface < npoly_face; iface++) {
@@ -477,9 +468,7 @@ const int     *face_vtx
         }
 
         if (tag_face[iFace] == FACE_IN_STACK) {
-          // printf(" oooo %i \n", iFace);
-          // printf(" oooo %i \n", face);
-          PDM_error (__FILE__, __LINE__, 0, "Error reorient : no neighbour processed face found\n");
+          PDM_error("Error during reorient : no neighbour processed face found, i_face = %i", iFace);
         }
       }
 
@@ -489,9 +478,7 @@ const int     *face_vtx
 
         if (!((tag_face[iface] == FACE_UNCHANGED_CYCLE) ||
               (tag_face[iface] == FACE_CHANGED_CYCLE))) {
-          printf(" oooo %i \n", iface);
-          printf(" Link to : %i %i \n", face_cell[2*iface], face_cell[2*iface+1]);
-          PDM_error (__FILE__, __LINE__, 0, "Error reorient : a face of polyhedron is not processed\n");
+          PDM_error("Error during reorient : a face of polyhedron is not processed - i_face = %i / i_cell1 = %i / i_cell2 = %i", iface, face_cell[2*iface], face_cell[2*iface+1]);
         }
 
         if (tag_face[iface] == FACE_CHANGED_CYCLE) {
@@ -575,16 +562,5 @@ const int     *face_vtx
   if (face_cell == NULL) {
     PDM_free(_face_cell);
   }
-
-  PDM_timer_hang_on (t1);
-  double et1 = PDM_timer_elapsed (t1);
-  PDM_timer_free (t1);
-
-  if (0 == 1) {
-    printf("elapsed time cell_face_orient : %12.5e\n", et1);
-  }
 }
 
-#ifdef	__cplusplus
-}
-#endif

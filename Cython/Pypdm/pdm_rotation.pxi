@@ -28,7 +28,7 @@ cdef extern from "pdm_rotation.h":
                                                                          const PDM_bool_t reverse,
                                                                                double*    homogeneous_matrix)
 
-  # euler angles -> other formats ---
+  # Euler angles -> other formats ---
 
   void PDM_rotation_euler_angles_to_axis_angle(const double     ang_x,
                                                const double     ang_y,
@@ -120,6 +120,22 @@ cdef extern from "pdm_rotation.h":
                                                              double*    ang_x,
                                                              double*    ang_y,
                                                              double*    ang_z)
+
+  void PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation(const double*    homogeneous_matrix,
+                                                                       const PDM_bool_t reverse,
+                                                                       const int        order[3],
+                                                                       const PDM_bool_t intrinsic,
+                                                                             double*    ang_x,
+                                                                             double*    ang_y,
+                                                                             double*    ang_z,
+                                                                             double     rotation_center[3])
+
+  void PDM_rotation_homogeneous_matrix_to_periodic_t_info(const double*    homogeneous_matrix,
+                                                          const PDM_bool_t reverse,
+                                                          const PDM_bool_t compute_rotation_center,
+                                                                double     rotation_center[3],
+                                                                double     rotation_angle[3],
+                                                                double     translation[3])
 
   void PDM_rotation_homogeneous_matrix_to_rotation_matrix(const double*    homogeneous_matrix,
                                                           const PDM_bool_t reverse,
@@ -244,7 +260,7 @@ def axis_angle_to_euler_angles(
     bint intrinsic = True):
   """axis_angle_to_euler_angles(axis,angle,reverse=False,order=(2,1,0),intrinsic=True)
 
-  Converts a rotation expressed as axis-angle to euler angles
+  Converts a rotation expressed as axis-angle to Euler angles
 
   Parameters:
     axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
@@ -359,7 +375,7 @@ def euler_angles_to_axis_angle(
     bint reverse = False):
   """euler_angles_to_axis_angle(ang_x,ang_y,ang_z,order=(2,1,0),intrinsic=True,reverse=False)
 
-  Converts a rotation expressed as euler angles to axis-angle
+  Converts a rotation expressed as Euler angles to axis-angle
 
   Parameters:
     ang_x           (double)                  : Rotation angle around the x-axis
@@ -398,7 +414,7 @@ def euler_angles_to_euler_angles(
     bint output_intrinsic = True):
   """euler_angles_to_euler_angles(ang_x,ang_y,ang_z,input_order=(2,1,0),input_intrinsic=True,reverse=False,output_order=(2,1,0),output_intrinsic=True)
 
-  Converts a rotation expressed as euler angles to another euler angles expression
+  Converts a rotation expressed as Euler angles to another Euler angles expression
 
   Parameters:
     ang_x            (double)                  : Rotation angle around the x-axis
@@ -444,7 +460,7 @@ def euler_angles_to_rotation_matrix(
   """
   euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order=(2,1,0),intrinsic=True,reverse=False)
 
-  Computes the rotation matrix corresponding to the provided euler angles
+  Computes the rotation matrix corresponding to the provided Euler angles
 
   Parameters:
     ang_x           (double)                  : Rotation angle around the x-axis
@@ -480,7 +496,7 @@ def euler_angles_to_homogeneous_matrix(
   """
   euler_angles_to_homogeneous_matrix(ang_x, ang_y, ang_z, order=(2,1,0), intrinsic=True, reverse=False)
 
-  Computes the homogeneous matrix corresponding to the provided euler angles
+  Computes the homogeneous matrix corresponding to the provided Euler angles
 
   Parameters:
     ang_x           (double)                  : Rotation angle around the x-axis
@@ -517,7 +533,7 @@ def euler_angles_and_rotation_center_to_homogeneous_matrix(
   """
   euler_angles_and_rotation_center_to_homogeneous_matrix(ang_x,ang_y,ang_z,order=(2,1,0),intrinsic=True,rotation_center=[0.,0.,0.],reverse=False)
 
-  Computes the homogeneous matrix corresponding to the provided euler angles
+  Computes the homogeneous matrix corresponding to the provided Euler angles
   and rotation center.
 
   Parameters:
@@ -554,10 +570,10 @@ def periodic_t_info_to_homogeneous_matrix(
     bint reverse = False):
   """periodic_t_info_to_homogeneous_matrix(rotation_center,rotation_angle,translation,reverse=False)
 
-  Converts the info of a CGNS Periodic_t node to a 4-by-4 homogeneous rotation matrix.
+  Converts the info of a CGNS Periodic_t node (rotation center, Euler angles and translation vector)
+  to a 4-by-4 homogeneous matrix.
   Rotation angles are applied as **intrinsic Euler angles** applied in a *(2,1,0)* order.
-
-  Both translation and rotation cannot be provided simultaneously (one should be null).
+  Translation is applied after the rotation.
 
   Parameters:
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
@@ -612,7 +628,7 @@ def rotation_matrix_to_euler_angles(
     bint intrinsic = True):
   """rotation_matrix_to_euler_angles(rotation_matrix,reverse=False,order=(2,1,0),intrinsic=True)
 
-  Converts a rotation expressed as a rotation matrix to euler angles
+  Converts a rotation expressed as a rotation matrix to Euler angles
 
   Parameters:
     rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
@@ -689,13 +705,159 @@ def rotation_matrix_and_rotation_center_to_homogeneous_matrix(
 
 # region homogeneous matrix to other formats -----------------------------------
 
-# to be implemented
-def homogeneous_matrix_to_axis_angle():
-  raise NotImplementedError
-def homogeneous_matrix_to_euler_angles():
-  raise NotImplementedError
-def homogeneous_matrix_to_rotation_matrix():
-  raise NotImplementedError
+def homogeneous_matrix_to_axis_angle(
+  NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
+  bint reverse = False):
+  """homogeneous_matrix_to_axis_angle(homogeneous_matrix,reverse=False)
+
+  Converts a rotation expressed as an homogeneous matrix to axis-angle
+
+  Caution: does not consider the affine part of the transformation (rotation center and translation)
+
+  Parameters:
+    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    reverse            (bool)                    : If True computes the reverse transformation
+
+  Returns:
+    Rotation axis  (`np.ndarray[np.double_t]`, shape = (3,))
+    Rotation angle (`double`, in *radians*)
+  """
+  _check_matrix_shape(homogeneous_matrix,(4,4))
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
+  cdef NPY.double_t angle
+  PDM_rotation_homogeneous_matrix_to_axis_angle(<double*> homogeneous_matrix.data,
+                                                <PDM_bool_t> reverse,
+                                                <double*> axis.data,
+                                                &angle)
+  return axis,angle
+
+def homogeneous_matrix_to_euler_angles(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
+    bint reverse = False,
+    NPY.ndarray[NPY.int32_t, mode='c', ndim=1] order = _default_order_,# = NPY.array([2,1,0],dtype=NPY.int32),
+    bint intrinsic = True):
+  """homogeneous_matrix_to_euler_angles(homogeneous_matrix,reverse=False,order=(2,1,0),intrinsic=True)
+
+  Converts a rotation expressed as an homogeneous matrix to Euler angles
+
+  Caution: does not consider the affine part of the transformation (rotation center and translation)
+
+  Parameters:
+    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    reverse            (bool)                    : If True computes the reverse transformation
+    order              (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic          (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
+
+  Returns:
+    Rotation angle around the x-axis (`double`)
+    Rotation angle around the y-axis (`double`)
+    Rotation angle around the z-axis (`double`)
+  """
+  _check_matrix_shape(homogeneous_matrix,(4,4))
+  _check_euler_angles_order(order)
+  cdef NPY.double_t ang_x,ang_y,ang_z
+  cdef int* out_order_data = np_to_int_pointer(order)
+  PDM_rotation_homogeneous_matrix_to_euler_angles(<double*> homogeneous_matrix.data,
+                                                  <PDM_bool_t> reverse,
+                                                  out_order_data,
+                                                  <PDM_bool_t> intrinsic,
+                                                  &ang_x,
+                                                  &ang_y,
+                                                  &ang_z)
+  return ang_x,ang_y,ang_z
+
+def homogeneous_matrix_to_euler_angles_and_rotation_center(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
+    bint reverse = False,
+    NPY.ndarray[NPY.int32_t, mode='c', ndim=1] order = _default_order_,# = NPY.array([2,1,0],dtype=NPY.int32),
+    bint intrinsic = True):
+  """homogeneous_matrix_to_euler_angles_and_rotation_center(homogeneous_matrix,reverse=False,order=(2,1,0),intrinsic=True)
+
+  Converts a rotation expressed as an homogeneous matrix to Euler angles and a rotation center
+
+  Caution: does not consider the rotation-axis-wise translation component
+
+  Parameters:
+    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    reverse            (bool)                    : If True computes the reverse transformation
+    order              (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic          (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
+
+  Returns:
+    Rotation angle around the x-axis (`double`)
+    Rotation angle around the y-axis (`double`)
+    Rotation angle around the z-axis (`double`)
+    Rotation center (`np.ndarray[np.double_t]`, shape = (3,))
+  """
+  _check_matrix_shape(homogeneous_matrix,(4,4))
+  _check_euler_angles_order(order)
+  cdef NPY.double_t ang_x,ang_y,ang_z
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] rotation_center = NPY.empty((3,),dtype=NPY.double)
+  cdef int* out_order_data = np_to_int_pointer(order)
+  PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation(<double*> homogeneous_matrix.data,
+                                                                      <PDM_bool_t> reverse,
+                                                                      out_order_data,
+                                                                      <PDM_bool_t> intrinsic,
+                                                                      &ang_x,
+                                                                      &ang_y,
+                                                                      &ang_z,
+                                                                      <double*> rotation_center.data)
+  return ang_x,ang_y,ang_z,rotation_center
+
+def homogeneous_matrix_to_periodic_t_info(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
+    bint reverse = False,
+    bint compute_rotation_center = False,
+    ):
+  """homogeneous_matrix_to_periodic_t_info(homogeneous_matrix,reverse=False)
+
+  Converts a 4-by-4 homogeneous matrix to the info of a CGNS Periodic_t node
+  (rotation center, Euler angles and translation vector).
+  Rotation angles are applied as **intrinsic Euler angles** applied in a *(2,1,0)* order.
+  Translation is applied after the rotation.
+
+  Parameters:
+    homogeneous_matrix      (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    reverse                 (bool)                    : If True computes the reverse transformation
+    compute_rotation_center (bool)                    : If True computes the rotation center so that the translation is along the rotation axis, set to 0. otherwise
+
+  Returns:
+    rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
+    rotation_angle  (np.ndarray[np.double_t]) : Rotation angles around the x, y and z axes (shape = (3,))
+    translation     (np.ndarray[np.double_t]) : Translation vector (shape = (3,))
+  """
+  _check_matrix_shape(homogeneous_matrix,(4,4))
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] rotation_center = NPY.empty((3,),dtype=NPY.double)
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] rotation_angle = NPY.empty((3,),dtype=NPY.double)
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] translation = NPY.empty((3,),dtype=NPY.double)
+  PDM_rotation_homogeneous_matrix_to_periodic_t_info(<double*> homogeneous_matrix.data,
+                                                     <PDM_bool_t> reverse,
+                                                     <PDM_bool_t> compute_rotation_center,
+                                                     <double*> rotation_center.data,
+                                                     <double*> rotation_angle.data,
+                                                     <double*> translation.data)
+  return rotation_center,rotation_angle,translation
+
+def homogeneous_matrix_to_rotation_matrix(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix,
+    bint reverse = False):
+  """homogeneous_matrix_to_rotation_matrix(homogeneous_matrix,reverse=False)
+
+  Converts a rotation expressed as an homogeneous matrix to a rotation matrix
+
+  Parameters:
+    homogeneous_matrix      (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    reverse         (bool)                    : If True computes the reverse transformation
+
+  Returns:
+    3-by-3 rotation matrix (`np.ndarray[np.double_t]`, shape = (3,3))
+  """
+  _check_matrix_shape(homogeneous_matrix,(4,4))
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)
+  PDM_rotation_homogeneous_matrix_to_rotation_matrix(<double*> homogeneous_matrix.data,
+                                                     <PDM_bool_t> reverse,
+                                                     <double*> rotation_matrix.data)
+  return rotation_matrix
 
 # region 2 unit vectors to other formats ---------------------------------------
 
@@ -735,7 +897,7 @@ def two_vectors_to_euler_angles(
     bint intrinsic = True):
   """two_vectors_to_euler_angles(vector_1,vector_2,reverse=False,order=(2,1,0),intrinsic=True)
 
-  Converts a rotation from the first vector to the latter to a rotation expressed as euler angles
+  Converts a rotation from the first vector to the latter to a rotation expressed as Euler angles
 
   Parameters:
     vector_1        (np.ndarray[np.double_t]) : First vector  (shape = (3,))
@@ -897,7 +1059,7 @@ def apply_euler_angles_and_rotation_center_to_coords(
   """
   apply_euler_angles_and_rotation_center_to_coords(coords,ang_x,ang_y,ang_z,order=[2,1,0],intrinsic=True,rotation_center=[0.,0.,0.],reverse=False)
 
-  Applies the rigid transform corresponding to the euler angles around the
+  Applies the rigid transform corresponding to the Euler angles around the
   rotation center to the provided coords array
 
   Parameters:
@@ -944,7 +1106,7 @@ def apply_euler_angles_and_rotation_center_to_vector_field(
   """
   apply_euler_angles_and_rotation_center_to_vector_field(vector_field,ang_x,ang_y,ang_z,order=[2,1,0],intrinsic=True,rotation_center=[0.,0.,0.],reverse=False)
 
-  Applies the rigid transform corresponding to the euler angles around the
+  Applies the rigid transform corresponding to the Euler angles around the
   rotation center to the provided vector field array
 
   Parameters:

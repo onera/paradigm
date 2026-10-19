@@ -1,22 +1,3 @@
-!-----------------------------------------------------------------------------
-! This file is part of the ParaDiGM library.
-!
-! Copyright (C) 2020  ONERA
-!
-! This library is free software; you can redistribute it and/or
-! modify it under the terms of the GNU Lesser General Public
-! License as published by the Free Software Foundation; either
-! version 3 of the License, or (at your option) any later version.
-!
-! This library is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-! Lesser General Public License for more details.
-!
-! You should have received a copy of the GNU Lesser General Public
-! License along with this library. If not, see <http://www.gnu.org/licenses/>.
-!-----------------------------------------------------------------------------
-
 #include "pdm_configf.h"
 
 module pdm_part
@@ -50,6 +31,10 @@ module pdm_part
   PDM_part_time_get_
   end interface
 
+  interface PDM_part_dump_times ; module procedure  &
+  PDM_part_dump_times_
+  end interface
+
   interface PDM_part_stat_get ; module procedure  &
   PDM_part_stat_get_
   end interface
@@ -80,6 +65,10 @@ module pdm_part
 
   interface PDM_part_coarse_mesh_time_get ; module procedure  &
   PDM_part_coarse_mesh_time_get_
+  end interface
+
+  interface PDM_part_coarse_mesh_dump_times ; module procedure  &
+  PDM_part_coarse_mesh_dump_times_
   end interface
 
 interface
@@ -391,6 +380,23 @@ interface
     type(c_ptr)        :: cpu_sys
 
   end subroutine PDM_part_time_get_c
+
+  !>
+  !!
+  !! \brief Print gather times
+  !!
+  !! \param [in]   ppart       Pointer to \ref PDM_part object
+  !!
+  !!
+  subroutine PDM_part_dump_times_c (ppart)  &
+  bind (c, name='PDM_part_dump_times')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: ppart
+
+  end subroutine PDM_part_dump_times_c
 
 
   !>
@@ -917,6 +923,23 @@ interface
   end subroutine PDM_part_coarse_mesh_time_get_c
 
 
+  !>
+  !!
+  !! \brief Return times
+  !!
+  !! \param [in]   cm          Pointer to \ref PDM_coarse_mesh
+  !!
+  !!
+
+  subroutine PDM_part_coarse_mesh_dump_times_c (cm) &
+  bind (c, name='PDM_part_coarse_mesh_dump_times')
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value :: cm
+
+  end subroutine PDM_part_coarse_mesh_dump_times_c
 
   !>
   !!
@@ -943,6 +966,7 @@ private :: PDM_part_create_ ,&
            PDM_part_part_dim_get_ ,&
            PDM_part_part_val_get_ ,&
            PDM_part_time_get_ ,&
+           PDM_part_dump_times_ ,&
            PDM_part_stat_get_ ,&
            PDM_part_part_color_get_ ,&
            PDM_part_coarse_mesh_create_ ,&
@@ -950,7 +974,8 @@ private :: PDM_part_create_ ,&
            PDM_part_coarse_mesh_part_dim_get_ ,&
            PDM_part_coarse_mesh_part_get_ ,&
            PDM_part_coarse_color_get_ ,&
-           PDM_part_coarse_mesh_time_get_
+           PDM_part_coarse_mesh_time_get_, &
+           PDM_part_coarse_mesh_dump_times_
 
 contains
 
@@ -1624,6 +1649,14 @@ contains
   end subroutine PDM_part_time_get_
 
 
+  subroutine PDM_part_dump_times_ (ppart)
+    use iso_c_binding
+    implicit none
+    type(c_ptr), value            :: ppart
+
+    call PDM_part_dump_times_c (ppart)
+
+  end subroutine PDM_part_dump_times_
 
   !>
   !!
@@ -2778,6 +2811,25 @@ contains
 
   end subroutine PDM_part_coarse_mesh_time_get_
 
+
+  !>
+  !!
+  !! \brief Return times
+  !!
+  !! \param [in]   cm          Pointer to \ref PDM_coarse_mesh
+  !!
+  !!
+
+  subroutine PDM_part_coarse_mesh_dump_times_(cm)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value            :: cm
+
+    call PDM_part_coarse_mesh_dump_times_c(cm)
+
+  end subroutine PDM_part_coarse_mesh_dump_times_
 
   !>
   !!

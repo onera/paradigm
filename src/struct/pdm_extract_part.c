@@ -43,12 +43,6 @@
 #include "pdm_unique.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -725,7 +719,7 @@ _prepare_graph
       arc_ln_to_gn = extrp->vtx_ln_to_gn;
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0,"PDM_extract_part_compute : cannot not use split_method !=  PDM_SPLIT_DUAL_WITH_HILBERT with dim=0 (use PDM_SPLIT_DUAL_WITH_HILBERT instead)\n");
+      PDM_error("Cannot not use split_method !=  PDM_SPLIT_DUAL_WITH_HILBERT with dim=0 (use PDM_SPLIT_DUAL_WITH_HILBERT instead)");
     }
   }
 
@@ -1198,7 +1192,7 @@ _extract_part_and_reequilibrate_nodal_groups
       break;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+      PDM_error("Invalid geom_kind %d", geom_kind);
     }
   }
 
@@ -1554,7 +1548,7 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
     entity_type = PDM_MESH_ENTITY_EDGE;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", mesh_dimension);
+    PDM_error("Invalid dimension %d", mesh_dimension);
   }
 
   int                   *n_extract_vtx;
@@ -2205,7 +2199,7 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                          extract_n_vtx       [i_part]);
         if (pos < 0) {
           PDM_log_trace_array_long(extract_vtx_ln_to_gn[i_part], extract_n_vtx[i_part], "extract_vtx_ln_to_gn : ");
-          PDM_error(__FILE__, __LINE__, 0, "Could not find vertex "PDM_FMT_G_NUM" in extract_vtx_ln_to_gn\n", recv_elmt_vtx[i_part][i]);
+          PDM_error("Could not find vertex "PDM_FMT_G_NUM" in extract_vtx_ln_to_gn", recv_elmt_vtx[i_part][i]);
         }
 
         unique_order_entity2[i] = pos;
@@ -2992,7 +2986,7 @@ _extract_part
         break;
       }
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid bound_entity_type %d\n", bound_entity_type);
+        PDM_error("Invalid bound_entity_type %d", bound_entity_type);
       }
     }
 
@@ -4064,7 +4058,7 @@ _extract_part_and_reequilibrate
       break;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", extrp->dim);
+      PDM_error("Invalid dimension %d", extrp->dim);
     }
   }
 
@@ -4982,7 +4976,7 @@ _extract_part_nodal_local_pmne
   assert(vtx_old_to_new     != NULL);
 
   if (extrp->n_part_out != extrp->n_part_in) {
-    PDM_error(__FILE__, __LINE__, 0, "n_part_out (%d) must be equal to n_part_in (%d) in LOCAL mode\n", extrp->n_part_out, extrp->n_part_in);
+    PDM_error("n_part_out (%d) must be equal to n_part_in (%d) in LOCAL mode", extrp->n_part_out, extrp->n_part_in);
   }
 
   int mesh_dimension = -1;
@@ -5454,12 +5448,20 @@ _extract_part_nodal_local
     PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extrp->pmn,
                                                                                       geom_kind);
 
-    if (pmne == NULL) {
+    // tmp (corners and vertices seem to be amalgamated here)
+    if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
       continue;
     }
 
-    // tmp
-    if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
+    if (pmne == NULL) {
+      PDM_mesh_entities_t entity_type = PDM_geometry_kind_to_entity_type(geom_kind);
+
+      PDM_malloc(extrp->pextract_n_entity          [entity_type], extrp->n_part_in, int  );
+      PDM_malloc(extrp->pextract_entity_parent_lnum[entity_type], extrp->n_part_in, int *);
+      for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
+        extrp->pextract_n_entity          [entity_type][i_part] = 0;
+        extrp->pextract_entity_parent_lnum[entity_type][i_part] = NULL;
+      }
       continue;
     }
 
@@ -5980,7 +5982,7 @@ _warmup_extract_part_nodal_greatest_dimension
   } // End if PDM_EXTRACT_PART_KIND_FROM_TARGET
 
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid extract_kind %d\n", extrp->extract_kind);
+    PDM_error("Invalid extract_kind %d", extrp->extract_kind);
   }
 
   *out_is_selected = is_selected;
@@ -6027,7 +6029,7 @@ _extract_part_nodal
       break;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension %d\n", mesh_dimension);
+      PDM_error("Invalid mesh dimension %d", mesh_dimension);
     }
   }
 
@@ -6546,12 +6548,12 @@ PDM_extract_part_create
 
   if(extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
     if(n_part_in != n_part_out) {
-      PDM_error(__FILE__, __LINE__, 0,"PDM_extract_part_create : cannot not equilibrate with not same number of n_part_in / n_part_out \n");
+      PDM_error("Cannot not equilibrate with not same number of n_part_in / n_part_out");
     }
   }
 
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "Ownership cannot be set at PDM_OWNERSHIP_BAD_VALUE\n");
+    PDM_error("Ownership cannot be set at PDM_OWNERSHIP_BAD_VALUE");
   }
 
   extrp->extract_kind       = extract_kind;
@@ -6818,7 +6820,7 @@ PDM_extract_part_compute
         break;
       }
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid extract_kind %d\n", extrp->extract_kind);
+        PDM_error("Invalid extract_kind %d", extrp->extract_kind);
         break;
       }
     }
@@ -6952,7 +6954,7 @@ PDM_extract_part_part_nodal_set
 )
 {
   if (extrp->dim != pmn->mesh_dimension) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_extract_part_part_nodal_set : extrp->dim (%d) does not match pmn->dim (%d)\n", extrp->dim, pmn->mesh_dimension);
+    PDM_error("extrp->dim (%d) does not match pmn->dim (%d)", extrp->dim, pmn->mesh_dimension);
   }
   extrp->is_nodal = 1;
   extrp->pmn      = pmn;
@@ -6980,7 +6982,7 @@ PDM_extract_part_selected_lnum_set
 )
 {
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_extract_part_selected_lnum_set : ownership cannot be PDM_OWNERSHIP_BAD_VALUE\n");
+    PDM_error("Ownership cannot be PDM_OWNERSHIP_BAD_VALUE");
   }
   extrp->n_extract         [i_part] = n_extract;
   extrp->extract_lnum      [i_part] = extract_lnum;
@@ -7012,10 +7014,10 @@ PDM_extract_part_target_set
 {
   extrp->from_target = 1;
   if (extrp->extract_kind != PDM_EXTRACT_PART_KIND_FROM_TARGET) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_extract_part_target_set : extract_kind must be PDM_EXTRACT_PART_KIND_FROM_TARGET\n");
+    PDM_error("Extract_kind must be PDM_EXTRACT_PART_KIND_FROM_TARGET");
   }
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_extract_part_target_set : ownership cannot be PDM_OWNERSHIP_BAD_VALUE\n");
+    PDM_error("Ownership cannot be PDM_OWNERSHIP_BAD_VALUE");
   }
   extrp->n_target       [i_part] = n_target;
   extrp->target_gnum    [i_part] = target_gnum;
@@ -7035,7 +7037,7 @@ PDM_extract_part_target_set
     entity_type = PDM_MESH_ENTITY_CELL;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", extrp->dim);
+    PDM_error("Invalid dimension %d", extrp->dim);
   }
 
   extrp->owner_parent_ln_to_gn[entity_type] = ownership;
@@ -7093,7 +7095,7 @@ PDM_extract_part_n_entity_get
       return PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+      PDM_error("Use part_mesh_nodal accessors instead");
     }
   }
 
@@ -7128,11 +7130,11 @@ PDM_extract_part_connectivity_get
 )
 {
   if (extrp->is_nodal) {
-    PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    PDM_error("Use part_mesh_nodal accessors instead");
   }
 
   if (i_part_out >= extrp->n_part_out) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_extract_part_connectivity_get : invalid i_part %d / %d\n", i_part_out, extrp->n_part_out);
+    PDM_error("Invalid i_part %d / %d", i_part_out, extrp->n_part_out);
   }
 
   PDM_mesh_entities_t entity_type = PDM_connectivity_type_to_entity_type(connectivity_type);
@@ -7190,7 +7192,7 @@ PDM_extract_part_ln_to_gn_get
       return PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+      PDM_error("Use part_mesh_nodal accessors instead");
     }
   }
 
@@ -7267,7 +7269,7 @@ PDM_extract_part_parent_ln_to_gn_get
 )
 {
   if (extrp->is_nodal) {
-    PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    PDM_error("Use part_mesh_nodal accessors instead");
   }
 
   int n_entity = 0;
@@ -7315,9 +7317,7 @@ PDM_extract_part_parent_lnum_get
 {
 
   if(extrp->extract_kind != PDM_EXTRACT_PART_KIND_LOCAL) {
-    PDM_error(__FILE__, __LINE__, 0,
-      "PDM_extract_part_parent_lnum_get: invalid extract_kind %d. Should be PDM_EXTRACT_PART_KIND_LOCAL\n",
-      extrp->extract_kind);
+    PDM_error("Invalid extract_kind %d. Should be PDM_EXTRACT_PART_KIND_LOCAL", extrp->extract_kind);
   }
 
   *parent_entity_lnum = extrp->pextract_entity_parent_lnum[entity_type][i_part_out];
@@ -7368,7 +7368,7 @@ PDM_extract_part_init_location_get
         break;
       }
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+        PDM_error("Invalid entity_type %d", entity_type);
       }
     }
   }
@@ -7811,7 +7811,7 @@ PDM_extract_part_renum_method_set
   }
 
   if (method_renum_id == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering mesh_entity method\n", renum_entity_method);
+    PDM_error ("'%s' is an unknown renumbering mesh_entity method", renum_entity_method);
   }
 
   extrp->renum_method           [mesh_entity] = method_renum_id;
@@ -7954,6 +7954,3 @@ PDM_extract_part_part_mesh_get
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
