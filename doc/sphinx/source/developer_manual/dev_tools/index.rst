@@ -12,6 +12,11 @@ Developer tools
 
     Facilities to implement exchange protocols
 
+  .. card:: Timer
+    :link: timer
+    :link-type: ref
+
+    Utilities for measuring execution times
 
 |
 
@@ -22,7 +27,8 @@ Developer tools
   :maxdepth: 1
   :hidden:
 
-  exchange_helper
+  exch_helper
+  timer
 
 
 

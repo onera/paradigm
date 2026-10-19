@@ -16,9 +16,6 @@
 #include "pdm_printf.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 /*============================================================================
@@ -204,21 +201,6 @@ _define_rank_distrib(const int             sampling_factor,
     g_distrib[rank_id] = sum;
 
   } /* End of loop on ranks */
-
-#if 0 && defined(DEBUG) && !defined(NDEBUG) /* Sanity check in debug */
-  {
-    PDM_g_num_t   sum = 0;
-    for (rank_id = 0; rank_id < n_ranks; rank_id++)
-      sum += g_distrib[rank_id];
-
-    if (sum != gsum_weight)
-      PDM_error(__FILE__, __LINE__, 0,
-                "Error while computing global distribution.\n"
-                "sum = %u and gsum_weight = %u\n",
-                sum, gsum_weight);
-    exit(1);
-  }
-#endif /* sanity check */
 
 }
 
@@ -664,6 +646,3 @@ PDM_GCC_SUPPRESS_WARNING_POP
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -1,6 +1,3 @@
-/*============================================================================
- * Hilbert encoding for 2D or 3D coordinates.
- *============================================================================*/
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -21,12 +18,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local Macro definitions
@@ -680,7 +671,7 @@ PDM_cuthill_generate
   for (int i = 0; i < n_elm; i++){
     dual_graph_idx_tmp[i] = dual_graph_idx[i]+1;
   }
-  dual_graph_idx_tmp[n_elm] = dual_graph_idx[n_elm];
+  dual_graph_idx_tmp[n_elm] = dual_graph_idx[n_elm]+1;
   for (int i = 0; i < dual_graph_idx[n_elm]; i++){
     dual_graph_tmp[i] = dual_graph[i]+1;
   }
@@ -698,6 +689,3 @@ PDM_cuthill_generate
   PDM_free(dual_graph_tmp);
 }
 
-#ifdef  __cplusplus
-}
-#endif

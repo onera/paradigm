@@ -52,12 +52,6 @@
  * Public function definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 
 #ifdef PDM_HAVE_PARMETIS
@@ -302,14 +296,18 @@ int *part
 {
   SCOTCH_Dgraph graph;
   SCOTCH_Strat strat;
+#ifdef SCOTCH_OPTIONNUMDETERMINISTIC
+  SCOTCH_Context context;
+  SCOTCH_Dgraph  cntgraph;
+#endif
+  SCOTCH_Dgraph *actgraph = &graph;
   int ierr = 0;
 
   MPI_Comm mpi_comm = PDM_MPI_2_mpi_comm(comm);
 
   ierr = SCOTCH_dgraphInit (&graph, mpi_comm);
   if (ierr) {
-    PDM_error(__FILE__, __LINE__, 0,"PPART error : Error in PT-Scotch graph initialization\n");
-    exit(1);
+    PDM_error("Error in PT-Scotch graph initialization");
   }
 
   SCOTCH_Num _baseval = 0;
@@ -411,7 +409,7 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
                               _edloloctab);
 
   if (ierr) {
-    PDM_error(__FILE__, __LINE__, 0, "PPART error : Error in SCOTCH_dgraphBuild\n");
+    PDM_error("Error in SCOTCH_dgraphBuild");
     exit(1);
   }
 
@@ -423,22 +421,51 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
   }
 
   if (ierr) {
-    PDM_error(__FILE__, __LINE__, 0, "PPART error : Error in PT-Scotch graph check\n");
-    exit(1);
+    PDM_error("Error in PT-Scotch graph check");
   }
 
   /* Partitioning strategy : */
 
   SCOTCH_stratInit(&strat);
 
+  /* Deterministic context */
+#ifdef SCOTCH_OPTIONNUMDETERMINISTIC
+  int _scotch_deterministic = 1;
+  {
+    char *_env = getenv("PDM_SCOTCH_DETERMINISTIC");
+    if (_env != NULL) {
+      _scotch_deterministic = atoi(_env);
+    }
+  }
+
+  if (_scotch_deterministic) {
+    ierr = SCOTCH_contextInit (&context);
+    if (ierr) {
+      PDM_error("Error in SCOTCH_contextInit\n");
+    }
+    SCOTCH_contextOptionSetNum (&context, SCOTCH_OPTIONNUMDETERMINISTIC, 1);
+    SCOTCH_contextRandomSeed   (&context, 0);
+    ierr = SCOTCH_contextBindDgraph (&context, &graph, &cntgraph);
+    if (ierr) {
+      PDM_error("Error in SCOTCH_contextBindDgraph\n");
+    }
+    actgraph = &cntgraph;
+  }
+#endif
+
   const SCOTCH_Num _n_part = (SCOTCH_Num) n_part;
 
-  ierr = SCOTCH_dgraphPart(&graph,
+  ierr = SCOTCH_dgraphPart(actgraph,
                            _n_part,   /* Nombre de partitions demande */
                            &strat,
                            _part);    /* parts[i] donne le numero */
 
   SCOTCH_stratExit(&strat);
+#ifdef SCOTCH_OPTIONNUMDETERMINISTIC
+  if (_scotch_deterministic) {
+    SCOTCH_contextExit(&context);
+  }
+#endif
   SCOTCH_dgraphExit(&graph);
 
   if (__part != NULL) {
@@ -471,6 +498,3 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

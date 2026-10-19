@@ -1,35 +1,5 @@
-/*
- * \file
- */
-
 #ifndef __PDM_BOX_TREE_H__
 #define __PDM_BOX_TREE_H__
-
-/*============================================================================
- * Search octrees and quadtrees of boxes.
- *============================================================================*/
-
-/*
-  This file is part of Code_Saturne, a general-purpose CFD tool.
-
-  Copyright (C) 1998-2014 EDF S.A.
-
-  This program is free software; you can redistribute it and/or modify it under
-  the terms of the GNU General Public License as published by the Free Software
-  Foundation; either version 2 of the License, or (at your option) any later
-  version.
-
-  This program is distributed in the hope that it will be useful, but WITHOUT
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-  details.
-
-  You should have received a copy of the GNU General Public License along with
-  this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
-  Street, Fifth Floor, Boston, MA 02110-1301, USA.
-*/
-
-/*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -49,9 +19,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -738,7 +705,7 @@ PDM_box_tree_extract_node_extents
  int             *node_id,
  double          *node_extents,
  const int        normalized
- );
+);
 
 void
 PDM_box_tree_extract_extents_by_child_ids
@@ -775,30 +742,20 @@ PDM_box_tree_get_box_ids
 int
 PDM_box_tree_box_extents_get
 (
- PDM_box_tree_t  *bt,
- const int        i_copied_rank,
- double         **extents
- );
-
+        PDM_box_tree_t  *bt,
+  const int              i_copied_rank,
+        double         **extents
+);
 
 void
 PDM_tree_intersection_point_box
 (
- PDM_box_tree_t        *btree,
- PDM_point_tree_seq_t  *ptree,
- int                  **box_pts_idx,
- int                  **box_pts
- );
+  PDM_box_tree_t        *btree,
+  PDM_point_tree_seq_t  *ptree,
+  int                  **box_pts_idx,
+  int                  **box_pts
+);
 
-void
-PDM_box_tree_write_vtk2
-(
- const char     *filename,
- PDM_box_tree_t *bt,
- const int       i_copied_rank,
- double *s,
- double *d
- );
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

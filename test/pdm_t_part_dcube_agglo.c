@@ -8,15 +8,16 @@
 #include <string.h>
 #include <fenv.h>
 
-#include "pdm.h"
 #include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_part.h"
 #include "pdm_dcube_gen.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_part_coarse_mesh.h"
+#include "pdm_part.h"
+#include "pdm_printf.h"
+#include "pdm_timer.h"
+#include "pdm.h"
 
 /*============================================================================
  * Type definitions
@@ -288,37 +289,7 @@ int main(int argc, char *argv[])
                                       dface_group);
 
   if (time_and_stat && !use_multipart) {
-
-    double  *elapsed  = NULL;
-    double  *cpu      = NULL;
-    double  *cpu_user = NULL;
-    double  *cpu_sys  = NULL;
-
-    PDM_part_time_get(ppart,
-                      &elapsed,
-                      &cpu,
-                      &cpu_user,
-                      &cpu_sys);
-
-    PDM_printf("[%i]   - elapsed total                    : %12.5e\n", i_rank, elapsed[0]);
-    PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", i_rank, elapsed[1]);
-    PDM_printf("[%i]   - elapsed splitting graph          : %12.5e\n", i_rank, elapsed[2]);
-    PDM_printf("[%i]   - elapsed building mesh partitions : %12.5e\n", i_rank, elapsed[3]);
-
-    PDM_printf("[%i]   - cpu total                        : %12.5e\n", i_rank, cpu[0]);
-    PDM_printf("[%i]   - cpu building graph               : %12.5e\n", i_rank, cpu[1]);
-    PDM_printf("[%i]   - cpu splitting graph              : %12.5e\n", i_rank, cpu[2]);
-    PDM_printf("[%i]   - cpu building mesh partitions     : %12.5e\n", i_rank, cpu[3]);
-
-    PDM_printf("[%i]   - cpu_user total                   : %12.5e\n", i_rank, cpu_user[0]);
-    PDM_printf("[%i]   - cpu_user building graph          : %12.5e\n", i_rank, cpu_user[1]);
-    PDM_printf("[%i]   - cpu_user splitting graph         : %12.5e\n", i_rank, cpu_user[2]);
-    PDM_printf("[%i]   - cpu_user building mesh partitions: %12.5e\n", i_rank, cpu_user[3]);
-
-    PDM_printf("[%i]   - cpu_sys total                    : %12.5e\n", i_rank, cpu_sys[0]);
-    PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", i_rank, cpu_sys[1]);
-    PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", i_rank, cpu_sys[2]);
-    PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", i_rank, cpu_sys[3]);
+    PDM_part_dump_times(ppart);
   }
 
   int n_tpart = 0;
@@ -480,10 +451,25 @@ int main(int argc, char *argv[])
   // PDM_part_coarse_mesh_add_option_anisotropic(cm, option_aniso);
 
 
-  PDM_part_coarse_mesh_compute (cm);
+  PDM_part_coarse_mesh_compute(cm);
+
+  PDM_part_coarse_mesh_dump_times(cm);
+
+  double *times;
+  PDM_part_coarse_mesh_time_get(cm, &times, &times, &times, &times);
+  if (i_rank == 0) {
+    for (int i = 0; i < 18; i++) {
+      printf("time #%2d : %f\n", i, times[i]);
+    }
+  }
+
+  // Get timer just to check memory ownership if properly handled
+  PDM_timer_t *timer = NULL;
+  PDM_part_coarse_mesh_timer_get(cm, &timer, PDM_OWNERSHIP_USER);
 
 
   PDM_part_coarse_mesh_free(cm);
+  PDM_timer_free(timer);
 
 
   if (dbg_part_dcube) {

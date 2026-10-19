@@ -13,12 +13,6 @@
 #include "pdm_mem_tool.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -326,6 +320,3 @@ PDM_block_to_block_free
   return NULL;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -27,12 +27,6 @@
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -254,7 +248,7 @@ static int _vtk_elt_type
       break;
 
     default:
-      PDM_error(__FILE__, __LINE__, 0, "type %d is not a valid std elt type\n", elt_type);
+      PDM_error("Element type %d is not a valid standard elt type", elt_type);
   }
 
   return vtk_elt_type;
@@ -315,7 +309,7 @@ _ijk_to_vtk
       idx[11] =  5; idx[12] =  6; idx[13] =  7; idx[ 6] =  8;
       idx[ 0] =  0; idx[ 3] =  1; idx[ 4] =  2; idx[ 5] =  3; idx[ 1] =  4;
     } else {
-      PDM_error(__FILE__, __LINE__, 0, "TRIA VTK ordering not implemented for order %d\n", order);
+      PDM_error("TRIA VTK ordering not implemented for order %d", order);
     }
     break;
 
@@ -333,7 +327,7 @@ _ijk_to_vtk
       idx[10] =  4; idx[12] =  5; idx[13] =  6; idx[ 6] =  7;
       idx[ 0] =  0; idx[ 4] =  1; idx[ 5] =  2; idx[ 1] =  3;
     } else {
-      PDM_error(__FILE__, __LINE__, 0, "QUAD VTK ordering not implemented for order %d\n", order);
+      PDM_error("QUAD VTK ordering not implemented for order %d", order);
     }
     break;
 
@@ -353,7 +347,7 @@ _ijk_to_vtk
       idx[6] = 3; idx[5] = 4;
       idx[0] = 0; idx[4] = 1; idx[1] = 2;
     } else {
-      PDM_error(__FILE__, __LINE__, 0, "TETRA VTK ordering not implemented for order %d\n", order);
+      PDM_error("TETRA VTK ordering not implemented for order %d", order);
     }
     break;
 
@@ -377,7 +371,7 @@ _ijk_to_vtk
       idx[ 8] =  1; idx[ 7] =  4;
       idx[ 0] =  0; idx[ 6] =  3; idx[ 1] =  5;
     } else {
-      PDM_error(__FILE__, __LINE__, 0, "PRISM VTK ordering not implemented for order %d\n", order);
+      PDM_error("PRISM VTK ordering not implemented for order %d", order);
     }
     break;
 
@@ -401,12 +395,12 @@ _ijk_to_vtk
       idx[11] =  3; idx[20] =  4; idx[ 9] =  5;
       idx[ 0] =  0; idx[ 8] =  1; idx[ 1] =  2;
     } else {
-      PDM_error(__FILE__, __LINE__, 0, "HEXA VTK ordering not implemented for order %d\n", order);
+      PDM_error("HEXA VTK ordering not implemented for order %d", order);
     }
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0, "VTK ordering not implemented for element type %d at order %d\n", (int) elt_type, order);
+    PDM_error("VTK ordering not implemented for element type %d at order %d", (int) elt_type, order);
     break;
   }
 }
@@ -931,7 +925,7 @@ static PDM_Mesh_nodal_elt_t _vtk_to_pdm_elt_type
   case 12:
     return PDM_MESH_NODAL_HEXA8;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "VTK type %d is not supported\n", vtk_elt_type);
+      PDM_error("VTK type %d is not supported", vtk_elt_type);
   }
 
   return PDM_MESH_NODAL_N_ELEMENT_TYPES;
@@ -1013,7 +1007,7 @@ _vtk_read_unstructured_grid
         prepa->n_elt = gn_elt;
       }
       else if (prepa->n_elt != gn_elt) {
-        PDM_error(__FILE__, __LINE__, 0, "Incoherent number of cells (block CELLS)\n");
+        PDM_error("Incoherent number of cells (block CELLS)");
       }
       s_elt_vtx -= prepa->n_elt;
 
@@ -1040,7 +1034,7 @@ _vtk_read_unstructured_grid
         prepa->n_elt = gn_elt;
       }
       else if (prepa->n_elt != gn_elt) {
-        PDM_error(__FILE__, __LINE__, 0, "Incoherent number of cells (block CELL_TYPES)\n");
+        PDM_error("Incoherent number of cells (block CELL_TYPES)");
       }
 
       PDM_malloc(prepa->elt_type, prepa->n_elt, PDM_Mesh_nodal_elt_t);
@@ -1086,7 +1080,7 @@ _vtk_read_polydata
         prepa->n_elt = gn_elt;
       }
       else if (prepa->n_elt != gn_elt) {
-        PDM_error(__FILE__, __LINE__, 0, "Incoherent number of cells (block CELLS)\n");
+        PDM_error("Incoherent number of cells (block CELLS)");
       }
       s_elt_vtx -= prepa->n_elt;
 
@@ -1134,7 +1128,7 @@ const char *s
     return PDM_DOUBLE;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Field data type '%s' is not supported\n");
+    PDM_error("Field data type '%s' is not supported");
   }
 
   return PDM_WRONG_DATA;
@@ -1153,7 +1147,7 @@ _pdm_data_size
   case PDM_DOUBLE:
     return sizeof(double);
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid data type %d\n", (int) data_type);
+    PDM_error("Invalid data type %d", (int) data_type);
   }
 
   return 0;
@@ -1279,7 +1273,7 @@ _vtk_read_fields
        field_stride[0] = 9;
       }
       else {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid field type '%s'\n", word);
+        PDM_error("Invalid field type '%s'", word);
       }
 
       fscanf(f, "%s", word);
@@ -2603,7 +2597,7 @@ PDM_vtk_lagrange_to_ijk
     return _vtk_lagrange_hexa_to_ijk(order);
 
   default:
-    PDM_error(__FILE__, __LINE__, 0, "VTK lagrange ordering not implemented for elt type %d\n", (int) elt_type);
+    PDM_error("VTK lagrange ordering not implemented for elt type %d", (int) elt_type);
   }
 
   return NULL;
@@ -2661,7 +2655,7 @@ PDM_vtk_read_to_dmesh_nodal
     FILE *f = fopen(filename, "r");
 
     if (f == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Failed to open file '%s'\n", filename);
+      PDM_error("Failed to open file '%s'", filename);
     }
 
     char word[999];
@@ -2690,7 +2684,7 @@ PDM_vtk_read_to_dmesh_nodal
           _vtk_read_polydata(f, &prepa);
         }
         else {
-          PDM_error(__FILE__, __LINE__, 0, "Dataset '%s' not supported\n", word);
+          PDM_error("Dataset '%s' not supported", word);
         }
 
       }
@@ -2959,7 +2953,7 @@ PDM_vtk_read_to_dmesh_nodal
         }
       }
       else if (t == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error(__FILE__, __LINE__, 0, "Poly3d are not supported\n");
+        PDM_error("Poly3d are not supported");
       }
       else {
         int stride = PDM_Mesh_nodal_n_vtx_elt_get(t, 1); // high-order??
@@ -3080,27 +3074,24 @@ PDM_vtk_read_to_dmesh_nodal
 }
 
 
-
-
-
 void
 PDM_vtk_write_unstructured_grid
 (
- const char                 *filename,
- const int                   n_vtx,
- const double                vtx_coord[],
- const PDM_g_num_t           vtx_g_num[],
- const int                   n_elt,
- const PDM_Mesh_nodal_elt_t  elt_type[],
- const int                   elt_vtx_idx[],
- const int                   elt_vtx[],
- const PDM_g_num_t           elt_g_num[],
- const int                   n_elt_field,
- const char                 *elt_field_name[],
- const double               *elt_field[],
- const int                   n_vtx_field,
- const char                 *vtx_field_name[],
- const double               *vtx_field[]
+  const char                 *filename,
+  const int                   n_vtx,
+  const double                vtx_coord[],
+  const PDM_g_num_t           vtx_g_num[],
+  const int                   n_elt,
+  const PDM_Mesh_nodal_elt_t  elt_type[],
+  const int                   elt_vtx_idx[],
+  const int                   elt_vtx[],
+  const PDM_g_num_t           elt_g_num[],
+  const int                   n_elt_field,
+        char                 *elt_field_name[],
+        double               *elt_field[],
+  const int                   n_vtx_field,
+        char                 *vtx_field_name[],
+        double               *vtx_field[]
 )
 {
   FILE *f = fopen(filename, "w");
@@ -3195,7 +3186,3 @@ PDM_vtk_write_unstructured_grid
 
   fclose(f);
 }
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_MESH_INTERSECTION_H
-#define PDM_MESH_INTERSECTION_H
+#ifndef __PDM_MESH_INTERSECTION_H__
+#define __PDM_MESH_INTERSECTION_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -17,12 +13,9 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -347,8 +340,8 @@ PDM_mesh_intersection_mesh_dimension_get
  const int                       i_mesh
 );
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif  /* PDM_MESH_INTERSECTION_H */
+#endif  /* __PDM_MESH_INTERSECTION_H__ */

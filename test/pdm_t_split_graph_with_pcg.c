@@ -62,24 +62,16 @@ int exit_code
 }
 
 /**
- *
  * \brief  Read arguments from the command line
- *
- * \param [in]    argc   Number of arguments
- * \param [in]    argv   Arguments
- * \param [inout] nPts   Number of points
- * \param [inout] ls     Low scalability
- * \param [inout] length Length of domains
- *
  */
-
 static void
 _read_args
 (
- int                    argc,
- char                 **argv,
- PDM_g_num_t           *n_vtx_a,
- int                   *post
+ int                argc,
+ char             **argv,
+ PDM_g_num_t       *n_vtx_seg,
+ PDM_split_dual_t  *part_method,
+ int               *post
 )
 {
   int i = 1;
@@ -88,17 +80,26 @@ _read_args
 
   while (i < argc) {
 
-    if (strcmp(argv[i], "-h") == 0)
+    if (strcmp(argv[i], "-h") == 0) {
       _usage(EXIT_SUCCESS);
-
+    }
     else if (strcmp(argv[i], "-n") == 0) {
       i++;
       if (i >= argc) {
         _usage(EXIT_FAILURE);
       }
       else {
-        long _n_vtx_a = atol(argv[i]);
-        *n_vtx_a = (PDM_g_num_t) _n_vtx_a;
+        long _n_vtx_seg = atol(argv[i]);
+        *n_vtx_seg = (PDM_g_num_t) _n_vtx_seg;
+      }
+    }
+    else if (strcmp(argv[i], "-part_method") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *part_method = (PDM_split_dual_t) atoi(argv[i]);
       }
     }
     else if (strcmp(argv[i], "-post") == 0) {
@@ -120,7 +121,7 @@ _generate_mesh
 )
 {
   int              n_part       = 1;
-  PDM_split_dual_t split_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_split_dual_t split_method = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /* Warmup */
   PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(pdm_comm,
@@ -196,26 +197,27 @@ main
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_g_num_t n_vtx_a = 10;
-
-  int post = 0;
+  PDM_g_num_t      n_vtx_seg   = 10;
+  PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+  int              post        = 0;
 
   _read_args(argc,
              argv,
-             &n_vtx_a,
+             &n_vtx_seg,
+             &part_method,
              &post);
 
-  PDM_part_mesh_nodal_t* pmn = _generate_mesh(comm, n_vtx_a);
+  PDM_part_mesh_nodal_t* pmn = _generate_mesh(comm, n_vtx_seg);
 
   if(post) {
     PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_SURFACIC, "out_surfacic");
   }
 
   /*
-   * Differents modes de splitting
-   *   - Split les sommets (idéal pour l'adaptation de maillage )
-   *   - Split les cellules (le plus classiques )
-   *   - On peut partir d'un pmn ou d'un pm
+   * Different splitting modes
+   *   - Split the vertex-vertex graph (ideal for node-centered mesh adaptation)
+   *   - Split the cell-cell graph (more traditional for FV solvers)
+   *   - Can start from a Part Mesh Nodal or a Part Mesh
    */
 
   /* Warm-up */
@@ -460,9 +462,20 @@ main
   //   gnode_node[i] -= 1;
   // }
 
+
+#ifdef PDM_HAVE_PTSCOTCH
+  part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+#else
+#ifdef PDM_HAVE_PARMETIS
+  part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+#else
+  PDM_error("This test requires PARMETIS or PTSCOTCH");
+#endif
+#endif
+
   int *node_part_id = NULL;
   PDM_malloc(node_part_id, n_tot_node, int);
-  PDM_para_graph_split(PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+  PDM_para_graph_split(part_method,
                        distrib_node,
                        gnode_node_idx,
                        gnode_node,

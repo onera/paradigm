@@ -28,12 +28,6 @@
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 
 /*=============================================================================
@@ -809,7 +803,7 @@ const int  *cell_vtx,
       }
 
       if (edge_id == 0) {
-        PDM_error(__FILE__, __LINE__, 0, "Error cell_edge edge not in a face\n");
+        PDM_error("Error cell_edge edge not in a face");
       }
 
       _cell_edge[idx_edge] = edge_id;
@@ -1410,7 +1404,7 @@ _gen_from_base_mesh
       }
 
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Wrong subcell hextet %d\n", hextet);
+        PDM_error("Wrong subcell hextet %d", hextet);
       }
     }
 
@@ -1547,7 +1541,7 @@ _gen_from_base_mesh
       }
 
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+        PDM_error("Wrong subface quadtria %d", quadtria);
       }
     }
 
@@ -1805,7 +1799,7 @@ _extrude_base_surface_mesh
       }
 
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+        PDM_error("Wrong subface quadtria %d", quadtria);
       }
     }
 
@@ -1899,7 +1893,7 @@ _extrude_base_surface_mesh
       }
 
       default: {
-        PDM_error(__FILE__, __LINE__, 0, "Wrong subface quadtria %d\n", quadtria);
+        PDM_error("Wrong subface quadtria %d", quadtria);
       }
     }
 
@@ -2070,7 +2064,7 @@ PDM_sphere_vol_gen_nodal
   int mesh_dimension = PDM_Mesh_nodal_elt_dim_get(t_elt);
   if (mesh_dimension != 3) {
     PDM_error(__FILE__, __LINE__, 0,
-              "Not implemented yes for dimension %d\n", mesh_dimension);
+              "Not implemented yes for dimension %d", mesh_dimension);
   }
 
   /* First: generate a dcube nodal */
@@ -2753,6 +2747,3 @@ PDM_GCC_SUPPRESS_WARNING_POP
 #undef _hextet_vtx_6
 #undef _hextet_vtx_7
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -21,12 +21,6 @@
 #include "pdm_mpi.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -396,8 +390,7 @@ PDM_exchange_helper_mpi_type_exch
                           mpi_type,
                           exch_helper->comm);
   } else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
+    PDM_error("Not yet implemented with k_comm = %i", k_comm);
   }
 }
 
@@ -540,8 +533,7 @@ PDM_exchange_helper_iexch
                                &exch_helper->n_sub_requests[request_id],
                                &exch_helper->sub_requests  [request_id]);
   } else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_iexch not yet implemented with k_comm = %i\n", k_comm);
+    PDM_error("Not yet implemented with k_comm = %i", k_comm);
   }
 
   PDM_MPI_Type_free(&mpi_type);
@@ -593,8 +585,7 @@ PDM_exchange_helper_exch_init
                            exch_helper->comm,
                            &exch_helper->sub_requests[request_id][0]);
   } else if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_DIST_GRAPH) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
+    PDM_error("Not yet implemented with k_comm = %i", k_comm);
   } else if(k_comm == PDM_MPI_COMM_KIND_P2P) {
     int tag = _get_next_tag(exch_helper);
     PDM_MPI_Alltoallv_p2p_init(send_buffer,
@@ -628,8 +619,7 @@ PDM_exchange_helper_exch_init
      exch_helper->rma_recv_idx[request_id] = recv_idx;
 
   } else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
+    PDM_error("Not yet implemented with k_comm = %i", k_comm);
   }
 
   exch_helper->is_persistent  [request_id] = 1;
@@ -648,8 +638,7 @@ PDM_exchange_helper_exch_start
 )
 {
   if(exch_helper->requests_status[request_id] != EXCHANGE_HELPER_STATUS_READY) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch_start with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch\n", exch_helper->requests_status[request_id], request_id);
+    PDM_error("Error with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch", exch_helper->requests_status[request_id], request_id);
   }
 
   if(exch_helper->k_comm[request_id] == PDM_MPI_COMM_KIND_WIN_RMA) {
@@ -686,8 +675,7 @@ PDM_exchange_helper_exch_wait
 )
 {
   if(exch_helper->requests_status[request_id] != EXCHANGE_HELPER_STATUS_ONGOING) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch_wait with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch\n", exch_helper->requests_status[request_id], request_id);
+    PDM_error("Error with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch", exch_helper->requests_status[request_id], request_id);
   }
 
   for(int i = 0; i < exch_helper->n_sub_requests[request_id]; ++i) {
@@ -837,8 +825,7 @@ PDM_exchange_helper_iexch_one_way
                    exch_helper->comm,
                    &exch_helper->sub_requests[request_id]);
   } else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_iexch_one_way not yet implemented with direction = %i\n", direction);
+    PDM_error("Error not yet implemented with direction = %i", direction);
   }
 
   exch_helper->k_comm         [request_id] = PDM_MPI_COMM_KIND_P2P;
@@ -899,8 +886,7 @@ PDM_exchange_helper_exch_one_way_init
                        exch_helper->comm,
                        &exch_helper->sub_requests[request_id]);
   } else {
-    PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch_one_way_init not yet implemented with direction = %i\n", direction);
+    PDM_error("Error not yet implemented with direction = %i", direction);
   }
 
 
@@ -921,8 +907,7 @@ PDM_exchange_helper_free
 {
   for(int i_req = 0; i_req < exch_helper->n_request; ++i_req) {
     if(exch_helper->requests_status[i_req] != EXCHANGE_HELPER_STATUS_FREE) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Error PDM_exchange_helper_free have a unfreed request = %i\n", i_req);
+      PDM_error("Error have a unfreed request = %i", i_req);
     }
     for(int i = 0; i < exch_helper->n_sub_requests[i_req]; ++i) {
       PDM_MPI_Request_free(&exch_helper->sub_requests[i_req][i]);
@@ -970,6 +955,3 @@ PDM_exchange_helper_free
 }
 
 
-#ifdef __cplusplus
-}
-#endif

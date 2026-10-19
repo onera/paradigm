@@ -1,30 +1,3 @@
-/*============================================================================
- * Functions about high order meshes
- *============================================================================*/
-
-/*
-  This file is part of the "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2018       ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-/*----------------------------------------------------------------------------*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -55,12 +28,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1084,9 +1051,7 @@ _compute_dist2_from_closest_edge_subdivision
                                     &_child);
 
     if (is_empty) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Heap is empty %s\n");
-      abort();
+      PDM_error("Heap is empty");
     }
 
     if ((distance_extension == 0) && (_dist2_current > dist2_pre)) {
@@ -1261,9 +1226,7 @@ _compute_dist2_from_uniform_edge_subdivision
 
 
     if (is_empty) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Heap is empty %s\n");
-      abort();
+      PDM_error("Heap is empty");
     }
 
     dist2_min_min = PDM_MIN (dist2_min_min, _dist2_current);
@@ -2348,9 +2311,7 @@ _compute_dist2_from_closest_tria_subdivision
 
 
     if (is_empty) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Heap is empty %s\n");
-      abort();
+      PDM_error("Heap is empty");
     }
 
     if ((distance_extension == 0) && (_dist2_current > dist2_pre)) {
@@ -2525,9 +2486,7 @@ _compute_dist2_from_uniform_tria_subdivision
 
 
     if (is_empty) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Heap is empty %s\n");
-      abort();
+      PDM_error("Heap is empty");
     }
 
     dist2_min_min = PDM_MIN (dist2_min_min, _dist2_current);
@@ -4761,9 +4720,7 @@ _compute_dist2_from_closest_tetra_subdivision
                                     &_child);
 
     if (is_empty) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Heap is empty %s\n");
-      abort();
+      PDM_error("Heap is empty");
     }
 
     if (dbg_enabled) {
@@ -4961,9 +4918,7 @@ _compute_dist2_from_uniform_tetra_subdivision
                                     &_child);
 
     if (is_empty) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Heap is empty\n");
-      abort();
+      PDM_error("Heap is empty");
     }
 
     dist2_min_min = PDM_MIN (dist2_min_min, _dist2_current);
@@ -5598,8 +5553,7 @@ _default_location
 
 
   default:
-    PDM_error(__FILE__, __LINE__, 0,
-              "PDM_ho_location : %d Element type not implemented yet\n", _type);
+    PDM_error("%d Element type not implemented yet", _type);
 
   }
 
@@ -5665,8 +5619,7 @@ _get_user_elt (PDM_Mesh_nodal_elt_t elt_type)
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0,
-              "Unvailable element type %d\n", (int) elt_type);
+    PDM_error("Unvailable element type %d", (int) elt_type);
   }
 
   return NULL;
@@ -5684,7 +5637,7 @@ _argmax
  )
 {
   double amax = -HUGE_VAL;
-  int    imax = -1;
+  int    imax = 0;
   for (int i = 0; i < n; i++) {
     if (a[i] > amax) {
       amax = a[i];
@@ -6058,7 +6011,7 @@ _boundary_child_element_coord
     }
 
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid elt_type %d\n", (int) parent_elt_type);
+      PDM_error("Invalid elt_type %d", (int) parent_elt_type);
 
   }
 
@@ -6113,7 +6066,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[1] = 1 - child_uvw[0];
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_QUADHO:
@@ -6135,7 +6088,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[1] = 1 - child_uvw[0];
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_TETRAHO:
@@ -6161,7 +6114,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[2] = 0;
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_PYRAMIDHO:
@@ -6192,7 +6145,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[2] = child_uvw[1];
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_PRISMHO:
@@ -6223,7 +6176,7 @@ _boundary_child_uvw_to_parent_uvw
       parent_uvw[2] = child_uvw[1];
       break;
     default:
-      PDM_error(__FILE__, __LINE__, 0, "Invalid i_bnd (%d) for elt_type %d\n", i_bnd, (int) parent_elt_type);
+      PDM_error("Invalid i_bnd (%d) for elt_type %d", i_bnd, (int) parent_elt_type);
     }
     break;
   case PDM_MESH_NODAL_HEXAHO: {
@@ -6234,7 +6187,7 @@ _boundary_child_uvw_to_parent_uvw
     break;
   }
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid elt_type %d\n", (int) parent_elt_type);
+    PDM_error("Invalid elt_type %d", (int) parent_elt_type);
   }
 }
 
@@ -6281,7 +6234,7 @@ _init_uvw
     uvw[2] = 0.5;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid elt_type %d\n", (int) elt_type);
+    PDM_error("Invalid elt_type %d", (int) elt_type);
   }
 }
 
@@ -6531,7 +6484,7 @@ _compute_uvw_ho
       }
 
       default:
-        PDM_error(__FILE__, __LINE__, 0, "Invalid elt dimension %d\n", elt_dim);
+        PDM_error("Invalid elt dimension %d", elt_dim);
       }
 
     if (singular) {
@@ -6582,7 +6535,7 @@ _compute_uvw_ho
           return 1;
         }
 
-        double child_uvw[2];
+        double child_uvw[3];
         _init_uvw(child_elt_type, child_uvw);
         int child_converged = _compute_uvw_ho(child_elt_type,
                                               order,
@@ -6767,8 +6720,7 @@ PDM_ho_location_uvw_nodes
     break;
 
     default:
-    PDM_error(__FILE__ , __LINE__, 0,
-              "Invalid element type %d\n", type);
+    PDM_error("Invalid element type %d", type);
   }
 }
 
@@ -6854,6 +6806,3 @@ PDM_ho_location_newton
   return dist2;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -13,9 +13,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local structure definitions
@@ -111,6 +108,3 @@ PDM_io_utils_diff_files
   return diff;
 }
 
-#ifdef  __cplusplus
-}
-#endif

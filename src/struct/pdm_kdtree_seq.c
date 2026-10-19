@@ -28,12 +28,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1756,6 +1750,3 @@ PDM_kdtree_seq_point_range_get
   return point_range[1] - point_range[0];
 }
 
-#ifdef  __cplusplus
-}
-#endif

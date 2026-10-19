@@ -19,9 +19,6 @@
 
 #ifdef __cplusplus
 extern "C"
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -153,7 +150,7 @@ PDM_dpoint_cloud_gen_random
   PDM_malloc(_dpts_coord, dn_pts * 3, double);
 
   if (_dpts_coord == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Failed to allocate coords (size = %d * 3 * sizeof(double))\n", dn_pts);
+    PDM_error("Failed to allocate coords (size = %d * 3 * sizeof(double))", dn_pts);
   }
 
   double origin[3] = {x_min, y_min, z_min};
@@ -299,6 +296,3 @@ PDM_dpoint_cloud_gen_cartesian
   *distrib_pts = distrib;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

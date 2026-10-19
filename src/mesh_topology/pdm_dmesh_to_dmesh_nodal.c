@@ -27,12 +27,6 @@
 #include "pdm_dmesh_to_dmesh_nodal.h"
 #include "pdm_dmesh_to_dmesh_nodal_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -2419,6 +2413,3 @@ PDM_dmesh_to_dmesh_nodal_update_group
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

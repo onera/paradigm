@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_PARA_OCTREE_H
-#define	PDM_PARA_OCTREE_H
+#ifndef __PDM_PARA_OCTREE_H__
+#define	__PDM_PARA_OCTREE_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -12,14 +8,12 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_part_to_block.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 
 #ifdef	__cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
 #endif
 
 /*============================================================================
@@ -37,7 +31,7 @@ typedef struct _pdm_para_octree_t PDM_para_octree_t;
  * \brief Names of 8 children of a node
  *
  */
-#ifndef PDM_OCTREE_H
+#ifndef __PDM_OCTREE_H__
 typedef enum {
   PDM_BOTTOM,
   PDM_UP,
@@ -476,8 +470,25 @@ PDM_para_octree_neighbor_get
   int               **part_boundary_elt
 );
 
+
+/**
+ *
+ * \brief Add external timer
+ *
+ * \param [in]   octree  Pointer to octree structure
+ * \param [in]   timer   Pointer to \ref PDM_timer_t object
+ *
+ */
+void
+PDM_para_octree_timer_set
+(
+  const PDM_para_octree_t *octree,
+        PDM_timer_t       *timer
+);
+
+
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* PDM_PARA_OCTREE_H */
+#endif	/* __PDM_PARA_OCTREE_H__ */

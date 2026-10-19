@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_DOCTREE_H
-#define PDM_DOCTREE_H
+#ifndef __PDM_DOCTREE_H__
+#define __PDM_DOCTREE_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -14,12 +10,9 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace */
-#endif
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -124,8 +117,9 @@ PDM_doctree_init_pts_location_get
 );
 
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif  /* PDM_DOCTREE_H */
+
+#endif  /* __PDM_DOCTREE_H__ */

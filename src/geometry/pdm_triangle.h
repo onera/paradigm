@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_TRIANGLE_H__
 #define __PDM_TRIANGLE_H__
 
@@ -19,9 +15,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -244,4 +237,4 @@ PDM_triangle_inscribed_circle
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_SURF_MESH_H__ */
+#endif /* __PDM_TRIANGLE_H__ */

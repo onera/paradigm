@@ -1,7 +1,3 @@
-/*============================================================================
- * Description d'un fichier scalaire
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -21,12 +17,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des types locaux
@@ -90,15 +80,11 @@ PDM_file_seq_open
     fichier->fichier = fopen(nom, "a");
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_file_seq_open :\n"
-                    "Mode de fichier inconnu\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Unknow file mode");
   }
 
   if (fichier->fichier == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_file_seq_open :\n"
-            "Erreur à l'ouverture du fichier %s\n", nom);
-    exit(EXIT_FAILURE);
+    PDM_error("Error when open file %s", nom);
   }
 
   return fichier;
@@ -117,16 +103,11 @@ PDM_file_seq_write
 {
 
   if (fichier->mode == FICHIER_SEQ_MODE_LECTURE) {
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_file_seq_open :\n"
-                    "Ecriture interdite pour le fichier %s "
-                    "ouvert en mode lecture\n",
-                    fichier->nom);
-    exit(EXIT_FAILURE);
+    PDM_error("Write forbidden for file '%s' opened in read mode", fichier->nom);
   }
 
   size_t _n_donnees = (size_t) n_donnees ;
-  size_t _n_donnees_ecrites = fwrite(donnees, taille_donnee,
-                                       _n_donnees, fichier->fichier);
+  size_t _n_donnees_ecrites = fwrite(donnees, taille_donnee, _n_donnees, fichier->fichier);
   PDM_g_num_t n_donnees_ecrites = (PDM_g_num_t) _n_donnees_ecrites;
 
   return n_donnees_ecrites;
@@ -146,11 +127,7 @@ PDM_file_seq_read
 
   if (fichier->mode == FICHIER_SEQ_MODE_ECRITURE ||
       fichier->mode == FICHIER_SEQ_MODE_AJOUT) {
-    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_file_seq_open :\n"
-                   "Lecture interdite pour le fichier %s "
-                   "ouvert en mode ecriture/ajout\n",
-                   fichier->nom);
-    exit(EXIT_FAILURE);
+    PDM_error("Read forbidden for file '%s' opened in write/append mode", fichier->nom);
   }
 
   size_t _n_donnees = (size_t) n_donnees ;
@@ -195,6 +172,3 @@ PDM_file_seq_close
   fclose(fichier->fichier);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

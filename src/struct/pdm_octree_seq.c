@@ -18,12 +18,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -1783,6 +1777,3 @@ PDM_octree_seq_points_inside_balls
 }
 
 
-#ifdef	__cplusplus
-}
-#endif

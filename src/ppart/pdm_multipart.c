@@ -1,27 +1,3 @@
-/*
-  This file is part of the ParaDiGM library.
-
-  Copyright (C) 2017       ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-/*============================================================================
- * TODO : write module description here
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -81,27 +57,21 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 
 #define CHECK_INSTANCE(multipart) \
-  if ((multipart) == NULL) { \
-    PDM_error(__FILE__, __LINE__, 0, "Error : Invalid PDM_multipart_t instance\n"); \
+  if ((multipart) == NULL) {      \
+    PDM_error("Error : Invalid PDM_multipart_t instance"); \
   }
 
 #define CHECK_I_DOMAIN(multipart, i_domain) \
-if ((i_domain) >= (multipart)->n_domain) { \
-  PDM_error(__FILE__, __LINE__, 0, "Error : Invalid i_domain (%d / %d)\n", (i_domain), (multipart)->n_domain); \
+if ((i_domain) >= (multipart)->n_domain) {  \
+  PDM_error("Error : Invalid i_domain (%d / %d)", (i_domain), (multipart)->n_domain); \
 }
 
-#define CHECK_I_PART(multipart, i_domain, i_part) \
+#define CHECK_I_PART(multipart, i_domain, i_part)  \
 if ((i_part) >= (multipart)->n_part[(i_domain)]) { \
-  PDM_error(__FILE__, __LINE__, 0, "Error : Invalid i_part for domain %d (%d / %d)\n", (i_domain), (i_part), (multipart)->n_part[(i_domain)]); \
+  PDM_error("Error : Invalid i_part for domain %d (%d / %d)", (i_domain), (i_part), (multipart)->n_part[(i_domain)]); \
 }
 
 /*============================================================================
@@ -296,7 +266,7 @@ _map_part_t_with_part_mesh
 static void
 _part_free
 (
- _part_t         *part
+  _part_t         *part
 )
 {
   /* Following is not results but internal array */
@@ -324,11 +294,11 @@ _part_free
 static void
 _setup_ghost_information
 (
-const int           i_rank,
-const int           n_part,
-const int          *pn_vtx,
-      int         **pinternal_vtx_priority,
-      PDM_g_num_t  *distrib_partition
+  const int           i_rank,
+  const int           n_part,
+  const int          *pn_vtx,
+        int         **pinternal_vtx_priority,
+        PDM_g_num_t  *distrib_partition
 )
 {
   /* 0 : Interior / 1 : owner join (at least one) / 2 : not owner */
@@ -1075,10 +1045,10 @@ static
 void
 _split_graph_hilbert
 (
- PDM_MPI_Comm   comm,
- PDM_dmesh_t   *dmesh,
- int            n_part,
- int           *node_part
+  PDM_MPI_Comm   comm,
+  PDM_dmesh_t   *dmesh,
+  int            n_part,
+  int           *node_part
 )
 {
   int dim = PDM_dmesh_dimension_get(dmesh);
@@ -1231,7 +1201,7 @@ _split_graph_hilbert
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+      PDM_error("Invalid dimension %d", dim);
     }
   }
 }
@@ -1240,13 +1210,13 @@ static
 void
 _warm_up_for_split
 (
- PDM_MPI_Comm       comm,
- PDM_dmesh_t       *dmesh,
- PDM_g_num_t       *distrib_node,
- int                compute_dual,
- PDM_split_dual_t   split_method,
- PDM_g_num_t      **out_dual_graph_idx,
- PDM_g_num_t      **out_dual_graph
+  PDM_MPI_Comm       comm,
+  PDM_dmesh_t       *dmesh,
+  PDM_g_num_t       *distrib_node,
+  int                compute_dual,
+  PDM_split_dual_t   split_method,
+  PDM_g_num_t      **out_dual_graph_idx,
+  PDM_g_num_t      **out_dual_graph
 )
 {
 
@@ -1452,17 +1422,18 @@ static
 PDM_g_num_t*
 _split_graph
 (
-      PDM_multipart_t   *multipart,
-      PDM_MPI_Comm       comm,
-      PDM_dmesh_t       *dmesh,
-      int                n_part,
-      PDM_split_dual_t   split_method,
-      PDM_part_size_t    part_size_method,
-const double            *part_fraction,
-      PDM_g_num_t       *distrib_node,
-      int              **node_part
+        PDM_multipart_t   *multipart,
+        PDM_MPI_Comm       comm,
+        PDM_dmesh_t       *dmesh,
+        int                n_part,
+        PDM_split_dual_t   split_method,
+        PDM_part_size_t    part_size_method,
+  const double            *part_fraction,
+        PDM_g_num_t       *distrib_node,
+        int              **node_part
 )
 {
+  PDM_timer_start(multipart->timer, "multipart:build_dual", 0);
   int verbose = 0;
 
   int i_rank;
@@ -1495,8 +1466,6 @@ const double            *part_fraction,
      split_method == PDM_SPLIT_DUAL_WITH_IMPLICIT) {
     compute_dual = 0;
   }
-  // Start dualgraph build timer
-  PDM_timer_resume(multipart->timer);
 
   PDM_g_num_t *dual_graph_idx = NULL;
   PDM_g_num_t *dual_graph     = NULL;
@@ -1510,12 +1479,8 @@ const double            *part_fraction,
 
 
 
-  // End dualgraph build timer
-  PDM_timer_hang_on(multipart->timer);
-  multipart->times_elapsed[TIMER_MPART_BUILD] = PDM_timer_elapsed(multipart->timer);
-  multipart->times_cpu    [TIMER_MPART_BUILD] = PDM_timer_cpu(multipart->timer);
-  multipart->times_cpu_u  [TIMER_MPART_BUILD] = PDM_timer_cpu_user(multipart->timer);
-  multipart->times_cpu_s  [TIMER_MPART_BUILD] = PDM_timer_cpu_sys(multipart->timer);
+  PDM_timer_end(multipart->timer, "multipart:build_dual", 0);
+  PDM_timer_start(multipart->timer, "multipart:graph_split", 0);
 
 
   int dn_node = distrib_node[i_rank+1] - distrib_node[i_rank];
@@ -1551,9 +1516,6 @@ const double            *part_fraction,
     PDM_free(displ);
   }
 
-  // Start dualgraph split timer
-  PDM_timer_resume(multipart->timer);
-
   if (split_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
     _split_graph_hilbert(comm,
                          dmesh,
@@ -1576,12 +1538,6 @@ const double            *part_fraction,
                           _node_part,
                           comm);
   }
-  // End dualgraph build timer
-  PDM_timer_hang_on(multipart->timer);
-  multipart->times_elapsed[TIMER_MPART_SPLIT] = PDM_timer_elapsed(multipart->timer)  - multipart->times_elapsed[TIMER_MPART_BUILD];
-  multipart->times_cpu    [TIMER_MPART_SPLIT] = PDM_timer_cpu(multipart->timer)      - multipart->times_cpu    [TIMER_MPART_BUILD];
-  multipart->times_cpu_u  [TIMER_MPART_SPLIT] = PDM_timer_cpu_user(multipart->timer) - multipart->times_cpu_u  [TIMER_MPART_BUILD];
-  multipart->times_cpu_s  [TIMER_MPART_SPLIT] = PDM_timer_cpu_sys(multipart->timer)  - multipart->times_cpu_s  [TIMER_MPART_BUILD];
 
 
   // PDM_log_trace_array_int (_node_part, dn_node, "_node_part :: ");
@@ -1594,6 +1550,8 @@ const double            *part_fraction,
   }
 
   *node_part = _node_part;
+
+  PDM_timer_end(multipart->timer, "multipart:graph_split", 0);
 
   return distrib_partition;
 }
@@ -1793,14 +1751,14 @@ static
 void
 _rebuild_part_mesh_group
 (
- PDM_dmesh_t       *dmesh,
-_part_mesh_t       *pmeshes,
- int                n_part,
- PDM_bound_type_t   entity_bound,
- PDM_g_num_t       *entity_distrib,
- int               *pn_entity,
- PDM_g_num_t      **entity_ln_to_gn,
- PDM_MPI_Comm       comm
+  PDM_dmesh_t       *dmesh,
+  _part_mesh_t       *pmeshes,
+  int                n_part,
+  PDM_bound_type_t   entity_bound,
+  PDM_g_num_t       *entity_distrib,
+  int               *pn_entity,
+  PDM_g_num_t      **entity_ln_to_gn,
+  PDM_MPI_Comm       comm
 )
 {
 
@@ -1852,13 +1810,13 @@ static
 void
 _deduce_part_connectivity_0d
 (
- PDM_MPI_Comm       comm,
- PDM_dmesh_t       *dmesh,
- _part_mesh_t      *pmeshes,
- int                n_part,
- int               *pn_vtx,
- PDM_g_num_t      **pvtx_ln_to_gn,
- PDM_g_num_t       *vtx_distrib
+  PDM_MPI_Comm       comm,
+  PDM_dmesh_t       *dmesh,
+  _part_mesh_t      *pmeshes,
+  int                n_part,
+  int               *pn_vtx,
+  PDM_g_num_t      **pvtx_ln_to_gn,
+  PDM_g_num_t       *vtx_distrib
 )
 {
   // Vertex
@@ -1894,18 +1852,18 @@ static
 void
 _deduce_part_connectivity_1d
 (
- PDM_MPI_Comm    comm,
- PDM_dmesh_t    *dmesh,
- _part_mesh_t   *pmeshes,
- int             n_part,
- int            *pn_edge,
- PDM_g_num_t   **pedge_ln_to_gn,
- PDM_g_num_t    *edge_distrib,
- PDM_g_num_t    *vtx_distrib,
- int          ***out_pedge_vtx_idx,
- int          ***out_pedge_vtx,
- int           **out_pn_vtx,
- PDM_g_num_t  ***out_pvtx_ln_to_gn
+  PDM_MPI_Comm    comm,
+  PDM_dmesh_t    *dmesh,
+  _part_mesh_t   *pmeshes,
+  int             n_part,
+  int            *pn_edge,
+  PDM_g_num_t   **pedge_ln_to_gn,
+  PDM_g_num_t    *edge_distrib,
+  PDM_g_num_t    *vtx_distrib,
+  int          ***out_pedge_vtx_idx,
+  int          ***out_pedge_vtx,
+  int           **out_pn_vtx,
+  PDM_g_num_t  ***out_pvtx_ln_to_gn
 )
 {
   int i_rank;
@@ -1996,28 +1954,28 @@ static
 void
 _deduce_part_connectivity_3d
 (
- PDM_MPI_Comm       comm,
- PDM_dmesh_t       *dmesh,
- _part_mesh_t      *pmeshes,
- int                n_part,
- int               *pn_cell,
- PDM_g_num_t      **pcell_ln_to_gn,
- PDM_g_num_t       *cell_distrib,
- PDM_g_num_t       *face_distrib,
- PDM_g_num_t       *edge_distrib,
- PDM_g_num_t       *vtx_distrib,
- int              **out_pn_face,
- PDM_g_num_t     ***out_pface_ln_to_gn,
- int             ***out_pface_vtx_idx,
- int             ***out_pface_vtx,
- int             ***out_pface_edge_idx,
- int             ***out_pface_edge,
- int              **out_pn_edge,
- PDM_g_num_t     ***out_pedge_ln_to_gn,
- int             ***out_pedge_vtx_idx,
- int             ***out_pedge_vtx,
- int              **out_pn_vtx,
- PDM_g_num_t     ***out_pvtx_ln_to_gn
+  PDM_MPI_Comm       comm,
+  PDM_dmesh_t       *dmesh,
+  _part_mesh_t      *pmeshes,
+  int                n_part,
+  int               *pn_cell,
+  PDM_g_num_t      **pcell_ln_to_gn,
+  PDM_g_num_t       *cell_distrib,
+  PDM_g_num_t       *face_distrib,
+  PDM_g_num_t       *edge_distrib,
+  PDM_g_num_t       *vtx_distrib,
+  int              **out_pn_face,
+  PDM_g_num_t     ***out_pface_ln_to_gn,
+  int             ***out_pface_vtx_idx,
+  int             ***out_pface_vtx,
+  int             ***out_pface_edge_idx,
+  int             ***out_pface_edge,
+  int              **out_pn_edge,
+  PDM_g_num_t     ***out_pedge_ln_to_gn,
+  int             ***out_pedge_vtx_idx,
+  int             ***out_pedge_vtx,
+  int              **out_pn_vtx,
+  PDM_g_num_t     ***out_pvtx_ln_to_gn
 )
 {
   /*
@@ -2031,7 +1989,7 @@ _deduce_part_connectivity_3d
                              &dcell_face_idx,
                              PDM_OWNERSHIP_BAD_VALUE);
   if (dcell_face_idx == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - _deduce_part_connectivity_3d : dcell_face_idx = NULL");
+    PDM_error("Error - _deduce_part_connectivity_3d : dcell_face_idx = NULL");
   }
 
   int          *pn_face        = NULL;
@@ -2193,25 +2151,25 @@ static
 void
 _deduce_part_connectivity_2d
 (
- PDM_MPI_Comm       comm,
- PDM_dmesh_t       *dmesh,
- _part_mesh_t      *pmeshes,
- int                n_part,
- int               *pn_face,
- PDM_g_num_t      **pface_ln_to_gn,
- PDM_g_num_t       *face_distrib,
- PDM_g_num_t       *edge_distrib,
- PDM_g_num_t       *vtx_distrib,
- int             ***out_pface_vtx_idx,
- int             ***out_pface_vtx,
- int             ***out_pface_edge_idx,
- int             ***out_pface_edge,
- int              **out_pn_edge,
- PDM_g_num_t     ***out_pedge_ln_to_gn,
- int             ***out_pedge_vtx_idx,
- int             ***out_pedge_vtx,
- int              **out_pn_vtx,
- PDM_g_num_t     ***out_pvtx_ln_to_gn
+  PDM_MPI_Comm       comm,
+  PDM_dmesh_t       *dmesh,
+  _part_mesh_t      *pmeshes,
+  int                n_part,
+  int               *pn_face,
+  PDM_g_num_t      **pface_ln_to_gn,
+  PDM_g_num_t       *face_distrib,
+  PDM_g_num_t       *edge_distrib,
+  PDM_g_num_t       *vtx_distrib,
+  int             ***out_pface_vtx_idx,
+  int             ***out_pface_vtx,
+  int             ***out_pface_edge_idx,
+  int             ***out_pface_edge,
+  int              **out_pn_edge,
+  PDM_g_num_t     ***out_pedge_ln_to_gn,
+  int             ***out_pedge_vtx_idx,
+  int             ***out_pedge_vtx,
+  int              **out_pn_vtx,
+  PDM_g_num_t     ***out_pvtx_ln_to_gn
 )
 {
   int          *pn_vtx        = NULL;
@@ -2348,12 +2306,6 @@ _run_ppart_domain
 
   dn_node = PDM_dmesh_dn_entity_get(dmesh, entity_type1);
 
-  // if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
-  //   if (dn_node <= 0) {
-  //     PDM_error(__FILE__, __LINE__, 0, "Error : Graph-based partitioning requires non-empty blocks (dn_node = %d)\n", dn_node);
-  //   }
-  // }
-
   switch (dim) {
     case 3: {
       _renum_node_method_none    = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
@@ -2380,7 +2332,7 @@ _run_ppart_domain
     }
 
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+      PDM_error("Invalid dimension %d", dim);
     }
   }
 
@@ -2401,7 +2353,7 @@ _run_ppart_domain
     // Check dpart_id
     for (int i_node = 0; i_node < dn_node; i_node++) {
       if (node_part[i_node] < 0 || node_part[i_node] >= distrib_partition[n_rank]) {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid node_part (%d / "PDM_FMT_G_NUM")\n", node_part[i_node], distrib_partition[n_rank]);
+        PDM_error("Invalid node_part (%d / "PDM_FMT_G_NUM")", node_part[i_node], distrib_partition[n_rank]);
       }
     }
 
@@ -2488,10 +2440,6 @@ _run_ppart_domain
   }
 
   pmeshes->tn_part = (int) distrib_partition[n_rank];
-
-
-  // Start construct partionned mesh timer
-  PDM_timer_resume(multipart->timer);
 
   /*
    * Deduce node_ln_to_gn
@@ -2926,13 +2874,6 @@ _run_ppart_domain
   PDM_free(pinternal_vtx_bound_part_idx);
   PDM_free(pinternal_vtx_bound);
 
-  // End construct partitionned mesh timer
-  PDM_timer_hang_on(multipart->timer);
-  multipart->times_elapsed[TIMER_MPART_MESH] = PDM_timer_elapsed(multipart->timer)  - multipart->times_elapsed[TIMER_MPART_SPLIT];
-  multipart->times_cpu    [TIMER_MPART_MESH] = PDM_timer_cpu(multipart->timer)      - multipart->times_cpu    [TIMER_MPART_SPLIT];
-  multipart->times_cpu_u  [TIMER_MPART_MESH] = PDM_timer_cpu_user(multipart->timer) - multipart->times_cpu_u  [TIMER_MPART_SPLIT];
-  multipart->times_cpu_s  [TIMER_MPART_MESH] = PDM_timer_cpu_sys(multipart->timer)  - multipart->times_cpu_s  [TIMER_MPART_SPLIT];
-
   if(own_edge_distrib == 1) {
     PDM_free(edge_distrib);
   }
@@ -2979,14 +2920,14 @@ _run_ppart_domain
 PDM_multipart_t *
 PDM_multipart_create
 (
- const int              n_domain,
- const int             *n_part,
- const PDM_bool_t       merge_blocks,
- const PDM_split_dual_t split_method,
- const PDM_part_size_t  part_size_method,
- const double          *part_fraction,
- const PDM_MPI_Comm     comm,
- const PDM_ownership_t  owner
+  const int              n_domain,
+  const int             *n_part,
+  const PDM_bool_t       merge_blocks,
+  const PDM_split_dual_t split_method,
+  const PDM_part_size_t  part_size_method,
+  const double          *part_fraction,
+  const PDM_MPI_Comm     comm,
+  const PDM_ownership_t  owner
 )
 {
   PDM_multipart_t *multipart;
@@ -3060,14 +3001,7 @@ PDM_multipart_create
   }
 
   // Initialise timers
-  multipart->timer     = PDM_timer_create();
-  multipart->timer_all = PDM_timer_create();
-  for (int i = 0; i < NTIMER_MPART; i++) {
-    multipart->times_elapsed[i] = 0.;
-    multipart->times_cpu[i]     = 0.;
-    multipart->times_cpu_u[i]   = 0.;
-    multipart->times_cpu_s[i]   = 0.;
-  }
+  multipart->timer = PDM_timer_create(multipart->comm);
 
   return (PDM_multipart_t *) multipart;
 }
@@ -3075,9 +3009,9 @@ PDM_multipart_create
 
 void PDM_multipart_dmesh_set
 (
- PDM_multipart_t   *multipart,
- const int          domain_id,
-       PDM_dmesh_t *dmesh
+  PDM_multipart_t   *multipart,
+  const int          domain_id,
+        PDM_dmesh_t *dmesh
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3089,9 +3023,9 @@ void PDM_multipart_dmesh_set
 
 void PDM_multipart_dmesh_nodal_set
 (
- PDM_multipart_t         *multipart,
- const int                domain_id,
-       PDM_dmesh_nodal_t *dmesh_nodal
+  PDM_multipart_t         *multipart,
+  const int                domain_id,
+        PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3106,20 +3040,20 @@ void PDM_multipart_dmesh_nodal_set
 void
 PDM_multipart_block_set
 (
- PDM_multipart_t             *multipart,
- const int                    i_domain,
- const int                    dn_cell,
- const int                    dn_face,
- const int                    dn_vtx,
- const int                    n_face_group,
- const int                   *dcell_face_idx,
- const PDM_g_num_t           *dcell_face,
- const PDM_g_num_t           *dface_cell,
- const int                   *dface_vtx_idx,
- const PDM_g_num_t           *dface_vtx,
- const double                *dvtx_coord,
- const int                   *dface_group_idx,
- const PDM_g_num_t           *dface_group
+  PDM_multipart_t             *multipart,
+  const int                    i_domain,
+  const int                    dn_cell,
+  const int                    dn_face,
+  const int                    dn_vtx,
+  const int                    n_face_group,
+  const int                   *dcell_face_idx,
+  const PDM_g_num_t           *dcell_face,
+  const PDM_g_num_t           *dface_cell,
+  const int                   *dface_vtx_idx,
+  const PDM_g_num_t           *dface_vtx,
+  const double                *dvtx_coord,
+  const int                   *dface_group_idx,
+  const PDM_g_num_t           *dface_group
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3182,11 +3116,11 @@ PDM_multipart_domain_interface_shared_set
 void
 PDM_multipart_renum_method_set
 (
- PDM_multipart_t     *multipart,
- const int            i_domain,
- PDM_mesh_entities_t  mesh_entity,
- const char          *renum_entity_method,
- const int           *renum_entity_properties
+  PDM_multipart_t     *multipart,
+  const int            i_domain,
+  PDM_mesh_entities_t  mesh_entity,
+  const char          *renum_entity_method,
+  const int           *renum_entity_properties
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3206,7 +3140,7 @@ PDM_multipart_renum_method_set
   }
 
   if (method_renum_id == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering mesh_entity method\n", renum_entity_method);
+    PDM_error("'%s' is an unknown renumbering mesh_entity method", renum_entity_method);
   }
 
   if(i_domain < 0) {
@@ -3227,11 +3161,11 @@ PDM_multipart_renum_method_set
 void
 PDM_multipart_set_reordering_options
 (
- PDM_multipart_t *multipart,
- const int        i_domain,
- const char      *renum_cell_method,
- const int       *renum_cell_properties,
- const char      *renum_face_method
+  PDM_multipart_t *multipart,
+  const int        i_domain,
+  const char      *renum_cell_method,
+  const int       *renum_cell_properties,
+  const char      *renum_face_method
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3239,10 +3173,10 @@ PDM_multipart_set_reordering_options
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
   int _renum_face_method = PDM_part_renum_method_face_idx_get(renum_face_method);
   if (_renum_cell_method == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering cell method\n", renum_cell_method);
+    PDM_error("'%s' is an unknown renumbering cell method", renum_cell_method);
   }
   if (_renum_face_method == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering face method\n", renum_face_method);
+    PDM_error("'%s' is an unknown renumbering face method", renum_face_method);
   }
 
   if(i_domain < 0) {
@@ -3263,16 +3197,16 @@ PDM_multipart_set_reordering_options
 
 void PDM_multipart_set_reordering_options_vtx
 (
- PDM_multipart_t *multipart,
- const int        i_domain,
- const char      *renum_vtx_method
+  PDM_multipart_t *multipart,
+  const int        i_domain,
+  const char      *renum_vtx_method
 )
 {
   CHECK_INSTANCE(multipart);
 
   int _renum_vtx_method = PDM_part_renum_method_vtx_idx_get(renum_vtx_method);
   if (_renum_vtx_method == -1) {
-    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering vtx method\n", renum_vtx_method);
+    PDM_error("'%s' is an unknown renumbering vtx method", renum_vtx_method);
   }
 
   if(i_domain < 0) {
@@ -3301,7 +3235,7 @@ PDM_multipart_dpart_id_set
 
   if (ownership != PDM_OWNERSHIP_KEEP &&
       ownership != PDM_OWNERSHIP_USER) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)\n");
+    PDM_error("Error - Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)");
   }
 
   multipart->dpart_id          [i_domain] = dpart_id;
@@ -3334,7 +3268,7 @@ PDM_multipart_dpart_id_get
 void
 PDM_multipart_compute
 (
- PDM_multipart_t *multipart
+  PDM_multipart_t *multipart
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3344,9 +3278,7 @@ PDM_multipart_compute
   PDM_MPI_Comm_rank(multipart->comm, &i_rank);
   PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
-
-  // Start all timer
-  PDM_timer_resume(multipart->timer_all);
+  PDM_timer_start(multipart->timer, "multipart:full", 0);
 
   /*
    * Step 1 : Split the graph (If we have a dmesh_nodal and prepare the dmesh before the treatment for faces and elements are the same)
@@ -3360,8 +3292,6 @@ PDM_multipart_compute
     // 1. Generate global numerotation using all blocks
     // 2. Call the partitionner once on the global numbering
   } else {
-    PDM_timer_t *timer = PDM_timer_create();
-    double cum_elapsed_time = 0;
     int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(multipart->n_part, multipart->n_domain);
 
     // int is_by_elt = 0;
@@ -3374,7 +3304,6 @@ PDM_multipart_compute
         PDM_split_dual_t split_method = multipart->split_method;
         int n_part = multipart->n_part[i_domain];
         _part_mesh_t* pmesh = &(multipart->pmeshes[i_domain]);
-
 
         const double* part_fraction      = &multipart->part_fraction[starting_part_idx[i_domain]];
         PDM_part_size_t part_size_method = multipart->part_size_method;
@@ -3429,10 +3358,6 @@ PDM_multipart_compute
 
         int n_part = multipart->n_part[i_domain];
 
-
-        if (0 && i_rank == 0)
-          PDM_printf("Running partitioning for block %i...\n", i_domain+1);
-        PDM_timer_resume(timer);
         _run_ppart_domain(multipart,
                           _dmesh,
                           NULL,
@@ -3443,39 +3368,22 @@ PDM_multipart_compute
                           part_size_method,
                           part_fraction,
                           comm);
-        PDM_timer_hang_on(timer);
-        if (0 && i_rank == 0)
-          PDM_printf("...completed (elapsed time : %f)\n", PDM_timer_elapsed(timer) - cum_elapsed_time);
-        cum_elapsed_time = PDM_timer_elapsed(timer);
       }
     }
-    PDM_timer_free(timer);
-
     PDM_free(starting_part_idx);
   }
 
-  // End all timer
-  PDM_timer_hang_on(multipart->timer_all);
-  multipart->times_elapsed[TIMER_MPART_ALL] = PDM_timer_elapsed(multipart->timer_all);
-  multipart->times_cpu    [TIMER_MPART_ALL] = PDM_timer_cpu(multipart->timer_all);
-  multipart->times_cpu_u  [TIMER_MPART_ALL] = PDM_timer_cpu_user(multipart->timer_all);
-  multipart->times_cpu_s  [TIMER_MPART_ALL] = PDM_timer_cpu_sys(multipart->timer_all);
-
-  // Free timer
-  PDM_timer_free(multipart->timer_all);
-  multipart->timer_all = NULL;
-  PDM_timer_free(multipart->timer);
-  multipart->timer = NULL;
+  PDM_timer_end(multipart->timer, "multipart:full", 0);
 }
 
 
 void
 PDM_multipart_get_part_mesh_nodal
 (
-PDM_multipart_t        *multipart,
-const int               i_domain,
-PDM_part_mesh_nodal_t **pmesh_nodal,
-PDM_ownership_t         ownership
+  PDM_multipart_t        *multipart,
+  const int               i_domain,
+  PDM_part_mesh_nodal_t **pmesh_nodal,
+  PDM_ownership_t         ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3495,7 +3403,7 @@ PDM_ownership_t         ownership
     PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_domain];
 
     if (dmesh_nodal == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "NULL dmesh_nodal\n");
+      PDM_error("NULL dmesh_nodal");
     }
 
     _part_mesh_t *pmesh = &(multipart->pmeshes[i_domain]);
@@ -3511,11 +3419,11 @@ PDM_ownership_t         ownership
       *pmesh_nodal = _compute_part_mesh_nodal_1d(dmesh_nodal, pmesh);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_compute_part_mesh_nodal error : Bad dmesh_nodal dimension \n");
+      PDM_error("PDM_multipart_compute_part_mesh_nodal error : Bad dmesh_nodal dimension ");
     }
 
     if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid ownership (expected KEEP or USER)\n");
+      PDM_error("Invalid ownership (expected KEEP or USER)");
     }
 
     multipart->pmesh_nodal          [i_domain] = *pmesh_nodal;
@@ -3527,10 +3435,10 @@ PDM_ownership_t         ownership
 void
 PDM_multipart_get_part_mesh
 (
-       PDM_multipart_t  *multipart,
- const int               i_domain,
-       PDM_part_mesh_t **pmesh,
-       PDM_ownership_t   ownership
+        PDM_multipart_t  *multipart,
+  const int               i_domain,
+        PDM_part_mesh_t **pmesh,
+        PDM_ownership_t   ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3547,19 +3455,19 @@ PDM_multipart_get_part_mesh
 void
 PDM_multipart_part_dim_get
 (
-PDM_multipart_t *multipart,
-const int        i_domain,
-const int        i_part,
-      int       *n_cell,
-      int       *n_face,
-      int       *n_face_part_bound,
-      int       *n_vtx,
-      int       *n_proc,
-      int       *n_total_part,
-      int       *s_cell_face,
-      int       *s_face_vtx,
-      int       *s_face_bound,
-      int       *n_bound_groups
+  PDM_multipart_t *multipart,
+  const int        i_domain,
+  const int        i_part,
+        int       *n_cell,
+        int       *n_face,
+        int       *n_face_part_bound,
+        int       *n_vtx,
+        int       *n_proc,
+        int       *n_total_part,
+        int       *s_cell_face,
+        int       *s_face_vtx,
+        int       *s_face_bound,
+        int       *n_bound_groups
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3643,14 +3551,14 @@ const int        i_part,
 void
 PDM_multipart_part_graph_comm_get
 (
- PDM_multipart_t      *multipart,
- const int             i_domain,
- const int             i_part,
- PDM_mesh_entities_t   entity_type,
- int                 **ppart_bound_proc_idx,
- int                 **ppart_bound_part_idx,
- int                 **ppart_bound,
- PDM_ownership_t       ownership
+  PDM_multipart_t      *multipart,
+  const int             i_domain,
+  const int             i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                 **ppart_bound_proc_idx,
+  int                 **ppart_bound_part_idx,
+  int                 **ppart_bound,
+  PDM_ownership_t       ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3675,24 +3583,24 @@ PDM_multipart_part_graph_comm_get
 void
 PDM_multipart_part_val_get
 (
-PDM_multipart_t     *multipart,
-const int            i_domain,
-const int            i_part,
-      int          **cell_face_idx,
-      int          **cell_face,
-      PDM_g_num_t  **cell_ln_to_gn,
-      int          **face_cell,
-      int          **face_vtx_idx,
-      int          **face_vtx,
-      PDM_g_num_t  **face_ln_to_gn,
-      int          **face_part_bound_proc_idx,
-      int          **face_part_bound_part_idx,
-      int          **face_part_bound,
-      double       **vtx,
-      PDM_g_num_t  **vtx_ln_to_gn,
-      int          **face_bound_idx,
-      int          **face_bound,
-      PDM_g_num_t  **face_bound_ln_to_gn
+  PDM_multipart_t     *multipart,
+  const int            i_domain,
+  const int            i_part,
+        int          **cell_face_idx,
+        int          **cell_face,
+        PDM_g_num_t  **cell_ln_to_gn,
+        int          **face_cell,
+        int          **face_vtx_idx,
+        int          **face_vtx,
+        PDM_g_num_t  **face_ln_to_gn,
+        int          **face_part_bound_proc_idx,
+        int          **face_part_bound_part_idx,
+        int          **face_part_bound,
+        double       **vtx,
+        PDM_g_num_t  **vtx_ln_to_gn,
+        int          **face_bound_idx,
+        int          **face_bound,
+        PDM_g_num_t  **face_bound_ln_to_gn
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3809,8 +3717,8 @@ const int            i_part,
 int
 PDM_multipart_part_tn_part_get
 (
-PDM_multipart_t *multipart,
-const int        i_domain
+  PDM_multipart_t *multipart,
+  const int        i_domain
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3825,13 +3733,13 @@ const int        i_domain
 int
 PDM_multipart_part_connectivity_get
 (
-PDM_multipart_t                *multipart,
-const int                       i_domain,
-const int                       i_part,
-      PDM_connectivity_type_t   connectivity_type,
-      int                     **connect_idx,
-      int                     **connect,
-      PDM_ownership_t           ownership
+  PDM_multipart_t                *multipart,
+  const int                       i_domain,
+  const int                       i_part,
+        PDM_connectivity_type_t   connectivity_type,
+        int                     **connect_idx,
+        int                     **connect,
+        PDM_ownership_t           ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3919,10 +3827,10 @@ const int                       i_part,
 int
 PDM_multipart_part_n_entity_get
 (
-PDM_multipart_t            *multipart,
-const int                   i_domain,
-const int                   i_part,
-      PDM_mesh_entities_t   entity_type
+  PDM_multipart_t            *multipart,
+  const int                   i_domain,
+  const int                   i_part,
+        PDM_mesh_entities_t   entity_type
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3932,7 +3840,7 @@ const int                   i_part,
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   if (entity_type < 0 || entity_type >= PDM_MESH_ENTITY_MAX) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_n_entity_get error : Wrong entity_type %d\n", entity_type);
+    PDM_error("PDM_multipart_part_n_entity_get error : Wrong entity_type %d", entity_type);
   }
 
   return PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, entity_type);
@@ -3943,12 +3851,12 @@ const int                   i_part,
 int
 PDM_multipart_part_ln_to_gn_get
 (
-PDM_multipart_t            *multipart,
-const int                   i_domain,
-const int                   i_part,
-      PDM_mesh_entities_t   entity_type,
-      PDM_g_num_t         **entity_ln_to_gn,
-      PDM_ownership_t       ownership
+  PDM_multipart_t            *multipart,
+  const int                   i_domain,
+  const int                   i_part,
+        PDM_mesh_entities_t   entity_type,
+        PDM_g_num_t         **entity_ln_to_gn,
+        PDM_ownership_t       ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -3973,12 +3881,12 @@ const int                   i_part,
 int
 PDM_multipart_partition_color_get
 (
-PDM_multipart_t            *multipart,
-const int                   i_domain,
-const int                   i_part,
-      PDM_mesh_entities_t   entity_type,
-      int                 **entity_color,
-      PDM_ownership_t       ownership
+  PDM_multipart_t            *multipart,
+  const int                   i_domain,
+  const int                   i_part,
+        PDM_mesh_entities_t   entity_type,
+        int                 **entity_color,
+        PDM_ownership_t       ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -4001,11 +3909,11 @@ const int                   i_part,
 void
 PDM_multipart_part_hyperplane_color_get
 (
-PDM_multipart_t        *multipart,
-const int               i_domain,
-const int               i_part,
-      int             **hyperplane_color,
-      PDM_ownership_t   ownership
+  PDM_multipart_t        *multipart,
+  const int               i_domain,
+  const int               i_part,
+        int             **hyperplane_color,
+        PDM_ownership_t   ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -4026,11 +3934,11 @@ const int               i_part,
 void
 PDM_multipart_part_thread_color_get
 (
-PDM_multipart_t        *multipart,
-const int               i_domain,
-const int               i_part,
-      int             **thread_color,
-      PDM_ownership_t   ownership
+  PDM_multipart_t        *multipart,
+  const int               i_domain,
+  const int               i_part,
+        int             **thread_color,
+        PDM_ownership_t   ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -4052,11 +3960,11 @@ const int               i_part,
 void
 PDM_multipart_part_ghost_infomation_get
 (
-PDM_multipart_t        *multipart,
-const int               i_domain,
-const int               i_part,
-      int             **vtx_ghost_information,
-      PDM_ownership_t   ownership
+  PDM_multipart_t        *multipart,
+  const int               i_domain,
+  const int               i_part,
+        int             **vtx_ghost_information,
+        PDM_ownership_t   ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -4077,64 +3985,32 @@ const int               i_part,
 void
 PDM_multipart_time_get
 (
- PDM_multipart_t *multipart,
- const int        i_domain,
- double         **elapsed,
- double         **cpu,
- double         **cpu_user,
- double         **cpu_sys
+  PDM_multipart_t *multipart,
+  const int        i_domain,
+  double         **elapsed,
+  double         **cpu,
+  double         **cpu_user,
+  double         **cpu_sys
 )
 {
   if (!(i_domain < multipart->n_domain)) {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_multipart_time_get : Domain identifier %d is not compatible with %d total domains.\n", i_domain, multipart->n_domain);
+    PDM_error("Domain identifier %d is not compatible with %d total domains.", i_domain, multipart->n_domain);
   }
-
-  *elapsed  = multipart->times_elapsed;
-  *cpu      = multipart->times_cpu;
-  *cpu_user = multipart->times_cpu_u;
-  *cpu_sys  = multipart->times_cpu_s;
-
-  int debug = 0;
-  if (debug) {
-
-    int i_rank, n_rank;
-    PDM_MPI_Comm_rank(multipart->comm, &i_rank);
-    PDM_MPI_Comm_size(multipart->comm, &n_rank);
-
-    double g_times_elapsed_min[NTIMER_MPART] = {0., 0., 0., 0.};
-    double g_times_elapsed_max[NTIMER_MPART] = {0., 0., 0., 0.};
-    double g_times_elapsed_mean[NTIMER_MPART] = {0., 0., 0., 0.};
-
-    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_min,  4, PDM_MPI_DOUBLE, PDM_MPI_MIN, multipart->comm);
-    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_max,  4, PDM_MPI_DOUBLE, PDM_MPI_MAX, multipart->comm);
-    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_mean, 4, PDM_MPI_DOUBLE, PDM_MPI_SUM, multipart->comm);
-
-    for (int i = 0; i < NTIMER_MPART; i++) {
-      g_times_elapsed_mean[i] /= n_rank;
-    }
-
-    if (i_rank == 0) {
-      PDM_printf("multipart_total_time %12.5e %12.5e %12.5e\n",       g_times_elapsed_mean[0], g_times_elapsed_min[0], g_times_elapsed_max[0]);
-      PDM_printf("multipart_build_graph_time %12.5e %12.5e %12.5e\n", g_times_elapsed_mean[1], g_times_elapsed_min[1], g_times_elapsed_max[1]);
-      PDM_printf("multipart_split_graph_time %12.5e %12.5e %12.5e\n", g_times_elapsed_mean[2], g_times_elapsed_min[2], g_times_elapsed_max[2]);
-      PDM_printf("multipart_mesh_time %12.5e %12.5e %12.5e\n",        g_times_elapsed_mean[3], g_times_elapsed_min[3], g_times_elapsed_max[3]);
-    }
-  } // end debug
-
+  abort();
+  *elapsed  = NULL; // multipart->times_elapsed;
+  *cpu      = NULL; // multipart->times_cpu;
+  *cpu_user = NULL; // multipart->times_cpu_u;
+  *cpu_sys  = NULL; // multipart->times_cpu_s;
 }
 
 
 void
 PDM_multipart_free
 (
- PDM_multipart_t *multipart
+  PDM_multipart_t *multipart
 )
 {
   // Free timer
-  if (multipart->timer_all != NULL) {
-    PDM_timer_free(multipart->timer_all);
-    multipart->timer_all = NULL;
-  }
   if (multipart->timer != NULL) {
     PDM_timer_free(multipart->timer);
     multipart->timer = NULL;
@@ -4211,11 +4087,11 @@ PDM_multipart_free
 int
 PDM_multipart_part_vtx_coord_get
 (
-PDM_multipart_t                *multipart,
-const int                       i_domain,
-const int                       i_part,
-      double                  **vtx_coord,
-      PDM_ownership_t           ownership
+  PDM_multipart_t                *multipart,
+  const int                       i_domain,
+  const int                       i_part,
+        double                  **vtx_coord,
+        PDM_ownership_t           ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -4236,15 +4112,15 @@ const int                       i_part,
 
 void PDM_multipart_group_get
 (
- PDM_multipart_t      *multipart,
- const int             i_domain,
- const int             i_part,
- PDM_mesh_entities_t   entity_type,
- int                  *n_group,
- int                 **group_entity_idx,
- int                 **group_entity,
- PDM_g_num_t         **group_entity_ln_to_gn,
- PDM_ownership_t       ownership
+  PDM_multipart_t      *multipart,
+  const int             i_domain,
+  const int             i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                  *n_group,
+  int                 **group_entity_idx,
+  int                 **group_entity,
+  PDM_g_num_t         **group_entity_ln_to_gn,
+  PDM_ownership_t       ownership
 )
 {
   CHECK_INSTANCE(multipart);
@@ -4271,19 +4147,19 @@ void PDM_multipart_group_get
 void
 PDM_multipart_stat_get
 (
- PDM_multipart_t  *multipart,
- int               i_domain,
- int              *cells_average,
- int              *cells_median,
- double           *cells_std_deviation,
- int              *cells_min,
- int              *cells_max,
- int              *bound_part_faces_average,
- int              *bound_part_faces_median,
- double           *bound_part_faces_std_deviation,
- int              *bound_part_faces_min,
- int              *bound_part_faces_max,
- int              *bound_part_faces_sum
+  PDM_multipart_t  *multipart,
+  int               i_domain,
+  int              *cells_average,
+  int              *cells_median,
+  double           *cells_std_deviation,
+  int              *cells_min,
+  int              *cells_max,
+  int              *bound_part_faces_average,
+  int              *bound_part_faces_median,
+  double           *bound_part_faces_std_deviation,
+  int              *bound_part_faces_min,
+  int              *bound_part_faces_max,
+  int              *bound_part_faces_sum
 )
 {
   CHECK_INSTANCE(multipart);
@@ -4463,7 +4339,7 @@ PDM_multipart_dn_node_get
   PDM_dmesh_t *dmesh = multipart->dmeshes[i_domain];
 
   if (dmesh == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dn_node_get : Invalid dmesh\n");
+    PDM_error("Error - Invalid dmesh\n");
   }
 
   int dn_entity[4];
@@ -4476,7 +4352,7 @@ PDM_multipart_dn_node_get
   int dim = PDM_dmesh_dimension_get(dmesh);
 
   if (dim < 0 || dim > 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+    PDM_error("Invalid dimension %d", dim);
   }
 
   return dn_entity[dim];
@@ -4485,6 +4361,3 @@ PDM_multipart_dn_node_get
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

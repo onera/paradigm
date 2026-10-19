@@ -3,6 +3,9 @@
 # ------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 cmake_policy(SET CMP0074 NEW) # force find_package to take <PackageName>_ROOT variables into account
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
+  cmake_policy(SET CMP0144 NEW) # force find_package to take <PACKAGENAME>_ROOT variables into account
+endif()
 
 if (NOT DEFINED PROJECT_ROOT)
   set(PROJECT_ROOT ${CMAKE_SOURCE_DIR} CACHE PATH "Root directory, where the submodules are populated")
@@ -71,6 +74,7 @@ option(PDM_ENABLE_Fortran_MPI_MODULE "Build with Fortran MPI module"            
 option(PDM_ENABLE_PYTHON_BINDINGS    "Build Python module"                       OFF)
 option(PDM_ENABLE_CUDA               "Build with CUDA"                           OFF)
 option(PDM_ENABLE_BLASLAPACK         "Build with BLAS/LAPACK"                    OFF)
+option(PDM_ENABLE_PEDANTIC           "Force pedantic compilation (for dev only)" OFF)
 
 option(PDM_ENABLE_TESTS              "Make CTest run the tests"                  ON )
 option(PDM_ENABLE_UNIT_TEST          "Enable unit test "                         OFF)
@@ -127,8 +131,8 @@ if (PDM_ENABLE_Fortran)
   if ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h" IS_NEWER_THAN "${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h")
     include (FortranizeFile)
     fortranize ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
-    list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h)
   endif()
+  list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h)
 endif()
 
 #------------------------------------------------------------------------------
@@ -312,7 +316,7 @@ if (PDM_ENABLE_UNIT_TEST)
   FetchContent_Declare(
     doctest
     GIT_REPOSITORY https://github.com/doctest/doctest.git
-    GIT_TAG        v2.4.11
+    GIT_TAG        v2.5.2
   )
   FetchContent_GetProperties(doctest)
   if (NOT doctest_POPULATED)

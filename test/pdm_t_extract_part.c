@@ -762,7 +762,7 @@ int main(int argc, char *argv[])
       for (int i = 0; i < pn_extract_group_cell; i++) {
         int i_cell = pextract_group_cell[i] - 1;
         if (pextract_parent_cell_ln_to_gn[i_cell] % n_group_cell != i_group) {
-          PDM_error(__FILE__, __LINE__, 0, "Error in cell group extraction\n");
+          PDM_error("Error in cell group extraction");
         }
       }
     }

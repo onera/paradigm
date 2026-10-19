@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_H__
 #define __PDM_H__
 
@@ -56,9 +52,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -390,6 +383,12 @@ typedef enum {
 
 } PDM_clustering_kind_t;
 
+typedef enum {
+  PDM_TIMER_REPORT_HIERARCHICAL = 0, /*!< Hierarchical report */
+  PDM_TIMER_REPORT_FLAT         = 1  /*!< Flat report */
+} PDM_timer_report_t;
+
+
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
@@ -430,6 +429,17 @@ PDM_entity_type_to_bound_type
  */
 PDM_mesh_entities_t
 PDM_geometry_kind_to_entity_type
+(
+ PDM_geometry_kind_t   geom_kind
+);
+
+
+/**
+ * \brief Helper to get dimension type according to a geometry kind
+ *
+ */
+int
+PDM_geometry_kind_to_dimension
 (
  PDM_geometry_kind_t   geom_kind
 );

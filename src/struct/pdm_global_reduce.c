@@ -25,12 +25,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local structure definitions
@@ -305,7 +299,7 @@ PDM_global_reduce_field_compute
     break;
 
     default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid reduction operation\n");
+    PDM_error("Invalid reduction operation");
   }
 
 
@@ -360,6 +354,3 @@ PDM_global_reduce_field_compute
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

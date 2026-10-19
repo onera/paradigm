@@ -244,7 +244,7 @@ _read_cloud_from_mesh
                                      filename);
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "File format '%s' is not supported\n", file_extension);
+    PDM_error("File format '%s' is not supported", file_extension);
   }
 
 

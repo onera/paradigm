@@ -1,6 +1,3 @@
-/*============================================================================
- * Manage case files associated with the EnSight Gold writer
- *============================================================================*/
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -25,12 +22,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local Type Definitions
@@ -498,10 +489,7 @@ const int                   append
       }
 
       if (fmt_ensight == 0) {
-        PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : "
-                "File \"%s\" does not seem to be a valid\n"
-                "EnSight 6 or Gold case file.",
-                __FILE__, __LINE__, this_case->case_file_name);
+        PDM_error("File \"%s\" does not seem to be a valid, EnSight 6 or Gold case file.", this_case->case_file_name);
       }
 
       /* Recherche des infos sur le fichier géométrique */
@@ -530,12 +518,7 @@ const int                   append
                      &geom_timeset, nom_fic_geo_base) != 2) {
             if (sscanf(ligne, "%*s %s",
                        nom_fic_geo_base) != 1) {
-              PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : "
-                      "The \"%s\" case file does not seem to\n"
-                      "indicate a geometry file",
-                      __FILE__, __LINE__,
-                      this_case->case_file_name);
-              abort();
+              PDM_error("The \"%s\" case file does not seem to indicate a geometry file", this_case->case_file_name);
             }
           }
         }
@@ -543,11 +526,7 @@ const int                   append
 
       if (((time_dependency != PDM_WRITER_TOPO_CST) && (geom_timeset == -1)) ||
           ((time_dependency == PDM_WRITER_TOPO_CST) && (geom_timeset != -1))) {
-        PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : Inconsistency geom time dependency between "
-                "The \"%s\" case and the function argument\n",
-                __FILE__, __LINE__,
-                this_case->case_file_name);
-        abort();
+        PDM_error("Inconsistency geom time dependency between, the \"%s\" case and the function argument", this_case->case_file_name);
       }
 
       /* Recherche des infos sur les fichiers variables */
@@ -573,8 +552,8 @@ const int                   append
             break;
           else {
 
-            int index_loc;
-            int var_dim;
+            int index_loc = 0;
+            int var_dim   = 0;
 
             if (strncmp(ligne, "constant per case file:", strlen("constant per case file:")) == 0) {
               index_loc = strlen("constant per case file:");
@@ -597,16 +576,12 @@ const int                   append
               var_dim = PDM_WRITER_VAR_TENSOR_ASYM;
             }
             else {
-              PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : "
-                      "The dimension \"%s\" is not yet implemented",
-                      __FILE__, __LINE__,
-                      ligne);
-              abort();
+              PDM_error("The dimension \"%s\" is not yet implemented", ligne);
             }
 
             char *ligne_ss_dim = ligne + index_loc;
-            int index_dim;
-            PDM_writer_var_loc_t var_loc;
+            int index_dim = 0;
+            PDM_writer_var_loc_t var_loc = PDM_WRITER_VAR_VERTICES;
 
             if (strncmp(ligne_ss_dim, "node:    ", strlen("node:    ")) == 0) {
               index_dim = strlen("node:    ");
@@ -621,11 +596,7 @@ const int                   append
               var_loc = PDM_WRITER_VAR_PARTICLES;
             }
             else {
-              PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : "
-                      "The location \"%s\" is not yet implemented",
-                      __FILE__, __LINE__,
-                      ligne_ss_dim);
-              abort();
+              PDM_error("The location \"%s\" is not yet implemented", ligne_ss_dim);
             }
 
             char nom_var[_l_max_chaine_ens];
@@ -637,9 +608,7 @@ const int                   append
             if (sscanf(ligne_ss_loc, "%d %d %s", &var_time_set, &var_file_set, nom_var) != 3) {
               if (sscanf(ligne_ss_loc, "%d %s", &var_time_set, nom_var) != 2) {
                 if (sscanf(ligne_ss_loc, "%s", nom_var) != 1) {
-                  PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d\n",
-                          __FILE__, __LINE__);
-                  abort();
+                  PDM_error("Error in reading file");
                 }
               }
             }
@@ -680,9 +649,7 @@ const int                   append
 
         if (retval != NULL) {
           if (sscanf(ligne, "%*s %d", time_set_num) != 1) {
-            PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d\n",
-                    __FILE__, __LINE__);
-            abort();
+            PDM_error("Reading error");
           }
         }
 
@@ -692,9 +659,7 @@ const int                   append
 
         if (retval != NULL) {
           if (sscanf(ligne, "%*s %d", time_set_n_step) != 1) {
-            PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d\n",
-                    __FILE__, __LINE__);
-            abort();
+            PDM_error("Reading error");
           }
         }
 
@@ -717,12 +682,7 @@ const int                   append
             retval = fgets(ligne, _l_max_chaine_ens, f);
 
             if (retval == NULL) {
-
-              PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : "
-                      "The dimension \"%s\" is not yet implemented",
-                      __FILE__, __LINE__,
-                      ligne);
-              abort();
+              PDM_error("The dimension \"%s\" is not yet implemented", ligne);
             }
             else {
               double time_value = atof(ligne);
@@ -806,9 +766,7 @@ PDM_writer_ensight_case_var_time_dep_get
   }
 
   if (i >= this_case->n_vars) {
-    PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : Unknown variable \"%s\":\n\n",
-           __FILE__, __LINE__, name);
-    abort();
+    PDM_error("Unknown variable \"%s\" ", name);
   }
 
   return var->time_dep;
@@ -831,9 +789,7 @@ const char* name
   }
 
   if (i >= this_case->n_vars) {
-    PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : Unknown variable \"%s\":\n\n",
-           __FILE__, __LINE__, name);
-    abort();
+    PDM_error("Unknown variable \"%s\"", name);
   }
 
   char *file_name;
@@ -952,9 +908,7 @@ PDM_writer_ensight_case_write(PDM_writer_ensight_case_t  *const this_case,
   f = fopen(this_case->case_file_name, "w");
 
   if (f == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : Error opening file \"%s\":\n\n",
-           __FILE__, __LINE__, this_case->case_file_name);
-    abort();
+    PDM_error("Error opening file \"%s\"", this_case->case_file_name);
   }
 
 
@@ -1258,14 +1212,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
   /* Close case file */
 
   if (fclose(f) != 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Error in %s line %d : Error closing file \"%s\":\n\n",
-           __FILE__, __LINE__, this_case->case_file_name);
-    abort();
+    PDM_error("Error closing file \"%s\"", this_case->case_file_name);
   }
 }
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

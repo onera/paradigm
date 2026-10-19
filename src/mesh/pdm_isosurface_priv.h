@@ -1,25 +1,5 @@
-#ifndef PDM_ISOSURFACE_PRIV_H
-#define PDM_ISOSURFACE_PRIV_H
-
-/*
-  This file is part of the ParaDiGM library.
-
-  Copyright (C) 2023       ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+#ifndef __PDM_ISOSURFACE_PRIV_H__
+#define __PDM_ISOSURFACE_PRIV_H__
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -42,9 +22,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*=============================================================================
@@ -56,25 +33,25 @@ extern "C" {
     (isos)->entry_mesh_type=(entry_type); \
   } \
   else if ((isos)->entry_mesh_type!=(entry_type)) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t:entry_mesh_type already set to %d.\n", __func__, (isos)->entry_mesh_type); \
+    PDM_error("PDM_isosurface_t:entry_mesh_type already set to %d.", (isos)->entry_mesh_type); \
   }
 
-#define PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface) \
-  if ((id_isosurface) >= (isos)->n_isosurface) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s: Invalid id_isosurface %d (n_isosurface = %d).\n", \
-              __func__, (id_isosurface), (isos)->n_isosurface); \
+#define PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface)           \
+  if ((id_isosurface) >= (isos)->n_isosurface) {               \
+    PDM_error("Invalid id_isosurface %d (n_isosurface = %d).", \
+              (id_isosurface), (isos)->n_isosurface);          \
   }
 
-#define PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface) \
-  if ((isos)->isosurfaces[(id_isosurface)].is_computed == PDM_FALSE) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s: Isosurface with id %d was not computed.\n", __func__, (id_isosurface)); \
+#define PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface)                   \
+  if ((isos)->isosurfaces[(id_isosurface)].is_computed == PDM_FALSE) {       \
+    PDM_error("Isosurface with id %d was not computed.", (id_isosurface)); \
   }
 
 #define PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type) \
   if ((entity_type) != PDM_MESH_ENTITY_VTX  && \
       (entity_type) != PDM_MESH_ENTITY_EDGE && \
       (entity_type) != PDM_MESH_ENTITY_FACE) { \
-    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t: has no mesh entity of type %d.\n", __func__, (entity_type)); \
+    PDM_error("PDM_isosurface_t: has no mesh entity of type %d.", (entity_type)); \
   }
 
 #define PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface)                      \
@@ -83,9 +60,8 @@ extern "C" {
       double delta = PDM_ABS((isos)->isosurfaces[(id_isosurface)].isovalues[i_iso] -           \
                              (isos)->isosurfaces[(id_isosurface)].isovalues[j_iso]);           \
       if (delta <= (isos)->ISOSURFACE_EPS) {                                                   \
-        PDM_error(__FILE__, __LINE__, 0,                                                       \
-                  "PDM_isosurface_t: isovalue %d = %f too close from"                          \
-                  "isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.\n",                \
+        PDM_error("PDM_isosurface_t: isovalue %d = %f too close from"                          \
+                  "isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.",                  \
                   i_iso, (isos)->isosurfaces[(id_isosurface)].isovalues[i_iso],                \
                   j_iso, (isos)->isosurfaces[(id_isosurface)].isovalues[j_iso],                \
                   delta, (isos)->ISOSURFACE_EPS,                                               \
@@ -515,4 +491,4 @@ isosurface_python_object_set
 }
 #endif
 
-#endif // PDM_ISOSURFACE_PRIV_H
+#endif /* __PDM_ISOSURFACE_PRIV_H__ */

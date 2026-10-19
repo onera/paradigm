@@ -1,12 +1,5 @@
-/*
- * \file
- */
-
-
 #ifndef __PDM_MEM_TOOL_H__
 #define __PDM_MEM_TOOL_H__
-
-/*--------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------
  *  Headers for the current file
@@ -16,9 +9,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*----------------------------------------------------------------------------

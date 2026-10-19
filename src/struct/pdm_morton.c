@@ -1,30 +1,3 @@
-/*============================================================================
- * Morton encoding for 2D or 3D coordinates.
- *============================================================================*/
-/*
-  This file is part of the "Finite Volume Mesh" library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
-
-  Copyright (C) 2011       ONERA
-  Copyright (C) 2008-2010  EDF
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-/*----------------------------------------------------------------------------*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -50,12 +23,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local Macro definitions
@@ -726,22 +693,6 @@ _define_rank_distrib(int                      dim,
 
   } /* End of loop on ranks */
 
-#if 0 && defined(dbg_enabled) && !defined(Ndbg_enabled) /* Sanity check in dbg_enabled */
-  {
-    PDM_g_num_t   sum = 0;
-    for (rank_id = 0; rank_id < n_ranks; rank_id++)
-      sum += g_distrib[rank_id];
-
-    if (sum != gsum_weight) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Error while computing global distribution.\n"
-                "sum = %u and gsum_weight = %u\n",
-                sum, gsum_weight);
-      abort();
-    }
-  }
-#endif /* sanity check */
-
 }
 
 /*----------------------------------------------------------------------------
@@ -1290,16 +1241,6 @@ PDM_morton_local_order(int                     n_codes,
 
   }
 
-#if 0 && defined(dbg_enabled) && !defined(Ndbg_enabled)   /* Check ordering */
-  for (i = 1; i < n_codes; i++) {
-    if (_a_gt_b(morton_codes[order[i-1]], morton_codes[order[i]])) {
-      PDM_error(__FILE__, __LINE__, 0,
-              "Id: %u inconsistent: bad ordering of Morton codes.",
-              (unsigned)i);
-      abort();
-    }
-  }
-#endif
 }
 
 
@@ -1327,17 +1268,6 @@ PDM_morton_local_sort(int               n_codes,
     _descend_morton_heap(0, i, morton_codes);
 
   }
-
-#if 0 && defined(dbg_enabled) && !defined(Ndbg_enabled)   /* Check good ordering */
-  for (i = 1; i < n_codes; i++) {
-    if (_a_gt_b(dim, morton_codes[i - 1], morton_codes[i])) {
-      PDM_error(__FILE__, __LINE__, 0,
-              "Id: %u inconsistent: bad ordering of Morton codes.",
-              (unsigned)i);
-      abort();
-    }
-  }
-#endif
 
 }
 
@@ -2310,6 +2240,3 @@ PDM_morton_closest_node
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

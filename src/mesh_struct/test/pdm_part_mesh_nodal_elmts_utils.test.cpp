@@ -258,7 +258,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     geom_kind_parent = PDM_GEOMETRY_KIND_SURFACIC;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "1D not yet available\n");
+    PDM_error("1D not yet available");
   }
 
   PDM_part_mesh_nodal_elmts_t *pmne_parent = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn,

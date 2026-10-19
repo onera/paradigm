@@ -39,6 +39,10 @@ if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
   set (FORTRAN_LIBRARIES                   )
   set (FORTRAN_LIBRARIES_FLAG              )
 
+  if (PDM_ENABLE_PEDANTIC)
+    string(APPEND CMAKE_Fortran_FLAGS " -Werror")
+  endif()
+
 elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
 
   set (CMAKE_Fortran_FLAGS "-fpp -Wp,-P -fpic -warn -diag-disable 7712 -diag-disable 8889")
@@ -338,6 +342,10 @@ else ()
 
 endif ()
 
+if (PDM_ENABLE_PEDANTIC)
+  string(APPEND CMAKE_C_FLAGS " -Werror")
+endif()
+
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" CACHE STRING "Flags used by the compiler during all build types." FORCE)
 set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}" CACHE STRING "Flags used by the compiler during release builds." FORCE)
 set (CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG}" CACHE STRING "Flags used by the compiler during debug builds." FORCE)
@@ -356,8 +364,8 @@ mark_as_advanced (CMAKE_C_FLAGS_PROFILING CMAKE_C_FLAGS_SANITIZE)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
-  # set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas")
-  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas")
+  # set (CMAKE_CXX_FLAGS "-std=c++14 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas")
+  set (CMAKE_CXX_FLAGS "-std=c++14 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas")
 
   set (CMAKE_CXX_FLAGS_RELEASE         "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
@@ -372,8 +380,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 
-  #set (CMAKE_CXX_FLAGS "-std=c++11 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd869,3656,177,2196")
-  set (CMAKE_CXX_FLAGS "-std=gnu++11 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd2196")
+  #set (CMAKE_CXX_FLAGS "-std=c++14 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd869,3656,177,2196")
+  set (CMAKE_CXX_FLAGS "-std=gnu++14 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd2196")
 
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 
@@ -388,7 +396,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   set (CXX_LIBRARIES_FLAG        )
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
+  set (CMAKE_CXX_FLAGS "-std=c++14 -fPIC -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG "-g -O0")
   set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -p")
@@ -401,7 +409,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   set (CXX_LIBRARIES_FLAG        )
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
-  set (CMAKE_CXX_FLAGS "-fPIC -std=gnu++11 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function -Wtautological-constant-compare")
+  set (CMAKE_CXX_FLAGS "-fPIC -std=gnu++14 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function -Wtautological-constant-compare -Wno-zero-length-array")
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG "-g -O0")
   set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -p")
@@ -414,7 +422,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
   set (CXX_LIBRARIES_FLAG        )
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set (CMAKE_CXX_FLAGS                "-std=c++11 -fPIC -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
+  set (CMAKE_CXX_FLAGS                "-std=c++14 -fPIC -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function")
   set (CMAKE_CXX_FLAGS_RELEASE        "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG          "-g -O0")
   set (CMAKE_CXX_FLAGS_PROFILING      "${CMAKE_CXX_FLAGS_RELEASE} -p")
@@ -444,7 +452,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
 
-  set (CMAKE_CXX_FLAGS "-fpic -std=c++11 -acc=host -fortranlibs -Minfo=accel")
+  set (CMAKE_CXX_FLAGS "-fpic -std=c++14 -acc=host -fortranlibs -Minfo=accel")
 
   set (CMAKE_CXX_FLAGS_RELEASE         "-fast -O3")
   set (CMAKE_CXX_FLAGS_DEBUG           "-g -Mbounds")
@@ -504,6 +512,11 @@ else ()
   set (CXX_LIBRARIES_FLAG        )
 
 endif()
+
+if (PDM_ENABLE_PEDANTIC)
+  string(APPEND CMAKE_CXX_FLAGS " -Werror")
+endif()
+
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "Flags used by the compiler during all build types." FORCE)
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" CACHE STRING "Flags used by the compiler during release builds." FORCE)

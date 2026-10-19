@@ -18,9 +18,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /**
@@ -44,4 +41,4 @@ PDM_reader_stl_dmesh_nodal
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif  /* __PDM_READER_STL_H__ */

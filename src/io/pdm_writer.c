@@ -1,7 +1,3 @@
-/*============================================================================
- * Sorties Cedre
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -32,48 +28,42 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Definition des macros locales
  *============================================================================*/
 
-#define CHECK_WRITER(wrt)                                                        \
-  if ((wrt) == NULL) {                                                           \
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid PDM_writer_t instance\n"); \
+#define CHECK_WRITER(wrt)                               \
+  if ((wrt) == NULL) {                                  \
+    PDM_error("Error : invalid PDM_writer_t instance"); \
   }
 
-#define CHECK_GEOM(geom)                                                              \
-  if ((geom) == NULL) {                                                               \
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid PDM_writer_geom_t instance\n"); \
+#define CHECK_GEOM(geom)                                     \
+  if ((geom) == NULL) {                                      \
+    PDM_error("Error : invalid PDM_writer_geom_t instance"); \
   }
 
-#define CHECK_VAR(var)                                                               \
-  if ((var) == NULL) {                                                               \
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid PDM_writer_var_t instance\n"); \
+#define CHECK_VAR(var)                                      \
+  if ((var) == NULL) {                                      \
+    PDM_error("Error : invalid PDM_writer_var_t instance"); \
   }
 
-#define CHECK_ID_GEOM(wrt, id_geom)                                         \
-  if ((id_geom) < 0 || (id_geom) >= (wrt)->geom_tab->n_geom) {              \
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid id_geom (%d / %d)\n", \
-                                     (id_geom), (wrt)->geom_tab->n_geom);   \
+#define CHECK_ID_GEOM(wrt, id_geom)                            \
+  if ((id_geom) < 0 || (id_geom) >= (wrt)->geom_tab->n_geom) { \
+    PDM_error("Error : invalid id_geom (%d / %d)",             \
+              (id_geom), (wrt)->geom_tab->n_geom);             \
   }
 
-#define CHECK_ID_VAR(wrt, id_var)                                          \
-  if ((id_var) < 0 || (id_var) >= (wrt)->var_tab->n_var) {                 \
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid id_var (%d / %d)\n", \
-                                     (id_var), (wrt)->var_tab->n_var);     \
+#define CHECK_ID_VAR(wrt, id_var)                          \
+  if ((id_var) < 0 || (id_var) >= (wrt)->var_tab->n_var) { \
+    PDM_error("Error : invalid id_var (%d / %d)",          \
+              (id_var), (wrt)->var_tab->n_var);            \
   }
 
-#define CHECK_I_OPTION(wrt, i_option)                                     \
-  if ((i_option) < 0 || (i_option) >= (wrt)->n_options) {                 \
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid option #%d / %d\n", \
-                                      (i_option), (wrt)->n_options);      \
+#define CHECK_I_OPTION(wrt, i_option)                     \
+  if ((i_option) < 0 || (i_option) >= (wrt)->n_options) { \
+    PDM_error("Error : invalid option #%d / %d",          \
+              (i_option), (wrt)->n_options);              \
   }
 
 /*============================================================================
@@ -659,9 +649,7 @@ _parse_options
     if (pch != NULL) {
       pch = strtok (str2, ":");
       if (pch == NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "CS_cree : Erreur dans le parsing des options specifiques :"
-                 "verifier les separateurs dans la chaine 'options'\n");
-        exit(1);
+        PDM_error("Parsing error : please check the delimiters in 'options'");
       }
       *n_options += 1;
     }
@@ -763,8 +751,7 @@ const char                   *options
   }
 
   if (fmt_id == -1) {
-    PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_create : unknown format '%s'", fmt);
-    abort();
+    PDM_error("Unknown format '%s'", fmt);
   }
 
   /* Mise a jour du tableau de stockage */
@@ -843,7 +830,9 @@ PDM_writer_free
  PDM_writer_t *cs
 )
 {
-  CHECK_WRITER(cs)
+  if (cs == NULL) {
+    return;
+  }
 
   PDM_writer_step_end (cs);
 
@@ -960,7 +949,7 @@ PDM_writer_step_beg
   CHECK_WRITER(cs)
 
   if (cs->is_there_open_step) {
-    PDM_error (__FILE__, __LINE__, 0, "Error PDM_writer_step_beg : A step is already open\n");
+    PDM_error("A step is already open");
   }
 
   cs->physical_time = physical_time;
@@ -1025,9 +1014,7 @@ PDM_writer_geom_create
 {
 
   if (n_part <= 0) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur cs_geom_create : Le nombre de partition doit etre >\n"
-                    "                      Ajuster le communicateur MPI ou\n"
-                    "                      Creer un sous-domaine avec 0 element\n");
+    PDM_error("Invalid `n_part` %d (must be >= 0)");
   }
 
   CHECK_WRITER(cs)
@@ -1137,7 +1124,7 @@ PDM_writer_geom_create_from_mesh_nodal
     geom_kind_min = PDM_GEOMETRY_KIND_CORNER;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", mesh->mesh_dimension);
+    PDM_error("Invalid mesh_dimension %d", mesh->mesh_dimension);
   }
 
   for (PDM_geometry_kind_t geom_kind = geom_kind_min; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
@@ -1200,7 +1187,7 @@ PDM_writer_geom_set_from_mesh_nodal
     geom_kind_min = PDM_GEOMETRY_KIND_CORNER;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d\n", mesh->mesh_dimension);
+    PDM_error("Invalid mesh_dimension %d", mesh->mesh_dimension);
   }
 
   for (PDM_geometry_kind_t geom_kind = geom_kind_min; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
@@ -1312,8 +1299,7 @@ PDM_writer_geom_bloc_add
   }
   else {
     if (geom_kind != geom->geom_kind) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Current geometry kind (%d) cannot contain element of type %d\n",
+      PDM_error("Current geometry kind (%d) cannot contain element of type %d",
                 (int) geom->geom_kind, (int) t_elt);
     }
   }
@@ -1451,8 +1437,7 @@ PDM_writer_geom_cell3d_cellface_add
   }
   else {
     if (geom_kind != geom->geom_kind) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Current geometry kind (%d) cannot contain element of dimension 3\n",
+      PDM_error("Current geometry kind (%d) cannot contain element of dimension 3",
                 (int) geom->geom_kind);
     }
   }
@@ -1548,8 +1533,7 @@ PDM_writer_geom_cell2d_cellface_add
   }
   else {
     if (geom_kind != geom->geom_kind) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Current geometry kind (%d) cannot contain element of dimension 2\n",
+      PDM_error("Current geometry kind (%d) cannot contain element of dimension 2",
                 (int) geom->geom_kind);
     }
   }
@@ -1604,8 +1588,7 @@ PDM_writer_geom_faces_facesom_add
   }
   else {
     if (geom_kind != geom->geom_kind) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Current geometry kind (%d) cannot contain element of dimension 2\n",
+      PDM_error("Current geometry kind (%d) cannot contain element of dimension 2",
                 (int) geom->geom_kind);
     }
   }
@@ -1955,14 +1938,13 @@ PDM_writer_var_write
   CHECK_WRITER(cs)
 
   if (id_var >= cs->var_tab->n_var) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad var identifier\n");
-    abort();
+    PDM_error("Invalid var identifier");
   }
 
   PDM_writer_var_t *var = cs->var_tab->var[id_var];
 
   if (var == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad var identifier\n");
+    PDM_error("Invalid var identifier");
   }
 
   /* Ecriture au format */
@@ -2007,8 +1989,7 @@ PDM_writer_var_set
   }
 
   if (n_ind <= id_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur cs_var_set    : Indice de geometrie incorrect\n");
-    abort();
+    PDM_error("Invalid geom identifier");
   }
 
   int n_part = geom->n_part;
@@ -2022,12 +2003,11 @@ PDM_writer_var_set
   double **val_geom = var->_val[id_geom];
 
   if (n_part <= id_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur cs_var_set    : Indice de partition incorrect\n");
-    abort();
+    PDM_error("Invalid part identifier");
   }
 
   if (geom->geom_kind == PDM_GEOMETRY_KIND_MAX) {
-    PDM_error(__FILE__, __LINE__, 0, "Undefined geometry kind\n");
+    PDM_error("Undefined geometry kind");
   }
   int n_cell = PDM_part_mesh_nodal_n_elmts_get(geom->mesh_nodal,
                                                geom->geom_kind,
@@ -2084,9 +2064,7 @@ PDM_writer_var_data_free
         PDM_writer_geom_t *geom = cs->geom_tab->geom[i];
 
         if (geom == NULL) {
-          PDM_error(__FILE__, __LINE__, 0,
-            "PDM_writer_var_data_free - Bad geom identifier : An associated geom of var '%s' is free before the var\n", var->nom_var);
-          abort();
+          PDM_error("Invalid geom identifier : An associated geom of var '%s' was freed before the var", var->nom_var);
         }
 
         int n_part = geom->n_part;
@@ -2118,8 +2096,7 @@ PDM_writer_var_free
     /* Acces a l'objet de geometrie courant */
 
     if (id_var >= cs->var_tab->n_var) {
-      PDM_error(__FILE__, __LINE__, 0, "Bad var identifier\n");
-      abort();
+      PDM_error("Invalid var identifier");
     }
 
     PDM_writer_var_t *var = cs->var_tab->var[id_var];
@@ -2177,13 +2154,11 @@ PDM_writer_fmt_add
   _load_intern_fmt();
 
   if (geom_write_fct == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_fmt_add : Undefined geom write function\n");
-    abort ();
+    PDM_error("Undefined geom write function");
   }
 
   if (var_write_fct == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_fmt_add : Undefined var write function\n");
-    abort ();
+    PDM_error("Undefined var write function");
   }
 
   if (n_fmt_tab >= s_fmt_tab) {
@@ -2530,6 +2505,3 @@ PDM_writer_geom_get
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -25,9 +25,13 @@ endif ()
 
 if (PDM_ENABLE_EXTENSION_PDMA)
   set(PYX_PDM_HAS_PDMA True)
+  if (NOT PDM_ENABLE_ANISO_AGGLO)
+    set(COMMENT_NOT_ANISO_AGGLO "\#")
+  endif()
 else ()
   set(PYX_PDM_HAS_PDMA False)
   set(COMMENT_NOT_PDMA "\#")
+  set(COMMENT_NOT_ANISO_AGGLO "\#")
 endif()
 
 set (include_dirs "")

@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_DCONNECTIVITY_TRANSFORM_H_
-#define PDM_DCONNECTIVITY_TRANSFORM_H_
+#ifndef __PDM_DCONNECTIVITY_TRANSFORM_H__
+#define __PDM_DCONNECTIVITY_TRANSFORM_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -21,9 +17,9 @@
  * Macro definition
  *============================================================================*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Types definition
@@ -317,8 +313,8 @@ PDM_dconnectivity_dface_vtx_from_face_and_edge
        PDM_g_num_t   **dface_vtx
 );
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif  /* PDM_DCONNECTIVITY_TRANSFORM_H_ */
+#endif  /* __PDM_DCONNECTIVITY_TRANSFORM_H__ */

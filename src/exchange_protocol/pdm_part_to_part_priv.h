@@ -5,7 +5,6 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
@@ -18,9 +17,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -136,4 +132,4 @@ struct _pdm_part_to_part_t {
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_PARTGNUM1_PARTGNUM2_PRIV_H__ */
+#endif /* __PDM_PART_TO_PART_PRIV_H__ */

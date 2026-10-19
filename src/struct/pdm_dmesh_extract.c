@@ -29,12 +29,6 @@
 #include "pdm_partitioning_nodal_algorithm.h"
 #include "pdm_priv.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Local macro definitions
@@ -42,7 +36,7 @@ extern "C" {
 
 #define CHECK_INSTANCE(dme) \
   if ((dme) == NULL) { \
-    PDM_error(__FILE__, __LINE__, 0, "Error : Invalid PDM_dmesh_extract_t instance\n"); \
+    PDM_error("Invalid PDM_dmesh_extract_t instance"); \
   }
 
 
@@ -1235,6 +1229,3 @@ PDM_dmesh_extract_free
   PDM_free(dme);
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

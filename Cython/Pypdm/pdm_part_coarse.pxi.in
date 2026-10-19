@@ -163,25 +163,25 @@ cdef extern from "pdm_part_coarse_mesh.h":
 
     void PDM_part_coarse_mesh_display(PDM_coarse_mesh_t *cm)
 
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@cdef extern from "pdm_coarse_mesh_aniso_agglo.h":
-@COMMENT_NOT_PDMA@    void PDM_part_coarse_mesh_part_set_anisotropic_info(PDM_coarse_mesh_t *cm,
-@COMMENT_NOT_PDMA@                                                        int                iPart,
-@COMMENT_NOT_PDMA@                                                        int               *agglomerationLines,
-@COMMENT_NOT_PDMA@                                                        int               *agglomerationLinesIdx,
-@COMMENT_NOT_PDMA@                                                        int                agglomerationLinesIdx_size,
-@COMMENT_NOT_PDMA@                                                        int               *isOnFineBnd)
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@    void PDM_part_coarse_mesh_part_get_anisotropic_info(PDM_coarse_mesh_t *cm,
-@COMMENT_NOT_PDMA@                                                        int                iPart,
-@COMMENT_NOT_PDMA@                                                        int              **agglomerationLines,
-@COMMENT_NOT_PDMA@                                                        int              **agglomerationLinesIdx,
-@COMMENT_NOT_PDMA@                                                        int               *agglomerationLinesIdx_size,
-@COMMENT_NOT_PDMA@                                                        int              **isOnFineBnd)
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@    void PDM_part_coarse_mesh_add_option_anisotropic(PDM_coarse_mesh_t *cm,
-@COMMENT_NOT_PDMA@                                                     int               *anisotropicOption)
-@COMMENT_NOT_PDMA@
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@cdef extern from "pdm_coarse_mesh_aniso_agglo.h":
+@COMMENT_NOT_ANISO_AGGLO@    void PDM_part_coarse_mesh_part_set_anisotropic_info(PDM_coarse_mesh_t *cm,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int                iPart,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int               *agglomerationLines,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int               *agglomerationLinesIdx,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int                agglomerationLinesIdx_size,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int               *isOnFineBnd)
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@    void PDM_part_coarse_mesh_part_get_anisotropic_info(PDM_coarse_mesh_t *cm,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int                iPart,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int              **agglomerationLines,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int              **agglomerationLinesIdx,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int               *agglomerationLinesIdx_size,
+@COMMENT_NOT_ANISO_AGGLO@                                                        int              **isOnFineBnd)
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@    void PDM_part_coarse_mesh_add_option_anisotropic(PDM_coarse_mesh_t *cm,
+@COMMENT_NOT_ANISO_AGGLO@                                                     int               *anisotropicOption)
+@COMMENT_NOT_ANISO_AGGLO@
 
 
 # ------------------------------------------------------------------
@@ -244,25 +244,25 @@ cdef class CoarseMesh:
                                              have_faceWeight,
                                              have_faceGroup)
 
-@COMMENT_NOT_PDMA@    # ------------------------------------------------------------------
-@COMMENT_NOT_PDMA@    def add_option_anisotropic(self,
-@COMMENT_NOT_PDMA@                               NPY.ndarray[NPY.int32_t, mode='c', ndim=1] anisotropicOption,
-@COMMENT_NOT_PDMA@                               ):
-@COMMENT_NOT_PDMA@        """
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        """
-@COMMENT_NOT_PDMA@        # ************************************************************************
-@COMMENT_NOT_PDMA@        # > Declaration
-@COMMENT_NOT_PDMA@        cdef int             *anisotropicOption_data
-@COMMENT_NOT_PDMA@        # ************************************************************************
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # assert(anisotropicOption.shape[0] == 12)
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        anisotropicOption_data = <int *> anisotropicOption.data
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        PDM_part_coarse_mesh_add_option_anisotropic(self._cm,
-@COMMENT_NOT_PDMA@                                                    anisotropicOption_data)
-@COMMENT_NOT_PDMA@
+@COMMENT_NOT_ANISO_AGGLO@    # ------------------------------------------------------------------
+@COMMENT_NOT_ANISO_AGGLO@    def add_option_anisotropic(self,
+@COMMENT_NOT_ANISO_AGGLO@                               NPY.ndarray[NPY.int32_t, mode='c', ndim=1] anisotropicOption,
+@COMMENT_NOT_ANISO_AGGLO@                               ):
+@COMMENT_NOT_ANISO_AGGLO@        """
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        """
+@COMMENT_NOT_ANISO_AGGLO@        # ************************************************************************
+@COMMENT_NOT_ANISO_AGGLO@        # > Declaration
+@COMMENT_NOT_ANISO_AGGLO@        cdef int             *anisotropicOption_data
+@COMMENT_NOT_ANISO_AGGLO@        # ************************************************************************
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        # assert(anisotropicOption.shape[0] == 12)
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        anisotropicOption_data = <int *> anisotropicOption.data
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        PDM_part_coarse_mesh_add_option_anisotropic(self._cm,
+@COMMENT_NOT_ANISO_AGGLO@                                                    anisotropicOption_data)
+@COMMENT_NOT_ANISO_AGGLO@
     # ------------------------------------------------------------------
     def set_mesh_input(self,
                        int      iPart,
@@ -386,47 +386,47 @@ cdef class CoarseMesh:
                                    FacePartBoundPartIdx_data,
                                    FacePartBound_data)
 
-@COMMENT_NOT_PDMA@    # ------------------------------------------------------------------
-@COMMENT_NOT_PDMA@    def set_mesh_input_anisotropic(self,
-@COMMENT_NOT_PDMA@                                   int      iPart,
-@COMMENT_NOT_PDMA@                                   NPY.ndarray[NPY.int32_t, mode='c', ndim=1] agglomerationLinesInit,
-@COMMENT_NOT_PDMA@                                   NPY.ndarray[NPY.int32_t, mode='c', ndim=1] agglomerationLinesInitIdx,
-@COMMENT_NOT_PDMA@                                   NPY.ndarray[NPY.int32_t, mode='c', ndim=1] isOnFineBndInit
-@COMMENT_NOT_PDMA@                                   ):
-@COMMENT_NOT_PDMA@        """
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        """
-@COMMENT_NOT_PDMA@        # ************************************************************************
-@COMMENT_NOT_PDMA@        # > Declaration
-@COMMENT_NOT_PDMA@        # > Cell entity
-@COMMENT_NOT_PDMA@        cdef int             *agglomerationLinesInit_data
-@COMMENT_NOT_PDMA@        cdef int             *agglomerationLinesInitIdx_data
-@COMMENT_NOT_PDMA@        cdef int             agglomerationLinesInitIdx_size
-@COMMENT_NOT_PDMA@        cdef int             *isOnFineBndInit_data
-@COMMENT_NOT_PDMA@        # ************************************************************************
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        agglomerationLinesInit_data = np_to_int_pointer(agglomerationLinesInit)
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        agglomerationLinesInitIdx_data = np_to_int_pointer(agglomerationLinesInitIdx)
-@COMMENT_NOT_PDMA@        agglomerationLinesInitIdx_size = 0 if agglomerationLinesInitIdx is None else agglomerationLinesInitIdx.shape[0]
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        isOnFineBndInit_data = np_to_int_pointer(isOnFineBndInit)
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # > Verbose
-@COMMENT_NOT_PDMA@        # print "isOnFineBndInit           = ", isOnFineBndInit
-@COMMENT_NOT_PDMA@        # print "agglomerationLinesInit    = ", agglomerationLinesInit
-@COMMENT_NOT_PDMA@        # print "agglomerationLinesInitIdx = ", agglomerationLinesInitIdx
-@COMMENT_NOT_PDMA@        # print "set_mesh_input_anisotropic agglomerationLinesInitIdx_size=", agglomerationLinesInitIdx_size
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # :::::::::::::::::::::::::::::::::::::::::::::::::::::
-@COMMENT_NOT_PDMA@        # > Fill input mesh for anisotropic
-@COMMENT_NOT_PDMA@        PDM_part_coarse_mesh_part_set_anisotropic_info(self._cm,
-@COMMENT_NOT_PDMA@                                                       iPart,
-@COMMENT_NOT_PDMA@                                                       agglomerationLinesInit_data,
-@COMMENT_NOT_PDMA@                                                       agglomerationLinesInitIdx_data,
-@COMMENT_NOT_PDMA@                                                       agglomerationLinesInitIdx_size,
-@COMMENT_NOT_PDMA@                                                       isOnFineBndInit_data)
-@COMMENT_NOT_PDMA@        # :::::::::::::::::::::::::::::::::::::::::::::::::::::
+@COMMENT_NOT_ANISO_AGGLO@    # ------------------------------------------------------------------
+@COMMENT_NOT_ANISO_AGGLO@    def set_mesh_input_anisotropic(self,
+@COMMENT_NOT_ANISO_AGGLO@                                   int      iPart,
+@COMMENT_NOT_ANISO_AGGLO@                                   NPY.ndarray[NPY.int32_t, mode='c', ndim=1] agglomerationLinesInit,
+@COMMENT_NOT_ANISO_AGGLO@                                   NPY.ndarray[NPY.int32_t, mode='c', ndim=1] agglomerationLinesInitIdx,
+@COMMENT_NOT_ANISO_AGGLO@                                   NPY.ndarray[NPY.int32_t, mode='c', ndim=1] isOnFineBndInit
+@COMMENT_NOT_ANISO_AGGLO@                                   ):
+@COMMENT_NOT_ANISO_AGGLO@        """
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        """
+@COMMENT_NOT_ANISO_AGGLO@        # ************************************************************************
+@COMMENT_NOT_ANISO_AGGLO@        # > Declaration
+@COMMENT_NOT_ANISO_AGGLO@        # > Cell entity
+@COMMENT_NOT_ANISO_AGGLO@        cdef int             *agglomerationLinesInit_data
+@COMMENT_NOT_ANISO_AGGLO@        cdef int             *agglomerationLinesInitIdx_data
+@COMMENT_NOT_ANISO_AGGLO@        cdef int             agglomerationLinesInitIdx_size
+@COMMENT_NOT_ANISO_AGGLO@        cdef int             *isOnFineBndInit_data
+@COMMENT_NOT_ANISO_AGGLO@        # ************************************************************************
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        agglomerationLinesInit_data = np_to_int_pointer(agglomerationLinesInit)
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        agglomerationLinesInitIdx_data = np_to_int_pointer(agglomerationLinesInitIdx)
+@COMMENT_NOT_ANISO_AGGLO@        agglomerationLinesInitIdx_size = 0 if agglomerationLinesInitIdx is None else agglomerationLinesInitIdx.shape[0]
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        isOnFineBndInit_data = np_to_int_pointer(isOnFineBndInit)
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        # > Verbose
+@COMMENT_NOT_ANISO_AGGLO@        # print "isOnFineBndInit           = ", isOnFineBndInit
+@COMMENT_NOT_ANISO_AGGLO@        # print "agglomerationLinesInit    = ", agglomerationLinesInit
+@COMMENT_NOT_ANISO_AGGLO@        # print "agglomerationLinesInitIdx = ", agglomerationLinesInitIdx
+@COMMENT_NOT_ANISO_AGGLO@        # print "set_mesh_input_anisotropic agglomerationLinesInitIdx_size=", agglomerationLinesInitIdx_size
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        # :::::::::::::::::::::::::::::::::::::::::::::::::::::
+@COMMENT_NOT_ANISO_AGGLO@        # > Fill input mesh for anisotropic
+@COMMENT_NOT_ANISO_AGGLO@        PDM_part_coarse_mesh_part_set_anisotropic_info(self._cm,
+@COMMENT_NOT_ANISO_AGGLO@                                                       iPart,
+@COMMENT_NOT_ANISO_AGGLO@                                                       agglomerationLinesInit_data,
+@COMMENT_NOT_ANISO_AGGLO@                                                       agglomerationLinesInitIdx_data,
+@COMMENT_NOT_ANISO_AGGLO@                                                       agglomerationLinesInitIdx_size,
+@COMMENT_NOT_ANISO_AGGLO@                                                       isOnFineBndInit_data)
+@COMMENT_NOT_ANISO_AGGLO@        # :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------
     def computeCoarseMesh(self):
@@ -587,43 +587,43 @@ cdef class CoarseMesh:
         }
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-@COMMENT_NOT_PDMA@    # ------------------------------------------------------------------
-@COMMENT_NOT_PDMA@    def part_coarse_val_get_anisotropic(self, int ipart):
-@COMMENT_NOT_PDMA@        """
-@COMMENT_NOT_PDMA@           Get partition dimensions
-@COMMENT_NOT_PDMA@        """
-@COMMENT_NOT_PDMA@        # ************************************************************************
-@COMMENT_NOT_PDMA@        # > Declaration
-@COMMENT_NOT_PDMA@        cdef int          *agglomerationLines
-@COMMENT_NOT_PDMA@        cdef int          *agglomerationLinesIdx
-@COMMENT_NOT_PDMA@        cdef int           agglomerationLinesIdx_size
-@COMMENT_NOT_PDMA@        cdef int          *isOnFineBnd
-@COMMENT_NOT_PDMA@        # ************************************************************************
-@COMMENT_NOT_PDMA@        # > Get dim
-@COMMENT_NOT_PDMA@        dims = self.part_coarse_dim_get(ipart)
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # > Get array
-@COMMENT_NOT_PDMA@        PDM_part_coarse_mesh_part_get_anisotropic_info(self._cm,
-@COMMENT_NOT_PDMA@                                                       ipart,
-@COMMENT_NOT_PDMA@                                                       &agglomerationLines,
-@COMMENT_NOT_PDMA@                                                       &agglomerationLinesIdx,
-@COMMENT_NOT_PDMA@                                                       &agglomerationLinesIdx_size,
-@COMMENT_NOT_PDMA@                                                       &isOnFineBnd)
-@COMMENT_NOT_PDMA@        # Verbose
-@COMMENT_NOT_PDMA@        # print "PDM_part_coarse_mesh_part_get_anisotropic_info : agglomerationLinesIdx_size : ", agglomerationLinesIdx_size
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # :::::::::::::::::::::::::::::::::::::::::::::::::::::
-@COMMENT_NOT_PDMA@        # > Translate to numpy capsule (Tout est pas fait encore )
-@COMMENT_NOT_PDMA@        dim = agglomerationLinesIdx[agglomerationLinesIdx_size-1]
-@COMMENT_NOT_PDMA@        npAggloLines    = create_numpy_or_none_i(agglomerationLines, dim, flag_owndata=False)
-@COMMENT_NOT_PDMA@        npAggloLinesIdx = create_numpy_or_none_i(agglomerationLinesIdx, agglomerationLinesIdx_size, flag_owndata=False)
-@COMMENT_NOT_PDMA@        npIsOnFineBnd   = create_numpy_or_none_i(isOnFineBnd, dims['nCell'], flag_owndata=False)
-@COMMENT_NOT_PDMA@
-@COMMENT_NOT_PDMA@        # :::::::::::::::::::::::::::::::::::::::::::::::::::::
-@COMMENT_NOT_PDMA@        return {'npAggloLines'    : npAggloLines,
-@COMMENT_NOT_PDMA@                'npAggloLinesIdx' : npAggloLinesIdx,
-@COMMENT_NOT_PDMA@                'npIsOnFineBnd'   : npIsOnFineBnd,
-@COMMENT_NOT_PDMA@                }
+@COMMENT_NOT_ANISO_AGGLO@    # ------------------------------------------------------------------
+@COMMENT_NOT_ANISO_AGGLO@    def part_coarse_val_get_anisotropic(self, int ipart):
+@COMMENT_NOT_ANISO_AGGLO@        """
+@COMMENT_NOT_ANISO_AGGLO@           Get partition dimensions
+@COMMENT_NOT_ANISO_AGGLO@        """
+@COMMENT_NOT_ANISO_AGGLO@        # ************************************************************************
+@COMMENT_NOT_ANISO_AGGLO@        # > Declaration
+@COMMENT_NOT_ANISO_AGGLO@        cdef int          *agglomerationLines
+@COMMENT_NOT_ANISO_AGGLO@        cdef int          *agglomerationLinesIdx
+@COMMENT_NOT_ANISO_AGGLO@        cdef int           agglomerationLinesIdx_size
+@COMMENT_NOT_ANISO_AGGLO@        cdef int          *isOnFineBnd
+@COMMENT_NOT_ANISO_AGGLO@        # ************************************************************************
+@COMMENT_NOT_ANISO_AGGLO@        # > Get dim
+@COMMENT_NOT_ANISO_AGGLO@        dims = self.part_coarse_dim_get(ipart)
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        # > Get array
+@COMMENT_NOT_ANISO_AGGLO@        PDM_part_coarse_mesh_part_get_anisotropic_info(self._cm,
+@COMMENT_NOT_ANISO_AGGLO@                                                       ipart,
+@COMMENT_NOT_ANISO_AGGLO@                                                       &agglomerationLines,
+@COMMENT_NOT_ANISO_AGGLO@                                                       &agglomerationLinesIdx,
+@COMMENT_NOT_ANISO_AGGLO@                                                       &agglomerationLinesIdx_size,
+@COMMENT_NOT_ANISO_AGGLO@                                                       &isOnFineBnd)
+@COMMENT_NOT_ANISO_AGGLO@        # Verbose
+@COMMENT_NOT_ANISO_AGGLO@        # print "PDM_part_coarse_mesh_part_get_anisotropic_info : agglomerationLinesIdx_size : ", agglomerationLinesIdx_size
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        # :::::::::::::::::::::::::::::::::::::::::::::::::::::
+@COMMENT_NOT_ANISO_AGGLO@        # > Translate to numpy capsule (Tout est pas fait encore )
+@COMMENT_NOT_ANISO_AGGLO@        dim = agglomerationLinesIdx[agglomerationLinesIdx_size-1]
+@COMMENT_NOT_ANISO_AGGLO@        npAggloLines    = create_numpy_or_none_i(agglomerationLines, dim, flag_owndata=False)
+@COMMENT_NOT_ANISO_AGGLO@        npAggloLinesIdx = create_numpy_or_none_i(agglomerationLinesIdx, agglomerationLinesIdx_size, flag_owndata=False)
+@COMMENT_NOT_ANISO_AGGLO@        npIsOnFineBnd   = create_numpy_or_none_i(isOnFineBnd, dims['nCell'], flag_owndata=False)
+@COMMENT_NOT_ANISO_AGGLO@
+@COMMENT_NOT_ANISO_AGGLO@        # :::::::::::::::::::::::::::::::::::::::::::::::::::::
+@COMMENT_NOT_ANISO_AGGLO@        return {'npAggloLines'    : npAggloLines,
+@COMMENT_NOT_ANISO_AGGLO@                'npAggloLinesIdx' : npAggloLinesIdx,
+@COMMENT_NOT_ANISO_AGGLO@                'npIsOnFineBnd'   : npIsOnFineBnd,
+@COMMENT_NOT_ANISO_AGGLO@                }
 
     # ------------------------------------------------------------------
     def part_color_get(self, int ipart):

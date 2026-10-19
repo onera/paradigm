@@ -23,12 +23,6 @@
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
@@ -3441,8 +3435,7 @@ PDM_part_to_part_t *ptp,
   PDM_UNUSED (part1_to_part2_data);
   PDM_UNUSED (ref_part2_data);
   PDM_UNUSED (request);
-  PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_part_to_part_ineighbor_alltoall not yet implemented\n");
+  PDM_error("Not yet implemented");
 }
 
 
@@ -3455,8 +3448,7 @@ PDM_part_to_part_ineighbor_alltoall_wait
 {
   PDM_UNUSED (ptp);
   PDM_UNUSED (request);
-  PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_part_to_part_ineighbor_alltoall_wait not yet implemented\n");
+  PDM_error("Not yet implemented");
 }
 
 
@@ -4313,7 +4305,7 @@ PDM_part_to_part_iexch_wait
 {
   // Check request
   if (request <= 0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_to_part_iexch_wait : Invalid request (associated to a *reverse* exchange)\n");
+    PDM_error("Invalid request (associated to a *reverse* exchange)");
   }
 
   const int _request = request - 1;
@@ -4687,7 +4679,7 @@ PDM_part_to_part_reverse_iexch_wait
 {
   // Check request
   if (request >= 0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_to_part_reverse_iexch_wait : Invalid request (associated to a *direct* exchange)\n");
+    PDM_error("Invalid request (associated to a *direct* exchange)");
   }
 
   const int _request = -request - 1;
@@ -5132,6 +5124,3 @@ PDM_part_to_part_comm_get
   return ptp->comm;
 }
 
-#ifdef __cplusplus
-}
-#endif

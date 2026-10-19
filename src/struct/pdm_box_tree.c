@@ -1,28 +1,3 @@
-/*============================================================================
- * Search octrees and quadtrees of boxes.
- *============================================================================*/
-
-/*
-  This file is part of Code_Saturne, a general-purpose CFD tool.
-
-  Copyright (C) 1998-2014 EDF S.A.
-
-  This program is free software; you can redistribute it and/or modify it under
-  the terms of the GNU General Public License as published by the Free Software
-  Foundation; either version 2 of the License, or (at your option) any later
-  version.
-
-  This program is distributed in the hope that it will be useful, but WITHOUT
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-  details.
-
-  You should have received a copy of the GNU General Public License along with
-  this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
-  Street, Fifth Floor, Boston, MA 02110-1301, USA.
-*/
-
-/*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -65,12 +40,6 @@
 #include "pdm_box_tree_priv.h"
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*=============================================================================
  * Local Macro and Type definitions
@@ -1761,11 +1730,9 @@ _new_node(PDM_box_tree_t     *bt,
   node = _local_data->nodes + node_id;
 
   if ((int)(morton_code.L) > bt->max_level) {
-    PDM_error(__FILE__, __LINE__, 0,
-	      "Error adding a new node in box tree (%p).\n"
-	      "Max level reached. Current level: %u and Max level: %d\n",
-	      (void *)bt, morton_code.L, bt->max_level);
-    abort();
+    PDM_error("Error adding a new node in box tree (%p).\n"
+              "Max level reached. Current level: %u and Max level: %d",
+              (void *)bt, morton_code.L, bt->max_level);
   }
 
   node->is_leaf = true;
@@ -3530,24 +3497,15 @@ PDM_box_tree_create(int    max_level,
   /* Sanity checks */
 
   if (max_level < 0) {
-    PDM_error(__FILE__, __LINE__, 0,
-	      "  Forbidden max_level value (%d) in the tree structure\n",
-	      max_level);
-    abort();
+    PDM_error("Forbidden max_level value (%d) in the tree structure", max_level);
   }
 
   if (threshold < 1) {
-    PDM_error(__FILE__, __LINE__, 0,
-	      "  Forbidden threshold value (%d) in the tree structure\n",
-	      threshold);
-    abort();
+    PDM_error("Forbidden threshold value (%d) in the tree structure", threshold);
   }
 
   if (max_box_ratio < 1.0) {
-    PDM_error(__FILE__, __LINE__, 0,
-	      "  Forbidden max_box_ratio value (%f) in the tree structure\n",
-	      (double)max_box_ratio);
-    abort();
+    PDM_error("Forbidden max_box_ratio value (%f) in the tree structure", (double)max_box_ratio);
   }
 
   /* Create and initialize tree structure according to its type */
@@ -6967,7 +6925,7 @@ PDM_box_tree_intersect_volume_boxes
  )
  {
   if (i_copied_rank >= bt->n_copied_ranks) {
-    PDM_error(__FILE__, __LINE__, 0, "Copied rank %d >= Number of copied ranks\n", (int) i_copied_rank);
+    PDM_error("Copied rank %d >= Number of copied ranks", (int) i_copied_rank);
   }
 
   const int dim = bt->boxes->dim;
@@ -7250,130 +7208,6 @@ PDM_box_tree_write_vtk
   PDM_free(node_depth);
 
 }
-
-
-void
-PDM_box_tree_write_vtk2
-(
- const char     *filename,
- PDM_box_tree_t *bt,
- const int       i_copied_rank,
- double *s,
- double *d
- )
-{
-  assert(bt != NULL);
-
-  PDM_box_tree_data_t *box_tree_data;
-  if (i_copied_rank < 0) {
-    box_tree_data = bt->local_data;
-  } else {
-    box_tree_data = bt->rank_data + i_copied_rank;
-  }
-
-  int n_nodes = box_tree_data->n_nodes;
-  int dim     = dim = bt->boxes->dim;
-
-  double *node_extents;
-  PDM_malloc(node_extents, n_nodes * 6, double);
-  int    *node_depth   = PDM_array_zeros_int(n_nodes);
-
-
-  /* Extents */
-  for (int i = 0; i < n_nodes; i++) {
-    double *e = node_extents + 6*i;
-    _extents(dim,
-             box_tree_data->nodes[i].morton_code,
-             e);
-
-    if (1) {//!normalized) {
-      double en[6] = {e[0], e[1], e[2], e[3], e[4], e[5]};
-      // PDM_box_set_normalize_inv((PDM_box_set_t *) bt->boxes, en,   e);
-      // PDM_box_set_normalize_inv((PDM_box_set_t *) bt->boxes, en+3, e+3);
-      for (int j = 0; j < 3; j++) {
-        e[j] = en[j] * d[j] + s[j];
-        e[3+j] = en[3+j] * d[j] + s[j];
-      }
-    }
-  }
-
-  /* Depth */
-  int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int *stack;
-  PDM_malloc(stack, s_stack, int);
-  int pos_stack = 0;
-
-  stack[pos_stack++] = 0;
-  while (pos_stack > 0) {
-
-    int node_id = stack[--pos_stack];
-
-    int *child_ids = box_tree_data->child_ids + node_id*bt->n_children;
-    _node_t *node = &(box_tree_data->nodes[node_id]);
-
-    if (node->is_leaf) {
-      continue;
-    }
-
-    for (int ichild = 0; ichild < bt->n_children; ichild++) {
-      int child_id = child_ids[ichild];
-      node_depth[child_id] = node_depth[node_id] + 1;
-      stack[pos_stack++] = child_id;
-    }
-
-  }
-  PDM_free(stack);
-
-
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "# vtk DataFile Version 2.0\nbox_tree\nASCII\nDATASET UNSTRUCTURED_GRID\n");
-
-  fprintf(f, "POINTS %d double\n", 8*n_nodes);
-  for (int i = 0; i < n_nodes; i++) {
-    double *e = node_extents + 6*i;
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
-  }
-
-  fprintf(f, "CELLS %d %d\n", n_nodes, 9*n_nodes);
-  for (int i = 0; i < n_nodes; i++) {
-    int j = 8*i;
-    fprintf(f, "8 %d %d %d %d %d %d %d %d\n", j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
-  }
-
-  fprintf(f, "CELL_TYPES %d\n", n_nodes);
-  for (int i = 0; i < n_nodes; i++) {
-    fprintf(f, "12\n");
-  }
-
-  fprintf(f, "CELL_DATA %d\n", n_nodes);
-  fprintf(f, "FIELD node_field 2\n");
-
-  fprintf(f, "depth 1 %d int\n", n_nodes);
-  for (int i = 0; i < n_nodes; i++) {
-    fprintf(f, "%d\n", node_depth[i]);
-  }
-
-  fprintf(f, "is_leaf 1 %d int\n", n_nodes);
-  for (int i = 0; i < n_nodes; i++) {
-    _node_t *node = &(box_tree_data->nodes[i]);
-    fprintf(f, "%d\n", node->is_leaf);
-  }
-
-  fclose(f);
-
-  PDM_free(node_extents);
-  PDM_free(node_depth);
-
-}
-
 
 void
 PDM_box_tree_extract_extents
@@ -8259,8 +8093,7 @@ PDM_tree_intersection_point_box
             break;
           }
           default: {
-            PDM_error(__FILE__, __LINE__, 0,
-                      "Subdivision criterion %d not implemented\n", (int) subdiv_crit);
+            PDM_error("Subdivision criterion %d not implemented", (int) subdiv_crit);
             break;
           }
         }
@@ -8439,6 +8272,3 @@ PDM_tree_intersection_point_box
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

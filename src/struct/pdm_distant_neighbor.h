@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_PART_DISTANT_NEIGHBOR_H__
 #define __PDM_PART_DISTANT_NEIGHBOR_H__
 
@@ -19,9 +15,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation csback to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*=============================================================================

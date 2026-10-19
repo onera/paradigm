@@ -1,9 +1,5 @@
-/*
- * \file
- */
-
-#ifndef PDM_DIST_CLOUD_SURF_H
-#define PDM_DIST_CLOUD_SURF_H
+#ifndef __PDM_DIST_CLOUD_SURF_H__
+#define __PDM_DIST_CLOUD_SURF_H__
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -13,12 +9,13 @@
 #include "pdm_mpi.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Macro definitions
@@ -253,6 +250,20 @@ PDM_dist_cloud_surf_dump_times
   PDM_dist_cloud_surf_t  *dist
 );
 
+/**
+ *
+ * \brief Add external timer
+ *
+ * \param [in]  dist    Pointer to \ref PDM_dist_cloud_surf_t instance
+ * \param [in]  timer   Pointer to \ref PDM_timer_t object
+ *
+ */
+void
+PDM_dist_cloud_surf_timer_set
+(
+  PDM_dist_cloud_surf_t *dist,
+  PDM_timer_t           *timer
+);
 
 
 /**
@@ -318,10 +329,9 @@ PDM_dist_cloud_surf_distri_data
         void                 ***cloud_data
 );
 
-
 /**
  *
- * \brief Distribute data from the surface mesh to a point cloud
+ * \brief Set a property
  *
  * \param [in]   dist              Pointer to \ref PDM_dist_cloud_surf_t object
  * \param [in]   property_name     Property name
@@ -332,14 +342,14 @@ PDM_dist_cloud_surf_distri_data
 void
 PDM_dist_cloud_property_set
 (
-       PDM_dist_cloud_surf_t  *dist,
- const char                   *property_name,
- const char                   *property_value
+        PDM_dist_cloud_surf_t *dist,
+  const char                  *property_name,
+  const char                  *property_value
 );
 
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif // PDM_MESH_DIST_H
+#endif /* __PDM_DIST_CLOUD_SURF_H__ */

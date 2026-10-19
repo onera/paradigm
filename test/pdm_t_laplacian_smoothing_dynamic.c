@@ -188,7 +188,7 @@ _generate_mesh
                                                   part_method);
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid mesh_dimension %d (must be 2 or 3)\n", mesh_dimension);
+      PDM_error("Invalid mesh_dimension %d (must be 2 or 3)", mesh_dimension);
     }
   }
 }

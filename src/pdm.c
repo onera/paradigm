@@ -13,12 +13,6 @@
 #include "pdm_part_renum.h"
 #include "pdm_writer.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -173,6 +167,40 @@ PDM_geometry_kind_to_entity_type
 
   return PDM_MESH_ENTITY_MAX;
 }
+
+
+int
+PDM_geometry_kind_to_dimension
+(
+ PDM_geometry_kind_t   geom_kind
+)
+{
+  switch (geom_kind) {
+
+    case PDM_GEOMETRY_KIND_VOLUMIC: {
+      return 3;
+    }
+    case PDM_GEOMETRY_KIND_SURFACIC: {
+      return 2;
+    }
+    case PDM_GEOMETRY_KIND_RIDGE: {
+      return 1;
+    }
+    case PDM_GEOMETRY_KIND_CORNER: {
+      return 0;
+    }
+    case PDM_GEOMETRY_KIND_MAX: {
+      return -1;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+    }
+
+  }
+
+  return -1;
+}
+
 
 
 PDM_geometry_kind_t
@@ -442,6 +470,3 @@ void
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

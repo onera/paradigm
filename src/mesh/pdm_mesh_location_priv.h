@@ -19,15 +19,13 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Type
  *============================================================================*/
-
-#define NTIMER_MESH_LOCATION 11
 
 /**
  * \struct _PDM_Dist_t
@@ -112,14 +110,6 @@ struct _pdm_mesh_location_t {
 
   PDM_timer_t *timer; /*!< Timer */
 
-  double times_elapsed[NTIMER_MESH_LOCATION]; /*!< Elapsed time */
-
-  double times_cpu[NTIMER_MESH_LOCATION];     /*!< CPU time */
-
-  double times_cpu_u[NTIMER_MESH_LOCATION];  /*!< User CPU time */
-
-  double times_cpu_s[NTIMER_MESH_LOCATION];  /*!< System CPU time */
-
   _points_in_element_t *points_in_elements;
 
   int  reverse_result; /*!< Enable reverse results */
@@ -140,8 +130,9 @@ struct _pdm_mesh_location_t {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-#ifdef  __cplusplus
+
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif  /* __PDM_MESH_LOCATION_PRIV_H__ */

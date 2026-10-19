@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_POLY_VOL_GEN_H__
 #define __PDM_POLY_VOL_GEN_H__
 
@@ -22,9 +18,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -107,5 +100,6 @@ PDM_poly_vol_gen
 
 #ifdef __cplusplus
 }
-#endif
-#endif
+#endif /* __cplusplus */
+
+#endif /* __PDM_POLY_VOL_GEN_H__ */

@@ -20,12 +20,6 @@
 #include "pdm_printf.h"
 #include "pdm_dmesh_nodal_elmts.h"
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 /*============================================================================
  * Fortran function header
@@ -432,7 +426,7 @@ const PDM_Mesh_nodal_elt_t     t_elt
 )
 {
   if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   int id_block = -1;
@@ -443,27 +437,8 @@ const PDM_Mesh_nodal_elt_t     t_elt
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
 
   if (elt_dim != dmn_elts->mesh_dimension) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, elt_dim);
+    PDM_error("Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i ", dmn_elts->mesh_dimension, elt_dim);
   }
-
-  // if(t_elt == PDM_MESH_NODAL_POINT) {
-  //   if(dmn_elts->mesh_dimension != 0){
-  //     PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 0);
-  //   }
-  // } else if(t_elt == PDM_MESH_NODAL_BAR2 || t_elt == PDM_MESH_NODAL_BARHO) {
-  //   if(dmn_elts->mesh_dimension != 1){
-  //     PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 1);
-  //   }
-  // } else if(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 || t_elt == PDM_MESH_NODAL_POLY_2D ||
-  //           t_elt == PDM_MESH_NODAL_TRIAHO || t_elt == PDM_MESH_NODAL_QUADHO) {
-  //   if(dmn_elts->mesh_dimension != 2){
-  //     PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 2);
-  //   }
-  // } else {
-  //   if(dmn_elts->mesh_dimension != 3){
-  //     PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 3);
-  //   }
-  // }
 
   switch (t_elt) {
 
@@ -543,7 +518,7 @@ const PDM_Mesh_nodal_elt_t     t_elt
     break;
 
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
+    PDM_error("Unknown element type");
     break;
 
   }
@@ -564,11 +539,11 @@ const char                    *ho_ordering
 )
 {
   if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   if (t_elt == PDM_MESH_NODAL_POLY_2D || t_elt == PDM_MESH_NODAL_POLY_3D) {
-    PDM_error (__FILE__, __LINE__, 0, "Elt type %d cannot be stored in a HO section\n", (int) t_elt);
+    PDM_error("Elt type %d cannot be stored in a HO section", (int) t_elt);
   }
 
   int id_block = -1;
@@ -578,21 +553,21 @@ const char                    *ho_ordering
 
   if(t_elt == PDM_MESH_NODAL_POINT) {
     if(dmn_elts->mesh_dimension != 0){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 0);
+      PDM_error("Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i", dmn_elts->mesh_dimension, 0);
     }
   } else if(t_elt == PDM_MESH_NODAL_BAR2 || t_elt == PDM_MESH_NODAL_BARHO || t_elt == PDM_MESH_NODAL_BARHO_BEZIER) {
     if(dmn_elts->mesh_dimension != 1){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 1);
+      PDM_error("Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i", dmn_elts->mesh_dimension, 1);
     }
   } else if(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_QUAD4 || t_elt == PDM_MESH_NODAL_POLY_2D ||
             t_elt == PDM_MESH_NODAL_TRIAHO || t_elt == PDM_MESH_NODAL_QUADHO ||
             t_elt == PDM_MESH_NODAL_TRIAHO_BEZIER) {
     if(dmn_elts->mesh_dimension != 2){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 2);
+      PDM_error("Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i", dmn_elts->mesh_dimension, 2);
     }
   } else {
     if(dmn_elts->mesh_dimension != 3){
-      PDM_error (__FILE__, __LINE__, 0, "Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i \n", dmn_elts->mesh_dimension, 3);
+      PDM_error("Bad mesh_dimension in PDM_DMesh_nodal_elmts_section_add = expected = %i and given = %i", dmn_elts->mesh_dimension, 3);
     }
   }
 
@@ -647,14 +622,14 @@ const int                n_elt,
 )
 {
   if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
   PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
 
   if (section == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    PDM_error("Bad standard block identifier");
   }
 
   /* Mapping */
@@ -691,7 +666,7 @@ const int                      id_section,
 )
 {
   if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
@@ -699,7 +674,7 @@ const int                      id_section,
   PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
 
   if (section == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    PDM_error("Bad standard section identifier");
   }
 
   if(owner != PDM_OWNERSHIP_BAD_VALUE) {
@@ -726,7 +701,7 @@ const PDM_l_num_t              n_elt,
   PDM_DMesh_nodal_section_poly2d_t *section = dmn_elts->sections_poly2d[_id_section];
 
   if (section == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    PDM_error("Bad standard section identifier");
   }
 
   /* Mapping */
@@ -770,7 +745,7 @@ const int                       id_section,
   PDM_DMesh_nodal_section_poly2d_t *section = dmn_elts->sections_poly2d[_id_section];
 
   if (section == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    PDM_error("Bad standard section identifier");
   }
 
   *connec_idx = section->_connec_idx;
@@ -790,7 +765,7 @@ const int                      id_section
 )
 {
   if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   int _id_section;
@@ -802,7 +777,7 @@ const int                      id_section
     PDM_DMesh_nodal_section_poly3d_t *section = dmn_elts->sections_poly3d[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
+      PDM_error("Bad polyhedron section identifier");
     }
 
     return section->distrib;
@@ -815,7 +790,7 @@ const int                      id_section
     PDM_DMesh_nodal_section_poly2d_t *section = dmn_elts->sections_poly2d[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad polygon section identifier\n");
+      PDM_error("Bad polygon section identifier");
     }
 
     return section->distrib;
@@ -827,7 +802,7 @@ const int                      id_section
     PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+      PDM_error("Bad standard section identifier");
     }
 
     return section->distrib;
@@ -843,7 +818,7 @@ const int                      id_section
 )
 {
   if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POLY_3D;
@@ -855,7 +830,7 @@ const int                      id_section
     PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");
+      PDM_error("Bad section identifier");
     }
 
     t_elt = section->t_elt;
@@ -896,7 +871,7 @@ const PDM_l_num_t               n_face,
   PDM_DMesh_nodal_section_poly3d_t *section = dmn_elts->sections_poly3d[_id_section];
 
   if (section == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    PDM_error("Bad standard section identifier");
   }
 
   section->n_elt          = n_elt;
@@ -946,7 +921,7 @@ const int                       id_section,
   PDM_DMesh_nodal_section_poly3d_t *section = dmn_elts->sections_poly3d[_id_section];
 
   if (section == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    PDM_error("Bad standard section identifier");
   }
 
   *n_face      = section->n_face;
@@ -1110,7 +1085,7 @@ const char                    *ho_ordering
 )
 {
   if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+    PDM_error("Bad mesh nodal identifier");
   }
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
@@ -1223,6 +1198,3 @@ PDM_dmesh_nodal_elmts_have_ho
 }
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

@@ -16,9 +16,6 @@
 
 #ifdef __cplusplus
 extern "C"
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -203,6 +200,3 @@ PDM_box_gen_cartesian
   *box_ln_to_gn = _box_ln_to_gn;
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

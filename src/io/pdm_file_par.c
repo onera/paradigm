@@ -1,8 +1,3 @@
-/*============================================================================
- * Description d'un fichier parallele
- *============================================================================*/
-
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -19,12 +14,6 @@
 
 /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 
 /*============================================================================
@@ -72,8 +61,7 @@ _pdm_mpi_io_error_message
 
   PDM_MPI_Error_string(code_erreur, buffer, &buffer_len);
 
-  PDM_error(__FILE__, __LINE__, 0, "Erreur MPI IO pour le fichier: %s\n"
-          "Error type: %s", nom_fichier, buffer);
+  PDM_error("MPI IO error for file : %s\n Error type: %s", nom_fichier, buffer);
 
   exit(EXIT_FAILURE);
 }
@@ -125,8 +113,7 @@ PDM_file_par_open
     _mode = PDM_MPI_MODE_RDONLY;
     break;
   default:
-    PDM_error(__FILE__, __LINE__, 0,"Erreur Fichier_par_open : mode inconnu\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Unknow mode");
   }
 
   PDM_file_par->acces = acces;
@@ -208,8 +195,7 @@ PDM_file_par_lecture_globale
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0,"Erreur Fichier_par_lecture : type d'acces inconnu\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Unknow type access");
 
   }
 
@@ -286,8 +272,7 @@ PDM_file_par_ecriture_globale
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0,"Erreur Fichier_par_ecriture_global : type d'acces inconnu\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Unknown type access");
 
   }
 
@@ -373,8 +358,7 @@ PDM_file_par_lecture_parallele
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0,"Erreur Fichier_par_lecture_parallele : type d'acces inconnu\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Unknown type access");
 
   }
 
@@ -467,8 +451,7 @@ PDM_file_par_ecriture_parallele
     break;
 
   default:
-    PDM_error(__FILE__, __LINE__, 0,"Erreur Fichier_par_ecriture_parallele : type d'acces inconnu\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Unknown type access");
 
   }
 
@@ -521,8 +504,7 @@ PDM_file_par_seek
     }
     break;
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_file_par_seek : whence non reconnu\n");
-    exit(EXIT_FAILURE);
+    PDM_error("Not recognized whence");
   }
 
   /* Definition de l'offset uniquement dans le cas IP
@@ -530,7 +512,7 @@ PDM_file_par_seek
      a chaque acces par fichier->offset */
 
   if (PDM_file_par->acces == FICHIER_PAR_ACCES_IP) {
-    int _whence;
+    int _whence = 0;
     switch(whence) {
     case FICHIER_PAR_SEEK_SET:
       _whence = PDM_MPI_SEEK_SET;
@@ -542,8 +524,7 @@ PDM_file_par_seek
       _whence = PDM_MPI_SEEK_END;
       break;
     default :
-      PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_file_par_seek : whence non reconnu\n");
-      exit(EXIT_FAILURE);
+      PDM_error("Not recognized whence");
     }
 
     errcode = PDM_MPI_File_seek(PDM_file_par->fichier,
@@ -588,6 +569,3 @@ PDM_file_par_close
 
 }
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

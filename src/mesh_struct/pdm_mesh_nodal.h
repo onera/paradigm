@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_MESH_NODAL_H__
 #define __PDM_MESH_NODAL_H__
 
@@ -21,9 +17,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -90,18 +83,6 @@ typedef struct PDM_Mesh_nodal_vtx_t PDM_Mesh_nodal_vtx_t;
 int
 PDM_Mesh_nodal_elt_dim_get
 (
- PDM_Mesh_nodal_elt_t type
- );
-
-int
-PDM_Mesh_nodal_is_2D_element
-(
-  PDM_Mesh_nodal_elt_t type
-);
-
-int
-PDM_Mesh_nodal_is_3D_element
-(
   PDM_Mesh_nodal_elt_t type
 );
 
@@ -132,8 +113,8 @@ PDM_Mesh_nodal_n_vtx_elt_get
 int
 PDM_vtx_vtx_per_elmt
 (
-  PDM_Mesh_nodal_elt_t   t_elt,
-  const int            **vtx_vtx
+        PDM_Mesh_nodal_elt_t   t_elt,
+  const int                  **vtx_vtx
 );
 
 /**
@@ -154,23 +135,23 @@ PDM_Mesh_nodal_elmt_is_ho
 void
 PDM_Mesh_nodal_ho_parent_node
 (
- const PDM_Mesh_nodal_elt_t  t_elt,
- const int                   order,
- const char                 *ho_ordering,
-       int                  *parent_node
+  const PDM_Mesh_nodal_elt_t  t_elt,
+  const int                   order,
+  const char                 *ho_ordering,
+        int                  *parent_node
 );
 
 
 void
 PDM_Mesh_nodal_reorder_elt_vtx
 (
- const PDM_Mesh_nodal_elt_t  t_elt,
- const int                   order,
- const char                 *ho_ordering_in,
- const char                 *ho_ordering_out,
- const int                   n_elt,
-       int                  *elt_vtx_in,
-       int                  *elt_vtx_out
+  const PDM_Mesh_nodal_elt_t  t_elt,
+  const int                   order,
+  const char                 *ho_ordering_in,
+  const char                 *ho_ordering_out,
+  const int                   n_elt,
+        int                  *elt_vtx_in,
+        int                  *elt_vtx_out
 );
 
 
@@ -178,7 +159,7 @@ PDM_Mesh_nodal_reorder_elt_vtx
 PDM_geometry_kind_t
 PDM_Mesh_nodal_geom_kind_from_elt_type
 (
- PDM_Mesh_nodal_elt_t t_elt
+  PDM_Mesh_nodal_elt_t t_elt
 );
 
 
@@ -230,8 +211,8 @@ PDM_n_edge_elt_per_elmt
 int
 PDM_edge_vtx_per_elmt
 (
-  PDM_Mesh_nodal_elt_t   t_elt,
-  const int            **edge_vtx
+        PDM_Mesh_nodal_elt_t   t_elt,
+  const int                  **edge_vtx
 );
 
 /**

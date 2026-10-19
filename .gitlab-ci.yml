@@ -17,6 +17,7 @@ variables:
   TESTS_MAX_DURATION: "01:00:00"
   SCHEDULER_PARAMETERS:  "--partition=intel --ntasks=12 --nodes=1-1 --time=00:30:00"
 default:
+  interruptible: true
   tags: #All jobs uses jamacar-slurm executor
     - juno-slurm
   id_tokens:
@@ -39,6 +40,7 @@ init_repo:
     - cd ${CI_PIPELINE_ID}
     - git checkout ${CI_COMMIT_SHA}
     - git submodule update --init extensions/paradigma
+    - git clone --depth 1 --branch v2.5.2 https://github.com/doctest/doctest.git doctest
   artifacts:
     reports:
       dotenv: build.env
@@ -128,10 +130,23 @@ build:
             - "ON"
           BUILD_TYPE:
             - "Debug"
+        - COMPILER: "intel-llvm@2025"
+          GNUM64:
+            - "ON"
+          MPI_LIB:
+            - "intel-oneapi"
+          PDMA:
+            - "ON"
+          BUILD_TYPE:
+            - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}_PDMA_${PDMA}
-    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=12 --nodes=1-1 --time=$BUILD_MAX_DURATION"
+    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=12 --ntasks=1 --nodes=1-1 --time=$BUILD_MAX_DURATION"
   stage: build
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
   before_script:
     - module purge
     - echo "compilo = $COMPILER"
@@ -140,6 +155,8 @@ build:
     -   module load doxygen/1.8.20-gnu831
     - elif [[ "${COMPILER}" == "gcc@15" ]]; then
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc15_cython3.sh # socle 7 + gcc 15 + Cython 3
+    - elif [[ "${COMPILER}" == "intel-llvm@2025" ]]; then
+    -   source /tmp_user/juno/sonics/dist/socle_cfd7_intel/source.sh
     - else
     -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - fi
@@ -150,17 +167,17 @@ build:
     - echo ${COMPILER}
     - echo ${MPI_LIB}
     - if   [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "intel-oneapi" ]]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON  -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_Fortran_MPI_MODULE=OFF ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PEDANTIC=ON -DPDM_ENABLE_PYTHON_BINDINGS=ON  -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_ANISO_AGGLO=OFF -DFETCHCONTENT_SOURCE_DIR_DOCTEST=$CUSTOM_CI_DIR/doctest ../
     - elif [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "openmpi" ]]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=ON  -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_Fortran_MPI_MODULE=OFF ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PEDANTIC=ON -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=ON  -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DFETCHCONTENT_SOURCE_DIR_DOCTEST=$CUSTOM_CI_DIR/doctest ../
     - elif [ "${COMPILER}" == "intel@2022" ]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON  -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=ON  -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PEDANTIC=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON  -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=ON  -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DFETCHCONTENT_SOURCE_DIR_DOCTEST=$CUSTOM_CI_DIR/doctest ../
     - elif [ "${COMPILER}" == "intel-llvm@2022" ]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PEDANTIC=ON -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DFETCHCONTENT_SOURCE_DIR_DOCTEST=$CUSTOM_CI_DIR/doctest ../
     - elif [ "${COMPILER}" == "gcc@14" ]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON  -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=ON  -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_DOC=ON ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PEDANTIC=ON -DPDM_ENABLE_PYTHON_BINDINGS=ON  -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=ON  -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_DOC=ON -DFETCHCONTENT_SOURCE_DIR_DOCTEST=$CUSTOM_CI_DIR/doctest ../
     - else
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON  -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PEDANTIC=ON -DPDM_ENABLE_PYTHON_BINDINGS=ON  -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON  -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DFETCHCONTENT_SOURCE_DIR_DOCTEST=$CUSTOM_CI_DIR/doctest ../
     - fi
     - make -j
 
@@ -249,6 +266,15 @@ unit_test:
             - "ON"
           BUILD_TYPE:
             - "Debug"
+        - COMPILER: "intel-llvm@2025"
+          GNUM64:
+            - "ON"
+          MPI_LIB:
+            - "intel-oneapi"
+          PDMA:
+            - "ON"
+          BUILD_TYPE:
+            - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}_PDMA_${PDMA}
     SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=20 --nodes=1-1 --time=$TESTS_MAX_DURATION"
@@ -259,6 +285,8 @@ unit_test:
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc14_cython3.sh # socle 7 + gcc 14 + Cython 3
     - elif [[ "${COMPILER}" == "gcc@15" ]]; then
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc15_cython3.sh # socle 7 + gcc 15 + Cython 3
+    - elif [[ "${COMPILER}" == "intel-llvm@2025" ]]; then
+    -   source /tmp_user/juno/sonics/dist/socle_cfd7_intel/source.sh
     - else
     -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - fi
@@ -276,6 +304,10 @@ unit_test:
     -   gcovr --gcov-ignore-parse-errors -g -k --xml-pretty --print-summary --root $CUSTOM_CI_DIR --object-directory $CUSTOM_CI_DIR/build$MATRIX_KEY --output $INIT_ORIGINAL_FOLDER/coverage.xml
     - fi
   when: on_success
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
   coverage: /lines:\s*(\d+\.\d+)%/
   artifacts:
     when: always
@@ -330,7 +362,7 @@ fake_install:
     - echo ${COMPILER}
     - echo ${MPI_LIB}
     - echo ${PDM_INSTALL_ROOT}
-    - cmake -DCMAKE_INSTALL_PREFIX=${PDM_INSTALL_ROOT} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=ON -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
+    - cmake -DCMAKE_INSTALL_PREFIX=${PDM_INSTALL_ROOT} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=ON -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DFETCHCONTENT_SOURCE_DIR_DOCTEST=$CUSTOM_CI_DIR/doctest ../
     - make -j install
     - cd $CUSTOM_CI_DIR
     - mkdir -p test_fake_install$MATRIX_KEY && cd test_fake_install$MATRIX_KEY

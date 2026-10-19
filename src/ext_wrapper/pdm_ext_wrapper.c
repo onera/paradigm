@@ -46,12 +46,6 @@
  * Public function definitions
  *============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
 
 
 #ifdef PDM_HAVE_PARMETIS
@@ -466,6 +460,11 @@ const int  n_part,
   //            Define Scotch properties
   SCOTCH_Graph grafptr;
   SCOTCH_Strat straptr;   //partitioning strategy
+#ifdef SCOTCH_OPTIONNUMDETERMINISTIC
+  SCOTCH_Context context;
+  SCOTCH_Graph  cntgrafptr;
+#endif
+  SCOTCH_Graph *actgrafptr = &grafptr;
   int ierr = 0;
 
   ierr = SCOTCH_graphInit (&grafptr);
@@ -554,31 +553,53 @@ const int  n_part,
                            _edlotab);
 
   if (ierr) {
-    PDM_error(__FILE__, __LINE__, 0, "PART error : Error in SCOTCH_graphBuild\n");
-    exit(1);
+    PDM_error("Error in SCOTCH_graphBuild");
   }
 
   if (check) {
     ierr = SCOTCH_graphCheck (&grafptr);
     if (ierr) {
-      PDM_error(__FILE__, __LINE__, 0, "PART error : Error in Scotch graph check\n");
-      exit(1);
+      PDM_error("Error in Scotch graph check");
     }
   }
 
   //Partitioning strategy
   SCOTCH_stratInit (&straptr);
 
+  /* Deterministic context */
+#ifdef SCOTCH_OPTIONNUMDETERMINISTIC
+  int _scotch_deterministic = 1;
+  {
+    char *_env = getenv("PDM_SCOTCH_DETERMINISTIC");
+    if (_env != NULL) {
+      _scotch_deterministic = atoi(_env);
+    }
+  }
+
+  if (_scotch_deterministic) {
+    ierr = SCOTCH_contextInit (&context);
+    if (ierr) {
+      PDM_error("Error in SCOTCH_contextInit\n");
+    }
+    SCOTCH_contextOptionSetNum (&context, SCOTCH_OPTIONNUMDETERMINISTIC, 1);
+    SCOTCH_contextRandomSeed   (&context, 0);
+    ierr = SCOTCH_contextBindGraph (&context, &grafptr, &cntgrafptr);
+    if (ierr) {
+      PDM_error("Error in SCOTCH_contextBindGraph\n");
+    }
+    actgrafptr = &cntgrafptr;
+  }
+#endif
+
   SCOTCH_Num _n_part = (SCOTCH_Num) n_part;
 
-  ierr = SCOTCH_graphPart (&grafptr,
+  ierr = SCOTCH_graphPart (actgrafptr,
                            _n_part, //nombre de partitions
                            &straptr,
                            _part);
 
   if (ierr) {
-    PDM_error(__FILE__, __LINE__, 0, "PART error : Error in SCOTCH_graphPart\n");
-    exit(1);
+    PDM_error("Error in SCOTCH_graphPart");
   }
 
   if (sizeof(int) != sizeof(SCOTCH_Num)) {
@@ -588,6 +609,11 @@ const int  n_part,
   }
 
   SCOTCH_stratExit (&straptr);
+#ifdef SCOTCH_OPTIONNUMDETERMINISTIC
+  if (_scotch_deterministic) {
+    SCOTCH_contextExit (&context);
+  }
+#endif
   SCOTCH_graphExit (&grafptr);
 
   if (__verttab != NULL) {
@@ -614,6 +640,3 @@ const int  n_part,
 
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

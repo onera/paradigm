@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_VTK_H__
 #define __PDM_VTK_H__
 
@@ -24,9 +20,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*============================================================================
@@ -573,11 +566,11 @@ PDM_vtk_write_unstructured_grid
  const int                   elt_vtx[],
  const PDM_g_num_t           elt_g_num[],
  const int                   n_elt_field,
- const char                 *elt_field_name[],
- const double               *elt_field[],
+       char                 *elt_field_name[],
+       double               *elt_field[],
  const int                   n_vtx_field,
- const char                 *vtx_field_name[],
- const double               *vtx_field[]
+       char                 *vtx_field_name[],
+       double               *vtx_field[]
 );
 
 #ifdef __cplusplus

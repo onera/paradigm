@@ -1,5 +1,5 @@
-#ifndef __pdm_dmesh_nodal_tO_DMESH_PRIV_H__
-#define __pdm_dmesh_nodal_tO_DMESH_PRIV_H__
+#ifndef __PDM_DMESH_NODAL_TO_DMESH_PRIV_H__
+#define __PDM_DMESH_NODAL_TO_DMESH_PRIV_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -19,9 +19,9 @@
  * Macro definitions
  *============================================================================*/
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Type
@@ -81,8 +81,8 @@ struct _pdm_dmesh_nodal_to_dmesh_t {
 
 };
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif  /* __pdm_dmesh_nodal_tO_DMESH_PRIV_H__ */
+#endif  /* __PDM_DMESH_NODAL_TO_DMESH_PRIV_H__ */

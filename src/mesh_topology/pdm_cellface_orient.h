@@ -1,13 +1,5 @@
-/*
- * \file
- * \author equemera
- *
- * \date August 31, 2017, 1:24 PM
- */
-
-#ifndef PDM_FACECELL_ORIENT_H
-#define	PDM_FACECELL_ORIENT_H
-
+#ifndef __PDM_CELLFACE_ORIENT_H__
+#define	__PDM_CELLFACE_ORIENT_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -21,9 +13,9 @@
  * Macro definition
  *============================================================================*/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /*============================================================================
  * Types definition
@@ -72,8 +64,9 @@ const int     *face_vtx
 );
 
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif	/* PDM_FACECELL_ORIENT_H */
+
+#endif	/* __PDM_CELLFACE_ORIENT_H__ */

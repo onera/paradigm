@@ -1,7 +1,3 @@
-/*
- * \file
- */
-
 #ifndef __PDM_PART_MESH_GEOM_H__
 #define __PDM_PART_MESH_GEOM_H__
 
@@ -18,9 +14,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 /*=============================================================================
@@ -58,6 +51,29 @@ PDM_compute_entity_center
   int    *connect,
   double *coord,
   double *entity_center
+);
+
+/**
+ *
+ * \brief Compute dual volume associated at each vertices (but without syncrhonise around partition)
+ *
+ * \param [in]  n_part          Number of partitions
+ * \param [in]  n_edge          Number of edges for each partitions (size = n_part)
+ * \param [in]  n_vtx           Number of vertices for each partitions (size = n_part)
+ * \param [in]  edge_vtx        Edges vertices connectivity array (size = 2 * n_edge)
+ * \param [in]  vtx_coord       Vertex coordinates (size = 3 * n_vtx)
+ * \param [out] out_vtx_volume  Entity center computed by mean with vertices coordinnates (size = n_vtx)
+ *
+ */
+void
+PDM_compute_dual_volume_ngon_1d
+(
+  int       n_part,
+  int      *n_edge,
+  int      *n_vtx,
+  int     **edge_vtx,
+  double  **vtx_coord,
+  double ***out_vtx_volume
 );
 
 /**
