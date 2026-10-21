@@ -662,7 +662,7 @@ _create
   PDM_malloc(pcg->part_to_recv_buffer, n_part, int *);
   PDM_malloc(pcg->n_entity_graph     , n_part, int  );
 
-  int stride = 3 + nuplet_size;
+  int stride = 4 + nuplet_size;
 
   PDM_MPI_Datatype mpi_stride_type;
   PDM_MPI_Type_create_contiguous(stride, PDM_MPI_INT, &mpi_stride_type);
@@ -707,8 +707,10 @@ _create
       send_buffer[stride*idx_write  ] = pentity_graph[i_part][4*idx_entity+2]-1;
       send_buffer[stride*idx_write+1] = i_part;
       send_buffer[stride*idx_write+2] = PDM_ABS(pentity_graph[i_part][4*idx_entity+3])-1;
+      send_buffer[stride*idx_write+3] = pentity_graph[i_part][4*idx_entity+0]-1;
+
       for (int i = 0; i < nuplet_size; i++) {
-        send_buffer[stride*idx_write+3+i] = sign * pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+        send_buffer[stride*idx_write+4+i] = sign * pentity_nuplet[i_part][nuplet_size*idx_entity+i];
       }
 
       pcg->part_to_send_buffer[i_part][idx_entity] = idx_write;
@@ -764,8 +766,10 @@ _create
       pentity_indices[i_part][stride*idx_entity  ] = pentity_graph[i_part][4*idx_entity+1];
       pentity_indices[i_part][stride*idx_entity+1] = pentity_graph[i_part][4*idx_entity+2]-1;
       pentity_indices[i_part][stride*idx_entity+2] = pentity_graph[i_part][4*idx_entity]-1; // Indices locaux
+      pentity_indices[i_part][stride*idx_entity+3] = PDM_ABS(pentity_graph[i_part][4*idx_entity+3])-1; // Indices locaux
+
       for (int i = 0; i < nuplet_size; i++) {
-        pentity_indices[i_part][stride*idx_entity+3+i] = pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+        pentity_indices[i_part][stride*idx_entity+4+i] = pentity_nuplet[i_part][nuplet_size*idx_entity+i];
       }
     }
 
@@ -782,22 +786,15 @@ _create
 
   /* Post buffer */
   int *to_find = NULL;
-  PDM_malloc(to_find, stride, int);
 
   for(int t_rank = 0; t_rank < n_rank; ++t_rank) {
     for(int j = recv_idx[t_rank]; j < recv_idx[t_rank+1]; ++j) {
 
-      int lpart   = recv_buffer[stride*j  ];
-      int tpart   = recv_buffer[stride*j+1];
-      int lentity = recv_buffer[stride*j+2];
+      int lpart   = recv_buffer[stride*j];
+      recv_buffer[stride*j] = t_rank;
       int n_entity_graph = pn_entity_graph[lpart];
 
-      to_find[0] = t_rank;
-      to_find[1] = tpart;
-      to_find[2] = lentity;
-      for (int i = 0; i < nuplet_size; i++) {
-        to_find[3+i] = recv_buffer[stride*j+3+i];
-      }
+      to_find = &recv_buffer[stride*j  ];
 
       int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], stride, n_entity_graph);
       if (pos == -1) {
@@ -814,7 +811,6 @@ _create
 
     }
   }
-  PDM_free(to_find);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -2096,4 +2092,45 @@ PDM_part_comm_graph_free
   PDM_exchange_helper_free(pcg->exch_h);
 
   PDM_free(pcg);
+}
+
+
+void
+PDM_part_comm_graph_log_trace
+(
+  PDM_part_comm_graph_t *pcg,
+  const char*            header
+)
+{
+  int n_part = PDM_part_comm_graph_n_part_get(pcg);
+
+  log_trace("%s (%p)\n", header, (void *) pcg);
+
+  for (int i_part=0; i_part<n_part; ++i_part) {
+
+    int *graph = NULL;
+    int *nuplt = NULL;
+    int n_entity   = PDM_part_comm_graph_entity_graph_get(pcg, i_part, &graph, PDM_OWNERSHIP_BAD_VALUE);
+    int nuplt_size = PDM_part_comm_graph_entity_nuplet_get(pcg, i_part, &nuplt, PDM_OWNERSHIP_BAD_VALUE);
+    const int *pcg_owner = PDM_part_comm_graph_owner_get(pcg, i_part);
+
+    log_trace("i_part = %d / %d ; n_entity = %d\n", i_part+1, n_part, n_entity);
+
+    for (int i_entity=0; i_entity<n_entity; ++i_entity) {
+      log_trace("i_entity = %d | entity_graph = %d %d %d %d",
+        i_entity,
+        graph[4*i_entity+0],
+        graph[4*i_entity+1],
+        graph[4*i_entity+2],
+        graph[4*i_entity+3]
+      );
+      if (nuplt!=NULL) {
+        log_trace(" | entity_nuplt =");
+        for (int i_nuplt=0; i_nuplt<nuplt_size; ++i_nuplt) {
+          log_trace(" %d", nuplt[nuplt_size*i_entity+i_nuplt]);
+        }
+      }
+      log_trace(" | owner = %d\n", pcg_owner[  i_entity  ]);
+    } // end loop on graph entities
+  } // end loop on partitions
 }

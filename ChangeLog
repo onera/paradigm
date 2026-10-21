@@ -4,6 +4,7 @@
 ### Deprecated
 ### Removed
 ### Fixed
+- PDM_part_comm_graph: fixup creation with multiple 'self-connections' on same rank
 ## [2.9.0] - 2026-10-19
 ### Added
 - PDM_mesh_intersection: Add unit tests for surface-surface intersection

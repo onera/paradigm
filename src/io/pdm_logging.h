@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "pdm.h"
+
 /*-----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
@@ -221,8 +222,6 @@ PDM_log_trace_graph_nuplet_int
  const int          larray,
  const char*        header
 );
-
-
 
 #ifdef __cplusplus
 }

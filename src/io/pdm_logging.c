@@ -309,11 +309,11 @@ PDM_log_trace_part_connectivity_gnum
 void
 PDM_log_trace_connectivity_int2
 (
- const int         *array_idx,
- const int         *array,
- const PDM_g_num_t *g_num,
- const int          larray,
- const char*        header
+  const int         *array_idx,
+  const int         *array,
+  const PDM_g_num_t *g_num,
+  const int          larray,
+  const char*        header
 )
 {
   // log_trace(header);
@@ -325,4 +325,3 @@ PDM_log_trace_connectivity_int2
     log_trace("\n");
   }
 }
-

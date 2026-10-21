@@ -1640,3 +1640,77 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - gather strided data", 2) {
 
   PDM_part_comm_graph_free(pcg);
 }
+MPI_TEST_CASE("[PDM_part_comm_graph] - exchange with intra partition join", 2) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /* Communication graph */
+  const int n_part = 1;
+
+  /**
+   *                266  i_rank=0
+   *                x    i_part=0
+   *           8 x   \ 112  33
+   * i_rank=0     \   x-----x
+   * i_part=0   23 x
+   *              /   x-----x
+   *          11 x   / 10   81
+   *                x     i_rank=1
+   *                2     i_part=0
+   *
+   */
+
+  std::vector<int> vn_entity_bound = {8, 4};
+  std::vector<std::vector<int>> ventity_bound = {{  8, 0, 1, 266,
+                                                   11, 1, 1,   2,
+                                                   23, 1, 1,  10,
+                                                   23, 0, 1, 112,
+                                                  112, 1, 1,  10,
+                                                  266, 0, 1,   8,
+                                                  112, 0, 1,  23,
+                                                   33, 1, 1,  81},
+                                                 { 10, 0, 1,  23,
+                                                   10, 0, 1, 112,
+                                                    2, 0, 1,  11,
+                                                   81, 0, 1,  33}};
+
+
+  int n_entity_bound = vn_entity_bound[i_rank];
+  int *entity_bound  = ventity_bound  [i_rank].data();
+
+  PDM_part_comm_graph_t* pcg = PDM_part_comm_graph_create(n_part,
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
+  PDM_part_comm_graph_log_trace(pcg, "pcg = ");
+
+  std::vector<std::vector<int>> vsend_data_n = {{1, 1, 1, 1, 1, 1, 1, 1},
+                                                {1, 1, 1, 1}};
+  std::vector<std::vector<int>> vsend_data = {{0,1,2,3,4,5,6,7,8,9},
+                                              {0,1,2,3,4,5,6,7,8,9,10,11}};
+
+  int *send_data_n = vsend_data_n[i_rank].data();
+  int *send_data   = vsend_data  [i_rank].data();
+  int **recv_data_n = NULL;
+  int **recv_data   = NULL;
+  PDM_part_comm_graph_exch(pcg,
+                           sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           &send_data_n,
+                (void **)  &send_data,
+                           &recv_data_n,
+                (void ***) &recv_data);
+  // PDM_part_comm_graph_exch_wait(pcg, req0);
+
+  PDM_part_comm_graph_free(pcg);
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    PDM_free(recv_data_n[i_part]);
+    PDM_free(recv_data  [i_part]);
+  }
+  PDM_free(recv_data_n);
+  PDM_free(recv_data);
+}
