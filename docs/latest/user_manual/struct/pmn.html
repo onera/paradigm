@@ -7,7 +7,7 @@
         <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
-        <title>Partitioned Nodal Mesh - ParaDiGM 2.8.0 documentation</title>
+        <title>Partitioned Nodal Mesh - ParaDiGM 2.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -196,7 +196,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../index.html"><div class="brand">ParaDiGM 2.8.0 documentation</div></a>
+      <a href="../../index.html"><div class="brand">ParaDiGM 2.9.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -222,7 +222,7 @@
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">ParaDiGM 2.8.0 documentation</span>
+  <span class="sidebar-brand-text">ParaDiGM 2.9.0 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -287,7 +287,9 @@
 <p class="caption" role="heading"><span class="caption-text">Developer manual</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_manual/coding_rules.html">Coding rules &amp; guidelines</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer_manual/dev_tools/index.html">Developer tools</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer_manual/dev_tools/index.html">Developer tools</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer_manual/dev_tools/exch_helper.html">Exchange helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer_manual/dev_tools/timer.html">Timer</a></li>
 </ul>
 </li>
 </ul>
@@ -739,6 +741,25 @@ sections.</p>
 <li><p class="sd-card-text"><strong>face_edge_idx</strong> (<cite>np.ndarray[np.int32_t]</cite>) – Connectivity index array for faces</p></li>
 <li><p class="sd-card-text"><strong>face_edge</strong> (<cite>np.ndarray[np.int32_t]</cite>) – Connectivity array for faces</p></li>
 <li><p class="sd-card-text"><strong>face_ln_to_gn</strong> (<cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Global numbering of faces</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.PartMeshNodal.set_sections_from_elt_vtx">
+<span class="sig-prename descclassname"><span class="pre">PartMeshNodal.</span></span><span class="sig-name descname"><span class="pre">set_sections_from_elt_vtx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elt_vtx_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elt_vtx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elt_ln_to_gn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.PartMeshNodal.set_sections_from_elt_vtx" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set 3D or 2D entiies from element-vertex connectivity.</p>
+<p class="sd-card-text">Cells are sorted from their type (tetrahedra, hexahedra, …) and stored in the corresponding
+sections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>dim</strong> (<em>int</em>) – dimension of elements (2 or 3)</p></li>
+<li><p class="sd-card-text"><strong>id_part</strong> (<em>int</em>) – id of the part (max = n_part)</p></li>
+<li><p class="sd-card-text"><strong>elt_vtx_idx</strong> (<cite>np.ndarray[np.int32_t]</cite>) – Connectivity index array for elements</p></li>
+<li><p class="sd-card-text"><strong>elt_vtx</strong> (<cite>np.ndarray[np.int32_t]</cite>) – Connectivity array for elements</p></li>
+<li><p class="sd-card-text"><strong>elt_ln_to_gn</strong> (<cite>np.ndarray[npy_pdm_gnum_t]</cite>) – Global numbering of elements</p></li>
 </ul>
 </dd>
 </dl>
@@ -2134,7 +2155,7 @@ Python</label><div class="sd-tab-content docutils">
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2025, ONERA The French Aerospace Lab
+                Copyright &#169; 2026, ONERA The French Aerospace Lab
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
@@ -2175,6 +2196,7 @@ Python</label><div class="sd-tab-content docutils">
 <li><a class="reference internal" href="#_CPPv437PDM_part_mesh_nodal_faces_facevtx_addP21PDM_part_mesh_nodal_tKiKiPKiPKiPK11PDM_g_num_tK15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_mesh_nodal_faces_facevtx_add()</span></code></a></li>
 <li><a class="reference internal" href="#Pypdm.Pypdm.PartMeshNodal.set_sections_from_cell_face"><code class="docutils literal notranslate"><span class="pre">PartMeshNodal.set_sections_from_cell_face()</span></code></a></li>
 <li><a class="reference internal" href="#Pypdm.Pypdm.PartMeshNodal.set_sections_from_face_edge"><code class="docutils literal notranslate"><span class="pre">PartMeshNodal.set_sections_from_face_edge()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.PartMeshNodal.set_sections_from_elt_vtx"><code class="docutils literal notranslate"><span class="pre">PartMeshNodal.set_sections_from_elt_vtx()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv431PDM_part_mesh_nodal_section_addP21PDM_part_mesh_nodal_tK20PDM_Mesh_nodal_elt_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_mesh_nodal_section_add()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv435PDM_part_mesh_nodal_section_std_setP21PDM_part_mesh_nodal_tKiKiKiPKiPK11PDM_g_num_tPKiPK11PDM_g_num_t15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_mesh_nodal_section_std_set()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv438PDM_part_mesh_nodal_section_std_ho_setP21PDM_part_mesh_nodal_tKiKiKiPKiPK11PDM_g_num_tPKiPK11PDM_g_num_tKiPKc15PDM_ownership_t"><code class="docutils literal notranslate"><span class="pre">PDM_part_mesh_nodal_section_std_ho_set()</span></code></a></li>
@@ -2237,13 +2259,13 @@ Python</label><div class="sd-tab-content docutils">
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+</div><script src="../../_static/documentation_options.js?v=182a64a0"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script src="../../_static/js/custom.js?v=3597c2b8"></script>
+    <script src="../../_static/js/custom.js?v=c7b75b1d"></script>
     </body>
 </html>

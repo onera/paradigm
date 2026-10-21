@@ -3,101 +3,161 @@
 Release notes
 #############
 
-Version 2.8.0 (May 2026)
-------------------------
+Version 2.9.0 (October 2026)
+----------------------------
 
 🌱 Added
 ^^^^^^^^
 
-- :ref:`PDM_isosurface<isosurface>`:
+- :pdmkw:`PDM_mesh_intersection`: Add unit tests for surface-surface intersection
+- Added deterministic context to partitioning using SCOTCH/PtSCOTCH.
 
-  - Add accessors
-  - Expand Python API
-  - Test more configurations in CI
+  - Toggleable at runtime via environment variable :pdmkw:`PDM_SCOTCH_DETERMINISTIC` (0=OFF, 1=ON, default: ON).
 
-- :pdmkw:`PDM_laplacian_smoothing`: New service for Laplacian smoothing
-- :pdmkw:`PDM_mpi`: Add unit tests
-- :ref:`PDM_multipart<multipart>`: Automatically register a :ref:`PDM_part_comm_graph<part_comm_graph>` to output :ref:`PDM_part_mesh_nodal<part_mesh_nodal>` structures
-- :ref:`PDM_part_comm_graph<part_comm_graph>`:
+- :ref:`PDM_part_mesh_nodal<part_mesh_nodal>` : 
 
-  - Add documentation
-  - Add accessors
-  - Add services for splitting, concatenation and filtering
-  - Add Python and Fortran APIs
+  - Add computation of dual volumes for 1D meshes
+  - Add Python API ``set_sections_from_elt_vtx``
 
-- :pdmkw:`PDM_part_geom`: Add function to compute vertex normals
-- :pdmkw:`PDM_part_graph_dual`: Add a function to assemble a generic dual graph from a partitioned graph
-- :ref:`PDM_part_mesh_nodal<part_mesh_nodal>`:
-
-  - Add functions to convert groups to element tags, and vice versa
-  - Add accessors
-  - Expand Python API
-
-- :ref:`PDM_writer<writer>`: Add accessors
-- :pdmkw:`PDM_array`: Add more array utilities
-- :ref:`PDM_exchange_helper<exchange_helper>`: New low-level service to factorize utilities for high-level protocol exchanges
-- :pdmkw:`PDM_mesh_repart` (**ParaDiGMA**): Enable implicit ``part_id_idx``
-- :pdmkw:`PDM_part_migrate` (**ParaDiGMA**):
-
-  - Add accessors
-  - Add function to translate :ref:`PDM_part_comm_graph<part_comm_graph>`
-  - Add unit tests
+- :pdmkw:`PDM_part_mesh`: Add computation of dual volumes for 1D meshes
 
 ⚠️ Changed
 ^^^^^^^^^^
 
-- Refactoring CMake files
-- :pdmkw:`PDM_mpi`: Refactoring to streamline the MPI wrapper
-- :ref:`PDM_part_mesh_nodal<part_mesh_nodal>`: Dissociate *vertices* and *corners* for embedded :ref:`PDM_part_comm_graph<part_comm_graph>`
-- :pdmkw:`PDM_reader_gamma`: Comply with the standard for 2D meshes and solutions
-- Cython: Replace capsules by constructors from raw C pointers
+- :ref:`PDM_part_mesh_nodal<part_mesh_nodal>` :
+
+  - Internal structure organized into arrays indexed by dimension to facilitate better factorization in the future
+
+- :ref:`PDM_rotation<rotation>` :
+
+  - improve precision of quaternions and add unit tests
+
+- :ref:`PDM_timer<timer>` :
+
+  - Add tree timer
+  - Json export
+  - Inclusive/Exclusive time and basic information for timer (min/max)
+  - Synchronize timer on option
+  - Pretty print in stdout / log / string
 
 🧊 Deprecated
 ^^^^^^^^^^^^^
 
-- :pdmkw:`PDM_iso_surface` (**ParaDiGMA**): Prototype replaced by the improved :ref:`PDM_isosurface<isosurface>` service
+- :pdmkw:`PDM_part_coarse_mesh`: :pdmkw:`PDM_part_coarse_mesh_time_get` is replaced by :pdmkw:`PDM_part_coarse_mesh_dump_times` and :pdmkw:`PDM_part_coarse_mesh_timer_get` (new :ref:`PDM_timer<timer>` )
 
 ❌ Removed
 ^^^^^^^^^^
 
-- :ref:`PDM_isosurface<isosurface>`: Remove the :pdmkw:`PDM_isosurface_distribution_get` function (was buggy)
-- Remove deprecated / unused prototypes:
-
-  - **ParaDiGM**: :pdmkw:`PDM_edge_intersect`, :pdmkw:`PDM_graph_bound`, :pdmkw:`PDM_mesh_adapt`, :pdmkw:`PDM_overlay`, :pdmkw:`PDM_part_bound`, :pdmkw:`PDM_poly_clipp`
-  - **ParaDiGMA**: :pdmkw:`PDM_delaunay`, :pdmkw:`PDM_cavity_operator`, :pdmkw:`PDM_mesh_adaptation`, :pdmkw:`PDM_mesh_generation`
+- Remove fake brace for emacs editor & clean all licensing (outdated)
 
 🔧 Fixed
 ^^^^^^^^
 
-- Fix compilation warnings
-- Fix memory leaks
-- Prevent divisions by zero (:ref:`PDM_dcube_nodal_gen<dcube_nodal_gen>`, :pdmkw:`PDM_hilbert`)
-- :pdmkw:`PDM_box_tree`: fix vectorization issue with icx (backported from version 2.7.1)
-- :pdmkw:`PDM_global_mean`: Fix case with n_part = 0
-- :ref:`PDM_isosurface<isosurface>`:
+- :pdmkw:`PDM_mesh_intersection`: Fix numerical issues in surface-surface intersection
+- :pdmkw:`PDM_domain_interface_translate_face2vtx`: prevent crash caused by ``n_face_this_edge == 2`` assertion
+- :pdmkw:`PDM_para_octree` :
 
-  - Fix cases with no surface groups
-  - Return ``iso_edge_vtx_idx`` as ``None`` in Python interface
-  - Fix ellipse equation
-  - Remove degenerate iso-edges
+  - Fix heap allocation, resolving the "heap is full" crash in octree construction
 
-- :pdmkw:`PDM_dist_cloud_surf`: Fix case with empty mesh
-- :pdmkw:`PDM_mesh_intersection`: Fix uninitialized ``tetraisation_pt_type`` parameter
-- :ref:`PDM_multipart<multipart>`: Fix output :ref:`PDM_part_mesh_nodal<part_mesh_nodal>` memory ownership
-- :ref:`PDM_part_mesh_nodal<part_mesh_nodal>`:
-
-  - Fix construction of topological ridges
-  - Improve error messages
-  - Orientation consistency for 2D nodal meshes reconstructed from face->edge connectivity (backported from version 2.7.1)
-
-- :ref:`PDM_part_to_part<part_to_part>`: Fix errors in Python interface (use after free, wrong size for stride arrays)
-- :pdmkw:`PDM_reader_gamma`: Fix orientation of quads in 2D
-- Renumbering (**ParaDiGMA**): Various fixes
+- :ref:`PDM_part_mesh_nodal<part_mesh_nodal>`: Fix `parent_to_local` indirection for hybrid 2D meshes
 
 |
 
 Earlier versions
 ----------------
+
+.. dropdown:: Version 2.8.0 (May 2026)
+
+  **🌱 Added**
+
+  - :ref:`PDM_isosurface<isosurface>`:
+  
+    - Add accessors
+    - Expand Python API
+    - Test more configurations in CI
+  
+  - :pdmkw:`PDM_laplacian_smoothing`: New service for Laplacian smoothing
+  - :pdmkw:`PDM_mpi`: Add unit tests
+  - :ref:`PDM_multipart<multipart>`: Automatically register a :ref:`PDM_part_comm_graph<part_comm_graph>` to output :ref:`PDM_part_mesh_nodal<part_mesh_nodal>` structures
+  - :ref:`PDM_part_comm_graph<part_comm_graph>`:
+  
+    - Add documentation
+    - Add accessors
+    - Add services for splitting, concatenation and filtering
+    - Add Python and Fortran APIs
+  
+  - :pdmkw:`PDM_part_geom`: Add function to compute vertex normals
+  - :pdmkw:`PDM_part_graph_dual`: Add a function to assemble a generic dual graph from a partitioned graph
+  - :ref:`PDM_part_mesh_nodal<part_mesh_nodal>`:
+  
+    - Add functions to convert groups to element tags, and vice versa
+    - Add accessors
+    - Expand Python API
+  
+  - :ref:`PDM_writer<writer>`: Add accessors
+  - :pdmkw:`PDM_array`: Add more array utilities
+  - :ref:`PDM_exchange_helper<exchange_helper>`: New low-level service to factorize utilities for high-level protocol exchanges
+  - :pdmkw:`PDM_mesh_repart` (**ParaDiGMA**): Enable implicit ``part_id_idx``
+  - :pdmkw:`PDM_part_migrate` (**ParaDiGMA**):
+  
+    - Add accessors
+    - Add function to translate :ref:`PDM_part_comm_graph<part_comm_graph>`
+    - Add unit tests
+
+  |
+
+  **⚠️ Changed**
+
+  - Refactoring CMake files
+  - :pdmkw:`PDM_mpi`: Refactoring to streamline the MPI wrapper
+  - :ref:`PDM_part_mesh_nodal<part_mesh_nodal>`: Dissociate *vertices* and *corners* for embedded :ref:`PDM_part_comm_graph<part_comm_graph>`
+  - :pdmkw:`PDM_reader_gamma`: Comply with the standard for 2D meshes and solutions
+  - Cython: Replace capsules by constructors from raw C pointers
+
+  |
+
+  **🧊 Deprecated**
+
+  - :pdmkw:`PDM_iso_surface` (**ParaDiGMA**): Prototype replaced by the improved :ref:`PDM_isosurface<isosurface>` service
+
+  |
+
+  **❌ Removed**
+
+  - :ref:`PDM_isosurface<isosurface>`: Remove the :pdmkw:`PDM_isosurface_distribution_get` function (was buggy)
+  - Remove deprecated / unused prototypes:
+  
+    - **ParaDiGM**: :pdmkw:`PDM_edge_intersect`, :pdmkw:`PDM_graph_bound`, :pdmkw:`PDM_mesh_adapt`, :pdmkw:`PDM_overlay`, :pdmkw:`PDM_part_bound`, :pdmkw:`PDM_poly_clipp`
+    - **ParaDiGMA**: :pdmkw:`PDM_delaunay`, :pdmkw:`PDM_cavity_operator`, :pdmkw:`PDM_mesh_adaptation`, :pdmkw:`PDM_mesh_generation`
+
+  |
+
+  **🔧 Fixed**
+
+  - Fix compilation warnings
+  - Fix memory leaks
+  - Prevent divisions by zero (:ref:`PDM_dcube_nodal_gen<dcube_nodal_gen>`, :pdmkw:`PDM_hilbert`)
+  - :pdmkw:`PDM_box_tree`: fix vectorization issue with icx (backported from version 2.7.1)
+  - :pdmkw:`PDM_global_mean`: Fix case with n_part = 0
+  - :ref:`PDM_isosurface<isosurface>`:
+  
+    - Fix cases with no surface groups
+    - Return ``iso_edge_vtx_idx`` as ``None`` in Python interface
+    - Fix ellipse equation
+    - Remove degenerate iso-edges
+  
+  - :pdmkw:`PDM_dist_cloud_surf`: Fix case with empty mesh
+  - :pdmkw:`PDM_mesh_intersection`: Fix uninitialized ``tetraisation_pt_type`` parameter
+  - :ref:`PDM_multipart<multipart>`: Fix output :ref:`PDM_part_mesh_nodal<part_mesh_nodal>` memory ownership
+  - :ref:`PDM_part_mesh_nodal<part_mesh_nodal>`:
+  
+    - Fix construction of topological ridges
+    - Improve error messages
+    - Orientation consistency for 2D nodal meshes reconstructed from face->edge connectivity (backported from version 2.7.1)
+  
+  - :ref:`PDM_part_to_part<part_to_part>`: Fix errors in Python interface (use after free, wrong size for stride arrays)
+  - :pdmkw:`PDM_reader_gamma`: Fix orientation of quads in 2D
+  - Renumbering (**ParaDiGMA**): Various fixes
 
 .. dropdown:: Version 2.7.1 (December 2025)
 

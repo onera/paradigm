@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="License" href="license.html" /><link rel="prev" title="Developer tools" href="developer_manual/dev_tools/index.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="License" href="license.html" /><link rel="prev" title="Timer" href="developer_manual/dev_tools/timer.html" />
         <link rel="prefetch" href="_static/logo.svg" as="image" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
-        <title>Release notes - ParaDiGM 2.8.0 documentation</title>
+        <title>Release notes - ParaDiGM 2.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=acfd86a5" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -196,7 +196,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">ParaDiGM 2.8.0 documentation</div></a>
+      <a href="index.html"><div class="brand">ParaDiGM 2.9.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -222,7 +222,7 @@
     <img class="sidebar-logo" src="_static/logo.svg" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">ParaDiGM 2.8.0 documentation</span>
+  <span class="sidebar-brand-text">ParaDiGM 2.9.0 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -287,7 +287,9 @@
 <p class="caption" role="heading"><span class="caption-text">Developer manual</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="developer_manual/coding_rules.html">Coding rules &amp; guidelines</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="developer_manual/dev_tools/index.html">Developer tools</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="developer_manual/dev_tools/index.html">Developer tools</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="developer_manual/dev_tools/exch_helper.html">Exchange helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_manual/dev_tools/timer.html">Timer</a></li>
 </ul>
 </li>
 </ul>
@@ -337,108 +339,73 @@
         <article role="main" id="furo-main-content">
           <section id="release-notes">
 <span id="change-log"></span><h1>Release notes<a class="headerlink" href="#release-notes" title="Link to this heading">¶</a></h1>
-<section id="version-2-8-0-may-2026">
-<h2>Version 2.8.0 (May 2026)<a class="headerlink" href="#version-2-8-0-may-2026" title="Link to this heading">¶</a></h2>
+<section id="version-2-9-0-october-2026">
+<h2>Version 2.9.0 (October 2026)<a class="headerlink" href="#version-2-9-0-october-2026" title="Link to this heading">¶</a></h2>
 <section id="added">
 <h3>🌱 Added<a class="headerlink" href="#added" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p><a class="reference internal" href="user_manual/prepro_algo/isosurface.html#isosurface"><span class="std std-ref">PDM_isosurface</span></a>:</p>
+<li><p><span class="pdmkw">PDM_mesh_intersection</span>: Add unit tests for surface-surface intersection</p></li>
+<li><p>Added deterministic context to partitioning using SCOTCH/PtSCOTCH.</p>
 <ul>
-<li><p>Add accessors</p></li>
-<li><p>Expand Python API</p></li>
-<li><p>Test more configurations in CI</p></li>
+<li><p>Toggleable at runtime via environment variable <span class="pdmkw">PDM_SCOTCH_DETERMINISTIC</span> (0=OFF, 1=ON, default: ON).</p></li>
 </ul>
 </li>
-<li><p><span class="pdmkw">PDM_laplacian_smoothing</span>: New service for Laplacian smoothing</p></li>
-<li><p><span class="pdmkw">PDM_mpi</span>: Add unit tests</p></li>
-<li><p><a class="reference internal" href="user_manual/partitioning/multipart.html#multipart"><span class="std std-ref">PDM_multipart</span></a>: Automatically register a <a class="reference internal" href="user_manual/comm_graph/pcg.html#part-comm-graph"><span class="std std-ref">PDM_part_comm_graph</span></a> to output <a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a> structures</p></li>
-<li><p><a class="reference internal" href="user_manual/comm_graph/pcg.html#part-comm-graph"><span class="std std-ref">PDM_part_comm_graph</span></a>:</p>
+<li><p><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a> :</p>
 <ul>
-<li><p>Add documentation</p></li>
-<li><p>Add accessors</p></li>
-<li><p>Add services for splitting, concatenation and filtering</p></li>
-<li><p>Add Python and Fortran APIs</p></li>
+<li><p>Add computation of dual volumes for 1D meshes</p></li>
+<li><p>Add Python API <code class="docutils literal notranslate"><span class="pre">set_sections_from_elt_vtx</span></code></p></li>
 </ul>
 </li>
-<li><p><span class="pdmkw">PDM_part_geom</span>: Add function to compute vertex normals</p></li>
-<li><p><span class="pdmkw">PDM_part_graph_dual</span>: Add a function to assemble a generic dual graph from a partitioned graph</p></li>
-<li><p><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a>:</p>
-<ul>
-<li><p>Add functions to convert groups to element tags, and vice versa</p></li>
-<li><p>Add accessors</p></li>
-<li><p>Expand Python API</p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="user_manual/io/writer.html#writer"><span class="std std-ref">PDM_writer</span></a>: Add accessors</p></li>
-<li><p><span class="pdmkw">PDM_array</span>: Add more array utilities</p></li>
-<li><p><a class="reference internal" href="developer_manual/dev_tools/exch_helper.html#exchange-helper"><span class="std std-ref">PDM_exchange_helper</span></a>: New low-level service to factorize utilities for high-level protocol exchanges</p></li>
-<li><p><span class="pdmkw">PDM_mesh_repart</span> (<strong>ParaDiGMA</strong>): Enable implicit <code class="docutils literal notranslate"><span class="pre">part_id_idx</span></code></p></li>
-<li><p><span class="pdmkw">PDM_part_migrate</span> (<strong>ParaDiGMA</strong>):</p>
-<ul>
-<li><p>Add accessors</p></li>
-<li><p>Add function to translate <a class="reference internal" href="user_manual/comm_graph/pcg.html#part-comm-graph"><span class="std std-ref">PDM_part_comm_graph</span></a></p></li>
-<li><p>Add unit tests</p></li>
-</ul>
-</li>
+<li><p><span class="pdmkw">PDM_part_mesh</span>: Add computation of dual volumes for 1D meshes</p></li>
 </ul>
 </section>
 <section id="changed">
 <h3>⚠️ Changed<a class="headerlink" href="#changed" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>Refactoring CMake files</p></li>
-<li><p><span class="pdmkw">PDM_mpi</span>: Refactoring to streamline the MPI wrapper</p></li>
-<li><p><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a>: Dissociate <em>vertices</em> and <em>corners</em> for embedded <a class="reference internal" href="user_manual/comm_graph/pcg.html#part-comm-graph"><span class="std std-ref">PDM_part_comm_graph</span></a></p></li>
-<li><p><span class="pdmkw">PDM_reader_gamma</span>: Comply with the standard for 2D meshes and solutions</p></li>
-<li><p>Cython: Replace capsules by constructors from raw C pointers</p></li>
+<li><p><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a> :</p>
+<ul>
+<li><p>Internal structure organized into arrays indexed by dimension to facilitate better factorization in the future</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="user_manual/util/rot.html#rotation"><span class="std std-ref">PDM_rotation</span></a> :</p>
+<ul>
+<li><p>improve precision of quaternions and add unit tests</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="developer_manual/dev_tools/timer.html#timer"><span class="std std-ref">PDM_timer</span></a> :</p>
+<ul>
+<li><p>Add tree timer</p></li>
+<li><p>Json export</p></li>
+<li><p>Inclusive/Exclusive time and basic information for timer (min/max)</p></li>
+<li><p>Synchronize timer on option</p></li>
+<li><p>Pretty print in stdout / log / string</p></li>
+</ul>
+</li>
 </ul>
 </section>
 <section id="deprecated">
 <h3>🧊 Deprecated<a class="headerlink" href="#deprecated" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p><span class="pdmkw">PDM_iso_surface</span> (<strong>ParaDiGMA</strong>): Prototype replaced by the improved <a class="reference internal" href="user_manual/prepro_algo/isosurface.html#isosurface"><span class="std std-ref">PDM_isosurface</span></a> service</p></li>
+<li><p><span class="pdmkw">PDM_part_coarse_mesh</span>: <span class="pdmkw">PDM_part_coarse_mesh_time_get</span> is replaced by <span class="pdmkw">PDM_part_coarse_mesh_dump_times</span> and <span class="pdmkw">PDM_part_coarse_mesh_timer_get</span> (new <a class="reference internal" href="developer_manual/dev_tools/timer.html#timer"><span class="std std-ref">PDM_timer</span></a> )</p></li>
 </ul>
 </section>
 <section id="removed">
 <h3>❌ Removed<a class="headerlink" href="#removed" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p><a class="reference internal" href="user_manual/prepro_algo/isosurface.html#isosurface"><span class="std std-ref">PDM_isosurface</span></a>: Remove the <span class="pdmkw">PDM_isosurface_distribution_get</span> function (was buggy)</p></li>
-<li><p>Remove deprecated / unused prototypes:</p>
-<ul>
-<li><p><strong>ParaDiGM</strong>: <span class="pdmkw">PDM_edge_intersect</span>, <span class="pdmkw">PDM_graph_bound</span>, <span class="pdmkw">PDM_mesh_adapt</span>, <span class="pdmkw">PDM_overlay</span>, <span class="pdmkw">PDM_part_bound</span>, <span class="pdmkw">PDM_poly_clipp</span></p></li>
-<li><p><strong>ParaDiGMA</strong>: <span class="pdmkw">PDM_delaunay</span>, <span class="pdmkw">PDM_cavity_operator</span>, <span class="pdmkw">PDM_mesh_adaptation</span>, <span class="pdmkw">PDM_mesh_generation</span></p></li>
-</ul>
-</li>
+<li><p>Remove fake brace for emacs editor &amp; clean all licensing (outdated)</p></li>
 </ul>
 </section>
 <section id="fixed">
 <h3>🔧 Fixed<a class="headerlink" href="#fixed" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>Fix compilation warnings</p></li>
-<li><p>Fix memory leaks</p></li>
-<li><p>Prevent divisions by zero (<a class="reference internal" href="user_manual/simple_mesh_gen/dcube_nodal.html#dcube-nodal-gen"><span class="std std-ref">PDM_dcube_nodal_gen</span></a>, <span class="pdmkw">PDM_hilbert</span>)</p></li>
-<li><p><span class="pdmkw">PDM_box_tree</span>: fix vectorization issue with icx (backported from version 2.7.1)</p></li>
-<li><p><span class="pdmkw">PDM_global_mean</span>: Fix case with n_part = 0</p></li>
-<li><p><a class="reference internal" href="user_manual/prepro_algo/isosurface.html#isosurface"><span class="std std-ref">PDM_isosurface</span></a>:</p>
+<li><p><span class="pdmkw">PDM_mesh_intersection</span>: Fix numerical issues in surface-surface intersection</p></li>
+<li><p><span class="pdmkw">PDM_domain_interface_translate_face2vtx</span>: prevent crash caused by <code class="docutils literal notranslate"><span class="pre">n_face_this_edge</span> <span class="pre">==</span> <span class="pre">2</span></code> assertion</p></li>
+<li><p><span class="pdmkw">PDM_para_octree</span> :</p>
 <ul>
-<li><p>Fix cases with no surface groups</p></li>
-<li><p>Return <code class="docutils literal notranslate"><span class="pre">iso_edge_vtx_idx</span></code> as <code class="docutils literal notranslate"><span class="pre">None</span></code> in Python interface</p></li>
-<li><p>Fix ellipse equation</p></li>
-<li><p>Remove degenerate iso-edges</p></li>
+<li><p>Fix heap allocation, resolving the “heap is full” crash in octree construction</p></li>
 </ul>
 </li>
-<li><p><span class="pdmkw">PDM_dist_cloud_surf</span>: Fix case with empty mesh</p></li>
-<li><p><span class="pdmkw">PDM_mesh_intersection</span>: Fix uninitialized <code class="docutils literal notranslate"><span class="pre">tetraisation_pt_type</span></code> parameter</p></li>
-<li><p><a class="reference internal" href="user_manual/partitioning/multipart.html#multipart"><span class="std std-ref">PDM_multipart</span></a>: Fix output <a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a> memory ownership</p></li>
-<li><p><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a>:</p>
-<ul>
-<li><p>Fix construction of topological ridges</p></li>
-<li><p>Improve error messages</p></li>
-<li><p>Orientation consistency for 2D nodal meshes reconstructed from face-&gt;edge connectivity (backported from version 2.7.1)</p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="user_manual/comm_graph/ptp.html#part-to-part"><span class="std std-ref">PDM_part_to_part</span></a>: Fix errors in Python interface (use after free, wrong size for stride arrays)</p></li>
-<li><p><span class="pdmkw">PDM_reader_gamma</span>: Fix orientation of quads in 2D</p></li>
-<li><p>Renumbering (<strong>ParaDiGMA</strong>): Various fixes</p></li>
+<li><p><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a>: Fix <cite>parent_to_local</cite> indirection for hybrid 2D meshes</p></li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -448,6 +415,114 @@
 <section id="earlier-versions">
 <h2>Earlier versions<a class="headerlink" href="#earlier-versions" title="Link to this heading">¶</a></h2>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Version 2.8.0 (May 2026)</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text"><strong>🌱 Added</strong></p>
+<ul class="simple">
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/prepro_algo/isosurface.html#isosurface"><span class="std std-ref">PDM_isosurface</span></a>:</p>
+<ul>
+<li><p class="sd-card-text">Add accessors</p></li>
+<li><p class="sd-card-text">Expand Python API</p></li>
+<li><p class="sd-card-text">Test more configurations in CI</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_laplacian_smoothing</span>: New service for Laplacian smoothing</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_mpi</span>: Add unit tests</p></li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/partitioning/multipart.html#multipart"><span class="std std-ref">PDM_multipart</span></a>: Automatically register a <a class="reference internal" href="user_manual/comm_graph/pcg.html#part-comm-graph"><span class="std std-ref">PDM_part_comm_graph</span></a> to output <a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a> structures</p></li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/comm_graph/pcg.html#part-comm-graph"><span class="std std-ref">PDM_part_comm_graph</span></a>:</p>
+<ul>
+<li><p class="sd-card-text">Add documentation</p></li>
+<li><p class="sd-card-text">Add accessors</p></li>
+<li><p class="sd-card-text">Add services for splitting, concatenation and filtering</p></li>
+<li><p class="sd-card-text">Add Python and Fortran APIs</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_part_geom</span>: Add function to compute vertex normals</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_part_graph_dual</span>: Add a function to assemble a generic dual graph from a partitioned graph</p></li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a>:</p>
+<ul>
+<li><p class="sd-card-text">Add functions to convert groups to element tags, and vice versa</p></li>
+<li><p class="sd-card-text">Add accessors</p></li>
+<li><p class="sd-card-text">Expand Python API</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/io/writer.html#writer"><span class="std std-ref">PDM_writer</span></a>: Add accessors</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_array</span>: Add more array utilities</p></li>
+<li><p class="sd-card-text"><a class="reference internal" href="developer_manual/dev_tools/exch_helper.html#exchange-helper"><span class="std std-ref">PDM_exchange_helper</span></a>: New low-level service to factorize utilities for high-level protocol exchanges</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_mesh_repart</span> (<strong>ParaDiGMA</strong>): Enable implicit <code class="docutils literal notranslate"><span class="pre">part_id_idx</span></code></p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_part_migrate</span> (<strong>ParaDiGMA</strong>):</p>
+<ul>
+<li><p class="sd-card-text">Add accessors</p></li>
+<li><p class="sd-card-text">Add function to translate <a class="reference internal" href="user_manual/comm_graph/pcg.html#part-comm-graph"><span class="std std-ref">PDM_part_comm_graph</span></a></p></li>
+<li><p class="sd-card-text">Add unit tests</p></li>
+</ul>
+</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p class="sd-card-text"><strong>⚠️ Changed</strong></p>
+<ul class="simple">
+<li><p class="sd-card-text">Refactoring CMake files</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_mpi</span>: Refactoring to streamline the MPI wrapper</p></li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a>: Dissociate <em>vertices</em> and <em>corners</em> for embedded <a class="reference internal" href="user_manual/comm_graph/pcg.html#part-comm-graph"><span class="std std-ref">PDM_part_comm_graph</span></a></p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_reader_gamma</span>: Comply with the standard for 2D meshes and solutions</p></li>
+<li><p class="sd-card-text">Cython: Replace capsules by constructors from raw C pointers</p></li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p class="sd-card-text"><strong>🧊 Deprecated</strong></p>
+<ul class="simple">
+<li><p class="sd-card-text"><span class="pdmkw">PDM_iso_surface</span> (<strong>ParaDiGMA</strong>): Prototype replaced by the improved <a class="reference internal" href="user_manual/prepro_algo/isosurface.html#isosurface"><span class="std std-ref">PDM_isosurface</span></a> service</p></li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p class="sd-card-text"><strong>❌ Removed</strong></p>
+<ul class="simple">
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/prepro_algo/isosurface.html#isosurface"><span class="std std-ref">PDM_isosurface</span></a>: Remove the <span class="pdmkw">PDM_isosurface_distribution_get</span> function (was buggy)</p></li>
+<li><p class="sd-card-text">Remove deprecated / unused prototypes:</p>
+<ul>
+<li><p class="sd-card-text"><strong>ParaDiGM</strong>: <span class="pdmkw">PDM_edge_intersect</span>, <span class="pdmkw">PDM_graph_bound</span>, <span class="pdmkw">PDM_mesh_adapt</span>, <span class="pdmkw">PDM_overlay</span>, <span class="pdmkw">PDM_part_bound</span>, <span class="pdmkw">PDM_poly_clipp</span></p></li>
+<li><p class="sd-card-text"><strong>ParaDiGMA</strong>: <span class="pdmkw">PDM_delaunay</span>, <span class="pdmkw">PDM_cavity_operator</span>, <span class="pdmkw">PDM_mesh_adaptation</span>, <span class="pdmkw">PDM_mesh_generation</span></p></li>
+</ul>
+</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p class="sd-card-text"><strong>🔧 Fixed</strong></p>
+<ul class="simple">
+<li><p class="sd-card-text">Fix compilation warnings</p></li>
+<li><p class="sd-card-text">Fix memory leaks</p></li>
+<li><p class="sd-card-text">Prevent divisions by zero (<a class="reference internal" href="user_manual/simple_mesh_gen/dcube_nodal.html#dcube-nodal-gen"><span class="std std-ref">PDM_dcube_nodal_gen</span></a>, <span class="pdmkw">PDM_hilbert</span>)</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_box_tree</span>: fix vectorization issue with icx (backported from version 2.7.1)</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_global_mean</span>: Fix case with n_part = 0</p></li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/prepro_algo/isosurface.html#isosurface"><span class="std std-ref">PDM_isosurface</span></a>:</p>
+<ul>
+<li><p class="sd-card-text">Fix cases with no surface groups</p></li>
+<li><p class="sd-card-text">Return <code class="docutils literal notranslate"><span class="pre">iso_edge_vtx_idx</span></code> as <code class="docutils literal notranslate"><span class="pre">None</span></code> in Python interface</p></li>
+<li><p class="sd-card-text">Fix ellipse equation</p></li>
+<li><p class="sd-card-text">Remove degenerate iso-edges</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_dist_cloud_surf</span>: Fix case with empty mesh</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_mesh_intersection</span>: Fix uninitialized <code class="docutils literal notranslate"><span class="pre">tetraisation_pt_type</span></code> parameter</p></li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/partitioning/multipart.html#multipart"><span class="std std-ref">PDM_multipart</span></a>: Fix output <a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a> memory ownership</p></li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/struct/pmn.html#part-mesh-nodal"><span class="std std-ref">PDM_part_mesh_nodal</span></a>:</p>
+<ul>
+<li><p class="sd-card-text">Fix construction of topological ridges</p></li>
+<li><p class="sd-card-text">Improve error messages</p></li>
+<li><p class="sd-card-text">Orientation consistency for 2D nodal meshes reconstructed from face-&gt;edge connectivity (backported from version 2.7.1)</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><a class="reference internal" href="user_manual/comm_graph/ptp.html#part-to-part"><span class="std std-ref">PDM_part_to_part</span></a>: Fix errors in Python interface (use after free, wrong size for stride arrays)</p></li>
+<li><p class="sd-card-text"><span class="pdmkw">PDM_reader_gamma</span>: Fix orientation of quads in 2D</p></li>
+<li><p class="sd-card-text">Renumbering (<strong>ParaDiGMA</strong>): Various fixes</p></li>
+</ul>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">Version 2.7.1 (December 2025)</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
 <p class="sd-card-text"><strong>🔧 Fixed</strong></p>
@@ -1056,14 +1131,14 @@
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="developer_manual/dev_tools/index.html">
+          <a class="prev-page" href="developer_manual/dev_tools/timer.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Developer tools</div>
+                <div class="title">Timer</div>
                 
               </div>
             </a>
@@ -1071,7 +1146,7 @@
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2025, ONERA The French Aerospace Lab
+                Copyright &#169; 2026, ONERA The French Aerospace Lab
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
@@ -1098,7 +1173,7 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Release notes</a><ul>
-<li><a class="reference internal" href="#version-2-8-0-may-2026">Version 2.8.0 (May 2026)</a><ul>
+<li><a class="reference internal" href="#version-2-9-0-october-2026">Version 2.9.0 (October 2026)</a><ul>
 <li><a class="reference internal" href="#added">🌱 Added</a></li>
 <li><a class="reference internal" href="#changed">⚠️ Changed</a></li>
 <li><a class="reference internal" href="#deprecated">🧊 Deprecated</a></li>
@@ -1118,13 +1193,13 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=69ff2ef9"></script>
+</div><script src="_static/documentation_options.js?v=182a64a0"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
-    <script src="_static/js/custom.js?v=3597c2b8"></script>
+    <script src="_static/js/custom.js?v=c7b75b1d"></script>
     </body>
 </html>

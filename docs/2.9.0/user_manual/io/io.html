@@ -1,0 +1,1636 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Writer" href="writer.html" /><link rel="prev" title="Parallel I/O" href="index.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
+        <title>IO - ParaDiGM 2.9.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
+  --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+  --color-foreground-primary: #23373b;
+  --color-brand-primary: #1c64ff;
+  --color-pdmkw: #6d80a1;
+  --color-link: #366ce4;
+  --color-highlight-on-target: #fff4d1;
+  --color-foreground-tertiary: #d9d9da;
+  --color-background-tertiary: #f1f2f7;
+  --color-api-name: #d63736;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #263238;
+  --color-code-foreground: #EEFFFF;
+  --color-brand-primary: #3d94ff;
+  --color-pdmkw: #879aad;
+  --color-link: #5ca5ff;
+  --color-highlight-on-target: #2e0c14;
+  --color-foreground-tertiary: #3f4144;
+  --color-background-secondary: #2a2c34;
+  --color-background-tertiary: #1d1f22;
+  --color-api-name: #ff6d6c;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #263238;
+  --color-code-foreground: #EEFFFF;
+  --color-brand-primary: #3d94ff;
+  --color-pdmkw: #879aad;
+  --color-link: #5ca5ff;
+  --color-highlight-on-target: #2e0c14;
+  --color-foreground-tertiary: #3f4144;
+  --color-background-secondary: #2a2c34;
+  --color-background-tertiary: #1d1f22;
+  --color-api-name: #ff6d6c;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ParaDiGM 2.9.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ParaDiGM 2.9.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/general.html">General presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/faq.html">FAQ</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../simple_mesh_gen/index.html">Simple mesh generation</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Simple mesh generation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../simple_mesh_gen/dcube_nodal.html">Distributed Nodal Square/Cube Mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple_mesh_gen/generate_mesh.html">Generation of simple partitioned meshes</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../partitioning/index.html">Partitioning</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Partitioning</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../partitioning/multipart.html">Multipart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../partitioning/extract_part.html">Extract part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../partitioning/part_extension.html">Part extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../partitioning/renumbering.html">Renumbering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../comm_graph/index.html">Communication graphs</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Communication graphs</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../comm_graph/ptp.html">Part to Part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm_graph/btp.html">Block to Part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm_graph/ptb.html">Part to Block</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comm_graph/pcg.html">Part Comm Graph</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../gnum/index.html">Global numbering</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../prepro_algo/index.html">Pre-/co-/post-processing</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Pre-/co-/post-processing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../prepro_algo/mesh_location.html">Mesh location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../prepro_algo/closest_points.html">Closest points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../prepro_algo/isosurface.html">Iso-surfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../mesh_transform/index.html">Mesh Transformations</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Mesh Transformations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mesh_transform/mesh_deform.html">Mesh Deform</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Parallel I/O</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Parallel I/O</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">IO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="writer.html">Writer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../struct/index.html">Mesh Structures</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Mesh Structures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../struct/pmn.html">Partitioned Nodal Mesh</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../util/index.html">Utils</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../util/rot.html">Rotations in 3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util/connec_transform.html">Connectivity transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util/mesh_eval.html">Mesh Evaluation Utils</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_manual/coding_rules.html">Coding rules &amp; guidelines</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer_manual/dev_tools/index.html">Developer tools</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer_manual/dev_tools/exch_helper.html">Exchange helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer_manual/dev_tools/timer.html">Timer</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Release notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/user_manual/io/io.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="io">
+<span id="id1"></span><h1>IO<a class="headerlink" href="#io" title="Link to this heading">¶</a></h1>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
+<p><strong>IO</strong> is a service for managing parallel file reading and writing.</p>
+</section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Create a directory</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412PDM_io_mkdirPKc">
+<span id="_CPPv312PDM_io_mkdirPKc"></span><span id="_CPPv212PDM_io_mkdirPKc"></span><span id="PDM_io_mkdir__cCP"></span><span class="target" id="pdm__io_8h_1ae979ea39e0ee65f6b72dc763206033dd"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_mkdir</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">path</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412PDM_io_mkdirPKc" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Create a directory. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>path</strong> – <strong>[in]</strong> Path to new directory</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">0 if successful, -1 else </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-1">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_mkdir">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_mkdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">path</span></em>, <em class="sig-param"><span class="pre">code</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_mkdir" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Create a directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>path</strong><em> [</em><em>character</em><em>,</em><em>in</em><em>]</em> :: Path to new directory</p></li>
+<li><p class="sd-card-text"><strong>code</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: 0 if successful, -1 else</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Open a file</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-2">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411PDM_io_openPKcK12PDM_io_fmt_tK13PDM_io_suff_tPKcK15PDM_io_backup_tK13PDM_io_kind_tK12PDM_io_mod_tK15PDM_io_endian_t12PDM_MPI_CommdPP13PDM_io_file_tP11PDM_l_num_t">
+<span id="_CPPv311PDM_io_openPKcK12PDM_io_fmt_tK13PDM_io_suff_tPKcK15PDM_io_backup_tK13PDM_io_kind_tK12PDM_io_mod_tK15PDM_io_endian_t12PDM_MPI_CommdPP13PDM_io_file_tP11PDM_l_num_t"></span><span id="_CPPv211PDM_io_openPKcK12PDM_io_fmt_tK13PDM_io_suff_tPKcK15PDM_io_backup_tK13PDM_io_kind_tK12PDM_io_mod_tK15PDM_io_endian_t12PDM_MPI_CommdPP13PDM_io_file_tP11PDM_l_num_t"></span><span id="PDM_io_open__cCP.PDM_io_fmt_tC.PDM_io_suff_tC.cCP.PDM_io_backup_tC.PDM_io_kind_tC.PDM_io_mod_tC.PDM_io_endian_tC.PDM_MPI_Comm.double.PDM_io_file_tPP.PDM_l_num_tP"></span><span class="target" id="pdm__io_8h_1a9fcdd7230f2bb8e694097ce66f640a28"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_open</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">nom</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv412PDM_io_fmt_t" title="PDM_io_fmt_t"><span class="n"><span class="pre">PDM_io_fmt_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">fmt</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv413PDM_io_suff_t" title="PDM_io_suff_t"><span class="n"><span class="pre">PDM_io_suff_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">suff_t</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">suff_u</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv415PDM_io_backup_t" title="PDM_io_backup_t"><span class="n"><span class="pre">PDM_io_backup_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">s_backup</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv413PDM_io_kind_t" title="PDM_io_kind_t"><span class="n"><span class="pre">PDM_io_kind_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">acces</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv412PDM_io_mod_t" title="PDM_io_mod_t"><span class="n"><span class="pre">PDM_io_mod_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mode</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv415PDM_io_endian_t" title="PDM_io_endian_t"><span class="n"><span class="pre">PDM_io_endian_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">endian</span></span>, <span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">prop_noeuds_actifs</span></span>, <span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">unite</span></span>, <span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ierr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411PDM_io_openPKcK12PDM_io_fmt_tK13PDM_io_suff_tPKcK15PDM_io_backup_tK13PDM_io_kind_tK12PDM_io_mod_tK15PDM_io_endian_t12PDM_MPI_CommdPP13PDM_io_file_tP11PDM_l_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Open a file for parallel access. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>nom</strong> – <strong>[in]</strong> File name </p></li>
+<li><p class="sd-card-text"><strong>fmt</strong> – <strong>[in]</strong> Text of Binary format </p></li>
+<li><p class="sd-card-text"><strong>suff_t</strong> – <strong>[in]</strong> Type of suffix (manual or automatic) </p></li>
+<li><p class="sd-card-text"><strong>suff_u</strong> – <strong>[in]</strong> Suffix (if manual) </p></li>
+<li><p class="sd-card-text"><strong>s_backup</strong> – <strong>[in]</strong> Enables the backup of a pre-existing file in write mode </p></li>
+<li><p class="sd-card-text"><strong>acces</strong> – <strong>[in]</strong> Type (parallel with MPI-IO, parallel without MPI-IO, sequential) </p></li>
+<li><p class="sd-card-text"><strong>mode</strong> – <strong>[in]</strong> Access mode (read, write, read/write) </p></li>
+<li><p class="sd-card-text"><strong>endian</strong> – <strong>[in]</strong> Endian type (big, little or native) </p></li>
+<li><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> MPI communicator </p></li>
+<li><p class="sd-card-text"><strong>prop_noeuds_actifs</strong> – <strong>[in]</strong> Proportion of active nodes </p></li>
+<li><p class="sd-card-text"><strong>unite</strong> – <strong>[out]</strong> PDM_io_file_t instance </p></li>
+<li><p class="sd-card-text"><strong>ierr</strong> – <strong>[out]</strong> Indicates whether the file is of type PDM_io or not (for read-only opening only) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv413PDM_io_type_t">
+<span id="_CPPv313PDM_io_type_t"></span><span id="_CPPv213PDM_io_type_t"></span><span class="target" id="pdm__io_8h_1ab89be487d781f75a5c12189f5b6b6d75"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_type_t</span></span></span><a class="headerlink" href="#_CPPv413PDM_io_type_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text"><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_type_t12PDM_IO_T_INTE">
+<span id="_CPPv3N13PDM_io_type_t12PDM_IO_T_INTE"></span><span id="_CPPv2N13PDM_io_type_t12PDM_IO_T_INTE"></span><span class="target" id="pdm__io_8h_1ab89be487d781f75a5c12189f5b6b6d75a5a21e63e486b8ae05aabff380a9afff7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_T_INT</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_type_t12PDM_IO_T_INTE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_type_t13PDM_IO_T_LONGE">
+<span id="_CPPv3N13PDM_io_type_t13PDM_IO_T_LONGE"></span><span id="_CPPv2N13PDM_io_type_t13PDM_IO_T_LONGE"></span><span class="target" id="pdm__io_8h_1ab89be487d781f75a5c12189f5b6b6d75a677e395c982c82f6d222310aadb47475"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_T_LONG</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_type_t13PDM_IO_T_LONGE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_type_t15PDM_IO_T_DOUBLEE">
+<span id="_CPPv3N13PDM_io_type_t15PDM_IO_T_DOUBLEE"></span><span id="_CPPv2N13PDM_io_type_t15PDM_IO_T_DOUBLEE"></span><span class="target" id="pdm__io_8h_1ab89be487d781f75a5c12189f5b6b6d75ac7d8de6d99fecc279d3ff54d707ae9b2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_T_DOUBLE</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_type_t15PDM_IO_T_DOUBLEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_type_t14PDM_IO_T_FLOATE">
+<span id="_CPPv3N13PDM_io_type_t14PDM_IO_T_FLOATE"></span><span id="_CPPv2N13PDM_io_type_t14PDM_IO_T_FLOATE"></span><span class="target" id="pdm__io_8h_1ab89be487d781f75a5c12189f5b6b6d75a542b422a34edbe82a8cefde7ceaf37a2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_T_FLOAT</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_type_t14PDM_IO_T_FLOATE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_type_t13PDM_IO_T_CHARE">
+<span id="_CPPv3N13PDM_io_type_t13PDM_IO_T_CHARE"></span><span id="_CPPv2N13PDM_io_type_t13PDM_IO_T_CHARE"></span><span class="target" id="pdm__io_8h_1ab89be487d781f75a5c12189f5b6b6d75a84272e4b409edd7196612c1d6c032c0d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_T_CHAR</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_type_t13PDM_IO_T_CHARE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv413PDM_io_suff_t">
+<span id="_CPPv313PDM_io_suff_t"></span><span id="_CPPv213PDM_io_suff_t"></span><span class="target" id="pdm__io_8h_1a4bb234381020b916d3e2a37eca56501e"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_suff_t</span></span></span><a class="headerlink" href="#_CPPv413PDM_io_suff_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text"><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_suff_t16PDM_IO_SUFF_AUTOE">
+<span id="_CPPv3N13PDM_io_suff_t16PDM_IO_SUFF_AUTOE"></span><span id="_CPPv2N13PDM_io_suff_t16PDM_IO_SUFF_AUTOE"></span><span class="target" id="pdm__io_8h_1a4bb234381020b916d3e2a37eca56501ea4156c5699d66446d04ef1ade79bff528"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_SUFF_AUTO</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_suff_t16PDM_IO_SUFF_AUTOE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_suff_t15PDM_IO_SUFF_MANE">
+<span id="_CPPv3N13PDM_io_suff_t15PDM_IO_SUFF_MANE"></span><span id="_CPPv2N13PDM_io_suff_t15PDM_IO_SUFF_MANE"></span><span class="target" id="pdm__io_8h_1a4bb234381020b916d3e2a37eca56501ea24de442a9b27d321ee1a8c47fa5d1f94"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_SUFF_MAN</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_suff_t15PDM_IO_SUFF_MANE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv413PDM_io_kind_t">
+<span id="_CPPv313PDM_io_kind_t"></span><span id="_CPPv213PDM_io_kind_t"></span><span class="target" id="pdm__io_8h_1a412170aa019c1b5f45de586d9b8cd0c1"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_kind_t</span></span></span><a class="headerlink" href="#_CPPv413PDM_io_kind_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text"><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_EOE">
+<span id="_CPPv3N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_EOE"></span><span id="_CPPv2N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_EOE"></span><span class="target" id="pdm__io_8h_1a412170aa019c1b5f45de586d9b8cd0c1a640c37f34294aaf5dc0a1ea2ef5b056e"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_KIND_MPIIO_EO</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_EOE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_IPE">
+<span id="_CPPv3N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_IPE"></span><span id="_CPPv2N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_IPE"></span><span class="target" id="pdm__io_8h_1a412170aa019c1b5f45de586d9b8cd0c1a9e967f701077e440e2cbb11491c84bd6"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_KIND_MPIIO_IP</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_IPE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_kind_t22PDM_IO_KIND_MPI_SIMPLEE">
+<span id="_CPPv3N13PDM_io_kind_t22PDM_IO_KIND_MPI_SIMPLEE"></span><span id="_CPPv2N13PDM_io_kind_t22PDM_IO_KIND_MPI_SIMPLEE"></span><span class="target" id="pdm__io_8h_1a412170aa019c1b5f45de586d9b8cd0c1aa75a11b297bdb0650656410af192acbf"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_KIND_MPI_SIMPLE</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_kind_t22PDM_IO_KIND_MPI_SIMPLEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13PDM_io_kind_t15PDM_IO_KIND_SEQE">
+<span id="_CPPv3N13PDM_io_kind_t15PDM_IO_KIND_SEQE"></span><span id="_CPPv2N13PDM_io_kind_t15PDM_IO_KIND_SEQE"></span><span class="target" id="pdm__io_8h_1a412170aa019c1b5f45de586d9b8cd0c1a82e6f193bebc343ce89ecf9a7b8e8a79"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_KIND_SEQ</span></span></span><a class="headerlink" href="#_CPPv4N13PDM_io_kind_t15PDM_IO_KIND_SEQE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv412PDM_io_mod_t">
+<span id="_CPPv312PDM_io_mod_t"></span><span id="_CPPv212PDM_io_mod_t"></span><span class="target" id="pdm__io_8h_1af0df2e9248d5033e163b88dc3b5f66f4"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_mod_t</span></span></span><a class="headerlink" href="#_CPPv412PDM_io_mod_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text"><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12PDM_io_mod_t15PDM_IO_MOD_READE">
+<span id="_CPPv3N12PDM_io_mod_t15PDM_IO_MOD_READE"></span><span id="_CPPv2N12PDM_io_mod_t15PDM_IO_MOD_READE"></span><span class="target" id="pdm__io_8h_1af0df2e9248d5033e163b88dc3b5f66f4a8c2b46749805533481e68acd337ddfcd"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_MOD_READ</span></span></span><a class="headerlink" href="#_CPPv4N12PDM_io_mod_t15PDM_IO_MOD_READE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12PDM_io_mod_t16PDM_IO_MOD_WRITEE">
+<span id="_CPPv3N12PDM_io_mod_t16PDM_IO_MOD_WRITEE"></span><span id="_CPPv2N12PDM_io_mod_t16PDM_IO_MOD_WRITEE"></span><span class="target" id="pdm__io_8h_1af0df2e9248d5033e163b88dc3b5f66f4aff53f0cb352e64de568dccca1295474e"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_MOD_WRITE</span></span></span><a class="headerlink" href="#_CPPv4N12PDM_io_mod_t16PDM_IO_MOD_WRITEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12PDM_io_mod_t17PDM_IO_MOD_APPENDE">
+<span id="_CPPv3N12PDM_io_mod_t17PDM_IO_MOD_APPENDE"></span><span id="_CPPv2N12PDM_io_mod_t17PDM_IO_MOD_APPENDE"></span><span class="target" id="pdm__io_8h_1af0df2e9248d5033e163b88dc3b5f66f4a104225776d855d1fd09e3db16ce9913d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_MOD_APPEND</span></span></span><a class="headerlink" href="#_CPPv4N12PDM_io_mod_t17PDM_IO_MOD_APPENDE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv412PDM_io_fmt_t">
+<span id="_CPPv312PDM_io_fmt_t"></span><span id="_CPPv212PDM_io_fmt_t"></span><span class="target" id="pdm__io_8h_1a1c286a13548decadada15b7fa417d8f9"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_fmt_t</span></span></span><a class="headerlink" href="#_CPPv412PDM_io_fmt_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text"><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12PDM_io_fmt_t14PDM_IO_FMT_TXTE">
+<span id="_CPPv3N12PDM_io_fmt_t14PDM_IO_FMT_TXTE"></span><span id="_CPPv2N12PDM_io_fmt_t14PDM_IO_FMT_TXTE"></span><span class="target" id="pdm__io_8h_1a1c286a13548decadada15b7fa417d8f9a41e72137cda951f97a3fd530edfc41fb"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_FMT_TXT</span></span></span><a class="headerlink" href="#_CPPv4N12PDM_io_fmt_t14PDM_IO_FMT_TXTE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N12PDM_io_fmt_t14PDM_IO_FMT_BINE">
+<span id="_CPPv3N12PDM_io_fmt_t14PDM_IO_FMT_BINE"></span><span id="_CPPv2N12PDM_io_fmt_t14PDM_IO_FMT_BINE"></span><span class="target" id="pdm__io_8h_1a1c286a13548decadada15b7fa417d8f9aa25ceab44ab707f143bc763309fad06d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_FMT_BIN</span></span></span><a class="headerlink" href="#_CPPv4N12PDM_io_fmt_t14PDM_IO_FMT_BINE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv415PDM_io_backup_t">
+<span id="_CPPv315PDM_io_backup_t"></span><span id="_CPPv215PDM_io_backup_t"></span><span class="target" id="pdm__io_8h_1aa2cc9633fb65ccf562da5abf6c89a1bb"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_backup_t</span></span></span><a class="headerlink" href="#_CPPv415PDM_io_backup_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text"><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N15PDM_io_backup_t16PDM_IO_BACKUP_ONE">
+<span id="_CPPv3N15PDM_io_backup_t16PDM_IO_BACKUP_ONE"></span><span id="_CPPv2N15PDM_io_backup_t16PDM_IO_BACKUP_ONE"></span><span class="target" id="pdm__io_8h_1aa2cc9633fb65ccf562da5abf6c89a1bbabdab1d63a79e13d41724e2af8476a7e2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_BACKUP_ON</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_io_backup_t16PDM_IO_BACKUP_ONE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N15PDM_io_backup_t17PDM_IO_BACKUP_OFFE">
+<span id="_CPPv3N15PDM_io_backup_t17PDM_IO_BACKUP_OFFE"></span><span id="_CPPv2N15PDM_io_backup_t17PDM_IO_BACKUP_OFFE"></span><span class="target" id="pdm__io_8h_1aa2cc9633fb65ccf562da5abf6c89a1bba044281ca8898b40ab32e51d8d5a9e637"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_BACKUP_OFF</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_io_backup_t17PDM_IO_BACKUP_OFFE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-3">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_open">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">nom</span></em>, <em class="sig-param"><span class="pre">fmt</span></em>, <em class="sig-param"><span class="pre">suff_t</span></em>, <em class="sig-param"><span class="pre">suff_u</span></em>, <em class="sig-param"><span class="pre">s_backup</span></em>, <em class="sig-param"><span class="pre">acces</span></em>, <em class="sig-param"><span class="pre">mode</span></em>, <em class="sig-param"><span class="pre">endian</span></em>, <em class="sig-param"><span class="pre">comm</span></em>, <em class="sig-param"><span class="pre">prop_noeuds_actifs</span></em>, <em class="sig-param"><span class="pre">unite</span></em>, <em class="sig-param"><span class="pre">ierr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_open" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Open a file for parallel access</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>nom</strong><em> [</em><em>character</em><em>]</em> :: File name</p></li>
+<li><p class="sd-card-text"><strong>fmt</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: ASCII or binary file</p></li>
+<li><p class="sd-card-text"><strong>suff_t</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Suffix type (manual/automatic)</p></li>
+<li><p class="sd-card-text"><strong>suff_u</strong><em> [</em><em>character</em><em>]</em> :: Suffix (if manual)</p></li>
+<li><p class="sd-card-text"><strong>s_backup</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Enable backup of preexisting file in writing mode</p></li>
+<li><p class="sd-card-text"><strong>acces</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Access type (parallel with/without MPI-IO, serial)</p></li>
+<li><p class="sd-card-text"><strong>mode</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em></p></li>
+<li><p class="sd-card-text"><strong>endian</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Endian type (little or big)</p></li>
+<li><p class="sd-card-text"><strong>comm</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: MPI communicator</p></li>
+<li><p class="sd-card-text"><strong>prop_noeuds_actifs</strong><em> [</em><em>real</em><em>,</em><em>in</em><em>]</em> :: Proportion of active nodes</p></li>
+<li><p class="sd-card-text"><strong>unite</strong><em> [</em><em>c_ptr</em><em>,</em><em>out</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>ierr</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Error code (indicates whether the file is of type PDM_io_file_t or not (for read-only opening only))</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">General file information</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-4">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv420PDM_io_file_name_getP13PDM_io_file_t">
+<span id="_CPPv320PDM_io_file_name_getP13PDM_io_file_t"></span><span id="_CPPv220PDM_io_file_name_getP13PDM_io_file_t"></span><span id="PDM_io_file_name_get__PDM_io_file_tP"></span><span class="target" id="pdm__io_8h_1a04b163ddacc0f10667d05dc83f6e8657"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_file_name_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420PDM_io_file_name_getP13PDM_io_file_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Return the file name (or NULL if no file) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Name of the file </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv415PDM_io_comm_getP13PDM_io_file_tP12PDM_MPI_Comm">
+<span id="_CPPv315PDM_io_comm_getP13PDM_io_file_tP12PDM_MPI_Comm"></span><span id="_CPPv215PDM_io_comm_getP13PDM_io_file_tP12PDM_MPI_Comm"></span><span id="PDM_io_comm_get__PDM_io_file_tP.PDM_MPI_CommP"></span><span class="target" id="pdm__io_8h_1a4dc1e6a7c7a4809ea90b531e73afad04"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_comm_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pdm_mpi_comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415PDM_io_comm_getP13PDM_io_file_tP12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Returns the file communicator. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>pdm_mpi_comm</strong> – <strong>[out]</strong> MPI communicator </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411PDM_io_dumpP13PDM_io_file_t">
+<span id="_CPPv311PDM_io_dumpP13PDM_io_file_t"></span><span id="_CPPv211PDM_io_dumpP13PDM_io_file_t"></span><span id="PDM_io_dump__PDM_io_file_tP"></span><span class="target" id="pdm__io_8h_1a3de04965a07a56a0acd6fb6432873554"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_dump</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411PDM_io_dumpP13PDM_io_file_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Shows file information. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-5">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_comm_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_comm_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">f_comm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_comm_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Returns the file communicator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>f_comm</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: MPI communicator</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_dump">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_dump" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Shows file information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Manage cursor in a file</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-6">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411PDM_io_seekP13PDM_io_file_tK11PDM_g_num_tK13PDM_io_seek_t">
+<span id="_CPPv311PDM_io_seekP13PDM_io_file_tK11PDM_g_num_tK13PDM_io_seek_t"></span><span id="_CPPv211PDM_io_seekP13PDM_io_file_tK11PDM_g_num_tK13PDM_io_seek_t"></span><span id="PDM_io_seek__PDM_io_file_tP.PDM_g_num_tC.PDM_io_seek_tC"></span><span class="target" id="pdm__io_8h_1a426252dc9922c6c9af2f0c0d6a3d68b6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_seek</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">offset</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_io_seek_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">seek</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411PDM_io_seekP13PDM_io_file_tK11PDM_g_num_tK13PDM_io_seek_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Set the file position indicator. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>offset</strong> – <strong>[in]</strong> Address </p></li>
+<li><p class="sd-card-text"><strong>seek</strong> – <strong>[in]</strong> Origin type </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411PDM_io_tellP13PDM_io_file_t">
+<span id="_CPPv311PDM_io_tellP13PDM_io_file_t"></span><span id="_CPPv211PDM_io_tellP13PDM_io_file_t"></span><span id="PDM_io_tell__PDM_io_file_tP"></span><span class="target" id="pdm__io_8h_1aa7c35bf7cd4e6cc6f8118324183ea881"></span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_tell</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411PDM_io_tellP13PDM_io_file_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Return the current file position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Current position in file </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-7" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-7">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_seek">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_seek</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">offset</span></em>, <em class="sig-param"><span class="pre">seek</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_seek" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Set the file position indicator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>offset</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Address</p></li>
+<li><p class="sd-card-text"><strong>seek</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Origin type</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_tell">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_tell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">offset</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_tell" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Return the current file position</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>offset</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Current position in file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Read data from a file</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-8">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418PDM_io_global_readP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPv">
+<span id="_CPPv318PDM_io_global_readP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPv"></span><span id="_CPPv218PDM_io_global_readP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPv"></span><span id="PDM_io_global_read__PDM_io_file_tP.PDM_l_num_tC.PDM_g_num_tC.voidP"></span><span class="target" id="pdm__io_8h_1a15f687778999feb64cb129582c5ddbaf"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_global_read</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">taille_donnee</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_donnees</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">donnees</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418PDM_io_global_readP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Global read: the master process alone accesses the file and redistributes the information to all the communicator’s processes. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong> – <strong>[in]</strong> Size of a unit piece of data </p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong> – <strong>[in]</strong> Amount of data to be read </p></li>
+<li><p class="sd-card-text"><strong>donnees</strong> – <strong>[out]</strong> Read data </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_io_par_interlaced_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPv">
+<span id="_CPPv326PDM_io_par_interlaced_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPv"></span><span id="_CPPv226PDM_io_par_interlaced_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPv"></span><span id="PDM_io_par_interlaced_read__PDM_io_file_tP.PDM_stride_tC.PDM_l_num_tCP.PDM_l_num_tC.PDM_l_num_tC.PDM_g_num_tCP.voidP"></span><span class="target" id="pdm__io_8h_1aa83bf3ae7f2c0f3e1f3d44330271cc3f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_par_interlaced_read</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">taille_donnee</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_donnees</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">indirection</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">donnees</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_io_par_interlaced_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Parallel reading of data blocks followed by redistribution of the data according to indirection. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong> – <strong>[in]</strong> Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED) </p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> – <strong>[in]</strong> Number of components for each piece of data </p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong> – <strong>[in]</strong> Unit size of a piece of data </p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong> – <strong>[in]</strong> Number of data items to be read </p></li>
+<li><p class="sd-card-text"><strong>indirection</strong> – <strong>[in]</strong> Indirection of data redistribution </p></li>
+<li><p class="sd-card-text"><strong>donnees</strong> – <strong>[out]</strong> Read data </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv421PDM_io_par_block_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPv">
+<span id="_CPPv321PDM_io_par_block_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPv"></span><span id="_CPPv221PDM_io_par_block_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPv"></span><span id="PDM_io_par_block_read__PDM_io_file_tP.PDM_stride_tC.PDM_l_num_tCP.PDM_l_num_tC.PDM_l_num_tC.PDM_g_num_tC.voidP"></span><span class="target" id="pdm__io_8h_1ae1f8a3ba036725d8ca5d9addcfe4dfd8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_par_block_read</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">taille_donnee</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_donnees</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">debut_bloc</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">donnees</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421PDM_io_par_block_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Parallel reading of data blocks. </p>
+<p class="sd-card-text">The blocks must be arranged in ascending order according to the numbering of the processes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong> – <strong>[in]</strong> Component size type (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED) </p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> – <strong>[in]</strong> Number of components for each data item </p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong> – <strong>[in]</strong> Unit size of a piece of data </p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong> – <strong>[in]</strong> Number of data items to be read </p></li>
+<li><p class="sd-card-text"><strong>debut_bloc</strong> – <strong>[in]</strong> Relative address of start of block </p></li>
+<li><p class="sd-card-text"><strong>donnees</strong> – <strong>[out]</strong> Read data </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-9" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-9">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_global_read">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_global_read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">taille_donnee</span></em>, <em class="sig-param"><span class="pre">n_donnees</span></em>, <em class="sig-param"><span class="pre">donnees</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_global_read" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Global read: the master process alone accesses the file and redistributes the information to all the communicator’s processes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Size of a unit piece of data</p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Amount of data to be read</p></li>
+<li><p class="sd-card-text"><strong>donnees</strong><em> [</em><em>c_ptr</em><em>]</em> :: Read data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_par_interlaced_read">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_par_interlaced_read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_n_composantes</span></em>, <em class="sig-param"><span class="pre">n_composantes</span></em>, <em class="sig-param"><span class="pre">taille_donnee</span></em>, <em class="sig-param"><span class="pre">n_donnees</span></em>, <em class="sig-param"><span class="pre">indirection</span></em>, <em class="sig-param"><span class="pre">donnees</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_par_interlaced_read" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Parallel reading of data blocks followed by redistribution of the data according to indirection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)</p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of components for each piece of data</p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Unit size of a piece of data</p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of data items to be read</p></li>
+<li><p class="sd-card-text"><strong>indirection</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Indirection of data redistribution</p></li>
+<li><p class="sd-card-text"><strong>donnees</strong><em> [</em><em>c_ptr</em><em>]</em> :: Read data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_par_block_read">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_par_block_read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_n_composantes</span></em>, <em class="sig-param"><span class="pre">n_composantes</span></em>, <em class="sig-param"><span class="pre">taille_donnee</span></em>, <em class="sig-param"><span class="pre">n_donnees</span></em>, <em class="sig-param"><span class="pre">debut_bloc</span></em>, <em class="sig-param"><span class="pre">donnees</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_par_block_read" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Parallel reading of data blocks. The blocks must be arranged in ascending order according to the numbering of the processes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Component size type (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)</p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of components for each data item</p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Unit size of a piece of data</p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of data items to be read</p></li>
+<li><p class="sd-card-text"><strong>debut_bloc</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Relative address of start of block</p></li>
+<li><p class="sd-card-text"><strong>donnees</strong><em> [</em><em>c_ptr</em><em>]</em> :: Read data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Write data in a file</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-10">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419PDM_io_global_writeP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPKv">
+<span id="_CPPv319PDM_io_global_writeP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPKv"></span><span id="_CPPv219PDM_io_global_writeP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPKv"></span><span id="PDM_io_global_write__PDM_io_file_tP.PDM_l_num_tC.PDM_g_num_tC.voidCP"></span><span class="target" id="pdm__io_8h_1adf633f14844a99f6b5b95ae520e7a0c7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_global_write</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">taille_donnee</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_donnees</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">donnees</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419PDM_io_global_writeP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPKv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Global write: The master process has sole access to the file. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong> – <strong>[in]</strong> Size of a unit piece of data </p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong> – <strong>[in]</strong> Amount of data to write </p></li>
+<li><p class="sd-card-text"><strong>donnees</strong> – <strong>[in]</strong> Data to write </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv427PDM_io_par_interlaced_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPKv">
+<span id="_CPPv327PDM_io_par_interlaced_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPKv"></span><span id="_CPPv227PDM_io_par_interlaced_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPKv"></span><span id="PDM_io_par_interlaced_write__PDM_io_file_tP.PDM_stride_tC.PDM_l_num_tCP.PDM_l_num_tC.PDM_l_num_tC.PDM_g_num_tCP.voidCP"></span><span class="target" id="pdm__io_8h_1a94fbbc71e0c3578f1928a8fcc266c5b6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_par_interlaced_write</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">taille_donnee</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_donnees</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">indirection</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">donnees</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv427PDM_io_par_interlaced_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPKv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Data sorted according to indirection, then parallel write of data blocks. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong> – <strong>[in]</strong> Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED) </p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> – <strong>[in]</strong> Number of components for each data item </p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong> – <strong>[in]</strong> Unit size of the data </p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong> – <strong>[in]</strong> Number of data items to be written </p></li>
+<li><p class="sd-card-text"><strong>indirection</strong> – <strong>[in]</strong> Data redistribution direction </p></li>
+<li><p class="sd-card-text"><strong>donnees</strong> – <strong>[in]</strong> Data to be written </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_io_par_block_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPKv">
+<span id="_CPPv322PDM_io_par_block_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPKv"></span><span id="_CPPv222PDM_io_par_block_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPKv"></span><span id="PDM_io_par_block_write__PDM_io_file_tP.PDM_stride_tC.PDM_l_num_tCP.PDM_l_num_tC.PDM_l_num_tC.PDM_g_num_tC.voidCP"></span><span class="target" id="pdm__io_8h_1abad080c5fef6407afcf344bcb66e62b9"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_par_block_write</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">taille_donnee</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_donnees</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">debut_bloc</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">donnees</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_io_par_block_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPKv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Parallel writing of data blocks. </p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">Blocks</span> <span class="n">must</span> <span class="n">be</span> <span class="n">arranged</span> <span class="ow">in</span> <span class="n">ascending</span> <span class="n">order</span> <span class="n">according</span>
+   <span class="n">to</span> <span class="n">numbering</span> <span class="n">of</span> <span class="n">the</span> <span class="n">processes</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong> – <strong>[in]</strong> Type of component sizes (PDM_STRIDE_CST_)INTERLACED or PDM_STRIDE_VAR_INTERLACED) </p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> – <strong>[in]</strong> Number of components for each data item </p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong> – <strong>[in]</strong> Unit size of the data </p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong> – <strong>[in]</strong> Number of data to read </p></li>
+<li><p class="sd-card-text"><strong>debut_bloc</strong> – <strong>[in]</strong> Relative address of start of block </p></li>
+<li><p class="sd-card-text"><strong>donnees</strong> – <strong>[in]</strong> Data to be written </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-11">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_global_write">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_global_write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">taille_donnee</span></em>, <em class="sig-param"><span class="pre">n_donnees</span></em>, <em class="sig-param"><span class="pre">donnees</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_global_write" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Size of a unit piece of data</p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Amount of data to write</p></li>
+<li><p class="sd-card-text"><strong>donnees</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Data to write</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_par_interlaced_write">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_par_interlaced_write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_n_composantes</span></em>, <em class="sig-param"><span class="pre">n_composantes</span></em>, <em class="sig-param"><span class="pre">taille_donnee</span></em>, <em class="sig-param"><span class="pre">n_donnees</span></em>, <em class="sig-param"><span class="pre">indirection</span></em>, <em class="sig-param"><span class="pre">donnees</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_par_interlaced_write" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Data sorted according to indirection, then parallel write of data blocks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)</p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of components for each data item</p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Unit size of the data</p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of data items to be written</p></li>
+<li><p class="sd-card-text"><strong>indirection</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Data redistribution direction</p></li>
+<li><p class="sd-card-text"><strong>donnees</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Data to be written</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_par_block_write">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_par_block_write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_n_composantes</span></em>, <em class="sig-param"><span class="pre">n_composantes</span></em>, <em class="sig-param"><span class="pre">taille_donnee</span></em>, <em class="sig-param"><span class="pre">n_donnees</span></em>, <em class="sig-param"><span class="pre">debut_bloc</span></em>, <em class="sig-param"><span class="pre">donnees</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_par_block_write" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Parallel writing of data blocks. Blocks must be arranged in ascending order according to numbering of the processes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)</p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of components for each data item</p></li>
+<li><p class="sd-card-text"><strong>taille_donnee</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Unit size of the data</p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of data to read</p></li>
+<li><p class="sd-card-text"><strong>debut_bloc</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Relative address of start of block</p></li>
+<li><p class="sd-card-text"><strong>donnees</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: Data to be written</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Little/big endian swapping</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-12">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv421PDM_io_swap_endian_onP13PDM_io_file_t">
+<span id="_CPPv321PDM_io_swap_endian_onP13PDM_io_file_t"></span><span id="_CPPv221PDM_io_swap_endian_onP13PDM_io_file_t"></span><span id="PDM_io_swap_endian_on__PDM_io_file_tP"></span><span class="target" id="pdm__io_8h_1a6181836484368d2a67ccf76898d75282"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_swap_endian_on</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421PDM_io_swap_endian_onP13PDM_io_file_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Activate endian swap. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_io_swap_endian_offP13PDM_io_file_t">
+<span id="_CPPv322PDM_io_swap_endian_offP13PDM_io_file_t"></span><span id="_CPPv222PDM_io_swap_endian_offP13PDM_io_file_t"></span><span id="PDM_io_swap_endian_off__PDM_io_file_tP"></span><span class="target" id="pdm__io_8h_1a2b1d7e0161499030c4310883deff9a79"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_swap_endian_off</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_io_swap_endian_offP13PDM_io_file_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Deactivate endian swap. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418PDM_io_swap_endianK6size_tK6size_tPKvPv">
+<span id="_CPPv318PDM_io_swap_endianK6size_tK6size_tPKvPv"></span><span id="_CPPv218PDM_io_swap_endianK6size_tK6size_tPKvPv"></span><span id="PDM_io_swap_endian__sC.sC.voidCP.voidP"></span><span class="target" id="pdm__io_8h_1a6872352d5a8afb0789ec14e459d53462"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_swap_endian</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">taille_donnee</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_donnees</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">donnees</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">resultats</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418PDM_io_swap_endianK6size_tK6size_tPKvPv" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Swap endian for little endian &lt;-&gt; big endian conversion. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>taille_donnee</strong> – <strong>[in]</strong> Size of a unit piece of data </p></li>
+<li><p class="sd-card-text"><strong>n_donnee</strong> – <strong>[in]</strong> Amount of data </p></li>
+<li><p class="sd-card-text"><strong>donnees</strong> – <strong>[in]</strong> Data </p></li>
+<li><p class="sd-card-text"><strong>resultats</strong> – <strong>[out]</strong> Result </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv415PDM_io_endian_t">
+<span id="_CPPv315PDM_io_endian_t"></span><span id="_CPPv215PDM_io_endian_t"></span><span class="target" id="pdm__io_8h_1a83c0724c1f7ba8e9f8549072b7192002"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_endian_t</span></span></span><a class="headerlink" href="#_CPPv415PDM_io_endian_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text"><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N15PDM_io_endian_t16PDM_IO_BIGENDIANE">
+<span id="_CPPv3N15PDM_io_endian_t16PDM_IO_BIGENDIANE"></span><span id="_CPPv2N15PDM_io_endian_t16PDM_IO_BIGENDIANE"></span><span class="target" id="pdm__io_8h_1a83c0724c1f7ba8e9f8549072b7192002a403e561c747a3e01f5565c58ea34d404"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_BIGENDIAN</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_io_endian_t16PDM_IO_BIGENDIANE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N15PDM_io_endian_t19PDM_IO_LITTLEENDIANE">
+<span id="_CPPv3N15PDM_io_endian_t19PDM_IO_LITTLEENDIANE"></span><span id="_CPPv2N15PDM_io_endian_t19PDM_IO_LITTLEENDIANE"></span><span class="target" id="pdm__io_8h_1a83c0724c1f7ba8e9f8549072b7192002a0a96e08e6c8853d66240805bca6d11c7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_LITTLEENDIAN</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_io_endian_t19PDM_IO_LITTLEENDIANE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N15PDM_io_endian_t13PDM_IO_NATIVEE">
+<span id="_CPPv3N15PDM_io_endian_t13PDM_IO_NATIVEE"></span><span id="_CPPv2N15PDM_io_endian_t13PDM_IO_NATIVEE"></span><span class="target" id="pdm__io_8h_1a83c0724c1f7ba8e9f8549072b7192002a69653882cf3c12a8e0a4be0e1d8141ce"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_NATIVE</span></span></span><a class="headerlink" href="#_CPPv4N15PDM_io_endian_t13PDM_IO_NATIVEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-13" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-13">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_swap_endian_on">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_swap_endian_on</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_swap_endian_on" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Activate endian swap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_swap_endian_off">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_swap_endian_off</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_swap_endian_off" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Deactivate endian swap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_swap_endian">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_swap_endian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">taille_donnee</span></em>, <em class="sig-param"><span class="pre">n_donnees</span></em>, <em class="sig-param"><span class="pre">donnees</span></em>, <em class="sig-param"><span class="pre">resultats</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_swap_endian" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Swap endian pour conversion little endian &lt;-&gt; big endian</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>taille_donnee</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Size of a unit piece of data</p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Amount of data</p></li>
+<li><p class="sd-card-text"><strong>donnees</strong><em> [</em><em>c_ptr</em><em>]</em> :: Data</p></li>
+<li><p class="sd-card-text"><strong>resultats</strong><em> [</em><em>c_ptr</em><em>]</em> :: Result</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Manage data and format</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-14">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417PDM_io_n_data_getP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_t">
+<span id="_CPPv317PDM_io_n_data_getP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_t"></span><span id="_CPPv217PDM_io_n_data_getP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_t"></span><span id="PDM_io_n_data_get__PDM_io_file_tP.PDM_stride_tC.PDM_l_num_tCP.PDM_l_num_tC.PDM_g_num_tCP"></span><span class="target" id="pdm__io_8h_1aef1506b54e5e48a388cd012fb5abd693"></span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_n_data_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_stride_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">t_n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">n_composantes</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_donnees</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_g_num_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">indirection</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417PDM_io_n_data_getP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Calculate the total size of a data field. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong> – <strong>[in]</strong> Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED) </p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> – <strong>[in]</strong> Number of components for each data </p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong> – <strong>[in]</strong> Number of data </p></li>
+<li><p class="sd-card-text"><strong>indirection</strong> – <strong>[in]</strong> Data redistribution direction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Total size of a data field </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419PDM_io_fmt_data_setP13PDM_io_file_tK11PDM_l_num_tK13PDM_io_type_tPKc">
+<span id="_CPPv319PDM_io_fmt_data_setP13PDM_io_file_tK11PDM_l_num_tK13PDM_io_type_tPKc"></span><span id="_CPPv219PDM_io_fmt_data_setP13PDM_io_file_tK11PDM_l_num_tK13PDM_io_type_tPKc"></span><span id="PDM_io_fmt_data_set__PDM_io_file_tP.PDM_l_num_tC.PDM_io_type_tC.cCP"></span><span class="target" id="pdm__io_8h_1a896708b098dfe331295dc645d280b140"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_fmt_data_set</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_l_num_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n_char_fmt</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv413PDM_io_type_t" title="PDM_io_type_t"><span class="n"><span class="pre">PDM_io_type_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">data_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fmt</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419PDM_io_fmt_data_setP13PDM_io_file_tK11PDM_l_num_tK13PDM_io_type_tPKc" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Defines the format of the individual data for text output. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>n_char_fmt</strong> – <strong>[in]</strong> Number of characters in the format </p></li>
+<li><p class="sd-card-text"><strong>data_type</strong> – <strong>[in]</strong> Type of data </p></li>
+<li><p class="sd-card-text"><strong>fmt</strong> – <strong>[in]</strong> Format </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp">
+<span class="target" id="pdm__io_8h_1a83c0724c1f7ba8e9f8549072b7192002"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_endian_t</span></span></span><br /></dt>
+<dd><p class="sd-card-text"><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp">
+<span class="target" id="pdm__io_8h_1a83c0724c1f7ba8e9f8549072b7192002a403e561c747a3e01f5565c58ea34d404"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_BIGENDIAN</span></span></span><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp">
+<span class="target" id="pdm__io_8h_1a83c0724c1f7ba8e9f8549072b7192002a0a96e08e6c8853d66240805bca6d11c7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_LITTLEENDIAN</span></span></span><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp">
+<span class="target" id="pdm__io_8h_1a83c0724c1f7ba8e9f8549072b7192002a69653882cf3c12a8e0a4be0e1d8141ce"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_IO_NATIVE</span></span></span><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-15" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-15">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_n_data_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_n_data_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_n_composantes</span></em>, <em class="sig-param"><span class="pre">n_composantes</span></em>, <em class="sig-param"><span class="pre">n_donnees</span></em>, <em class="sig-param"><span class="pre">indirection</span></em>, <em class="sig-param"><span class="pre">taille</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_n_data_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Calculate the total size of a data field</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_n_composantes</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)</p></li>
+<li><p class="sd-card-text"><strong>n_composantes</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Number of components for each data</p></li>
+<li><p class="sd-card-text"><strong>n_donnees</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of data</p></li>
+<li><p class="sd-card-text"><strong>indirection</strong> (*)<em> [</em><em>integer</em><em>,</em><em>pointer</em><em>]</em> :: Data redistribution direction</p></li>
+<li><p class="sd-card-text"><strong>taille</strong><em> [</em><em>integer</em><em>,</em><em>out</em><em>]</em> :: Total size of a data field</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_fmt_data_set">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_fmt_data_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">n_char_fmt</span></em>, <em class="sig-param"><span class="pre">data_type</span></em>, <em class="sig-param"><span class="pre">fmt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_fmt_data_set" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Defines the format of the individual data for text output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>n_char_fmt</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Number of characters in the format</p></li>
+<li><p class="sd-card-text"><strong>data_type</strong><em> [</em><em>integer</em><em>,</em><em>in</em><em>]</em> :: Type of data</p></li>
+<li><p class="sd-card-text"><strong>fmt</strong><em> [</em><em>character</em><em>]</em> :: Format</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Close a file</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-16" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-16">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv412PDM_io_closeP13PDM_io_file_t">
+<span id="_CPPv312PDM_io_closeP13PDM_io_file_t"></span><span id="_CPPv212PDM_io_closeP13PDM_io_file_t"></span><span id="PDM_io_close__PDM_io_file_tP"></span><span class="target" id="pdm__io_8h_1a9f642d7c68c1d9bca9ac48f7dba838e1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_close</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412PDM_io_closeP13PDM_io_file_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Closing the file without destroying the PDM_io structure associated with unit. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-17" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-17">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_close">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_close" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Close a file without destroying the PDM_io structure associated with unit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Get elapsed and CPU times</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-18" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-18">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424PDM_io_get_timer_fichierP13PDM_io_file_tPdPd">
+<span id="_CPPv324PDM_io_get_timer_fichierP13PDM_io_file_tPdPd"></span><span id="_CPPv224PDM_io_get_timer_fichierP13PDM_io_file_tPdPd"></span><span id="PDM_io_get_timer_fichier__PDM_io_file_tP.doubleP.doubleP"></span><span class="target" id="pdm__io_8h_1a8069840b502c471e564103d5b9d48b42"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_get_timer_fichier</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">t_cpu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">t_elapsed</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_io_get_timer_fichierP13PDM_io_file_tPdPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Returns the cumulative files access time. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_cpu</strong> – <strong>[out]</strong> CPU time </p></li>
+<li><p class="sd-card-text"><strong>t_elapsed</strong> – <strong>[out]</strong> Elapsed time </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv428PDM_io_timer_swap_endian_getP13PDM_io_file_tPdPd">
+<span id="_CPPv328PDM_io_timer_swap_endian_getP13PDM_io_file_tPdPd"></span><span id="_CPPv228PDM_io_timer_swap_endian_getP13PDM_io_file_tPdPd"></span><span id="PDM_io_timer_swap_endian_get__PDM_io_file_tP.doubleP.doubleP"></span><span class="target" id="pdm__io_8h_1a17e8fd338325745586bf2415262cc7c7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_timer_swap_endian_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">t_cpu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">t_elapsed</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428PDM_io_timer_swap_endian_getP13PDM_io_file_tPdPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Returns the cumulative time for data swap. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_cpu</strong> – <strong>[out]</strong> CPU time </p></li>
+<li><p class="sd-card-text"><strong>t_elapsed</strong> – <strong>[out]</strong> Elapsed time </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv424PDM_io_timer_distrib_getP13PDM_io_file_tPdPd">
+<span id="_CPPv324PDM_io_timer_distrib_getP13PDM_io_file_tPdPd"></span><span id="_CPPv224PDM_io_timer_distrib_getP13PDM_io_file_tPdPd"></span><span id="PDM_io_timer_distrib_get__PDM_io_file_tP.doubleP.doubleP"></span><span class="target" id="pdm__io_8h_1aed36bf9a6e8cfe5b70ffb8235b4ebe65"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_timer_distrib_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">t_cpu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">t_elapsed</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv424PDM_io_timer_distrib_getP13PDM_io_file_tPdPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Returns the cumulative time for data distribution. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_cpu</strong> – <strong>[out]</strong> CPU time </p></li>
+<li><p class="sd-card-text"><strong>t_elapsed</strong> – <strong>[out]</strong> Elapsed time </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv422PDM_io_timer_total_getP13PDM_io_file_tPdPd">
+<span id="_CPPv322PDM_io_timer_total_getP13PDM_io_file_tPdPd"></span><span id="_CPPv222PDM_io_timer_total_getP13PDM_io_file_tPdPd"></span><span id="PDM_io_timer_total_get__PDM_io_file_tP.doubleP.doubleP"></span><span class="target" id="pdm__io_8h_1a39a577facb6b76330e920d1b224ceceb"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_timer_total_get</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">t_cpu</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">t_elapsed</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv422PDM_io_timer_total_getP13PDM_io_file_tPdPd" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Returns the total cumulative time. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p></li>
+<li><p class="sd-card-text"><strong>t_cpu</strong> – <strong>[out]</strong> CPU time </p></li>
+<li><p class="sd-card-text"><strong>t_elapsed</strong> – <strong>[out]</strong> Elapsed time </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-19" name="sd-tab-set-9" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-19">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_get_timer_fichier">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_get_timer_fichier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_cpu</span></em>, <em class="sig-param"><span class="pre">t_elapsed</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_get_timer_fichier" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Returns the cumulative files access time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_cpu</strong><em> [</em><em>real</em><em>,</em><em>out</em><em>]</em> :: CPU time</p></li>
+<li><p class="sd-card-text"><strong>t_elapsed</strong><em> [</em><em>real</em><em>,</em><em>out</em><em>]</em> :: Elapsed time</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_timer_swap_endian_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_timer_swap_endian_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_cpu</span></em>, <em class="sig-param"><span class="pre">t_elapsed</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_timer_swap_endian_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Returns the cumulative time for data swap</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_cpu</strong><em> [</em><em>real</em><em>,</em><em>out</em><em>]</em> :: CPU time</p></li>
+<li><p class="sd-card-text"><strong>t_elapsed</strong><em> [</em><em>real</em><em>,</em><em>out</em><em>]</em> :: Elapsed time</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_timer_distrib_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_timer_distrib_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_cpu</span></em>, <em class="sig-param"><span class="pre">t_elapsed</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_timer_distrib_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Returns the cumulative time for data distribution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_cpu</strong><em> [</em><em>real</em><em>,</em><em>out</em><em>]</em> :: CPU time</p></li>
+<li><p class="sd-card-text"><strong>t_elapsed</strong><em> [</em><em>real</em><em>,</em><em>out</em><em>]</em> :: Elapsed time</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_timer_total_get">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_timer_total_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em>, <em class="sig-param"><span class="pre">t_cpu</span></em>, <em class="sig-param"><span class="pre">t_elapsed</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_timer_total_get" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Returns the total cumulative time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p></li>
+<li><p class="sd-card-text"><strong>t_cpu</strong><em> [</em><em>real</em><em>,</em><em>out</em><em>]</em> :: CPU time</p></li>
+<li><p class="sd-card-text"><strong>t_elapsed</strong><em> [</em><em>real</em><em>,</em><em>out</em><em>]</em> :: Elapsed time</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-20" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-20">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411PDM_io_freeP13PDM_io_file_t">
+<span id="_CPPv311PDM_io_freeP13PDM_io_file_t"></span><span id="_CPPv211PDM_io_freeP13PDM_io_file_t"></span><span id="PDM_io_free__PDM_io_file_tP"></span><span class="target" id="pdm__io_8h_1a009e9923c7468710446b5f3b4aea2330"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_io_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_io_file_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">fichier</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411PDM_io_freeP13PDM_io_file_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Free of the PDM_io structure associated with the unit. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong> – <strong>[in]</strong> Pointer to PDM_io_file_t object </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<input id="sd-tab-item-21" name="sd-tab-set-10" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-21">
+Fortran</label><div class="sd-tab-content docutils">
+<dl>
+<dt class="sig sig-object f" id="f/_/pdm_io_free">
+<em class="property"><span class="pre">subroutine</span>&#160; </em><span class="sig-name descname"><span class="pre">pdm_io_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fichier</span></em><span class="sig-paren">)</span><a class="headerlink" href="#f/_/pdm_io_free" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Free of the PDM_io structure associated with the unit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>fichier</strong><em> [</em><em>c_ptr</em><em>,</em><em>in</em><em>]</em> :: PDM_io_file_t instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details></section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Write</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-22" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-22">
+C</label><div class="sd-tab-content docutils">
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// Initialize write</span>
+<span class="n">PDM_io_file_t</span><span class="w"> </span><span class="o">*</span><span class="n">pdm_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="n">PDM_l_num_t</span><span class="w">    </span><span class="n">ierr</span><span class="p">;</span>
+<span class="n">PDM_io_open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+<span class="w">            </span><span class="n">PDM_IO_FMT_BIN</span><span class="p">,</span><span class="w">         </span><span class="c1">// Binary output file</span>
+<span class="w">            </span><span class="n">PDM_IO_SUFF_MAN</span><span class="p">,</span><span class="w">        </span><span class="c1">// Manual suffix</span>
+<span class="w">            </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w">                     </span><span class="c1">// Empty suffix</span>
+<span class="w">            </span><span class="n">PDM_IO_BACKUP_OFF</span><span class="p">,</span><span class="w">      </span><span class="c1">// No backup</span>
+<span class="w">            </span><span class="n">PDM_IO_KIND_MPI_SIMPLE</span><span class="p">,</span><span class="w"> </span><span class="c1">// Simple MPI-IO access</span>
+<span class="w">            </span><span class="n">PDM_IO_MOD_WRITE</span><span class="p">,</span><span class="w">       </span><span class="c1">// Write mode</span>
+<span class="w">            </span><span class="n">PDM_IO_NATIVE</span><span class="p">,</span><span class="w">          </span><span class="c1">// Native endian</span>
+<span class="w">            </span><span class="n">comm</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">-1.</span><span class="p">,</span>
+<span class="w">            </span><span class="o">&amp;</span><span class="n">pdm_file</span><span class="p">,</span>
+<span class="w">            </span><span class="o">&amp;</span><span class="n">ierr</span><span class="p">);</span>
+
+<span class="c1">// To write a keyword in a mesh file</span>
+<span class="c1">// buffer is a char* containing the keyword</span>
+<span class="n">PDM_io_global_write</span><span class="p">(</span><span class="n">pdm_file</span><span class="p">,</span>
+<span class="w">      </span><span class="p">(</span><span class="n">PDM_l_num_t</span><span class="p">)</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="p">),</span>
+<span class="w">      </span><span class="p">(</span><span class="n">PDM_l_num_t</span><span class="p">)</span><span class="w"> </span><span class="n">s_buffer</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">buffer</span><span class="p">);</span>
+
+<span class="c1">// To make each MPI rank write a buffer</span>
+<span class="n">PDM_io_par_interlaced_write</span><span class="p">(</span><span class="n">pdm_file</span><span class="p">,</span>
+<span class="w">                            </span><span class="n">PDM_STRIDE_VAR_INTERLACED</span><span class="p">,</span>
+<span class="w">            </span><span class="p">(</span><span class="n">PDM_l_num_t</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="c1">// Buffer size in number of characters</span>
+<span class="w">            </span><span class="p">(</span><span class="n">PDM_l_num_t</span><span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="p">),</span>
+<span class="w">            </span><span class="p">(</span><span class="n">PDM_l_num_t</span><span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">                            </span><span class="o">&amp;</span><span class="n">i_rank_gnum</span><span class="p">,</span><span class="w"> </span><span class="c1">// MPI rank write order</span>
+<span class="w">             </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="n">buffer</span><span class="p">);</span>
+
+<span class="c1">// End write</span>
+<span class="n">PDM_io_close</span><span class="p">(</span><span class="n">pdm_file</span><span class="p">);</span>
+<span class="n">PDM_io_free</span><span class="w"> </span><span class="p">(</span><span class="n">pdm_file</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-23" name="sd-tab-set-11" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="Fortran" for="sd-tab-item-23">
+Fortran</label><div class="sd-tab-content docutils">
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">call </span><span class="n">PDM_io_open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="w">               </span><span class="p">&amp;</span>
+<span class="w">                 </span><span class="n">PDM_IO_FMT_BIN</span><span class="p">,</span><span class="w">         </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Binary output file</span>
+<span class="w">                 </span><span class="n">PDM_IO_SUFF_MAN</span><span class="p">,</span><span class="w">        </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Manual suffix</span>
+<span class="w">                 </span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="w">                     </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Empty suffix</span>
+<span class="w">                 </span><span class="n">PDM_IO_BACKUP_OFF</span><span class="p">,</span><span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! No backup</span>
+<span class="w">                 </span><span class="n">PDM_IO_KIND_MPI_SIMPLE</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Simple MPI-IO access</span>
+<span class="w">                 </span><span class="n">PDM_IO_MOD_WRITE</span><span class="p">,</span><span class="w">       </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Write mode</span>
+<span class="w">                 </span><span class="n">PDM_IO_NATIVE</span><span class="p">,</span><span class="w">          </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Native endian</span>
+<span class="w">                 </span><span class="n">comm</span><span class="p">,</span><span class="w">                   </span><span class="p">&amp;</span>
+<span class="w">                 </span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="w">                    </span><span class="p">&amp;</span>
+<span class="w">                 </span><span class="n">pdm_file</span><span class="p">,</span><span class="w">               </span><span class="p">&amp;</span>
+<span class="w">                 </span><span class="n">ierr</span><span class="p">)</span>
+
+<span class="c">! To write a keyword in a mesh file</span>
+<span class="c">! buffer is a character(*) containing the keyword</span>
+<span class="k">call </span><span class="n">PDM_io_global_write</span><span class="p">(</span><span class="n">pdm_file</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                         </span><span class="mi">4</span><span class="p">,</span><span class="w">        </span><span class="p">&amp;</span>
+<span class="w">                         </span><span class="n">s_buffer</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                         </span><span class="n">buffer</span><span class="p">)</span>
+
+<span class="c">! To make each MPI rank write a buffer</span>
+<span class="k">call </span><span class="n">PDM_io_par_interlaced_write</span><span class="p">(</span><span class="n">pdm_file</span><span class="p">,</span><span class="w">                  </span><span class="p">&amp;</span>
+<span class="w">                                 </span><span class="n">PDM_STRIDE_VAR_INTERLACED</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">                                 </span><span class="n">size</span><span class="p">,</span><span class="w">                      </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Buffer size in number of characters</span>
+<span class="w">                                 </span><span class="mi">4</span><span class="p">,</span><span class="w">                         </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! Number of bytes per character</span>
+<span class="w">                                 </span><span class="mi">1</span><span class="p">,</span><span class="w">                         </span><span class="p">&amp;</span>
+<span class="w">                                 </span><span class="n">indirection</span><span class="p">,</span><span class="w">               </span><span class="p">&amp;</span><span class="w"> </span><span class="c">! MPI rank write order</span>
+<span class="w">                                 </span><span class="n">buffer</span><span class="p">)</span>
+
+<span class="c">! End write</span>
+<span class="k">call </span><span class="n">PDM_io_close</span><span class="p">(</span><span class="n">pdm_file</span><span class="p">)</span>
+<span class="k">call </span><span class="n">PDM_io_free</span><span class="w"> </span><span class="p">(</span><span class="n">pdm_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</details></section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="writer.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Writer</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Parallel I/O</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, ONERA The French Aerospace Lab
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">IO</a><ul>
+<li><a class="reference internal" href="#description">Description</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv412PDM_io_mkdirPKc"><code class="docutils literal notranslate"><span class="pre">PDM_io_mkdir()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv411PDM_io_openPKcK12PDM_io_fmt_tK13PDM_io_suff_tPKcK15PDM_io_backup_tK13PDM_io_kind_tK12PDM_io_mod_tK15PDM_io_endian_t12PDM_MPI_CommdPP13PDM_io_file_tP11PDM_l_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_open()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv413PDM_io_type_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_type_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_type_t12PDM_IO_T_INTE"><code class="docutils literal notranslate"><span class="pre">PDM_io_type_t::PDM_IO_T_INT</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_type_t13PDM_IO_T_LONGE"><code class="docutils literal notranslate"><span class="pre">PDM_io_type_t::PDM_IO_T_LONG</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_type_t15PDM_IO_T_DOUBLEE"><code class="docutils literal notranslate"><span class="pre">PDM_io_type_t::PDM_IO_T_DOUBLE</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_type_t14PDM_IO_T_FLOATE"><code class="docutils literal notranslate"><span class="pre">PDM_io_type_t::PDM_IO_T_FLOAT</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_type_t13PDM_IO_T_CHARE"><code class="docutils literal notranslate"><span class="pre">PDM_io_type_t::PDM_IO_T_CHAR</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv413PDM_io_suff_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_suff_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_suff_t16PDM_IO_SUFF_AUTOE"><code class="docutils literal notranslate"><span class="pre">PDM_io_suff_t::PDM_IO_SUFF_AUTO</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_suff_t15PDM_IO_SUFF_MANE"><code class="docutils literal notranslate"><span class="pre">PDM_io_suff_t::PDM_IO_SUFF_MAN</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv413PDM_io_kind_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_kind_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_EOE"><code class="docutils literal notranslate"><span class="pre">PDM_io_kind_t::PDM_IO_KIND_MPIIO_EO</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_kind_t20PDM_IO_KIND_MPIIO_IPE"><code class="docutils literal notranslate"><span class="pre">PDM_io_kind_t::PDM_IO_KIND_MPIIO_IP</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_kind_t22PDM_IO_KIND_MPI_SIMPLEE"><code class="docutils literal notranslate"><span class="pre">PDM_io_kind_t::PDM_IO_KIND_MPI_SIMPLE</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N13PDM_io_kind_t15PDM_IO_KIND_SEQE"><code class="docutils literal notranslate"><span class="pre">PDM_io_kind_t::PDM_IO_KIND_SEQ</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv412PDM_io_mod_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_mod_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N12PDM_io_mod_t15PDM_IO_MOD_READE"><code class="docutils literal notranslate"><span class="pre">PDM_io_mod_t::PDM_IO_MOD_READ</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N12PDM_io_mod_t16PDM_IO_MOD_WRITEE"><code class="docutils literal notranslate"><span class="pre">PDM_io_mod_t::PDM_IO_MOD_WRITE</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N12PDM_io_mod_t17PDM_IO_MOD_APPENDE"><code class="docutils literal notranslate"><span class="pre">PDM_io_mod_t::PDM_IO_MOD_APPEND</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv412PDM_io_fmt_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_fmt_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N12PDM_io_fmt_t14PDM_IO_FMT_TXTE"><code class="docutils literal notranslate"><span class="pre">PDM_io_fmt_t::PDM_IO_FMT_TXT</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N12PDM_io_fmt_t14PDM_IO_FMT_BINE"><code class="docutils literal notranslate"><span class="pre">PDM_io_fmt_t::PDM_IO_FMT_BIN</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv415PDM_io_backup_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_backup_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N15PDM_io_backup_t16PDM_IO_BACKUP_ONE"><code class="docutils literal notranslate"><span class="pre">PDM_io_backup_t::PDM_IO_BACKUP_ON</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N15PDM_io_backup_t17PDM_IO_BACKUP_OFFE"><code class="docutils literal notranslate"><span class="pre">PDM_io_backup_t::PDM_IO_BACKUP_OFF</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv420PDM_io_file_name_getP13PDM_io_file_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_file_name_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv415PDM_io_comm_getP13PDM_io_file_tP12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_io_comm_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv411PDM_io_dumpP13PDM_io_file_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_dump()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv411PDM_io_seekP13PDM_io_file_tK11PDM_g_num_tK13PDM_io_seek_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_seek()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv411PDM_io_tellP13PDM_io_file_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_tell()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv418PDM_io_global_readP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPv"><code class="docutils literal notranslate"><span class="pre">PDM_io_global_read()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv426PDM_io_par_interlaced_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPv"><code class="docutils literal notranslate"><span class="pre">PDM_io_par_interlaced_read()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv421PDM_io_par_block_readP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPv"><code class="docutils literal notranslate"><span class="pre">PDM_io_par_block_read()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv419PDM_io_global_writeP13PDM_io_file_tK11PDM_l_num_tK11PDM_g_num_tPKv"><code class="docutils literal notranslate"><span class="pre">PDM_io_global_write()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv427PDM_io_par_interlaced_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_tPKv"><code class="docutils literal notranslate"><span class="pre">PDM_io_par_interlaced_write()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_io_par_block_writeP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tK11PDM_l_num_tK11PDM_g_num_tPKv"><code class="docutils literal notranslate"><span class="pre">PDM_io_par_block_write()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv421PDM_io_swap_endian_onP13PDM_io_file_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_swap_endian_on()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_io_swap_endian_offP13PDM_io_file_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_swap_endian_off()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv418PDM_io_swap_endianK6size_tK6size_tPKvPv"><code class="docutils literal notranslate"><span class="pre">PDM_io_swap_endian()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv415PDM_io_endian_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_endian_t</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N15PDM_io_endian_t16PDM_IO_BIGENDIANE"><code class="docutils literal notranslate"><span class="pre">PDM_io_endian_t::PDM_IO_BIGENDIAN</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N15PDM_io_endian_t19PDM_IO_LITTLEENDIANE"><code class="docutils literal notranslate"><span class="pre">PDM_io_endian_t::PDM_IO_LITTLEENDIAN</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N15PDM_io_endian_t13PDM_IO_NATIVEE"><code class="docutils literal notranslate"><span class="pre">PDM_io_endian_t::PDM_IO_NATIVE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv417PDM_io_n_data_getP13PDM_io_file_tK12PDM_stride_tPK11PDM_l_num_tK11PDM_l_num_tPK11PDM_g_num_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_n_data_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv419PDM_io_fmt_data_setP13PDM_io_file_tK11PDM_l_num_tK13PDM_io_type_tPKc"><code class="docutils literal notranslate"><span class="pre">PDM_io_fmt_data_set()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv412PDM_io_closeP13PDM_io_file_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_close()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv424PDM_io_get_timer_fichierP13PDM_io_file_tPdPd"><code class="docutils literal notranslate"><span class="pre">PDM_io_get_timer_fichier()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv428PDM_io_timer_swap_endian_getP13PDM_io_file_tPdPd"><code class="docutils literal notranslate"><span class="pre">PDM_io_timer_swap_endian_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv424PDM_io_timer_distrib_getP13PDM_io_file_tPdPd"><code class="docutils literal notranslate"><span class="pre">PDM_io_timer_distrib_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv422PDM_io_timer_total_getP13PDM_io_file_tPdPd"><code class="docutils literal notranslate"><span class="pre">PDM_io_timer_total_get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv411PDM_io_freeP13PDM_io_file_t"><code class="docutils literal notranslate"><span class="pre">PDM_io_free()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=182a64a0"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../../_static/js/custom.js?v=c7b75b1d"></script>
+    </body>
+</html>

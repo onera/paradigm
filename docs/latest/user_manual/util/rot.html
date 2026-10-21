@@ -7,7 +7,7 @@
         <link rel="prefetch" href="../../_static/logo.svg" as="image" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
-        <title>Rotations in 3D - ParaDiGM 2.8.0 documentation</title>
+        <title>Rotations in 3D - ParaDiGM 2.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -196,7 +196,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../index.html"><div class="brand">ParaDiGM 2.8.0 documentation</div></a>
+      <a href="../../index.html"><div class="brand">ParaDiGM 2.9.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -222,7 +222,7 @@
     <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">ParaDiGM 2.8.0 documentation</span>
+  <span class="sidebar-brand-text">ParaDiGM 2.9.0 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -287,7 +287,9 @@
 <p class="caption" role="heading"><span class="caption-text">Developer manual</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_manual/coding_rules.html">Coding rules &amp; guidelines</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer_manual/dev_tools/index.html">Developer tools</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer_manual/dev_tools/index.html">Developer tools</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer_manual/dev_tools/exch_helper.html">Exchange helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../developer_manual/dev_tools/timer.html">Timer</a></li>
 </ul>
 </li>
 </ul>
@@ -520,13 +522,13 @@ C</label><div class="sd-tab-content docutils">
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv450PDM_rotation_periodic_t_info_to_homogeneous_matrixAL3E_KdAL3E_KdAL3E_KdK10PDM_bool_tPd">
 <span id="_CPPv350PDM_rotation_periodic_t_info_to_homogeneous_matrixAL3E_KdAL3E_KdAL3E_KdK10PDM_bool_tPd"></span><span id="_CPPv250PDM_rotation_periodic_t_info_to_homogeneous_matrixA3_KdA3_KdA3_KdK10PDM_bool_tPd"></span><span id="PDM_rotation_periodic_t_info_to_homogeneous_matrix__doubleCA.doubleCA.doubleCA.PDM_bool_tC.doubleP"></span><span class="target" id="pdm__rotation_8h_1a69178685632a932730e49488c8662e04"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_rotation_periodic_t_info_to_homogeneous_matrix</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rotation_center</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rotation_angle</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">translation</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">reverse</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">homogeneous_matrix</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv450PDM_rotation_periodic_t_info_to_homogeneous_matrixAL3E_KdAL3E_KdAL3E_KdK10PDM_bool_tPd" title="Link to this definition">¶</a><br /></dt>
-<dd><p class="sd-card-text">Converts the info of a CGNS Periodic_t node to a 4-by-4 homogeneous rotation matrix. </p>
+<dd><p class="sd-card-text">Converts the info of a CGNS Periodic_t node (rotation center, Euler angles and translation vector) to a 4-by-4 homogeneous rotation matrix, assuming a ZYX intrinsic order. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p class="sd-card-text"><strong>rotation_center</strong> – <strong>[in]</strong> </p></li>
-<li><p class="sd-card-text"><strong>rotation_angle</strong> – <strong>[in]</strong> </p></li>
-<li><p class="sd-card-text"><strong>translation</strong> – <strong>[in]</strong> </p></li>
+<li><p class="sd-card-text"><strong>rotation_center</strong> – <strong>[in]</strong> Rotation center </p></li>
+<li><p class="sd-card-text"><strong>rotation_angle</strong> – <strong>[in]</strong> Rotation angles (Euler angles ZYX intrinsic) </p></li>
+<li><p class="sd-card-text"><strong>translation</strong> – <strong>[in]</strong> Translation vector (applied <strong>after</strong> rotation) </p></li>
 <li><p class="sd-card-text"><strong>reverse</strong> – <strong>[in]</strong> If True, encodes the reverse transformation </p></li>
 <li><p class="sd-card-text"><strong>homogeneous_matrix</strong> – <strong>[out]</strong> 4-by-4 rotation matrix </p></li>
 </ul>
@@ -636,6 +638,26 @@ C</label><div class="sd-tab-content docutils">
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv463PDM_rotation_homogeneous_matrix_to_euler_angles_and_translationPKdK10PDM_bool_tAL3E_KiK10PDM_bool_tPdPdPdAL3E_d">
+<span id="_CPPv363PDM_rotation_homogeneous_matrix_to_euler_angles_and_translationPKdK10PDM_bool_tAL3E_KiK10PDM_bool_tPdPdPdAL3E_d"></span><span id="_CPPv263PDM_rotation_homogeneous_matrix_to_euler_angles_and_translationPKdK10PDM_bool_tA3_KiK10PDM_bool_tPdPdPdA3_d"></span><span id="PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation__doubleCP.PDM_bool_tC.iCA.PDM_bool_tC.doubleP.doubleP.doubleP.doubleA"></span><span class="target" id="pdm__rotation_8h_1a87aeb2eef316100f1434df1d11b510ac"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">homogeneous_matrix</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">reverse</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">order</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">intrinsic</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ang_x</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ang_y</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ang_z</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">translation</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv463PDM_rotation_homogeneous_matrix_to_euler_angles_and_translationPKdK10PDM_bool_tAL3E_KiK10PDM_bool_tPdPdPdAL3E_d" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Converts a rotation expressed as a 4-by-4 homogeneous rotation matrix to euler angles and rotation center. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>homogeneous_matrix</strong> – <strong>[in]</strong> 4-by-4 homogeneous rotation matrix </p></li>
+<li><p class="sd-card-text"><strong>reverse</strong> – <strong>[in]</strong> If True, encodes the reverse transformation </p></li>
+<li><p class="sd-card-text"><strong>order</strong> – <strong>[in]</strong> Order of rotations to apply </p></li>
+<li><p class="sd-card-text"><strong>intrinsic</strong> – <strong>[in]</strong> <a class="reference external" href="https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations">Axis conventions</a></p></li>
+<li><p class="sd-card-text"><strong>ang_x</strong> – <strong>[out]</strong> Rotation angle around the x-axis </p></li>
+<li><p class="sd-card-text"><strong>ang_y</strong> – <strong>[out]</strong> Rotation angle around the y-axis </p></li>
+<li><p class="sd-card-text"><strong>ang_z</strong> – <strong>[out]</strong> Rotation angle around the z-axis </p></li>
+<li><p class="sd-card-text"><strong>translation</strong> – <strong>[out]</strong> Translation vector </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv450PDM_rotation_homogeneous_matrix_to_rotation_matrixPKdK10PDM_bool_tPd">
 <span id="_CPPv350PDM_rotation_homogeneous_matrix_to_rotation_matrixPKdK10PDM_bool_tPd"></span><span id="_CPPv250PDM_rotation_homogeneous_matrix_to_rotation_matrixPKdK10PDM_bool_tPd"></span><span id="PDM_rotation_homogeneous_matrix_to_rotation_matrix__doubleCP.PDM_bool_tC.doubleP"></span><span class="target" id="pdm__rotation_8h_1abee919ce23a9e7dd6ff657bb71b440c5"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_rotation_homogeneous_matrix_to_rotation_matrix</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">homogeneous_matrix</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">reverse</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">rotation_matrix</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv450PDM_rotation_homogeneous_matrix_to_rotation_matrixPKdK10PDM_bool_tPd" title="Link to this definition">¶</a><br /></dt>
 <dd><p class="sd-card-text">Converts a rotation expressed as a 4-by-4 homogeneous matrix to a 3-by-3 rotation matrix. </p>
@@ -645,6 +667,24 @@ C</label><div class="sd-tab-content docutils">
 <li><p class="sd-card-text"><strong>homogeneous_matrix</strong> – <strong>[in]</strong> 4-by-4 rotation matrix </p></li>
 <li><p class="sd-card-text"><strong>reverse</strong> – <strong>[in]</strong> If True, encodes the reverse transformation </p></li>
 <li><p class="sd-card-text"><strong>rotation_matrix</strong> – <strong>[out]</strong> 3-by-3 rotation matrix </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv450PDM_rotation_homogeneous_matrix_to_periodic_t_infoPKdK10PDM_bool_tK10PDM_bool_tAL3E_dAL3E_dAL3E_d">
+<span id="_CPPv350PDM_rotation_homogeneous_matrix_to_periodic_t_infoPKdK10PDM_bool_tK10PDM_bool_tAL3E_dAL3E_dAL3E_d"></span><span id="_CPPv250PDM_rotation_homogeneous_matrix_to_periodic_t_infoPKdK10PDM_bool_tK10PDM_bool_tA3_dA3_dA3_d"></span><span id="PDM_rotation_homogeneous_matrix_to_periodic_t_info__doubleCP.PDM_bool_tC.PDM_bool_tC.doubleA.doubleA.doubleA"></span><span class="target" id="pdm__rotation_8h_1a9b67a8b673c318481d971b4298eaee17"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_rotation_homogeneous_matrix_to_periodic_t_info</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">homogeneous_matrix</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">reverse</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PDM_bool_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">compute_rotation_center</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rotation_center</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rotation_angle</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">translation</span></span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv450PDM_rotation_homogeneous_matrix_to_periodic_t_infoPKdK10PDM_bool_tK10PDM_bool_tAL3E_dAL3E_dAL3E_d" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Converts a 4-by-4 homogeneous rotation matrix to the info of a CGNS Periodic_t node (rotation center, Euler angles and translation vector), assuming a ZYX intrinsic order. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>homogeneous_matrix</strong> – <strong>[in]</strong> 4-by-4 rotation matrix </p></li>
+<li><p class="sd-card-text"><strong>reverse</strong> – <strong>[in]</strong> If True, encodes the reverse transformation </p></li>
+<li><p class="sd-card-text"><strong>compute_rotation_center</strong> – <strong>[in]</strong> If True computes the rotation center so that the translation is along the rotation axis, set to 0. otherwise </p></li>
+<li><p class="sd-card-text"><strong>rotation_center</strong> – <strong>[out]</strong> Rotation center </p></li>
+<li><p class="sd-card-text"><strong>rotation_angle</strong> – <strong>[out]</strong> Rotation angles (Euler angles ZYX intrinsic) </p></li>
+<li><p class="sd-card-text"><strong>translation</strong> – <strong>[out]</strong> Translation vector (applied <strong>after</strong> rotation) </p></li>
 </ul>
 </dd>
 </dl>
@@ -761,7 +801,7 @@ Python</label><div class="sd-tab-content docutils">
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.axis_angle_to_euler_angles">
 <span class="sig-name descname"><span class="pre">axis_angle_to_euler_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.axis_angle_to_euler_angles" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Converts a rotation expressed as axis-angle to euler angles</p>
+<dd><p class="sd-card-text">Converts a rotation expressed as axis-angle to Euler angles</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -842,7 +882,7 @@ provided axis and rotation center</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.euler_angles_to_axis_angle">
 <span class="sig-name descname"><span class="pre">euler_angles_to_axis_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ang_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.euler_angles_to_axis_angle" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Converts a rotation expressed as euler angles to axis-angle</p>
+<dd><p class="sd-card-text">Converts a rotation expressed as Euler angles to axis-angle</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -868,7 +908,7 @@ provided axis and rotation center</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.euler_angles_to_euler_angles">
 <span class="sig-name descname"><span class="pre">euler_angles_to_euler_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ang_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.euler_angles_to_euler_angles" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Converts a rotation expressed as euler angles to another euler angles expression</p>
+<dd><p class="sd-card-text">Converts a rotation expressed as Euler angles to another Euler angles expression</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -898,7 +938,7 @@ provided axis and rotation center</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.euler_angles_to_rotation_matrix">
 <span class="sig-name descname"><span class="pre">euler_angles_to_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ang_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.euler_angles_to_rotation_matrix" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Computes the rotation matrix corresponding to the provided euler angles</p>
+<dd><p class="sd-card-text">Computes the rotation matrix corresponding to the provided Euler angles</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -920,7 +960,7 @@ provided axis and rotation center</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.euler_angles_to_homogeneous_matrix">
 <span class="sig-name descname"><span class="pre">euler_angles_to_homogeneous_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ang_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.euler_angles_to_homogeneous_matrix" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Computes the homogeneous matrix corresponding to the provided euler angles</p>
+<dd><p class="sd-card-text">Computes the homogeneous matrix corresponding to the provided Euler angles</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -942,7 +982,7 @@ provided axis and rotation center</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.euler_angles_and_rotation_center_to_homogeneous_matrix">
 <span class="sig-name descname"><span class="pre">euler_angles_and_rotation_center_to_homogeneous_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ang_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.,</span> <span class="pre">0.,</span> <span class="pre">0.]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.euler_angles_and_rotation_center_to_homogeneous_matrix" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Computes the homogeneous matrix corresponding to the provided euler angles
+<dd><p class="sd-card-text">Computes the homogeneous matrix corresponding to the provided Euler angles
 and rotation center.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -984,7 +1024,7 @@ Rotation angle (<cite>double</cite>, in <em>radians</em>)</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.rotation_matrix_to_euler_angles">
 <span class="sig-name descname"><span class="pre">rotation_matrix_to_euler_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotation_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.rotation_matrix_to_euler_angles" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Converts a rotation expressed as a rotation matrix to euler angles</p>
+<dd><p class="sd-card-text">Converts a rotation expressed as a rotation matrix to Euler angles</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1040,6 +1080,115 @@ and rotation center</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.homogeneous_matrix_to_axis_angle">
+<span class="sig-name descname"><span class="pre">homogeneous_matrix_to_axis_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">homogeneous_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.homogeneous_matrix_to_axis_angle" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Converts a rotation expressed as an homogeneous matrix to axis-angle</p>
+<p class="sd-card-text">Caution: does not consider the affine part of the transformation (rotation center and translation)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>homogeneous_matrix</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Homogeneous matrix (shape = (4,4))</p></li>
+<li><p class="sd-card-text"><strong>reverse</strong> (<em>bool</em>) – If True computes the reverse transformation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Rotation axis  (<cite>np.ndarray[np.double_t]</cite>, shape = (3,))
+Rotation angle (<cite>double</cite>, in <em>radians</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.homogeneous_matrix_to_euler_angles">
+<span class="sig-name descname"><span class="pre">homogeneous_matrix_to_euler_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">homogeneous_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.homogeneous_matrix_to_euler_angles" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Converts a rotation expressed as an homogeneous matrix to Euler angles</p>
+<p class="sd-card-text">Caution: does not consider the affine part of the transformation (rotation center and translation)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>homogeneous_matrix</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Homogeneous matrix (shape = (4,4))</p></li>
+<li><p class="sd-card-text"><strong>reverse</strong> (<em>bool</em>) – If True computes the reverse transformation</p></li>
+<li><p class="sd-card-text"><strong>order</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Order of rotations to apply</p></li>
+<li><p class="sd-card-text"><strong>intrinsic</strong> (<em>bool</em>) – <p class="sd-card-text"><a class="reference external" href="https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations">Axis conventions</a></p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Rotation angle around the x-axis (<cite>double</cite>)
+Rotation angle around the y-axis (<cite>double</cite>)
+Rotation angle around the z-axis (<cite>double</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.homogeneous_matrix_to_euler_angles_and_rotation_center">
+<span class="sig-name descname"><span class="pre">homogeneous_matrix_to_euler_angles_and_rotation_center</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">homogeneous_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.homogeneous_matrix_to_euler_angles_and_rotation_center" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Converts a rotation expressed as an homogeneous matrix to Euler angles and a rotation center</p>
+<p class="sd-card-text">Caution: does not consider the rotation-axis-wise translation component</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>homogeneous_matrix</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Homogeneous matrix (shape = (4,4))</p></li>
+<li><p class="sd-card-text"><strong>reverse</strong> (<em>bool</em>) – If True computes the reverse transformation</p></li>
+<li><p class="sd-card-text"><strong>order</strong> (<em>np.ndarray</em><em>[</em><em>np.int32_t</em><em>]</em>) – Order of rotations to apply</p></li>
+<li><p class="sd-card-text"><strong>intrinsic</strong> (<em>bool</em>) – <p class="sd-card-text"><a class="reference external" href="https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations">Axis conventions</a></p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">Rotation angle around the x-axis (<cite>double</cite>)
+Rotation angle around the y-axis (<cite>double</cite>)
+Rotation angle around the z-axis (<cite>double</cite>)
+Rotation center (<cite>np.ndarray[np.double_t]</cite>, shape = (3,))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.homogeneous_matrix_to_rotation_matrix">
+<span class="sig-name descname"><span class="pre">homogeneous_matrix_to_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">homogeneous_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.homogeneous_matrix_to_rotation_matrix" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Converts a rotation expressed as an homogeneous matrix to a rotation matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>homogeneous_matrix</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Homogeneous matrix (shape = (4,4))</p></li>
+<li><p class="sd-card-text"><strong>reverse</strong> (<em>bool</em>) – If True computes the reverse transformation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">3-by-3 rotation matrix (<cite>np.ndarray[np.double_t]</cite>, shape = (3,3))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Pypdm.Pypdm.homogeneous_matrix_to_periodic_t_info">
+<span class="sig-name descname"><span class="pre">homogeneous_matrix_to_periodic_t_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">homogeneous_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.homogeneous_matrix_to_periodic_t_info" title="Link to this definition">¶</a></dt>
+<dd><p class="sd-card-text">Converts a 4-by-4 homogeneous matrix to the info of a CGNS Periodic_t node
+(rotation center, Euler angles and translation vector).
+Rotation angles are applied as <strong>intrinsic Euler angles</strong> applied in a <em>(2,1,0)</em> order.
+Translation is applied after the rotation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>homogeneous_matrix</strong> (<em>np.ndarray</em><em>[</em><em>np.double_t</em><em>]</em>) – Homogeneous matrix (shape = (4,4))</p></li>
+<li><p class="sd-card-text"><strong>reverse</strong> (<em>bool</em>) – If True computes the reverse transformation</p></li>
+<li><p class="sd-card-text"><strong>compute_rotation_center</strong> (<em>bool</em>) – If True computes the rotation center so that the translation is along the rotation axis, set to 0. otherwise</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">3D rotation center (shape = (3,))
+rotation_angle  (np.ndarray[np.double_t]) : Rotation angles around the x, y and z axes (shape = (3,))
+translation     (np.ndarray[np.double_t]) : Translation vector (shape = (3,))</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text">rotation_center (np.ndarray[np.double_t])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.two_vectors_to_axis_angle">
 <span class="sig-name descname"><span class="pre">two_vectors_to_axis_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.two_vectors_to_axis_angle" title="Link to this definition">¶</a></dt>
 <dd><p class="sd-card-text">Converts a rotation from the first vector to the latter to a rotation expressed as axis angle</p>
@@ -1061,7 +1210,7 @@ Rotation angle (<cite>double</cite>, in <em>radians</em>)</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.two_vectors_to_euler_angles">
 <span class="sig-name descname"><span class="pre">two_vectors_to_euler_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.two_vectors_to_euler_angles" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Converts a rotation from the first vector to the latter to a rotation expressed as euler angles</p>
+<dd><p class="sd-card-text">Converts a rotation from the first vector to the latter to a rotation expressed as Euler angles</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1287,7 +1436,7 @@ Python</label><div class="sd-tab-content docutils">
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.apply_euler_angles_and_rotation_center_to_coords">
 <span class="sig-name descname"><span class="pre">apply_euler_angles_and_rotation_center_to_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[2,</span> <span class="pre">1,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.,</span> <span class="pre">0.,</span> <span class="pre">0.]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.apply_euler_angles_and_rotation_center_to_coords" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Applies the rigid transform corresponding to the euler angles around the
+<dd><p class="sd-card-text">Applies the rigid transform corresponding to the Euler angles around the
 rotation center to the provided coords array</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1312,7 +1461,7 @@ rotation center to the provided coords array</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="Pypdm.Pypdm.apply_euler_angles_and_rotation_center_to_vector_field">
 <span class="sig-name descname"><span class="pre">apply_euler_angles_and_rotation_center_to_vector_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[2,</span> <span class="pre">1,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.,</span> <span class="pre">0.,</span> <span class="pre">0.]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Pypdm.Pypdm.apply_euler_angles_and_rotation_center_to_vector_field" title="Link to this definition">¶</a></dt>
-<dd><p class="sd-card-text">Applies the rigid transform corresponding to the euler angles around the
+<dd><p class="sd-card-text">Applies the rigid transform corresponding to the Euler angles around the
 rotation center to the provided vector field array</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1469,7 +1618,7 @@ matrix around the provided axis and rotation center to the provided coordinate a
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2025, ONERA The French Aerospace Lab
+                Copyright &#169; 2026, ONERA The French Aerospace Lab
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
@@ -1513,7 +1662,9 @@ matrix around the provided axis and rotation center to the provided coordinate a
 <li><a class="reference internal" href="#_CPPv470PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrixPKdAL3E_KdK10PDM_bool_tPd"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv445PDM_rotation_homogeneous_matrix_to_axis_anglePKdK10PDM_bool_tAL3E_dPd"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_homogeneous_matrix_to_axis_angle()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv447PDM_rotation_homogeneous_matrix_to_euler_anglesPKdK10PDM_bool_tAL3E_KiK10PDM_bool_tPdPdPd"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_homogeneous_matrix_to_euler_angles()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv463PDM_rotation_homogeneous_matrix_to_euler_angles_and_translationPKdK10PDM_bool_tAL3E_KiK10PDM_bool_tPdPdPdAL3E_d"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_homogeneous_matrix_to_euler_angles_and_translation()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv450PDM_rotation_homogeneous_matrix_to_rotation_matrixPKdK10PDM_bool_tPd"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_homogeneous_matrix_to_rotation_matrix()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv450PDM_rotation_homogeneous_matrix_to_periodic_t_infoPKdK10PDM_bool_tK10PDM_bool_tAL3E_dAL3E_dAL3E_d"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_homogeneous_matrix_to_periodic_t_info()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv438PDM_rotation_two_vectors_to_axis_angleAL3E_KdAL3E_KdK10PDM_bool_tAL3E_dPd"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_two_vectors_to_axis_angle()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv440PDM_rotation_two_vectors_to_euler_anglesAL3E_KdAL3E_KdK10PDM_bool_tAL3E_KiK10PDM_bool_tPdPdPd"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_two_vectors_to_euler_angles()</span></code></a></li>
 <li><a class="reference internal" href="#_CPPv443PDM_rotation_two_vectors_to_rotation_matrixAL3E_KdAL3E_KdK10PDM_bool_tPd"><code class="docutils literal notranslate"><span class="pre">PDM_rotation_two_vectors_to_rotation_matrix()</span></code></a></li>
@@ -1533,6 +1684,11 @@ matrix around the provided axis and rotation center to the provided coordinate a
 <li><a class="reference internal" href="#Pypdm.Pypdm.rotation_matrix_to_euler_angles"><code class="docutils literal notranslate"><span class="pre">rotation_matrix_to_euler_angles()</span></code></a></li>
 <li><a class="reference internal" href="#Pypdm.Pypdm.rotation_matrix_to_homogeneous_matrix"><code class="docutils literal notranslate"><span class="pre">rotation_matrix_to_homogeneous_matrix()</span></code></a></li>
 <li><a class="reference internal" href="#Pypdm.Pypdm.rotation_matrix_and_rotation_center_to_homogeneous_matrix"><code class="docutils literal notranslate"><span class="pre">rotation_matrix_and_rotation_center_to_homogeneous_matrix()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.homogeneous_matrix_to_axis_angle"><code class="docutils literal notranslate"><span class="pre">homogeneous_matrix_to_axis_angle()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.homogeneous_matrix_to_euler_angles"><code class="docutils literal notranslate"><span class="pre">homogeneous_matrix_to_euler_angles()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.homogeneous_matrix_to_euler_angles_and_rotation_center"><code class="docutils literal notranslate"><span class="pre">homogeneous_matrix_to_euler_angles_and_rotation_center()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.homogeneous_matrix_to_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">homogeneous_matrix_to_rotation_matrix()</span></code></a></li>
+<li><a class="reference internal" href="#Pypdm.Pypdm.homogeneous_matrix_to_periodic_t_info"><code class="docutils literal notranslate"><span class="pre">homogeneous_matrix_to_periodic_t_info()</span></code></a></li>
 <li><a class="reference internal" href="#Pypdm.Pypdm.two_vectors_to_axis_angle"><code class="docutils literal notranslate"><span class="pre">two_vectors_to_axis_angle()</span></code></a></li>
 <li><a class="reference internal" href="#Pypdm.Pypdm.two_vectors_to_euler_angles"><code class="docutils literal notranslate"><span class="pre">two_vectors_to_euler_angles()</span></code></a></li>
 <li><a class="reference internal" href="#Pypdm.Pypdm.two_vectors_to_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">two_vectors_to_rotation_matrix()</span></code></a></li>
@@ -1564,7 +1720,7 @@ matrix around the provided axis and rotation center to the provided coordinate a
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=69ff2ef9"></script>
+</div><script src="../../_static/documentation_options.js?v=182a64a0"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
@@ -1572,6 +1728,6 @@ matrix around the provided axis and rotation center to the provided coordinate a
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="../../_static/js/custom.js?v=3597c2b8"></script>
+    <script src="../../_static/js/custom.js?v=c7b75b1d"></script>
     </body>
 </html>

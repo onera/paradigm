@@ -1,0 +1,747 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Release notes" href="../../changelog.html" /><link rel="prev" title="Exchange helper" href="exch_helper.html" />
+        <link rel="prefetch" href="../../_static/logo.svg" as="image" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2025.07.19 -->
+        <title>Timer - ParaDiGM 2.9.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=acfd86a5" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=d356628d" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --font-stack: Roboto, Segoe UI, Helvetica, sans-serif;
+  --font-stack--monospace: Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+  --color-foreground-primary: #23373b;
+  --color-brand-primary: #1c64ff;
+  --color-pdmkw: #6d80a1;
+  --color-link: #366ce4;
+  --color-highlight-on-target: #fff4d1;
+  --color-foreground-tertiary: #d9d9da;
+  --color-background-tertiary: #f1f2f7;
+  --color-api-name: #d63736;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #263238;
+  --color-code-foreground: #EEFFFF;
+  --color-brand-primary: #3d94ff;
+  --color-pdmkw: #879aad;
+  --color-link: #5ca5ff;
+  --color-highlight-on-target: #2e0c14;
+  --color-foreground-tertiary: #3f4144;
+  --color-background-secondary: #2a2c34;
+  --color-background-tertiary: #1d1f22;
+  --color-api-name: #ff6d6c;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #263238;
+  --color-code-foreground: #EEFFFF;
+  --color-brand-primary: #3d94ff;
+  --color-pdmkw: #879aad;
+  --color-link: #5ca5ff;
+  --color-highlight-on-target: #2e0c14;
+  --color-foreground-tertiary: #3f4144;
+  --color-background-secondary: #2a2c34;
+  --color-background-tertiary: #1d1f22;
+  --color-api-name: #ff6d6c;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ParaDiGM 2.9.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ParaDiGM 2.9.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/general.html">General presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/faq.html">FAQ</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_manual/simple_mesh_gen/index.html">Simple mesh generation</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Simple mesh generation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/simple_mesh_gen/dcube_nodal.html">Distributed Nodal Square/Cube Mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/simple_mesh_gen/generate_mesh.html">Generation of simple partitioned meshes</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_manual/partitioning/index.html">Partitioning</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Partitioning</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/partitioning/multipart.html">Multipart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/partitioning/extract_part.html">Extract part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/partitioning/part_extension.html">Part extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/partitioning/renumbering.html">Renumbering</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_manual/comm_graph/index.html">Communication graphs</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Communication graphs</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/comm_graph/ptp.html">Part to Part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/comm_graph/btp.html">Block to Part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/comm_graph/ptb.html">Part to Block</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/comm_graph/pcg.html">Part Comm Graph</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/gnum/index.html">Global numbering</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_manual/prepro_algo/index.html">Pre-/co-/post-processing</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Pre-/co-/post-processing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/prepro_algo/mesh_location.html">Mesh location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/prepro_algo/closest_points.html">Closest points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/prepro_algo/isosurface.html">Iso-surfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_manual/mesh_transform/index.html">Mesh Transformations</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Mesh Transformations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/mesh_transform/mesh_deform.html">Mesh Deform</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_manual/io/index.html">Parallel I/O</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Parallel I/O</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/io/io.html">IO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/io/writer.html">Writer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_manual/struct/index.html">Mesh Structures</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Mesh Structures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/struct/pmn.html">Partitioned Nodal Mesh</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_manual/util/index.html">Utils</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/util/rot.html">Rotations in 3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/util/connec_transform.html">Connectivity transformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_manual/util/mesh_eval.html">Mesh Evaluation Utils</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../coding_rules.html">Coding rules &amp; guidelines</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Developer tools</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Developer tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exch_helper.html">Exchange helper</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Timer</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Release notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/developer_manual/dev_tools/timer.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="timer">
+<span id="id1"></span><h1>Timer<a class="headerlink" href="#timer" title="Link to this heading">¶</a></h1>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">¶</a></h2>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
+</section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h2>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Initialization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-0">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv416PDM_timer_create12PDM_MPI_Comm">
+<span id="_CPPv316PDM_timer_create12PDM_MPI_Comm"></span><span id="_CPPv216PDM_timer_create12PDM_MPI_Comm"></span><span id="PDM_timer_create__PDM_MPI_Comm"></span><span class="target" id="pdm__timer_8h_1a1644792d753d0b3c68cedb121666cc90"></span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_create</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_MPI_Comm</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv416PDM_timer_create12PDM_MPI_Comm" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Initializes and creates a new PDM_timer_t context. </p>
+<p class="sd-card-text">This function allocates and returns the main structure (PDM_timer_t) used to record, organize, and aggregate event profiling data within a parallel application.</p>
+<p class="sd-card-text">The timer architecture is based on a <strong>hierarchical timing system</strong> that uses a call stack to capture parent-child relationships between events. This structure allows reports to be visualized in a clear, indented tree format.</p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>Key Profiling Concepts</strong></dt><dd><p class="sd-card-text">The timer records several critical time metrics:<ul class="simple">
+<li><p class="sd-card-text"><strong>Inclusive Time:</strong> Measures the total elapsed time (Wall-Clock Time, typically from PDM_MPI_Wtime) between the start and end of an event. This <strong>includes</strong> the time spent in any child functions (events) it calls.</p></li>
+<li><p class="sd-card-text"><strong>Exclusive Time:</strong> Measures the <strong>net time</strong> spent inside the function itself. It is calculated by subtracting the inclusive time of all direct child events from the event’s Inclusive Time. This is the key metric for identifying a function’s direct computational cost.</p></li>
+<li><p class="sd-card-text"><strong>Synchronization-Aware Timing :</strong> In addition to inclusive/exclusive times, the timer captures the time spent in synchronization operations (e.g., MPI barriers, waits) immediately <strong>before</strong> and <strong>after</strong> the event’s main measurement. These metrics are essential for diagnosing <strong>load imbalance</strong> or <strong>waiting latency</strong> * in a parallel context.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>comm</strong> – <strong>[in]</strong> The MPI communicator (PDM_MPI_Comm) on which the timer operates. This communicator will be used for the global aggregation of results.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">A pointer to the newly allocated timer structure (PDM_timer_t*). The caller is responsible for freeing this structure using PDM_timer_free. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Usage</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-1" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-1">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv415PDM_timer_startP11PDM_timer_tPKci">
+<span id="_CPPv315PDM_timer_startP11PDM_timer_tPKci"></span><span id="_CPPv215PDM_timer_startP11PDM_timer_tPKci"></span><span id="PDM_timer_start__PDM_timer_tP.cCP.i"></span><span class="target" id="pdm__timer_8h_1a50331f6c78d1a9d370eb74174b68c770"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_start</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">name</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">force_synchro</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415PDM_timer_startP11PDM_timer_tPKci" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Marks the start of a timed event, pushing it onto the timer’s call stack. </p>
+<p class="sd-card-text">This function initiates the measurement for a named event, establishing its place in the hierarchical structure of the profiling data. It automatically sets up the parent-child relationship with the currently running event (if one exists).</p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>Hierarchical Event Management</strong></dt><dd><p class="sd-card-text">When called, PDM_timer_start does the following:<ol class="loweralpha simple">
+<li><p class="sd-card-text"><strong>Pushes the Event:</strong> The new event defined by <code class="docutils literal notranslate"><span class="pre">name</span></code> is pushed onto the timer’s internal call stack.</p></li>
+<li><p class="sd-card-text"><strong>Sets Parent:</strong> The event that was previously at the top of the stack (if any) is automatically designated as the <strong>parent</strong>.</p></li>
+<li><p class="sd-card-text"><strong>Records Path:</strong> The unique <strong>path name</strong> (e.g., “Main/FunctionA/LoopB”) is derived and stored, which is crucial for global aggregation.</p></li>
+<li><p class="sd-card-text"><strong>Starts Timing:</strong> The Wall-Clock Time (PDM_MPI_Wtime) is recorded to mark the start of the event’s <strong>Inclusive Time</strong>.</p></li>
+</ol>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>timer</strong> – <strong>[in]</strong> The timer context structure (PDM_timer_t*) created by PDM_timer_create. </p></li>
+<li><p class="sd-card-text"><strong>name</strong> – <strong>[in]</strong> The simple, descriptive name of the event (e.g., “step 1”). This name is appended to the parent’s path name. </p></li>
+<li><p class="sd-card-text"><strong>force_synchro</strong> – <strong>[in]</strong> An integer flag controlling synchronization behavior at the event start:<ul>
+<li><p class="sd-card-text">If non-zero : The function executes an <strong>MPI Barrier</strong> * on the timer’s communicator just before starting the event measurement. The time spent waiting at the barrier is recorded. This helps isolate the impact of load imbalance on the event’s start time.</p></li>
+<li><p class="sd-card-text">If zero : No synchronization is performed, and timing starts immediately. </p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv413PDM_timer_endP11PDM_timer_tPKci">
+<span id="_CPPv313PDM_timer_endP11PDM_timer_tPKci"></span><span id="_CPPv213PDM_timer_endP11PDM_timer_tPKci"></span><span id="PDM_timer_end__PDM_timer_tP.cCP.i"></span><span class="target" id="pdm__timer_8h_1ae15f26af960edce5d29177bd091e0fdf"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_end</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">name</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">force_synchro</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv413PDM_timer_endP11PDM_timer_tPKci" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Marks the end of a timed event, calculating its duration and removing it from the call stack. </p>
+<p class="sd-card-text">This function concludes the timing for the event identified by <code class="docutils literal notranslate"><span class="pre">name</span></code>, which must match the event currently at the top of the timer’s internal call stack. It calculates the event’s total Inclusive Time and finalizes all associated metrics before popping it from the stack.</p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>Event Finalization Process</strong></dt><dd><p class="sd-card-text">When called, PDM_timer_end performs the following crucial steps:<ol class="loweralpha simple">
+<li><p class="sd-card-text"><strong>Records End Time:</strong> The Wall-Clock Time (PDM_MPI_Wtime) is recorded to mark the end of the event.</p></li>
+<li><p class="sd-card-text"><strong>Calculates Duration:</strong> The total <strong>Inclusive Time**is computed by taking the difference between the end and start times.</strong></p></li>
+<li><p class="sd-card-text"><strong>**Updates Parent:</strong> The newly calculated Inclusive Time is subtracted from the parent event’s potential Exclusive Time (by summing it to the parent’s children time total).</p></li>
+<li><p class="sd-card-text"><strong>Pops Event:</strong> The finished event is popped from the call stack, restoring the parent event to the top of the stack.</p></li>
+</ol>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>timer</strong> – <strong>[in]</strong> The timer context structure (PDM_timer_t) created by PDM_timer_create. </p></li>
+<li><p class="sd-card-text"><strong>name</strong> – <strong>[in]</strong> The name of the event being terminated. This name <em>must</em> exactly match the name of the event at the top of the stack. A mismatch indicates a logic error in the application’s timer calls. </p></li>
+<li><p class="sd-card-text"><strong>force_synchro</strong> – <strong>[in]</strong> An integer flag controlling synchronization behavior upon event completion:<ul>
+<li><p class="sd-card-text">If non-zero : The function executes an <strong>MPI Barrier</strong> on the timer’s communicator just <em>after</em> recording the end time. The time spent waiting at the barrier is recorded. This helps assess the impact of waiting for other ranks to finish the same event.</p></li>
+<li><p class="sd-card-text">If zero : No synchronization is performed. </p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Post-treatment</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-2">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv415PDM_timer_printP11PDM_timer_t18PDM_timer_report_t">
+<span id="_CPPv315PDM_timer_printP11PDM_timer_t18PDM_timer_report_t"></span><span id="_CPPv215PDM_timer_printP11PDM_timer_t18PDM_timer_report_t"></span><span id="PDM_timer_print__PDM_timer_tP.PDM_timer_report_t"></span><span class="target" id="pdm__timer_8h_1af8efee10d962e4a9785970f18904b771"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_print</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span>, <span class="n"><span class="pre">PDM_timer_report_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415PDM_timer_printP11PDM_timer_t18PDM_timer_report_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Aggregates data and prints the profiling report in current process to the standard output. </p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>Report Modes</strong></dt><dd><p class="sd-card-text">The report format is controlled by the mode parameter:<ul class="simple">
+<li><p class="sd-card-text">PDM_TIMER_REPORT_HIERARCHICAL: The report preserves the call structure, indenting child events under their parents. This is ideal for analyzing call flow and identifying top-level consumers.</p></li>
+<li><p class="sd-card-text">PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name (e.g., “Main/Kernel/Loop”), ignoring the call hierarchy for a concise overview of every measured function.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>timer</strong> – [in] The timer context structure (PDM_timer_t*) </p></li>
+<li><p class="sd-card-text"><strong>mode</strong> – [in] Report mode (PDM_timer_report_t) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv413PDM_timer_logP11PDM_timer_t18PDM_timer_report_t">
+<span id="_CPPv313PDM_timer_logP11PDM_timer_t18PDM_timer_report_t"></span><span id="_CPPv213PDM_timer_logP11PDM_timer_t18PDM_timer_report_t"></span><span id="PDM_timer_log__PDM_timer_tP.PDM_timer_report_t"></span><span class="target" id="pdm__timer_8h_1aedd27e131277a1c367f252c51039fafe"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_log</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span>, <span class="n"><span class="pre">PDM_timer_report_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv413PDM_timer_logP11PDM_timer_t18PDM_timer_report_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Aggregates data and log the profiling report in current process to the paradigm logger. </p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>Report Modes</strong></dt><dd><p class="sd-card-text">The report format is controlled by the mode parameter:<ul class="simple">
+<li><p class="sd-card-text">PDM_TIMER_REPORT_HIERARCHICAL: The report preserves the call structure, indenting child events under their parents. This is ideal for analyzing call flow and identifying top-level consumers.</p></li>
+<li><p class="sd-card-text">PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name (e.g., “Main/Kernel/Loop”), ignoring the call hierarchy for a concise overview of every measured function.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>timer</strong> – [in] The timer context structure (PDM_timer_t*) </p></li>
+<li><p class="sd-card-text"><strong>mode</strong> – [in] Report mode (PDM_timer_report_t) </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419PDM_timer_dump_jsonP11PDM_timer_tPKc">
+<span id="_CPPv319PDM_timer_dump_jsonP11PDM_timer_tPKc"></span><span id="_CPPv219PDM_timer_dump_jsonP11PDM_timer_tPKc"></span><span id="PDM_timer_dump_json__PDM_timer_tP.cCP"></span><span class="target" id="pdm__timer_8h_1a80a800138876a08b8eba2580c7ca705e"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_dump_json</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">filename</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419PDM_timer_dump_jsonP11PDM_timer_tPKc" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Exports the <strong>local</strong>, per-process profiling data to a JSON file. </p>
+<p class="sd-card-text">This function serializes the full hierarchical tree of timed events recorded by the calling process into a specified JSON file. Since no aggregation is performed, this report is crucial for <strong>analyzing the timing behavior of an individual process</strong> and identifying process-specific performance anomalies or load imbalance sources.</p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>JSON Structure and Content</strong></dt><dd><p class="sd-card-text">The exported JSON file maintains the <strong>exact hierarchical structure</strong> established during the runtime (parent-child relationships). Each event object includes the following per-process metrics:<ul class="simple">
+<li><p class="sd-card-text"><strong>name:</strong> The simple name of the event (e.g., “LoopA”).</p></li>
+<li><p class="sd-card-text"><strong>n_call:</strong> The number of times this event was executed locally.</p></li>
+<li><p class="sd-card-text"><strong>t_inclusive:</strong> The total Wall-Clock Time for the event.</p></li>
+<li><p class="sd-card-text"><strong>t_exclusive:</strong> The net time spent within the event (calculated during the dump process).</p></li>
+<li><p class="sd-card-text"><strong>t_sync_entry:</strong> Synchronization time recorded at the start.</p></li>
+<li><p class="sd-card-text"><strong>t_sync_exit:</strong> Synchronization time recorded at the end.</p></li>
+<li><p class="sd-card-text"><strong>children:</strong> An array containing the full JSON objects of child events.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">This function is typically called by <strong>all ranks</strong>, but the output file will contain only the local data of the calling process. To distinguish reports, the <code class="docutils literal notranslate"><span class="pre">filename</span></code> should usually include the rank ID (e.g., “profiling_0.json”, “profiling_1.json”).</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>timer</strong> – <strong>[in]</strong> The timer context structure (PDM_timer_t*) containing the local event tree. </p></li>
+<li><p class="sd-card-text"><strong>filename</strong> – <strong>[in]</strong> The path and name of the JSON file to be created. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv421PDM_timer_gather_dumpP11PDM_timer_tPKc">
+<span id="_CPPv321PDM_timer_gather_dumpP11PDM_timer_tPKc"></span><span id="_CPPv221PDM_timer_gather_dumpP11PDM_timer_tPKc"></span><span id="PDM_timer_gather_dump__PDM_timer_tP.cCP"></span><span class="target" id="pdm__timer_8h_1a66f6f90f6e038f7b756b3645697d12ab"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_gather_dump</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">filename</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421PDM_timer_gather_dumpP11PDM_timer_tPKc" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Aggregates profiling data from all processes and writes the consolidated report to a file on rank 0. </p>
+<p class="sd-card-text">This function initiates the collective process of gathering local statistics from all ranks into a single comprehensive set of <strong>Global Statistics</strong> (Mean, Min[R], Max[R]) on the root process (rank 0).</p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>Report Format</strong></dt><dd><p class="sd-card-text">The resulting file contains a structured, typically <strong>text-based</strong> report. This function is generally used to generate the final human-readable terminal or log file report.</p>
+</dd>
+</dl>
+</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">This function is called <strong>collectively</strong>, but the final file output only occurs on the root rank (rank 0) after aggregation is complete.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>timer</strong> – <strong>[in]</strong> The timer context structure (PDM_timer_t*). </p></li>
+<li><p class="sd-card-text"><strong>filename</strong> – <strong>[in]</strong> The path and name of the file to which the global aggregated data will be written (e.g., “pdm_report.txt”). </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv426PDM_timer_gather_dump_jsonP11PDM_timer_tPKc">
+<span id="_CPPv326PDM_timer_gather_dump_jsonP11PDM_timer_tPKc"></span><span id="_CPPv226PDM_timer_gather_dump_jsonP11PDM_timer_tPKc"></span><span id="PDM_timer_gather_dump_json__PDM_timer_tP.cCP"></span><span class="target" id="pdm__timer_8h_1a67b70b9855c4d2f37ee34a1d430ef5a2"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_gather_dump_json</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">filename</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv426PDM_timer_gather_dump_jsonP11PDM_timer_tPKc" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Aggregates profiling data and exports the <strong>Global Statistics</strong> in a hierarchical JSON format on rank 0. </p>
+<p class="sd-card-text">This function first performs the global aggregation (calculating Mean, Min, Max, etc., across all ranks). It then generates a structured JSON file that uses the original event call tree (PDM_timer_t hierarchy) but populates the timing fields with the <strong>aggregated global results</strong>.</p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>JSON Structure and Content</strong></dt><dd><p class="sd-card-text">The output JSON is highly machine-readable, maintaining the parent-child relationships while exposing all global metrics for each event:<ul class="simple">
+<li><p class="sd-card-text"><strong>path_name:</strong> Unique identifier (e.g., “Main/Kernel”).</p></li>
+<li><p class="sd-card-text"><strong>n_call:</strong> Total calls across all processes.</p></li>
+<li><p class="sd-card-text"><strong>t_inclusive_mean/min/max:</strong> Global statistics for Inclusive Time.</p></li>
+<li><p class="sd-card-text"><strong>t_exclusive_mean:</strong> Global mean for Exclusive Time.</p></li>
+<li><p class="sd-card-text"><strong>r_inclusive_min/max:</strong> Rank IDs where the minimum and maximum times occurred.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>timer</strong> – <strong>[in]</strong> The timer context structure (PDM_timer_t*). </p></li>
+<li><p class="sd-card-text"><strong>filename</strong> – <strong>[in]</strong> The path and name of the JSON file to be created (e.g., “global_profiling.json”). </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv427PDM_timer_get_report_stringP11PDM_timer_t18PDM_timer_report_t">
+<span id="_CPPv327PDM_timer_get_report_stringP11PDM_timer_t18PDM_timer_report_t"></span><span id="_CPPv227PDM_timer_get_report_stringP11PDM_timer_t18PDM_timer_report_t"></span><span id="PDM_timer_get_report_string__PDM_timer_tP.PDM_timer_report_t"></span><span class="target" id="pdm__timer_8h_1a1a304e578c86d6998ec2a176494f6b2c"></span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_get_report_string</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span>, <span class="n"><span class="pre">PDM_timer_report_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv427PDM_timer_get_report_stringP11PDM_timer_t18PDM_timer_report_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Generates and returns the local, per-process profiling report as a dynamically allocated string. </p>
+<p class="sd-card-text">This utility function calls the internal reporting engine to format the local event data into a human-readable text report. This report reflects the exact times and call stack structure observed by the calling process (rank).</p>
+<p class="sd-card-text"><dl class="simple">
+<dt><strong>Memory Management</strong></dt><dd><p class="sd-card-text">The function returns a newly allocated C-style string (<code class="docutils literal notranslate"><span class="pre">char*</span></code>). <strong>The caller is responsible for freeing this memory</strong> using the appropriate deallocation function.</p>
+</dd>
+<dt><strong>Report Modes</strong></dt><dd><p class="sd-card-text">The structure of the generated report is controlled by the <code class="docutils literal notranslate"><span class="pre">mode</span></code> parameter:<ul class="simple">
+<li><p class="sd-card-text">PDM_TIMER_REPORT_HIERARCHICAL: The report displays the event timing data in a hierarchical, indented format, mirroring the call stack of the process.</p></li>
+<li><p class="sd-card-text">PDM_TIMER_REPORT_FLAT: The report lists all unique events alphabetically by their full path name, providing a flat view of the function costs.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p class="sd-card-text"><strong>timer</strong> – <strong>[in]</strong> The timer context structure (PDM_timer_t*) containing the local event tree. </p></li>
+<li><p class="sd-card-text"><strong>mode</strong> – <strong>[in]</strong> Report mode (PDM_timer_report_t)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p class="sd-card-text">A dynamically allocated C-string containing the formatted local report. Returns NULL or an empty string on allocation failure. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Finalization</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-3" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="language" data-sync-id="C" for="sd-tab-item-3">
+C</label><div class="sd-tab-content docutils">
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv414PDM_timer_freeP11PDM_timer_t">
+<span id="_CPPv314PDM_timer_freeP11PDM_timer_t"></span><span id="_CPPv214PDM_timer_freeP11PDM_timer_t"></span><span id="PDM_timer_free__PDM_timer_tP"></span><span class="target" id="pdm__timer_8h_1aca93bedc9150211e76738b771163c8e3"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PDM_timer_free</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PDM_timer_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">timer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414PDM_timer_freeP11PDM_timer_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p class="sd-card-text">Releases all dynamically allocated resources associated with the PDM timer context. </p>
+<p class="sd-card-text">This function is the final cleanup step for the timer. It recursively frees all memory used by the timer structure, including the entire event tree, the call stack, and any globally aggregated statistics that may have been stored.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="sd-card-text">This function should be called <strong>after</strong> all profiling and reporting is complete. <strong>Failure to call this function will result in memory leaks.</strong></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="sd-card-text"><strong>timer</strong> – <strong>[in]</strong> The timer context structure (PDM_timer_t*) to be destroyed and freed. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</details></section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../../changelog.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Release notes</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="exch_helper.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Exchange helper</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, ONERA The French Aerospace Lab
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Timer</a><ul>
+<li><a class="reference internal" href="#description">Description</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#_CPPv416PDM_timer_create12PDM_MPI_Comm"><code class="docutils literal notranslate"><span class="pre">PDM_timer_create()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv415PDM_timer_startP11PDM_timer_tPKci"><code class="docutils literal notranslate"><span class="pre">PDM_timer_start()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv413PDM_timer_endP11PDM_timer_tPKci"><code class="docutils literal notranslate"><span class="pre">PDM_timer_end()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv415PDM_timer_printP11PDM_timer_t18PDM_timer_report_t"><code class="docutils literal notranslate"><span class="pre">PDM_timer_print()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv413PDM_timer_logP11PDM_timer_t18PDM_timer_report_t"><code class="docutils literal notranslate"><span class="pre">PDM_timer_log()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv419PDM_timer_dump_jsonP11PDM_timer_tPKc"><code class="docutils literal notranslate"><span class="pre">PDM_timer_dump_json()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv421PDM_timer_gather_dumpP11PDM_timer_tPKc"><code class="docutils literal notranslate"><span class="pre">PDM_timer_gather_dump()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv426PDM_timer_gather_dump_jsonP11PDM_timer_tPKc"><code class="docutils literal notranslate"><span class="pre">PDM_timer_gather_dump_json()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv427PDM_timer_get_report_stringP11PDM_timer_t18PDM_timer_report_t"><code class="docutils literal notranslate"><span class="pre">PDM_timer_get_report_string()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv414PDM_timer_freeP11PDM_timer_t"><code class="docutils literal notranslate"><span class="pre">PDM_timer_free()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=182a64a0"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../../_static/js/custom.js?v=c7b75b1d"></script>
+    </body>
+</html>
