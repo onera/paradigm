@@ -2039,3 +2039,68 @@ int     *new_to_old_order
 }
 
 
+void
+PDM_part_renum_by_first_appearance
+(
+ const int  n_entity1,
+ const int *entity1_order,
+ const int *entity1_entity2_idx,
+ const int *entity1_entity2,
+       int *old_to_new_entity2,
+       int *new_to_old_entity2,
+       int *n_entity2_new
+)
+{
+  int _n_entity2_new = *n_entity2_new;
+  for (int i = 0; i < n_entity1; i++) {
+    int i_entity1 = (entity1_order != NULL) ? entity1_order[i] : i;
+    for (int idx = entity1_entity2_idx[i_entity1]; idx < entity1_entity2_idx[i_entity1+1]; idx++) {
+      int i_entity2 = PDM_ABS(entity1_entity2[idx]) - 1;
+      if (old_to_new_entity2[i_entity2] == -1) {
+        old_to_new_entity2[i_entity2]      = _n_entity2_new;
+        new_to_old_entity2[_n_entity2_new] = i_entity2;
+        _n_entity2_new++;
+      }
+    }
+  }
+  *n_entity2_new = _n_entity2_new;
+}
+
+void
+PDM_part_renum_by_lexicographic_order
+(
+ const int  n_entity1,
+ const int *entity1_entity2_idx,
+ const int *entity1_entity2,
+       int *new_to_old_entity1
+)
+{
+  if (n_entity1 <= 0) {
+    return;
+  }
+  int n_max = 0;
+  for (int i = 0; i < n_entity1; i++) {
+    n_max = PDM_MAX(n_max, entity1_entity2_idx[i+1] - entity1_entity2_idx[i]);
+  }
+  /*
+   * Key of entity1 i : its sorted entity2 ids, padded with 0 (smaller than any 1-based id,
+   * so that a prefix comes first), then i itself so that equal lists keep their initial order
+   */
+  int stride = n_max + 1;
+  int *key = NULL;
+  PDM_malloc(key, stride * n_entity1, int);
+  for (int i = 0; i < n_entity1; i++) {
+    int *_key = key + stride * i;
+    int  n    = entity1_entity2_idx[i+1] - entity1_entity2_idx[i];
+    for (int j = 0; j < n; j++) {
+      _key[j] = PDM_ABS(entity1_entity2[entity1_entity2_idx[i] + j]);
+    }
+    PDM_sort_int(_key, NULL, n);
+    for (int j = n; j < n_max; j++) {
+      _key[j] = 0;
+    }
+    _key[n_max] = i; // This one is here to ensure stable sort
+  }
+  PDM_order_lnum_s(key, stride, new_to_old_entity1, n_entity1);
+  PDM_free(key);
+}

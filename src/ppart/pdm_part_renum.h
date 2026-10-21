@@ -48,8 +48,8 @@ typedef void (*PDM_part_renum_fct_t) (part_t  **ppart, int n_part, void* specifi
 int
 PDM_part_renum_method_cell_add
 (
- const char                 *name,     /*!< Name          */
- const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */
+  const char                 *name,     /*!< Name          */
+  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */
 );
 
 /**
@@ -64,8 +64,8 @@ PDM_part_renum_method_cell_add
 int
 PDM_part_renum_method_face_add
 (
- const char                 *name,     /*!< Name          */
- const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
+  const char                 *name,     /*!< Name          */
+  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 );
 
 /**
@@ -80,8 +80,8 @@ PDM_part_renum_method_face_add
 int
 PDM_part_renum_method_edge_add
 (
- const char                 *name,     /*!< Name          */
- const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
+  const char                 *name,     /*!< Name          */
+  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 );
 
 
@@ -97,8 +97,8 @@ PDM_part_renum_method_edge_add
 int
 PDM_part_renum_method_vtx_add
 (
- const char                 *name,     /*!< Name          */
- const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
+  const char                 *name,     /*!< Name          */
+  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 );
 
 
@@ -114,7 +114,7 @@ PDM_part_renum_method_vtx_add
 const char *
 PDM_part_renum_method_vtx_name_get
 (
-const int idx
+  const int idx
 );
 
 /**
@@ -129,7 +129,7 @@ const int idx
 int
 PDM_part_renum_method_cell_idx_get
 (
-const char *name
+  const char *name
 );
 
 
@@ -145,7 +145,7 @@ const char *name
 int
 PDM_part_renum_method_face_idx_get
 (
-const char *name
+  const char *name
 );
 
 /**
@@ -160,7 +160,7 @@ const char *name
 int
 PDM_part_renum_method_edge_idx_get
 (
-const char *name
+  const char *name
 );
 
 /**
@@ -175,10 +175,8 @@ const char *name
 int
 PDM_part_renum_method_vtx_idx_get
 (
-const char *name
+  const char *name
 );
-
-
 
 /**
  *
@@ -189,19 +187,18 @@ const char *name
  * \return Name of the method
  *
  */
-
 void
 PDM_part_renum_method_cell_name_get_cf
 (
- const int  idx,
- char      *name,
- int       *l_name
- );
+  const int   idx,
+        char *name,
+        int  *l_name
+);
 
 const char *
 PDM_part_renum_method_cell_name_get
 (
-const int idx
+  const int idx
 );
 
 
@@ -214,19 +211,18 @@ const int idx
  * \return Name of the method
  *
  */
-
 void
 PDM_part_renum_method_face_name_get_cf
 (
- const int  idx,
- char      *name,
- int       *l_name
- );
+  const int  idx,
+  char      *name,
+  int       *l_name
+);
 
 const char *
 PDM_part_renum_method_face_name_get
 (
-const int idx
+  const int idx
 );
 
 
@@ -241,7 +237,7 @@ const int idx
 int
 PDM_part_n_renum_method_cell_get
 (
-void
+  void
 );
 
 
@@ -256,7 +252,7 @@ void
 int
 PDM_part_n_renum_method_face_get
 (
-void
+  void
 );
 
 
@@ -269,7 +265,7 @@ void
 int
 PDM_part_n_renum_method_cell_get
 (
-void
+  void
 );
 
 
@@ -284,7 +280,7 @@ void
 int
 PDM_part_n_renum_method_face_get
 (
-void
+  void
 );
 
 
@@ -297,7 +293,7 @@ void
 void
 PDM_part_renum_method_purge
 (
-void
+  void
 );
 
 /**
@@ -309,7 +305,7 @@ void
 void
 PDM_part_renum_method_load_local
 (
-void
+  void
 );
 
 
@@ -324,10 +320,10 @@ void
 void
 PDM_part_renum_cell
 (
- part_t **part,
- int       n_part,
- int       renum_cell_method,
- void     *specific_data
+  part_t  **part,
+  int       n_part,
+  int       renum_cell_method,
+  void     *specific_data
 );
 
 
@@ -342,10 +338,10 @@ PDM_part_renum_cell
 void
 PDM_part_renum_face
 (
- part_t **part,
- int       n_part,
- int       renum_face_method,
- void     *specific_data
+  part_t  **part,
+  int       n_part,
+  int       renum_face_method,
+  void     *specific_data
 );
 
 
@@ -360,10 +356,10 @@ PDM_part_renum_face
 void
 PDM_part_renum_edge
 (
- part_t **part,
- int       n_part,
- int       renum_vtx_method,
- void     *specific_data
+  part_t  **part,
+  int       n_part,
+  int       renum_vtx_method,
+  void     *specific_data
 );
 
 /**
@@ -377,10 +373,10 @@ PDM_part_renum_edge
 void
 PDM_part_renum_vtx
 (
- part_t **part,
- int       n_part,
- int       renum_vtx_method,
- void     *specific_data
+  part_t  **part,
+  int       n_part,
+  int       renum_vtx_method,
+  void     *specific_data
 );
 
 
@@ -398,8 +394,8 @@ PDM_part_renum_vtx
 void
 PDM_part_reorder_cell
 (
- part_t *part,
- int     *new_to_old_order
+  part_t *part,
+  int     *new_to_old_order
 );
 
 
@@ -417,8 +413,8 @@ PDM_part_reorder_cell
 void
 PDM_part_reorder_face
 (
- part_t *part,
- int     *new_to_old_order
+  part_t *part,
+  int     *new_to_old_order
 );
 
 /**
@@ -435,8 +431,8 @@ PDM_part_reorder_face
 void
 PDM_part_reorder_edge
 (
- part_t *part,
- int     *new_to_old_order
+  part_t *part,
+  int     *new_to_old_order
 );
 
 /**
@@ -453,8 +449,8 @@ PDM_part_reorder_edge
 void
 PDM_part_reorder_vtx
 (
- part_t *part,
- int     *new_to_old_order
+  part_t *part,
+  int     *new_to_old_order
 );
 
 
@@ -489,9 +485,9 @@ PDM_part_renum_connectivities
 void
 PDM_order_face_cell
 (
-int          n_face,
-int         *new_to_old_order,
-int         *face_cell
+  int          n_face,
+  int         *new_to_old_order,
+  int         *face_cell
 );
 
 /**
@@ -506,9 +502,9 @@ int         *face_cell
 void
 PDM_part_renum_array
 (
-const int  sizeArray,
-const int *old_to_new_order,
-int       *array
+  const int  sizeArray,
+  const int *old_to_new_order,
+        int *array
 );
 
 /**
@@ -523,10 +519,10 @@ int       *array
 void
 PDM_part_renum_graph
 (
-const int   n_entity1,
-      int  *entity1_entity1_idx,
-      int  *entity1_entity1,
-const int  *new_to_old_order
+  const int   n_entity1,
+        int  *entity1_entity1_idx,
+        int  *entity1_entity1,
+  const int  *new_to_old_order
 );
 
 /**
@@ -541,9 +537,9 @@ const int  *new_to_old_order
 void
 PDM_part_renum_array_face_cell
 (
-const int  sizeArray,
-const int *old_to_new_order,
-int       *array
+  const int  sizeArray,
+  const int *old_to_new_order,
+        int *array
 );
 
 /**
@@ -557,8 +553,8 @@ int       *array
 void
 PDM_part_reorder_face_bound
 (
- part_t *part,
- int    *new_to_old_order
+  part_t *part,
+  int    *new_to_old_order
 );
 
 /**
@@ -572,8 +568,65 @@ PDM_part_reorder_face_bound
 void
 PDM_part_reorder_edge_bound
 (
-part_t  *part,
-int     *new_to_old_order
+  part_t  *part,
+  int     *new_to_old_order
+);
+
+/**
+ *
+ * \brief Number entities2 by order of first appearance through an entity1->entity2 connectivity
+ *
+ * The entities1 are traversed in the order given by \p entity1_order (identity if NULL).
+ * Each entity2 not numbered yet (\p old_to_new_entity2 == -1) receives the next new number.
+ * The function can be called several times to continue the same numbering
+ * (e.g. principal elements, then lower dimension elements). Entities2 never reached keep -1
+ * in \p old_to_new_entity2 and are not in \p new_to_old_entity2.
+ *
+ * \param [in]     n_entity1            Number of entities1
+ * \param [in]     entity1_order        Traversal order of entities1, 0-based (size = \p n_entity1) or NULL
+ * \param [in]     entity1_entity2_idx  Index of entity1->entity2 connectivity (size = \p n_entity1 + 1)
+ * \param [in]     entity1_entity2      Entity1->entity2 connectivity (1-based, sign ignored) (size = entity_entity2_idx[n_entity1])
+ * \param [in,out] old_to_new_entity2   Old to new numbering of entities2 (0-based, -1 if not numbered yet)
+ * \param [in,out] new_to_old_entity2   New to old numbering of entities2 (0-based)
+ * \param [in,out] n_entity2_new        Number of entities2 already numbered
+ *
+ */
+void
+PDM_part_renum_by_first_appearance
+(
+ const int  n_entity1,
+ const int *entity1_order,
+ const int *entity1_entity2_idx,
+ const int *entity1_entity2,
+       int *old_to_new_entity2,
+       int *new_to_old_entity2,
+       int *n_entity2_new
+);
+
+/**
+ *
+ * \brief Order entities1 lexicographically by their sorted entity1->entity2 connectivity
+ *
+ * For each entity1, the list of its entities2 is sorted by increasing id (sign ignored) and the
+ * entities1 are ordered by the lexicographic order of these lists : the smallest entity2 id is
+ * the first key, a list that is a prefix of another one comes first (an entity1 without
+ * entity2 comes before all the others), and entities1 with the same list keep their
+ * initial relative order.
+ *
+ * \param [in]  n_entity1            Number of entities1
+ * \param [in]  entity1_entity2_idx  Index of entity1->entity2 connectivity (size = \p n_entity1 + 1)
+ * \param [in]  entity1_entity2      Entity1->entity2 connectivity (1-based, sign ignored)  (size = entity_entity2_idx[n_entity1])
+ * \param [out] new_to_old_entity1   New to old numbering of entities1, 0-based
+ *                                   (size = \p n_entity1, allocated by the caller)
+ *
+ */
+void
+PDM_part_renum_by_lexicographic_order
+(
+ const int  n_entity1,
+ const int *entity1_entity2_idx,
+ const int *entity1_entity2,
+       int *new_to_old_entity1
 );
 
 #ifdef __cplusplus

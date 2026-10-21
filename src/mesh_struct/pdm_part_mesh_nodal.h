@@ -1388,6 +1388,97 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_free
 
 
 /**
+ * \brief Get the vertex permutation
+ *
+ * new_field[i] = old_field[vtx_new_to_old[i]] (0-based)
+ *
+ * \param [in]   pmn             Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   i_part          Partition identifier
+ * \param [out]  vtx_new_to_old  Vertex permutation (size = number of vertices of the partition), NULL if no renumbering was done
+ * \param [in]   ownership       Choice of ownership of the resulting array \ref PDM_ownership_t
+ *                               (PDM_OWNERSHIP_USER to take it, PDM_OWNERSHIP_KEEP (default) to
+ *                                let \p pmn free it, PDM_OWNERSHIP_BAD_VALUE to leave it unchanged)
+ */
+void
+PDM_part_mesh_nodal_vtx_new_to_old_get
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  int                     i_part,
+  int                   **vtx_new_to_old,
+  PDM_ownership_t         ownership
+);
+
+/**
+ * \brief Get the element permutation (part numbering)
+ *
+ * new_field[i] = old_field[elmt_new_to_old[i]] (0-based)
+ *
+ * \param [in]   pmn              Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   geom_kind        Geometry kind (corner, ridge, surface or volume)
+ * \param [in]   i_part           Partition identifier
+ * \param [out]  elmt_new_to_old  Element permutation (size = number of elements of
+ *                                \p geom_kind), NULL if no renumbering was done or if
+ *                                there is no element of this geometry kind
+ * \param [in]   ownership       Choice of ownership of the resulting array \ref PDM_ownership_t
+ *                               (PDM_OWNERSHIP_USER to take it, PDM_OWNERSHIP_KEEP (default) to
+ *                                let \p pmn free it, PDM_OWNERSHIP_BAD_VALUE to leave it unchanged)
+ */
+void
+PDM_part_mesh_nodal_elmts_new_to_old_get
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     i_part,
+  int                   **elmt_new_to_old,
+  PDM_ownership_t         ownership
+);
+
+
+/**
+ * \brief Get the permutation of the entries of a group
+ *
+ * new_group_field[j] = old_group_field[group_new_to_old[j]] (0-based)
+ *
+ * \param [in]   pmn               Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   geom_kind         Geometry kind (corner, ridge, surface or volume)
+ * \param [in]   i_part            Partition identifier
+ * \param [in]   i_group           Group identifier
+ * \param [out]  group_new_to_old  Permutation of the entries of the group (size = number of
+ *                                 elements in the group), NULL if no renumbering was done
+ *                                 or if there is no element of this geometry kind
+ * \param [in]   ownership       Choice of ownership of the resulting array \ref PDM_ownership_t
+ *                               (PDM_OWNERSHIP_USER to take it, PDM_OWNERSHIP_KEEP (default) to
+ *                                let \p pmn free it, PDM_OWNERSHIP_BAD_VALUE to leave it unchanged)
+ */
+
+void
+PDM_part_mesh_nodal_group_new_to_old_get
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     i_part,
+  int                     i_group,
+  int                   **group_new_to_old,
+  PDM_ownership_t         ownership
+);
+
+
+/**
+ * \brief Free the permutations of the last \ref PDM_part_mesh_nodal_renum
+ *
+ * Arrays whose ownership was given to the user (PDM_OWNERSHIP_USER) are not freed.
+ * Called by \ref PDM_part_mesh_nodal_free and at the beginning of \ref PDM_part_mesh_nodal_renum.
+ *
+ * \param [in] pmn Pointer to \ref PDM_part_mesh_nodal_t instance
+ */
+void
+PDM_part_mesh_nodal_new_to_old_free
+(
+  PDM_part_mesh_nodal_t *pmn
+);
+
+
+/**
  * \brief Transform group information inside a \ref PDM_part_mesh_nodal_t to tag for all elements
  *
  * \param [in]  pmne            Pointer to \ref PDM_part_mesh_nodal_t object

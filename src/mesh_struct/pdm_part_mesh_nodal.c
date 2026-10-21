@@ -937,6 +937,8 @@ PDM_part_mesh_nodal_free
   PDM_part_mesh_nodal_part_comm_graph_free(pmn, PDM_GEOMETRY_KIND_MAX);
   PDM_part_mesh_nodal_part_comm_graph_vtx_free(pmn);
 
+  PDM_part_mesh_nodal_new_to_old_free(pmn);
+
   PDM_free(pmn->section_kind);
   PDM_free(pmn->section_id);
 
@@ -2809,4 +2811,121 @@ PDM_part_mesh_nodal_dump_gamma
   }
   PDM_free(gvtx_coord);
   PDM_free(gvtx_tag);
+}
+
+void
+PDM_part_mesh_nodal_vtx_new_to_old_get
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  int                     i_part,
+  int                   **vtx_new_to_old,
+  PDM_ownership_t         ownership
+)
+{
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    pmn->vtx_new_to_old_ownership[i_part] = ownership;
+  }
+
+  *vtx_new_to_old = pmn->vtx_new_to_old[i_part];
+}
+
+
+void
+PDM_part_mesh_nodal_elmts_new_to_old_get
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     i_part,
+  int                   **elmt_new_to_old,
+  PDM_ownership_t         ownership
+)
+{
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    pmn->elmt_new_to_old_ownership[dim][i_part] = ownership;
+  }
+
+  *elmt_new_to_old = pmn->elmt_new_to_old[dim][i_part];
+}
+
+void
+PDM_part_mesh_nodal_group_new_to_old_get
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     i_part,
+  int                     i_group,
+  int                   **group_new_to_old,
+  PDM_ownership_t         ownership
+)
+{
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
+
+  if (i_group < 0 || i_group >= pmn->n_group_new_to_old[dim]) {
+    PDM_error("Invalid i_group (%d / %d)", i_group, pmn->n_group_new_to_old[dim]);
+  }
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    pmn->group_new_to_old_ownership[dim][i_part][i_group] = ownership;
+  }
+
+  *group_new_to_old = pmn->group_new_to_old[dim][i_part][i_group];
+}
+
+
+void
+PDM_part_mesh_nodal_new_to_old_free
+(
+  PDM_part_mesh_nodal_t *pmn
+)
+{
+  CHECK_PMN(pmn)
+
+  if (pmn->vtx_new_to_old != NULL) {
+    for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+      if (pmn->vtx_new_to_old_ownership[i_part] == PDM_OWNERSHIP_KEEP) {
+        PDM_free(pmn->vtx_new_to_old[i_part]);
+      }
+    }
+    PDM_free(pmn->vtx_new_to_old);
+    PDM_free(pmn->vtx_new_to_old_ownership);
+  }
+
+  for (int dim = 0; dim < 4; dim++) {
+
+    if (pmn->elmt_new_to_old[dim] != NULL) {
+      for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+        if (pmn->elmt_new_to_old_ownership[dim][i_part] == PDM_OWNERSHIP_KEEP) {
+          PDM_free(pmn->elmt_new_to_old[dim][i_part]);
+        }
+      }
+      PDM_free(pmn->elmt_new_to_old          [dim]);
+      PDM_free(pmn->elmt_new_to_old_ownership[dim]);
+    }
+
+    if (pmn->group_new_to_old[dim] != NULL) {
+      for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+        for (int i_group = 0; i_group < pmn->n_group_new_to_old[dim]; i_group++) {
+          if (pmn->group_new_to_old_ownership[dim][i_part][i_group] == PDM_OWNERSHIP_KEEP) {
+            PDM_free(pmn->group_new_to_old[dim][i_part][i_group]);
+          }
+        }
+        PDM_free(pmn->group_new_to_old          [dim][i_part]);
+        PDM_free(pmn->group_new_to_old_ownership[dim][i_part]);
+      }
+      PDM_free(pmn->group_new_to_old          [dim]);
+      PDM_free(pmn->group_new_to_old_ownership[dim]);
+    }
+    pmn->n_group_new_to_old[dim] = 0;
+  }
 }

@@ -1,5 +1,6 @@
 ## [Development version]
 ### Added
+- PDM_part_mesh_nodal: add renumbering functions
 ### Changed
 ### Deprecated
 ### Removed
