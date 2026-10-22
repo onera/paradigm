@@ -1076,32 +1076,17 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
     double max_ratio    = -1.;
     double mean_ratio   = -1.;
     double median_ratio = -1.;
-    int    min_send     = -1;
-    int    max_send     = -1;
-    int    min_recv     = -1;
-    int    max_recv     = -1;
 
     PDM_part_comm_graph_owner_statistics_get(pcg,
                                              &min_ratio,
                                              &max_ratio,
                                              &mean_ratio,
-                                             &median_ratio,
-                                             &min_send,
-                                             &max_send,
-                                             &min_recv,
-                                             &max_recv);
+                                             &median_ratio);
 
     CHECK(min_ratio    == doctest::Approx(expected_min_ratio   [i_owner]).epsilon(1e-12));
     CHECK(max_ratio    == doctest::Approx(expected_max_ratio   [i_owner]).epsilon(1e-12));
     CHECK(mean_ratio   == doctest::Approx(expected_mean_ratio  [i_owner]).epsilon(1e-12));
-    /* n_rank impair -> valeur mediane exacte */
     CHECK(median_ratio == doctest::Approx(expected_median_ratio[i_owner]).epsilon(1e-12));
-
-    /* chaque rang communique avec les deux autres */
-    CHECK(min_send == 2);
-    CHECK(max_send == 2);
-    CHECK(min_recv == 2);
-    CHECK(max_recv == 2);
 
     PDM_part_comm_graph_free(pcg);
   }

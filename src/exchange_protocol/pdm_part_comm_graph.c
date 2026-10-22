@@ -2366,6 +2366,8 @@ PDM_part_comm_graph_owner_check
   PDM_free(owner_opp);
 
 }
+
+
 void
 PDM_part_comm_graph_owner_statistics_get
 (
@@ -2373,11 +2375,7 @@ PDM_part_comm_graph_owner_statistics_get
   double                *min_ratio_owner,
   double                *max_ratio_owner,
   double                *mean_ratio_owner,
-  double                *median_ratio_owner,
-  int                   *min_n_active_rank_send,
-  int                   *max_n_active_rank_send,
-  int                   *min_n_active_rank_recv,
-  int                   *max_n_active_rank_recv
+  double                *median_ratio_owner
 )
 {
   CHECK_INSTANCE(pcg)
@@ -2465,8 +2463,4 @@ PDM_part_comm_graph_owner_statistics_get
   if (max_ratio_owner        != NULL) { *max_ratio_owner        = g_max_ratio;    }
   if (mean_ratio_owner       != NULL) { *mean_ratio_owner       = g_mean_ratio;   }
   if (median_ratio_owner     != NULL) { *median_ratio_owner     = g_median_ratio; }
-  if (min_n_active_rank_send != NULL) { *min_n_active_rank_send = g_min_send;     }
-  if (max_n_active_rank_send != NULL) { *max_n_active_rank_send = g_max_send;     }
-  if (min_n_active_rank_recv != NULL) { *min_n_active_rank_recv = g_min_recv;     }
-  if (max_n_active_rank_recv != NULL) { *max_n_active_rank_recv = g_max_recv;     }
 }

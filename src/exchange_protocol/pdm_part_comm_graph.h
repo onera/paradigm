@@ -721,10 +721,6 @@ PDM_part_comm_graph_owner_check
  * \param [out] max_ratio_owner         Maximum over the ranks of the ratio of owned entities (or NULL)
  * \param [out] mean_ratio_owner        Mean over the ranks of the ratio of owned entities (or NULL)
  * \param [out] median_ratio_owner      Median over the ranks of the ratio of owned entities (or NULL)
- * \param [out] min_n_active_rank_send  Minimum over the ranks of the number of ranks sent to (or NULL)
- * \param [out] max_n_active_rank_send  Maximum over the ranks of the number of ranks sent to (or NULL)
- * \param [out] min_n_active_rank_recv  Minimum over the ranks of the number of ranks received from (or NULL)
- * \param [out] max_n_active_rank_recv  Maximum over the ranks of the number of ranks received from (or NULL)
  *
  */
 void
@@ -734,11 +730,7 @@ PDM_part_comm_graph_owner_statistics_get
   double                *min_ratio_owner,
   double                *max_ratio_owner,
   double                *mean_ratio_owner,
-  double                *median_ratio_owner,
-  int                   *min_n_active_rank_send,
-  int                   *max_n_active_rank_send,
-  int                   *min_n_active_rank_recv,
-  int                   *max_n_active_rank_recv
+  double                *median_ratio_owner
 );
 
 #ifdef __cplusplus
