@@ -100,7 +100,7 @@ PDM_bound_type_to_entity_type
       return PDM_MESH_ENTITY_VTX;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid bound_type %d\n", bound_type);
+      PDM_error("Invalid bound_type %d", bound_type);
     }
 
   }
@@ -130,7 +130,7 @@ PDM_entity_type_to_bound_type
       return PDM_BOUND_TYPE_VTX;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+      PDM_error("Invalid entity_type %d", entity_type);
     }
 
   }
@@ -160,7 +160,7 @@ PDM_geometry_kind_to_entity_type
       return PDM_MESH_ENTITY_VTX;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+      PDM_error("Invalid geom_kind %d", geom_kind);
     }
 
   }
@@ -193,7 +193,7 @@ PDM_geometry_kind_to_dimension
       return -1;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+      PDM_error("Invalid geom_kind %d", geom_kind);
     }
 
   }
@@ -224,7 +224,7 @@ PDM_entity_type_to_geometry_kind
       return PDM_GEOMETRY_KIND_CORNER;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+      PDM_error("Invalid entity_type %d", entity_type);
     }
 
   }
@@ -253,7 +253,7 @@ PDM_dimension_to_entity_type
       return PDM_MESH_ENTITY_VTX;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+      PDM_error("Invalid dimension %d", dim);
     }
   }
 
@@ -282,7 +282,7 @@ PDM_dimension_to_geometry_kind
       return PDM_GEOMETRY_KIND_CORNER;
     }
     default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+      PDM_error("Invalid dimension %d", dim);
     }
   }
 
@@ -304,7 +304,7 @@ PDM_entity_pair_to_connectivity_type
       case PDM_MESH_ENTITY_FACE: return PDM_CONNECTIVITY_TYPE_CELL_FACE;
       case PDM_MESH_ENTITY_EDGE: return PDM_CONNECTIVITY_TYPE_CELL_EDGE;
       case PDM_MESH_ENTITY_VTX : return PDM_CONNECTIVITY_TYPE_CELL_VTX;
-      default: PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+      default: PDM_error("Invalid entity pair %d %d", entity_type1, entity_type2);
     }
   }
   else if (entity_type1 == PDM_MESH_ENTITY_FACE) {
@@ -313,7 +313,7 @@ PDM_entity_pair_to_connectivity_type
       case PDM_MESH_ENTITY_FACE: return PDM_CONNECTIVITY_TYPE_FACE_FACE;
       case PDM_MESH_ENTITY_EDGE: return PDM_CONNECTIVITY_TYPE_FACE_EDGE;
       case PDM_MESH_ENTITY_VTX : return PDM_CONNECTIVITY_TYPE_FACE_VTX;
-      default: PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+      default: PDM_error("Invalid entity pair %d %d", entity_type1, entity_type2);
     }
   }
   else if (entity_type1 == PDM_MESH_ENTITY_EDGE) {
@@ -322,7 +322,7 @@ PDM_entity_pair_to_connectivity_type
       case PDM_MESH_ENTITY_FACE: return PDM_CONNECTIVITY_TYPE_EDGE_FACE;
       case PDM_MESH_ENTITY_EDGE: return PDM_CONNECTIVITY_TYPE_EDGE_EDGE;
       case PDM_MESH_ENTITY_VTX : return PDM_CONNECTIVITY_TYPE_EDGE_VTX;
-      default: PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+      default: PDM_error("Invalid entity pair %d %d", entity_type1, entity_type2);
     }
   }
   else if (entity_type1 == PDM_MESH_ENTITY_VTX) {
@@ -331,11 +331,11 @@ PDM_entity_pair_to_connectivity_type
       case PDM_MESH_ENTITY_FACE: return PDM_CONNECTIVITY_TYPE_VTX_FACE;
       case PDM_MESH_ENTITY_EDGE: return PDM_CONNECTIVITY_TYPE_VTX_EDGE;
       case PDM_MESH_ENTITY_VTX : return PDM_CONNECTIVITY_TYPE_VTX_VTX;
-      default: PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+      default: PDM_error("Invalid entity pair %d %d", entity_type1, entity_type2);
     }
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+    PDM_error("Invalid entity pair %d %d", entity_type1, entity_type2);
   }
 
   return PDM_CONNECTIVITY_TYPE_MAX;
@@ -436,7 +436,7 @@ PDM_connectivity_type_to_entity_pair
     }
 
     default : {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid connectivity type %d\n", connectivity_type);
+      PDM_error("Invalid connectivity type %d", connectivity_type);
       // return 0;
     }
   }

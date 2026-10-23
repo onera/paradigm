@@ -945,9 +945,8 @@ _dist_cloud_surf_compute_optim
     n_part_mesh = PDM_surf_mesh_n_part_get (surf_mesh);
   }
   else {
-    log_trace("empty mesh\n");
-    // PDM_error(__FILE__, __LINE__, 0,
-    //     "PDM_dist_cloud_surf error : The surface mesh is not defined. "
+    // PDM_error(
+    //     "The surface mesh is not defined. "
     //     "To do that : \n"
     //     "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
     //     "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
@@ -2288,7 +2287,7 @@ PDM_dist_cloud_surf_timer_set
     return;
   }
   if(timer == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "timer is NULL \n");
+    PDM_error("timer is NULL");
   }
   PDM_timer_free(dist->timer);
 
