@@ -72,6 +72,223 @@
  * Static function definitions
  *============================================================================*/
 
+/**
+ * \brief Compare lexicographically two nuplets of the same size using absolute values.
+ *
+ * \param[in] size Number of elements in each nuplet.
+ * \param[in] a    First nuplet to compare.
+ * \param[in] b    Second nuplet to compare.
+ *
+ * \return -1 if |a| > |b|, 0 if |a| == |b|, 1 if |a| < |b|
+ */
+static
+inline
+int
+_compare_nuplets_abs
+(
+  const int size,
+  const int a[],
+  const int b[]
+)
+{
+  for (int i = 0; i < size; i++) {
+    if (PDM_ABS(a[i]) < PDM_ABS(b[i])) {
+      return 1;
+    }
+    if (PDM_ABS(a[i]) > PDM_ABS(b[i])) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+/**
+ * \brief Compare lexicographically two nuplets of the same size.
+ *
+ * \param[in] size Number of elements in each nuplet.
+ * \param[in] a    First nuplet to compare.
+ * \param[in] b    Second nuplet to compare.
+ *
+ * \return -1 if a > b, 0 if a == b, 1 if a < b
+ */
+static
+inline
+int
+_compare_nuplets
+(
+  const int size,
+  const int a[],
+  const int b[]
+)
+{
+  for (int i = 0; i < size; i++) {
+    if (a[i] < b[i]) {
+      return 1;
+    }
+    if (a[i] > b[i]) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+/**
+ * \brief Generate a 31-bit hash from an array of integers.
+ *
+ * Computes a hash value using a set of large primes and bit-rotation to ensure
+ * uniform distribution and minimize collisions, even for large input arrays.
+ * The hash is computed using the absolute values of the input to ensure symmetry.
+ *
+ * \param[in] n      Number of elements in the array.
+ * \param[in] values Array of integers to hash.
+ *
+ * \return A positive 31-bit integer hash.
+ */
+static
+inline
+int
+_pdm_hash_any_size(const int n, const int values[])
+{
+  // Suite de nombres premiers larges pour éviter les résonances
+  const int n_primes = 9;
+  static const unsigned int primes[9] = {73856093, 19349663, 83492791, 4256233, 2160517,
+                                         12582917, 50331653, 100663319, 201326611};
+
+  unsigned int h = 0;
+  for (int i = 0; i < n; i++) {
+    unsigned int p = primes[i % n_primes];       // On boucle sur les nombres premiers si n > n_primes
+    h ^= ((unsigned int)PDM_ABS(values[i]) * p); // Un petit mélange supplémentaire pour propager les bits
+    h = (h << 5) | (h >> 27);
+  }
+
+  return (int)(h & 0x7FFFFFFF);
+}
+
+/**
+ * \brief Compare two nuplets based on their hash values for load balancing.
+ *
+ * Uses \ref _pdm_hash_any_size to compare nuplets. This strategy is used to
+ * homogenize the distribution of owners across the MPI communicator. In case
+ * of hash collision, a lexicographical tie-breaker using absolute values is used.
+ *
+ * \param[in] size Number of elements in each nuplet.
+ * \param[in] a    First nuplet to compare.
+ * \param[in] b    Second nuplet to compare.
+ *
+ * \return 1 if hash(a) > hash(b), -1 if hash(a) > hash(b).
+ * If hashes are equal, follows \ref _compare_nuplets_abs return rules.
+ */
+static
+inline
+int
+_compare_nuplets_hash_abs
+(
+  const int size,
+  const int a[],
+  const int b[]
+)
+{
+  uint32_t h_local   = _pdm_hash_any_size(size, a);
+  uint32_t h_distant = _pdm_hash_any_size(size, b);
+  int i_win = 0;
+  if (h_local < h_distant) {
+    i_win = 1;
+  } else if (h_local > h_distant) {
+    i_win = -1;
+  } else {
+    // Cas extrêmement rare de collision de hash : On retombe sur la comparaison classique en tie-breaker
+    i_win = _compare_nuplets_abs(size, a, b);
+  }
+  return i_win;
+}
+
+typedef int (*PDM_owner_compare_f)(int stride, const int *a, const int *b);
+
+static
+void
+_compute_owner_gen
+(
+  PDM_part_comm_graph_t *pcg,
+  int                    nuplet_size,
+  PDM_owner_compare_f    compare_func
+)
+{
+  int i_rank = -1;
+  PDM_MPI_Comm_rank(pcg->comm, &i_rank);
+
+  int stride = 3 + nuplet_size; // nuplet_size is extern to manage with / without nuplet cases for ownership
+
+  int sign = (pcg->is_signed == PDM_TRUE) ? -1 : 1;
+
+  /*
+   * Compute owner
+   */
+  int *cur_location = NULL;
+  int *opp_location = NULL;
+  PDM_malloc(cur_location, stride, int);
+  PDM_malloc(opp_location, stride, int);
+
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    int n_entity_graph = pcg->n_entity_graph[i_part];
+
+    int *lbound_entity = NULL;
+    PDM_malloc(lbound_entity, n_entity_graph, int);
+
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      lbound_entity[idx_entity] = pcg->pentity_graph[i_part][4*idx_entity];
+      pcg->bound_owner[i_part][idx_entity] = -1;
+    }
+
+    int n_unique = PDM_inplace_unique(lbound_entity, 0, n_entity_graph-1);
+
+    int *lowner = PDM_array_const_int(n_unique, -1);
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      int l_entity = pcg->pentity_graph[i_part][4*idx_entity];
+      int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
+
+      pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
+
+      for (int i = 0; i < nuplet_size; i++) {
+        cur_location[i] = pcg->pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+      }
+      cur_location[nuplet_size+0] = i_rank;
+      cur_location[nuplet_size+1] = i_part+1;
+      cur_location[nuplet_size+2] = PDM_ABS(l_entity);
+
+      for (int i = 0; i < nuplet_size; i++) {
+        opp_location[i] = sign * pcg->pentity_nuplet[i_part][nuplet_size*idx_entity+i]; // Forcement l'opposé
+      }
+      opp_location[nuplet_size+0] = pcg->pentity_graph[i_part][4*idx_entity+1];
+      opp_location[nuplet_size+1] = pcg->pentity_graph[i_part][4*idx_entity+2];
+      opp_location[nuplet_size+2] = PDM_ABS(pcg->pentity_graph[i_part][4*idx_entity+3]);
+
+      // PDM_log_trace_array_int(cur_location, stride, "cur_location :: ");
+      // PDM_log_trace_array_int(opp_location, stride, "opp_location :: ");
+
+      if(lowner[pos] != 0) {
+        if (compare_func(stride, cur_location, opp_location) >= 0) {
+          lowner[pos] = 1;
+        }
+        else {
+          lowner[pos] = 0;
+        }
+      }
+    }
+
+    /* Last loop to fill */
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      int pos = pcg->bound_owner[i_part][idx_entity];
+      pcg->bound_owner[i_part][idx_entity] = lowner[pos];
+    }
+
+    PDM_free(lowner);
+    PDM_free(lbound_entity);
+  }
+
+  PDM_free(cur_location);
+  PDM_free(opp_location);
+}
+
 static
 void
 _allocate_send_buffer_strid_cst
@@ -166,7 +383,7 @@ _allocate_recv_strid_cst
   unsigned char **_recv_entity_data = NULL;
   PDM_malloc(_recv_entity_data, pcg->n_part, unsigned char *);
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
-    _recv_entity_data[i_part] = malloc(pcg->n_entity_graph[i_part] * s_data_tot * sizeof(unsigned char));
+    PDM_malloc(_recv_entity_data[i_part], pcg->n_entity_graph[i_part] * s_data_tot, unsigned char);
   }
 
   *recv_entity_data = _recv_entity_data;
@@ -364,7 +581,8 @@ _post_send_strid_and_fill_send_buffer
   }
 
   int send_buff_size = send_data_idx[n_rank] * s_data_tot;
-  unsigned char  *send_buffer       = malloc(send_buff_size * sizeof(unsigned char));
+  unsigned char  *send_buffer = NULL;
+  PDM_malloc(send_buffer, send_buff_size, unsigned char);
   unsigned char **_send_entity_data = (unsigned char **) send_entity_data;
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
@@ -412,7 +630,7 @@ _post_recv_strid_var
   *recv_entity_data   = (void **) _recv_entity_data;
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
-    _recv_entity_stride[i_part] = malloc(pcg->n_entity_graph[i_part] * sizeof(int));
+    PDM_malloc(_recv_entity_stride[i_part], pcg->n_entity_graph[i_part], int);
     int recv_buff_size_part = 0;
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       int idx_read  = pcg->part_to_recv_buffer[i_part][i];
@@ -564,32 +782,6 @@ _exch_strid_var
 
   PDM_MPI_Type_free(&mpi_type);
 }
-
-
-/**
- *  \brief Compare lexicographically two nuplets of same size (in absolute value)
- *
- *  \return -1 if a > b, 0 if a == b, 1 if a < b
- */
-static inline int
-_compare_nuplets_abs
-(
-  const int size,
-  const int a[],
-  const int b[]
-)
-{
-  for (int i = 0; i < size; i++) {
-    if (PDM_ABS(a[i]) < PDM_ABS(b[i])) {
-      return 1;
-    }
-    if (PDM_ABS(a[i]) > PDM_ABS(b[i])) {
-      return -1;
-    }
-  }
-  return 0;
-}
-
 
 static PDM_part_comm_graph_t *
 _create
@@ -877,50 +1069,13 @@ _create
   PDM_malloc(pcg->bound_owner, n_part, int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_entity_graph = pn_entity_graph[i_part];
-
     PDM_malloc(pcg->bound_owner[i_part], n_entity_graph, int);
-    int *lbound_entity = NULL;
-    PDM_malloc(lbound_entity, n_entity_graph, int);
-
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      lbound_entity[idx_entity] = pentity_graph[i_part][4*idx_entity];
-      pcg->bound_owner[i_part][idx_entity] = -1;
-    }
-
-    int n_unique = PDM_inplace_unique(lbound_entity, 0, n_entity_graph-1);
-
-    int *lowner = PDM_array_const_int(n_unique, -1);
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int l_entity = pentity_graph[i_part][4*idx_entity];
-      int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
-
-      pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
-
-      int my_location[3] = {i_rank, i_part+1, l_entity};
-
-      if(lowner[pos] != 0) {
-        if (_compare_nuplets_abs(3, my_location, &pentity_graph[i_part][4*idx_entity+1]) >= 0) {
-          lowner[pos] = 1;
-        }
-        else {
-          lowner[pos] = 0;
-        }
-      }
-    }
-
-    /* Last loop to fill */
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int pos = pcg->bound_owner[i_part][idx_entity];
-      pcg->bound_owner[i_part][idx_entity] = lowner[pos];
-    }
-
-    PDM_free(lowner);
-    PDM_free(lbound_entity);
   }
 
   /* Deleguate to exch_helper for Asynchronous and persitent exchange */
   pcg->exch_h = PDM_exchange_helper_create(comm);
 
+  PDM_part_comm_graph_owner_compute(pcg, PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC, NULL);
 
   return pcg;
 }
@@ -972,8 +1127,12 @@ PDM_part_comm_graph_with_nuplet_create
   int max_nuplet_size;
   PDM_MPI_Allreduce(&nuplet_size, &max_nuplet_size, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
-  if (min_nuplet_size != max_nuplet_size) {
+  if(min_nuplet_size != max_nuplet_size) {
     PDM_error("All ranks must have the same nuplet_size");
+  }
+
+  if(min_nuplet_size < 0) {
+    PDM_error("nuplet_size should be > 0 \n");
   }
 
   return _create(n_part,
@@ -1047,10 +1206,6 @@ PDM_part_comm_graph_iexch
   if(t_stride == PDM_STRIDE_CST_INTERLACED) {
     s_data_tot = s_data * cst_stride;
   }
-
-  PDM_MPI_Datatype mpi_type;
-  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
-  PDM_MPI_Type_commit(&mpi_type);
 
   int request_id = -1;
 
@@ -1186,8 +1341,6 @@ PDM_part_comm_graph_iexch
   else {
     INVALID_T_STRIDE(t_stride)
   }
-
-  PDM_MPI_Type_free(&mpi_type);
 
   return request_id;
 }
@@ -2094,7 +2247,6 @@ PDM_part_comm_graph_free
   PDM_free(pcg);
 }
 
-
 void
 PDM_part_comm_graph_log_trace
 (
@@ -2133,4 +2285,182 @@ PDM_part_comm_graph_log_trace
       log_trace(" | owner = %d\n", pcg_owner[  i_entity  ]);
     } // end loop on graph entities
   } // end loop on partitions
+}
+
+void
+PDM_part_comm_graph_owner_compute
+(
+  PDM_part_comm_graph_t             *pcg,
+  PDM_part_comm_graph_owner_kind_t   owner_kind,
+  int                              **user_owner
+)
+{
+  if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC) {
+    _compute_owner_gen(pcg, 0, _compare_nuplets_abs);
+  } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET) {
+    _compute_owner_gen(pcg, pcg->nuplet_size, _compare_nuplets);
+  } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH) {
+    _compute_owner_gen(pcg, 0, _compare_nuplets_hash_abs);
+  } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) {
+    _compute_owner_gen(pcg, pcg->nuplet_size, _compare_nuplets_hash_abs);
+  } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED) {
+    if(user_owner == NULL) {
+      PDM_error("Owner_kind=PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED but user_owner is NULL");
+    }
+    for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+      for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        pcg->bound_owner[i_part][i] = user_owner[i_part][i];
+      }
+    }
+  } else {
+    PDM_error("Not implemented for owner_kind = %i", owner_kind);
+  }
+
+  PDM_part_comm_graph_owner_check(pcg);
+}
+
+void
+PDM_part_comm_graph_owner_check
+(
+  PDM_part_comm_graph_t             *pcg
+)
+{
+  int i_rank = -1;
+  PDM_MPI_Comm_rank(pcg->comm, &i_rank);
+  int **owner_opp = NULL;
+  PDM_part_comm_graph_exch(pcg,
+                           sizeof(int),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+          (void  **)       pcg->bound_owner,
+                           NULL,
+          (void ***)       &owner_opp);
+
+
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+
+    for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+
+      int l_entity = PDM_ABS(pcg->pentity_graph[i_part][4*i]);
+
+      int t_rank   = pcg->pentity_graph[i_part][4*i+1];
+      int t_part   = pcg->pentity_graph[i_part][4*i+2];
+      int t_entity = PDM_ABS(pcg->pentity_graph[i_part][4*i+3]);
+
+      // In periodic case, we can have same owner
+      int is_same = 0;
+      if(i_rank == t_rank && i_part+1 == t_part && l_entity == t_entity) {
+        is_same = 1;
+      }
+
+      if(pcg->bound_owner[i_part][i] == 1) {
+        if(is_same == 0 && owner_opp[i_part][i] == 1) {
+          PDM_error("2 owner for same entity : i_rank=%i/i_part=%i/i=%i", i_rank, i_part, i);
+        }
+      }
+    }
+
+    PDM_free(owner_opp[i_part]);
+  }
+  PDM_free(owner_opp);
+
+}
+
+
+void
+PDM_part_comm_graph_owner_statistics_get
+(
+  PDM_part_comm_graph_t *pcg,
+  double                *min_ratio_owner,
+  double                *max_ratio_owner,
+  double                *mean_ratio_owner,
+  double                *median_ratio_owner
+)
+{
+  CHECK_INSTANCE(pcg)
+
+  int n_rank = -1;
+  int i_rank = -1;
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
+  PDM_MPI_Comm_rank(pcg->comm, &i_rank);
+
+  /* Connectivity of the graph */
+  int l_n_send = pcg->n_active_rank_send;
+  int l_n_recv = pcg->n_active_rank_recv;
+
+  int g_min_send = 0;
+  int g_max_send = 0;
+  int g_min_recv = 0;
+  int g_max_recv = 0;
+  PDM_MPI_Allreduce(&l_n_send, &g_min_send, 1, PDM_MPI_INT, PDM_MPI_MIN, pcg->comm);
+  PDM_MPI_Allreduce(&l_n_send, &g_max_send, 1, PDM_MPI_INT, PDM_MPI_MAX, pcg->comm);
+  PDM_MPI_Allreduce(&l_n_recv, &g_min_recv, 1, PDM_MPI_INT, PDM_MPI_MIN, pcg->comm);
+  PDM_MPI_Allreduce(&l_n_recv, &g_max_recv, 1, PDM_MPI_INT, PDM_MPI_MAX, pcg->comm);
+
+  /* Local ownership ratio */
+  int n_owner      = 0;
+  int n_tot_entity = 0;
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    n_tot_entity += pcg->n_entity_graph[i_part];
+    for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+      n_owner += pcg->bound_owner[i_part][i];
+    }
+  }
+
+  double local_ratio = 0.;
+  if (n_tot_entity > 0) {
+    local_ratio = (double) n_owner / (double) n_tot_entity;
+  }
+
+  /* Ratios live in [0, 1]; these are overwritten by the Allreduce anyway */
+  double g_max_ratio  = 0.;
+  double g_min_ratio  = 1.;
+  double g_mean_ratio = 0.;
+  PDM_MPI_Allreduce(&local_ratio, &g_max_ratio , 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, pcg->comm);
+  PDM_MPI_Allreduce(&local_ratio, &g_min_ratio , 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, pcg->comm);
+  PDM_MPI_Allreduce(&local_ratio, &g_mean_ratio, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, pcg->comm);
+
+  /* NB: ranks with an empty graph contribute 0 to this mean */
+  g_mean_ratio = g_mean_ratio / n_rank;
+
+  /*
+   * Median : gathered and sorted on rank 0, then broadcast so that every rank returns the same value.
+   */
+  double *all_ratios = NULL;
+  if(i_rank == 0) {
+    PDM_malloc(all_ratios, n_rank, double);
+  }
+
+  PDM_MPI_Gather(&local_ratio,
+                 1,
+                 PDM_MPI_DOUBLE,
+                 all_ratios,
+                 1,
+                 PDM_MPI_DOUBLE,
+                 0,
+                 pcg->comm);
+
+  double g_median_ratio = 0.;
+  if(i_rank == 0) {
+
+    PDM_sort_double(all_ratios, NULL, n_rank);
+
+    if (n_rank % 2 == 1) {                     /* odd number of ranks */
+      g_median_ratio = all_ratios[n_rank / 2];
+    } else {                                   /* even : average of the two middle values */
+      int i_mid = n_rank / 2;
+      g_median_ratio = 0.5 * (all_ratios[i_mid - 1] + all_ratios[i_mid]);
+    }
+  }
+
+  PDM_MPI_Bcast(&g_median_ratio, 1, PDM_MPI_DOUBLE, 0, pcg->comm);
+
+  PDM_free(all_ratios);
+  all_ratios = NULL;
+
+  if (min_ratio_owner        != NULL) { *min_ratio_owner        = g_min_ratio;    }
+  if (max_ratio_owner        != NULL) { *max_ratio_owner        = g_max_ratio;    }
+  if (mean_ratio_owner       != NULL) { *mean_ratio_owner       = g_mean_ratio;   }
+  if (median_ratio_owner     != NULL) { *median_ratio_owner     = g_median_ratio; }
 }

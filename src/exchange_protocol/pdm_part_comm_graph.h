@@ -33,6 +33,19 @@ extern "C" {
 
 typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
 
+/**
+ * \enum PDM_part_comm_graph_owner_kind_t
+ *
+ * \brief Owner kind computation
+ */
+typedef enum {
+  PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC             = 0, /*!< Lexicographic order (i_rank, i_part, i_entity)                                                   */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET = 1, /*!< Lexicographic order with nuplet first (0-uplet, 1-uplet, ..., n_uplet, i_rank, i_part, i_entity) */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_HASH                      = 2, /*!< Hash to better owner repartition                                                                 */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET          = 3, /*!< Hash to better owner repartition and take nuplet                                                 */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED              = 4, /*!< Given by the user                                                                                */
+} PDM_part_comm_graph_owner_kind_t;
+
 
 /*============================================================================
  * Public function definitions
@@ -632,7 +645,7 @@ PDM_part_comm_graph_entity_nuplet_get
  *
  * \brief Get internal communicator
  *
- * \param [in]  pcg  Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in] pcg  Pointer to \ref PDM_part_comm_graph_t instance
  *
  * \return MPI Communicator
  */
@@ -653,6 +666,71 @@ PDM_part_comm_graph_log_trace
 (
   PDM_part_comm_graph_t *pcg,
   const char*            header
+);
+
+/*
+ * \brief Compute owner for all entity of the current \ref PDM_part_comm_graph_t, owner array is modify inplace
+ *
+ * \param [in] pcg        Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in] owner_kind Owner kind
+ * \param [in] user_owner Array of user owner (only if owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) else NULL, the array is copied
+ *
+ */
+void
+PDM_part_comm_graph_owner_compute
+(
+  PDM_part_comm_graph_t             *pcg,
+  PDM_part_comm_graph_owner_kind_t   owner_kind,
+  int                              **user_owner
+);
+
+
+/**
+ *
+ * \brief Check owner validity (only one owner among all partition / procs)
+ *
+ * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
+ */
+void
+PDM_part_comm_graph_owner_check
+(
+  PDM_part_comm_graph_t *pcg
+);
+
+/**
+ *
+ * \brief Compute statistics about the current \ref PDM_part_comm_graph_t :
+ *           - Min/Max number of processors connected by the graph
+ *           - Min/Max/Mean/Median ratio of owned entities (relative to the local
+ *             size of the graph) : to have an idea of the repartition of owners
+ *
+ * All the returned values are global and identical on every rank.
+ *
+ * Ratios are expressed in [0, 1] (multiply by 100 to display a percentage).
+ * On a given rank, the local ratio is the number of entities owned by this rank
+ * divided by the total number of entries of its communication graph. A rank
+ * whose graph is empty contributes a null ratio and still counts in the mean.
+ *
+ * Any output pointer may be NULL if the corresponding value is not needed.
+ *
+ * \warning This function is collective : it must be called by every rank of the
+ *          communicator of \p pcg, whatever the output pointers passed.
+ *
+ * \param [in]  pcg                     Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [out] min_ratio_owner         Minimum over the ranks of the ratio of owned entities (or NULL)
+ * \param [out] max_ratio_owner         Maximum over the ranks of the ratio of owned entities (or NULL)
+ * \param [out] mean_ratio_owner        Mean over the ranks of the ratio of owned entities (or NULL)
+ * \param [out] median_ratio_owner      Median over the ranks of the ratio of owned entities (or NULL)
+ *
+ */
+void
+PDM_part_comm_graph_owner_statistics_get
+(
+  PDM_part_comm_graph_t *pcg,
+  double                *min_ratio_owner,
+  double                *max_ratio_owner,
+  double                *mean_ratio_owner,
+  double                *median_ratio_owner
 );
 
 #ifdef __cplusplus
