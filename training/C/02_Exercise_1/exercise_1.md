@@ -197,7 +197,7 @@ This is an **advanced setting we won't be using here**, so we just specify that 
 
 Now that you have created a mesh partitioning structure `mpart`, you can **set** (step 2) the cube mesh to it.
 For simplicity of the exercise, we here set the mesh using the **Dirstibuted-Nodal-Mesh** structure (`dmn`).
-This is a pratice internal to **ParaDiGM** algorithms. In your software you would just set the mesh using basic arrays.
+This is a practice internal to **ParaDiGM** algorithms. In your software you would just set the mesh using basic arrays.
 
 ```{code-cell}
 ---
@@ -757,7 +757,7 @@ visu/PEXT.case : extension
 ## Annex 1
 
 In some cases, the mesh is an assembly of several sub-meshes. These are called *domains*.
-In the figure bellow, we can see a mesh made of two domains.
+In the figure below, we can see a mesh made of two domains.
 
 <img src="mesh.png" width="180">
 

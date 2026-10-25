@@ -41,7 +41,7 @@ Partitioning
 .. Enumerators
 .. -----------
 
-.. Here we present enumerators that are usefull for the features detailed in this section.
+.. Here we present enumerators that are useful for the features detailed in this section.
 
 .. .. doxygenenum:: PDM_connectivity_type_t
 
