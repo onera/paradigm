@@ -780,24 +780,11 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
   PDM_geometry_kind_t    geom_kind
 )
 {
-
   if (pmn->pcg_vtx == NULL) {
     PDM_error("pmn->pcg_vtx is mandatory in order to deduce other");
   }
 
-  PDM_part_mesh_nodal_elmts_t* pmne = NULL;
-  if (geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
-    pmne = pmn->pmne[3];
-  } else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-    pmne = pmn->pmne[2];
-  } else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-    pmne = pmn->pmne[1];
-  } else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-    pmne = pmn->pmne[0];
-  } else {
-    PDM_error("Not implemented for geom_kind %d", geom_kind);
-  }
-
+  PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
   int dim = PDM_geometry_kind_to_dimension(geom_kind);
 
   if(pmn->pcg[dim] != NULL) {

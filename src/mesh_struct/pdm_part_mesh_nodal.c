@@ -109,26 +109,18 @@ _get_from_geometry_kind
 {
   PDM_geometry_kind_t principal_geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn);
 
+  if (geom_kind < 0) {
+    PDM_error("geom_kind must be >=0 (got %d)", geom_kind);
+  }
+
   if (principal_geom_kind > geom_kind) {
     PDM_error("Invalid geom_kind (expected >= %d but got %d)", principal_geom_kind, geom_kind);
   }
 
+  int dim = PDM_geometry_kind_to_dimension(geom_kind);
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
-  if (geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
-    pmne = pmn->pmne[3];
-  }
-  else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
-    pmne = pmn->pmne[2];
-  }
-  else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-    pmne = pmn->pmne[1];
-  }
-  else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
-    pmne = pmn->pmne[0];
-  }
-  else {
-    PDM_error("Invalid geom_kind %d", geom_kind);
-  }
+  pmne = pmn->pmne[dim];
+
   return pmne;
 }
 
