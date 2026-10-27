@@ -858,17 +858,12 @@ PDM_part_mesh_nodal_complete_part_comm_graph
   /*
    * Deduce all other
    */
-  if(pmn->pcg[0] == NULL) {
-    PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_CORNER);
-  }
-  if(pmn->pcg[1] == NULL) {
-    PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_RIDGE);
-  }
-  if(pmn->pcg[2] == NULL) {
-    PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_SURFACIC);
-  }
-  if(pmn->pcg[3] == NULL) {
-    PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
+  PDM_geometry_kind_t leading_geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn);
+  for (int geom_kind=leading_geom_kind; geom_kind<PDM_GEOMETRY_KIND_MAX; ++geom_kind) {
+    int dim = PDM_geometry_kind_to_dimension(geom_kind);
+    if(pmn->pcg[dim] == NULL) {
+      PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, geom_kind);
+    }
   }
 }
 
