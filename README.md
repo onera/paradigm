@@ -1,3 +1,5 @@
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.10483/status.svg)](https://doi.org/10.21105/joss.10483)
+
 <p align="center">
     <img src="doc/_static/logo.svg" alt="Logo" width="25%"/>
 </p>
@@ -145,6 +147,11 @@ If you have a question or encounter a problem, please follow the [rules of our c
 ## 💡 Contributing to ParaDiGM
 
 If you would like to contribute to **ParaDiGM**, make sure you follow [these instructions](CONTRIBUTING.md).
+
+
+## 📰 Citing ParaDiGM
+
+- Quémerais et al., (2026). *ParaDiGM: Parallel Distributed General Mesh*. Journal of Open Source Software, 11(126), 10483, https://doi.org/10.21105/joss.10483
 
 
 ## ⚖️ License
