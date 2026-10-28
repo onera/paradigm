@@ -289,8 +289,7 @@ void PDM_io_array_write_end
  )
 {
   if (PDM_io_tabs == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_array_write_end :"
-            "La phase d'écriture n'a pas été initialisée\n");
+    PDM_error("La phase d'écriture n'a pas été initialisée");
     exit(EXIT_FAILURE);
   }
 

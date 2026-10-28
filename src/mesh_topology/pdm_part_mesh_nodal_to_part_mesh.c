@@ -36,8 +36,7 @@
 
 #define CHECK_PMN_TO_PM(pmn_to_pm)                                       \
   if ((pmn_to_pm) == NULL) {                                             \
-    PDM_error(__FILE__, __LINE__, 0,                                     \
-              "Invalid PDM_part_mesh_nodal_to_part_mesh_t instance.\n"); \
+    PDM_error("Invalid PDM_part_mesh_nodal_to_part_mesh_t instance.");   \
   }
 
 /*=============================================================================
@@ -95,14 +94,12 @@ _check_inputs
 
       if (entity_type1 < entity_type_parent ||
           entity_type2 < entity_type_parent) {
-        PDM_error(__FILE__, __LINE__, 0,
-                  "Invalid requested connectivity type %d : highest dimension entity type is %d\n",
+        PDM_error("Invalid requested connectivity type %d : highest dimension entity type is %d",
                   connectivity_type, entity_type_parent);
       }
 
       if (entity_type1 >= entity_type2) {
-        PDM_error(__FILE__, __LINE__, 0,
-                  "Invalid requested connectivity type %d : only strictly downward connectivities are supported at the moment\n",
+        PDM_error("Invalid requested connectivity type %d : only strictly downward connectivities are supported at the moment",
                   connectivity_type);
       }
     }
@@ -111,8 +108,7 @@ _check_inputs
   /* Check gnums */
   for (PDM_mesh_entities_t entity_type = (PDM_mesh_entities_t) 0; entity_type < PDM_MESH_ENTITY_MAX; entity_type++) {
     if (pmn_to_pm->g_num_state[entity_type] == PMN_TO_PM_STATE_REQ && build_entity[entity_type] == PDM_FALSE) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Gnums requested for entity type %d but this entity is not involved in the requested connectivities\n",
+      PDM_error("Gnums requested for entity type %d but this entity is not involved in the requested connectivities",
                  entity_type);
     }
   }
@@ -123,14 +119,12 @@ _check_inputs
     PDM_mesh_entities_t entity_type = PDM_bound_type_to_entity_type(bound_type);
 
     if (pmn_to_pm->group_state[bound_type] == PMN_TO_PM_STATE_REQ && build_entity[entity_type] == PDM_FALSE) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Groups requested for entity type %d but this entity is not involved in the requested connectivities\n",
+      PDM_error("Groups requested for entity type %d but this entity is not involved in the requested connectivities",
                  entity_type);
     }
 
     if (pmn_to_pm->part_comm_graph_state[bound_type] == PMN_TO_PM_STATE_REQ && build_entity[entity_type] == PDM_FALSE) {
-      PDM_error(__FILE__, __LINE__, 0,
-                "Inter-partition comm graph requested for entity type %d but this entity is not involved in the requested connectivities\n",
+      PDM_error("Inter-partition comm graph requested for entity type %d but this entity is not involved in the requested connectivities",
                  entity_type);
     }
   }
@@ -139,7 +133,7 @@ _check_inputs
   // TMP: With current implementation, we cannot guarantee the following cases :
   if (pmn_to_pm->connectivity_state[PDM_CONNECTIVITY_TYPE_CELL_EDGE] == PMN_TO_PM_STATE_REQ &&
       pmn_to_pm->connectivity_state[PDM_CONNECTIVITY_TYPE_FACE_EDGE] == PMN_TO_PM_STATE_REQ) {
-    PDM_error(__FILE__, __LINE__, 0, "cell->edge + face->edge not properly handled yet\n");
+    PDM_error("cell->edge + face->edge not properly handled yet");
   }
 }
 
@@ -211,7 +205,7 @@ _transfer_highest_dimension_entities
                                                                     PDM_OWNERSHIP_BAD_VALUE);
 
         if (ln_to_gn == NULL) {
-          PDM_error(__FILE__, __LINE__, 0, "TODO -> use parent_entity_g_num instead? (what do we do with poly2d?)\n");
+          PDM_error("TODO -> use parent_entity_g_num instead? (what do we do with poly2d?)");
         }
 
         for (int i_elt = 0; i_elt < n_elt; i_elt++) {
@@ -539,9 +533,8 @@ _generate_gnum
                                    PDM_OWNERSHIP_BAD_VALUE);
     if (entity_to_vtx_idx[i_part] == NULL) {
       if (entity_type != PDM_MESH_ENTITY_EDGE) {
-        PDM_error(__FILE__, __LINE__, 0,
-                  "We are supposed to have connectivity type %d, "
-                  "yet n_entity = %d, entity_to_vtx_idx: %p, entity_to_vtx: %p (entity = %s)\n",
+        PDM_error("We are supposed to have connectivity type %d, "
+                  "yet n_entity = %d, entity_to_vtx_idx: %p, entity_to_vtx: %p (entity = %s)",
                   connectivity_type_vtx, n_entity[i_part], (void *) entity_to_vtx_idx[i_part], (void *) entity_to_vtx[i_part],
                   _entity_name[entity_type]);
       }
@@ -986,7 +979,7 @@ PDM_part_mesh_nodal_to_part_mesh_create
 )
 {
   if (pmesh_nodal == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid PDM_part_mesh_nodal_t instance\n");
+    PDM_error("Invalid PDM_part_mesh_nodal_t instance");
   }
 
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = NULL;
@@ -1055,7 +1048,7 @@ PDM_part_mesh_nodal_to_part_mesh_part_comm_graph_enable
 {
   CHECK_PMN_TO_PM(pmn_to_pm);
 
-  PDM_error(__FILE__, __LINE__, 0, "Inter-partitions comm graphs are not yet implemented\n");
+  PDM_error("Inter-partitions comm graphs are not yet implemented");
 
   pmn_to_pm->part_comm_graph_state[bound_type] = PMN_TO_PM_STATE_REQ;
 }
@@ -1070,12 +1063,12 @@ PDM_part_mesh_nodal_to_part_mesh_compute
   CHECK_PMN_TO_PM(pmn_to_pm);
 
   if (pmn_to_pm->pmesh != NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_to_part_mesh already computed\n");
+    PDM_error("PDM_part_mesh_nodal_to_part_mesh already computed");
   }
 
   PDM_part_mesh_nodal_t *pmesh_nodal = pmn_to_pm->pmesh_nodal;
   if (pmesh_nodal == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid PDM_part_mesh_nodal_t instance\n");
+    PDM_error("Invalid PDM_part_mesh_nodal_t instance");
   }
 
   /* Check coherence in requested connectivities, gnums, etc */

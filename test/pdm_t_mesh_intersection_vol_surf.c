@@ -507,7 +507,7 @@ char *argv[]
   _set_mesh(mi, 0, mpart_vol_a , n_part);
   _set_mesh(mi, 1, mpart_surf_b, n_part);
 
-  PDM_mesh_intersection_compute(mi);
+  // PDM_mesh_intersection_compute(mi); // Not Implemented
 
   PDM_mesh_intersection_free(mi);
 
