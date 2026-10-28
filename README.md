@@ -1,5 +1,3 @@
-[![DOI](https://joss.theoj.org/papers/10.21105/joss.10483/status.svg)](https://doi.org/10.21105/joss.10483)
-
 <p align="center">
     <img src="doc/_static/logo.svg" alt="Logo" width="25%"/>
 </p>
