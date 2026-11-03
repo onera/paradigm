@@ -1,12 +1,10 @@
-<div>
-  <center>
+<p align="center">
     <img src="doc/_static/logo.svg" alt="Logo" width="25%"/>
     <br>
     <br>
     <a href="https://doi.org/10.21105/joss.10483"><img alt="JOSS" src="https://joss.theoj.org/papers/10.21105/joss.10483/status.svg"></a>
     <a href="https://www.gnu.org/licenses/lgpl-3.0"><img alt="License LGPL v3.0" src="https://img.shields.io/badge/License-LGPL_v3-blue.svg"></a>
-  </center>
-</div>
+</p>
 
 **ParaDiGM** (*Parallel Distributed General Mesh*) is a library for managing meshes in a massively parallel distributed environment, with interfaces in C, Python and Fortran.
 
