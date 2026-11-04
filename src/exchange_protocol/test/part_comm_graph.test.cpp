@@ -1782,7 +1782,6 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - exchange with intra partition join", 2) {
                                                           &entity_bound,
                                                           PDM_OWNERSHIP_USER,
                                                           pdm_comm);
-  PDM_part_comm_graph_log_trace(pcg, "pcg = ");
 
   std::vector<std::vector<int>> vsend_data_n = {{1, 1, 1, 1, 1, 1, 1, 1},
                                                 {1, 1, 1, 1}};
@@ -1801,7 +1800,6 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - exchange with intra partition join", 2) {
                 (void **)  &send_data,
                            &recv_data_n,
                 (void ***) &recv_data);
-  // PDM_part_comm_graph_exch_wait(pcg, req0);
 
   PDM_part_comm_graph_free(pcg);
   for (int i_part=0; i_part<n_part; ++i_part) {
